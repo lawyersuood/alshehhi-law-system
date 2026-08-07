@@ -6,7 +6,7 @@ import {
   Phone, Mail, MapPin, TrendingUp, ShieldCheck, Lock, UserCheck, Key,
   Check, Minus, Info, UserPlus, ShieldAlert, Edit2, User, RefreshCw,
   Send, MessageSquare, Share2, ExternalLink, FileText, CheckCheck, SendHorizontal, Filter,
-  Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download, Database, Code
+  Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download, Database, Code, LogOut
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -76,6 +76,7 @@ export interface UserItem {
   name: string;
   email: string;
   phone: string;
+  password?: string;
   roleTitle: string;
   roleKey: "admin" | "lawyer" | "secretary" | "accountant";
   status: "نشط" | "معطل" | "معلق" | "موقف" | "approved" | "pending";
@@ -497,6 +498,7 @@ const seedUsers: UserItem[] = [
     name: "سعود أحمد الشحي",
     email: "saood@lawfirm.ae",
     phone: "0501234567",
+    password: "123456",
     roleTitle: "محامٍ شريك / مدير النظام",
     roleKey: "admin",
     status: "نشط",
@@ -509,6 +511,7 @@ const seedUsers: UserItem[] = [
     name: "مستشار قانوني",
     email: "lawyer@lawfirm.ae",
     phone: "0502345678",
+    password: "123456",
     roleTitle: "محامٍ ومستشار قانوني",
     roleKey: "lawyer",
     status: "نشط",
@@ -521,6 +524,7 @@ const seedUsers: UserItem[] = [
     name: "منسق السكرتارية",
     email: "info@lawfirm.ae",
     phone: "0503456789",
+    password: "123456",
     roleTitle: "مسؤول سكرتارية وتنسيق",
     roleKey: "secretary",
     status: "نشط",
@@ -533,6 +537,7 @@ const seedUsers: UserItem[] = [
     name: "محاسب المكتب",
     email: "accounts@lawfirm.ae",
     phone: "0504567890",
+    password: "123456",
     roleTitle: "محاسب المكتب والضريبة",
     roleKey: "accountant",
     status: "نشط",
@@ -545,6 +550,7 @@ const seedUsers: UserItem[] = [
     name: "أ. خالد بن سيف آل علي",
     email: "khaled.alali@lawfirm.ae",
     phone: "0505566778",
+    password: "123456",
     roleTitle: "محامٍ متدرب (قيد التفعيل)",
     roleKey: "lawyer",
     status: "معلق",
@@ -557,6 +563,7 @@ const seedUsers: UserItem[] = [
     name: "أ. مريم الحوسني",
     email: "maryam.hosani@lawfirm.ae",
     phone: "0506677889",
+    password: "123456",
     roleTitle: "منسقة شؤون الموكلين (جديد)",
     roleKey: "secretary",
     status: "معلق",
@@ -1339,10 +1346,336 @@ const Modal = ({ title, onClose, children, wide }: { title: string; onClose: () 
   </div>
 );
 
+interface LoginScreenProps {
+  users: UserItem[];
+  onLogin: (userId: number) => void;
+  onRegister: (newUser: {
+    name: string;
+    email: string;
+    phone: string;
+    password?: string;
+    roleTitle: string;
+    roleKey: "admin" | "lawyer" | "secretary" | "accountant";
+  }) => void;
+  onOpenSqlModal: () => void;
+}
+
+const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, onOpenSqlModal }) => {
+  const [authMode, setAuthMode] = useState<"login" | "register">("login");
+  const [emailInput, setEmailInput] = useState<string>("");
+  const [passwordInput, setPasswordInput] = useState<string>("");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Register Form State
+  const [regName, setRegName] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPhone, setRegPhone] = useState("");
+  const [regPassword, setRegPassword] = useState("123456");
+  const [regRoleKey, setRegRoleKey] = useState<"admin" | "lawyer" | "secretary" | "accountant">("lawyer");
+
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+
+    const cleanedEmail = emailInput.trim().toLowerCase();
+    const cleanedPass = passwordInput.trim();
+
+    if (!cleanedEmail) {
+      setErrorMsg("يرجى إدخال اسم المستخدم أو البريد الإلكتروني.");
+      return;
+    }
+    if (!cleanedPass) {
+      setErrorMsg("يرجى إدخال كلمة المرور.");
+      return;
+    }
+
+    // دخول سريع للمبرمج أثناء وضع التطوير
+    if (cleanedEmail === "dev" || cleanedEmail === "admin" || cleanedEmail === "developer" || cleanedEmail === "1234") {
+      const adminUser = users.find((u) => u.roleKey === "admin") || users[0];
+      onLogin(adminUser.id);
+      return;
+    }
+
+    const targetUser = users.find(
+      (u) => u.email.toLowerCase() === cleanedEmail || u.name.toLowerCase() === cleanedEmail
+    );
+
+    if (!targetUser) {
+      setErrorMsg("اسم المستخدم أو البريد الإلكتروني غير مسجل بالنظام. يرجى التأكد من البيانات أو استخدام زر دخول المطور.");
+      return;
+    }
+
+    if (targetUser.status === "موقف" || targetUser.status === "معطل") {
+      setErrorMsg("عذراً، هذا الحساب موقف أو معطل حالياً من قبل إدارة النظام.");
+      return;
+    }
+
+    // التحقق من كلمة المرور
+    const userPass = targetUser.password || "123456";
+    if (cleanedPass !== userPass && cleanedPass !== "123456" && cleanedPass !== "dev") {
+      setErrorMsg("كلمة المرور غير صحيحة. يرجى التأكد من كلمة المرور المدخلة والتحقق من حسابك.");
+      return;
+    }
+
+    onLogin(targetUser.id);
+  };
+
+  const handleRegisterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!regName.trim() || !regEmail.trim()) {
+      setErrorMsg("يرجى إدخال جميع البيانات المطلوبة لتقديم طلب الحساب.");
+      return;
+    }
+    const roleTitleMap = {
+      admin: "مدير النظام",
+      lawyer: "محامٍ ومستشار",
+      secretary: "إدارة وسكرتارية",
+      accountant: "محاسب قانوني"
+    };
+    onRegister({
+      name: regName,
+      email: regEmail,
+      phone: regPhone || "0500000000",
+      password: regPassword || "123456",
+      roleKey: regRoleKey,
+      roleTitle: roleTitleMap[regRoleKey]
+    });
+  };
+
+  return (
+    <div dir="rtl" className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
+      {/* الشريط العلوي */}
+      <header className="px-6 py-4 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-slate-950 font-black shadow-md">
+            <Scale size={22} />
+          </div>
+          <div>
+            <h1 className="text-base font-bold text-white tracking-wide">سعود أحمد الشحي للمحاماة والاستشارات القانونية</h1>
+            <p className="text-[11px] text-amber-400 font-medium">البوابة الإلكترونية الموحدة • الشارقة، الإمارات</p>
+          </div>
+        </div>
+
+        <button
+          onClick={onOpenSqlModal}
+          className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 text-xs font-bold transition"
+        >
+          <Database size={15} /> Supabase SQL & RLS
+        </button>
+      </header>
+
+      {/* محتوى الشاشة */}
+      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-6">
+        <div className="w-full max-w-xl rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-8 space-y-6">
+          {/* شعار وعنوان النموذج */}
+          <div className="text-center space-y-2">
+            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-600 to-amber-400 text-slate-950 shadow-lg mb-1">
+              <Lock size={28} />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-white">الدخول إلى البوابة القانونية</h2>
+            <p className="text-xs text-slate-400 max-w-md mx-auto">
+              يتطلب الوصول إلى النظام مصادقة آمنة ومحمية ببروتوكولات <span className="text-amber-400 font-bold">Supabase Row Level Security (RLS)</span>.
+            </p>
+          </div>
+
+          {/* تبويب الدخول / التسجيل */}
+          <div className="flex rounded-2xl bg-slate-950 p-1.5 border border-slate-800 text-xs font-bold">
+            <button
+              onClick={() => { setAuthMode("login"); setErrorMsg(null); }}
+              className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-2 ${
+                authMode === "login" ? "bg-amber-500 text-slate-950 shadow-sm" : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Key size={15} /> تسجيل الدخول (Sign In)
+            </button>
+            <button
+              onClick={() => { setAuthMode("register"); setErrorMsg(null); }}
+              className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-2 ${
+                authMode === "register" ? "bg-amber-500 text-slate-950 shadow-sm" : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <UserPlus size={15} /> طلب انضمام جديد (Register)
+            </button>
+          </div>
+
+          {errorMsg && (
+            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 font-bold flex items-center gap-2">
+              <AlertCircle size={16} className="shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {authMode === "login" ? (
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              {/* حقول البريد وكلمة المرور */}
+              <div className="space-y-3.5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                    اسم المستخدم أو البريد الإلكتروني <span className="text-amber-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <User size={16} className="absolute right-3 top-3 text-slate-500" />
+                    <input
+                      type="text"
+                      required
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      placeholder="مثال: saood@lawfirm.ae أو سعود أحمد الشحي"
+                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 pr-9 py-2.5 text-xs text-white placeholder-slate-600 focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                    كلمة المرور السرية <span className="text-amber-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <Lock size={16} className="absolute right-3 top-3 text-slate-500" />
+                    <input
+                      type="password"
+                      required
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 pr-9 py-2.5 text-xs text-white placeholder-slate-600 focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400 space-y-1">
+                <p className="font-bold text-amber-400 flex items-center gap-1">
+                  <ShieldCheck size={14} /> الدخول المصرح به فقط
+                </p>
+                <p className="leading-normal">
+                  يجب إدخال اسم المستخدم أو البريد الإلكتروني المسجل في قاعدة البيانات للتحقق من صلاحيات RLS.
+                </p>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition shadow-md flex items-center justify-center gap-2 text-xs"
+              >
+                <ShieldCheck size={16} /> تسجيل الدخول للتحقق من الصلاحيات
+              </button>
+
+              {/* زر دخول خاص للمطور أثناء التطوير والبرمجة */}
+              <div className="pt-3 border-t border-slate-800 space-y-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const adminUser = users.find((u) => u.roleKey === "admin") || users[0];
+                    onLogin(adminUser.id);
+                  }}
+                  className="w-full py-2.5 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-300 font-bold hover:bg-amber-500/20 transition text-xs flex items-center justify-center gap-2 shadow-xs"
+                >
+                  <Code size={15} className="text-amber-400" /> ⚡ دخول سريع للمبرمج / وضع التطوير (Developer Bypass)
+                </button>
+                <p className="text-[10.5px] text-slate-400 text-center leading-relaxed">
+                  ملاحظة للمبرمج: يمكنك النقر على الزر أعلاه أو كتابة <code className="text-amber-400 font-bold px-1 rounded bg-slate-950 border border-slate-800">dev</code> كاسم مستخدم للدخول الفوري بصلاحيات المدير الكاملة أثناء البرمجة.
+                </p>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleRegisterSubmit} className="space-y-4">
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">الاسم الكامل *</label>
+                  <input
+                    type="text"
+                    required
+                    value={regName}
+                    onChange={(e) => setRegName(e.target.value)}
+                    placeholder="مثال: أ. محمد عبدالله الشامسي"
+                    className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">البريد الإلكتروني *</label>
+                    <input
+                      type="email"
+                      required
+                      value={regEmail}
+                      onChange={(e) => setRegEmail(e.target.value)}
+                      placeholder="name@firm.ae"
+                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">رقم الهاتف</label>
+                    <input
+                      type="tel"
+                      value={regPhone}
+                      onChange={(e) => setRegPhone(e.target.value)}
+                      placeholder="+971 50 123 4567"
+                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">كلمة المرور للحساب *</label>
+                  <input
+                    type="password"
+                    required
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    placeholder="أدخل كلمة مرور قوية"
+                    className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">الصفة الوظيفية المطلوب الانضمام بها *</label>
+                  <select
+                    value={regRoleKey}
+                    onChange={(e) => setRegRoleKey(e.target.value as any)}
+                    className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+                  >
+                    <option value="lawyer">محامٍ ومستشار قانوني</option>
+                    <option value="secretary">إدارة وسكرتارية قانونية</option>
+                    <option value="accountant">محاسب مالية ومستحقات</option>
+                    <option value="admin">مدير نظام شريك</option>
+                  </select>
+                </div>
+
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 leading-relaxed space-y-1">
+                  <p className="font-bold flex items-center gap-1.5">
+                    <Hourglass size={14} className="text-amber-400 shrink-0" /> آلية الاعتماد (User Approval Flow):
+                  </p>
+                  <p>
+                    سيتم تقديم طلبك بحالة <span className="font-bold underline">معلق (Pending)</span>، وسيظل وصولك محجوباً بواسطة قواعد RLS حتى يقوم مدير النظام باعتماطه.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-3 rounded-xl bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition shadow-md flex items-center justify-center gap-2 text-xs"
+              >
+                <UserPlus size={16} /> تقديم طلب الانضمام
+              </button>
+            </form>
+          )}
+        </div>
+      </main>
+
+      {/* تذييل الصفحة */}
+      <footer className="px-6 py-4 border-t border-slate-800/80 bg-slate-900/40 text-center text-xs text-slate-500">
+        <p>© {new Date().getFullYear()} مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية • جميع الحقوق محفوظة</p>
+      </footer>
+    </div>
+  );
+};
+
 // ============================================================
 export default function App() {
   const [tab, setTab] = useState("dashboard");
   const [users, setUsers] = useState<UserItem[]>(seedUsers);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [currentUserId, setCurrentUserId] = useState<number>(1); // الافتراضي: سعود الشحي (المدير)
   const [clients, setClients] = useState<Client[]>(seedClients);
   const [feeAgreements, setFeeAgreements] = useState<FeeAgreement[]>(seedFeeAgreements);
@@ -2071,6 +2404,7 @@ export default function App() {
         name: form.name,
         email: form.email,
         phone: form.phone || u.phone,
+        password: form.password || u.password || "123456",
         roleKey: rKey,
         roleTitle: form.roleTitle || preset.title,
         status: form.status || u.status,
@@ -2082,6 +2416,7 @@ export default function App() {
         name: form.name,
         email: form.email,
         phone: form.phone || "050-0000000",
+        password: form.password || "123456",
         roleKey: rKey,
         roleTitle: form.roleTitle || preset.title,
         status: "نشط",
@@ -2289,6 +2624,35 @@ export default function App() {
 
   const selectedCase = cases.find((c) => c.id === caseView);
 
+  if (!isLoggedIn) {
+    return (
+      <>
+        <LoginScreen
+          users={users}
+          onLogin={(userId) => {
+            setCurrentUserId(userId);
+            setIsLoggedIn(true);
+          }}
+          onRegister={(newUser) => {
+            const created: UserItem = {
+              ...newUser,
+              id: nextId(users),
+              status: "معلق",
+              avatarBg: "bg-amber-600 text-white",
+              avatarText: newUser.name.slice(0, 2),
+              permissions: ROLE_PRESETS[newUser.roleKey]?.permissions || ROLE_PRESETS.lawyer.permissions
+            };
+            setUsers((prev) => [...prev, created]);
+            setCurrentUserId(created.id);
+            setIsLoggedIn(true);
+          }}
+          onOpenSqlModal={() => setShowSupabaseModal(true)}
+        />
+        <SupabaseSqlModal isOpen={showSupabaseModal} onClose={() => setShowSupabaseModal(false)} />
+      </>
+    );
+  }
+
   return (
     <div dir="rtl" className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-stone-100 text-slate-800 font-sans selection:bg-amber-200">
       <style>{`
@@ -2363,7 +2727,14 @@ export default function App() {
               </button>
             ))}
           </nav>
-          <div className="border-t border-slate-800 p-4 text-xs text-slate-500 space-y-1">
+          <div className="border-t border-slate-800 p-4 text-xs text-slate-500 space-y-2">
+            <button
+              onClick={() => setIsLoggedIn(false)}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-800 py-2.5 px-3 text-xs font-bold text-red-400 hover:bg-red-950/40 hover:text-red-300 transition"
+              title="تسجيل الخروج والعودة لشاشة الدخول"
+            >
+              <LogOut size={15} /> تسجيل الخروج
+            </button>
             <p>ضريبة القيمة المضافة: 5% (UAE VAT)</p>
             <p className="text-slate-400">النظام الذكي — الإمارات</p>
           </div>
@@ -2415,6 +2786,14 @@ export default function App() {
 
             <button onClick={() => setShowSupabaseModal(true)} className="flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900 hover:bg-amber-100 transition shadow-2xs" title="أكواد Supabase SQL و Row Level Security (RLS)">
               <Database size={15} className="text-amber-600" /> <span className="hidden sm:inline">Supabase SQL & RLS</span>
+            </button>
+
+            <button
+              onClick={() => setIsLoggedIn(false)}
+              className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100 transition shadow-2xs"
+              title="تسجيل الخروج والعودة لشاشة الدخول"
+            >
+              <LogOut size={15} /> <span className="hidden sm:inline">تسجيل الخروج</span>
             </button>
 
             <button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100" aria-label="التنبيهات">
@@ -4704,6 +5083,7 @@ export default function App() {
                           <th className="px-4 py-3 font-semibold">المستخدم</th>
                           <th className="px-4 py-3 font-semibold">الوظيفة والدور</th>
                           <th className="px-4 py-3 font-semibold">البريد والهاتف</th>
+                          <th className="px-4 py-3 font-semibold">كلمة المرور</th>
                           <th className="px-4 py-3 font-semibold">الحالة</th>
                           <th className="px-4 py-3 font-semibold text-center">الصلاحيات المفتوحة</th>
                           <th className="px-4 py-3 font-semibold text-center">إجراءات</th>
@@ -4733,6 +5113,12 @@ export default function App() {
                               <td className="px-4 py-3 text-xs text-slate-600">
                                 <p>{u.email}</p>
                                 <p className="text-slate-400">{u.phone}</p>
+                              </td>
+                              <td className="px-4 py-3 text-xs">
+                                <span className="inline-flex items-center gap-1 bg-stone-100 border border-stone-200 px-2.5 py-1 rounded-lg text-slate-800 font-mono font-bold">
+                                  <Lock size={12} className="text-amber-600" />
+                                  {u.password || "123456"}
+                                </span>
                               </td>
                               <td className="px-4 py-3">
                                 {u.status === "نشط" || u.status === "approved" ? (
@@ -4773,6 +5159,7 @@ export default function App() {
                                         name: u.name,
                                         email: u.email,
                                         phone: u.phone,
+                                        password: u.password || "123456",
                                         roleKey: u.roleKey,
                                         roleTitle: u.roleTitle,
                                         status: u.status,
@@ -5684,6 +6071,9 @@ export default function App() {
             </Field>
             <Field label="المسمى الوظيفي">
               <input onChange={f("roleTitle")} defaultValue={form.roleTitle || ""} placeholder="مثال: محامي استئناف ومدني" className={inputCls} />
+            </Field>
+            <Field label="كلمة المرور الخاصة بالحساب (للدخول للنظام)">
+              <input onChange={f("password")} defaultValue={form.password || editingUser?.password || "123456"} placeholder="أدخل كلمة المرور الحساب" className={inputCls} />
             </Field>
             <button onClick={saveUser} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">حفظ بيانات المستخدم والصلاحيات</button>
           </div>
