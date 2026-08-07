@@ -6,7 +6,7 @@ import {
   Phone, Mail, MapPin, TrendingUp, ShieldCheck, Lock, UserCheck, Key,
   Check, Minus, Info, UserPlus, ShieldAlert, Edit2, User, RefreshCw,
   Send, MessageSquare, Share2, ExternalLink, FileText, CheckCheck, SendHorizontal, Filter,
-  Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download
+  Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download, Database, Code
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -49,7 +49,7 @@ const handleDownloadPDF = (elementId: string, filename: string) => {
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true, logging: false },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
+  } as any;
   
   html2pdf().set(opt).from(element).save().catch((err: any) => {
     console.error("PDF generation failed, falling back to window.print()", err);
@@ -78,7 +78,7 @@ export interface UserItem {
   phone: string;
   roleTitle: string;
   roleKey: "admin" | "lawyer" | "secretary" | "accountant";
-  status: "نشط" | "معطل";
+  status: "نشط" | "معطل" | "معلق" | "موقف" | "approved" | "pending";
   avatarBg: string;
   avatarText: string;
   permissions: RolePermissions;
@@ -539,6 +539,30 @@ const seedUsers: UserItem[] = [
     avatarBg: "bg-purple-500",
     avatarText: "مح",
     permissions: ROLE_PRESETS.accountant.permissions
+  },
+  {
+    id: 5,
+    name: "أ. خالد بن سيف آل علي",
+    email: "khaled.alali@lawfirm.ae",
+    phone: "0505566778",
+    roleTitle: "محامٍ متدرب (قيد التفعيل)",
+    roleKey: "lawyer",
+    status: "معلق",
+    avatarBg: "bg-amber-600 text-white",
+    avatarText: "خع",
+    permissions: ROLE_PRESETS.lawyer.permissions
+  },
+  {
+    id: 6,
+    name: "أ. مريم الحوسني",
+    email: "maryam.hosani@lawfirm.ae",
+    phone: "0506677889",
+    roleTitle: "منسقة شؤون الموكلين (جديد)",
+    roleKey: "secretary",
+    status: "معلق",
+    avatarBg: "bg-rose-500 text-white",
+    avatarText: "مح",
+    permissions: ROLE_PRESETS.secretary.permissions
   }
 ];
 
@@ -546,7 +570,93 @@ export const seedFeeAgreements: FeeAgreement[] = [];
 
 export const seedPayments: PaymentReceipt[] = [];
 
-const seedClients: Client[] = [];
+const seedClients: Client[] = [
+  { id: 1, name: "فوزية احمد عتيق علي المهيري", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 2, name: "خط السماء لصناعة عوادم السيارات- مؤسسة فردية", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 3, name: "دار سمرا للكمبيوتر ذ.م.م Dar Samra Computer L.L.C", type: "شركة", idNo: "100331456200003", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 4, name: "بريدج لخدمات الترجمة القانونية", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 5, name: "PAKIZA PROPERTIES L.L.C باكيزا للعقارات ش.ذ.م.م", type: "شركة", idNo: "105100974200003", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 6, name: "JOAN DAYAN CASTILLO", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "PH" },
+  { id: 7, name: "ابو بكر عبدالعزيز طلحة", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "SD" },
+  { id: 8, name: "Anthropic, PBC", type: "شركة", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "" },
+  { id: 9, name: "محمد سلطان الشامسي", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 10, name: "احمد مختار عيد محمد", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "EG" },
+  { id: 11, name: "aly mohsmed aly mohamed rehan", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "EG" },
+  { id: 12, name: "بنك المارية المحلي", type: "شركة", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
+  { id: 13, name: "بوابة الابتكار للحلول التكنولوجية", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 14, name: "شما جمال عبدالله سالم السويدي shamma jamal abdalla salim alsuwaidi", type: "فرد", idNo: "", phone: "", email: "shammaalsuwaidi5555@outlook.com", emirate: "دبي", address: "" },
+  { id: 15, name: "هونج كونج لتجارة أدوات التجميل ش.ذ.م.م HONG KONG COSMETICS TRADING L.L.C", type: "شركة", idNo: "104912672300003", phone: "", email: "hkcosmetics.pro@gmail.com", emirate: "دبي", address: "" },
+  { id: 16, name: "الاوائل لصناعة البلاستك ذ.م.م Al-Awail Plastic Manufacturing LLC", type: "شركة", idNo: "", phone: "", email: "Alawaelplasticindustry@gmail.com", emirate: "الشارقة", address: "" },
+  { id: 17, name: "محمد صدام محمد نواز Muhammad Saddam Muhammad Nawaz", type: "فرد", idNo: "", phone: "0501043543", email: "sadamnawaz23006@gmail.com", emirate: "دبي", address: "" },
+  { id: 18, name: "Day to day", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 19, name: "دار القضاء الشارقة-Sharjah Court House", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "" },
+  { id: 20, name: "مهند صالح- Muhannad Saleh", type: "فرد", idNo: "", phone: "", email: "Mohaneds45@hotmail.com", emirate: "خارج الدولة", address: "GB" },
+  { id: 21, name: "الأستاذ المحامي / هيثم احمد سيف العامري-Lawyer/Professor Haitham Ahmed Saif Al-Amri", type: "فرد", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
+  { id: 22, name: "الصافي لتنقية مياه الشرب-Al Safi for drinking water purification", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 23, name: "الهيئة العامة للمعاشات-General Authority for Pensions", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
+  { id: 24, name: "الشوؤن القانونية في دبي-Legal Affairs in Dubai", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 25, name: "الهيئة الاتحادية للضرائب-Federal Tax Authority", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
+  { id: 26, name: "FEDERAL TAX AUTHORITY", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
+  { id: 27, name: "ارامكس- Aramex", type: "شركة", idNo: "100212963100003", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 28, name: "name.com", type: "شركة", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "" },
+  { id: 29, name: "GOOGEL", type: "شركة", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "" },
+  { id: 30, name: "وزارة الموارد البشرية والتوطين-Ministry of Human Resources and Emiratization", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 31, name: "احمد طلال اليمن- Ahmed Talal Yemen", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "LB" },
+  { id: 32, name: "دائرة التنمية الاقتصادية بشارقة-Sharjah Department of Economic Development", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "" },
+  { id: 33, name: "بخيته صالح راشد راشد المنصوري-Bakhita Saleh Rashid Rashid Al Mansouri", type: "فرد", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
+  { id: 34, name: "Usk zinc industries", type: "شركة", idNo: "", phone: "", email: "mohammadumer.khalid@hotmail.com", emirate: "دبي", address: "" },
+  { id: 35, name: "Elin foodstuff treding", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 36, name: "PNP GLOBAL SUPPLY COMPANY LIMITED", type: "شركة", idNo: "", phone: "+84911330257", email: "michael.hua@pnpglobalsupply.com", emirate: "خارج الدولة", address: "VN" },
+  { id: 37, name: "Sharjah Electricity & Water Authority", type: "جهة حكومية", idNo: "100394961500003", phone: "", email: "", emirate: "الشارقة", address: "" },
+  { id: 38, name: "محمد عمر بن خالد خالد بشير-Muhammad Omar bin Khalid Khalid Bashir", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "PK" },
+  { id: 39, name: "نسرين انطونيوس ظاهر-Nasreen Antonios Daher", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "SY" },
+  { id: 40, name: "خليفة محمد احمد بيبي الشحي Khalifa Mohammed Ahmed Bibi Al Shehhi", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "" },
+  { id: 41, name: "بدر سعيد راشد سعيد الحبسي-Badr Saeed Rashid Saeed Al Habsi", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "" },
+  { id: 42, name: "Wafeq FZ LLC (Main)", type: "شركة", idNo: "100584752800003", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 43, name: "METHAQ TAKAFUL INSURANCE COMPANY", type: "شركة", idNo: "100000232700003", phone: "", email: "", emirate: "أبوظبي", address: "" },
+  { id: 44, name: "MINISTRY OF JUSTICE", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
+  { id: 45, name: "du", type: "شركة", idNo: "100001397700003", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 46, name: "محمد احمد عبيد بن جرش الفلاسي-Mohammed Ahmed Obeid between Jarash Al-Fals", type: "فرد", idNo: "", phone: "", email: "M.falasi87@gmail.com", emirate: "دبي", address: "" },
+  { id: 47, name: "ناعومي كمال الدين ظريف-Naomi Kamal El-Din Zarif", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 48, name: "عزة راشد سعيد ساعد الشميلي-Azza Rashid Saeed Saad Al-Shumaili", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "" },
+  { id: 49, name: "محمد صالح-Muhammad Saleh", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 50, name: "مريم محمد راشد-Maryam Mohammed Rashid", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 51, name: "نور عماد الدين إبراهيم-Nour Emad El-Din Ibrahim", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 52, name: "USK METALS L L C", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 53, name: "زينب بنت عبدالله بن غلوم البلوشية-Zainab bint Abdullah bin Ghloum Al Balushi", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 54, name: "خالد خليفة عبيد الغول-Khaled Khalifa Obaid Al-Ghul", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 55, name: "عمر مصطفى عيد محمد-Omar Mustafa Eid Muhammad", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 56, name: "عبدالله محمد عبدالله المازمي-Abdullah Mohammed Abdullah Al Mazmi", type: "فرد", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "" },
+  { id: 57, name: "أمير حسين جواد اقاباباني-Amir Hussein Jawad Aghababani", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "IR" },
+  { id: 58, name: "عذاري سعيد محمد الظنحاني Adhari Saeed Mohammed Al Dhanhani", type: "فرد", idNo: "", phone: "", email: "", emirate: "الفجيرة", address: "" },
+  { id: 59, name: "يعقوب حسن أحمد البنا-Yaqub Hassan Ahmed Al-Banna", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 60, name: "علا تحسين عبدالرؤف الفارس-Alaa Tahseen Abdul Raouf Al-Fares", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 61, name: "نادية يونس عثمان- Nadia Younes Othman", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 62, name: "احمد راشد الشميلي- Ahmed Rashid Al-Shumaili", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "" },
+  { id: 63, name: "امينة آل بيات Amina Al-Bayat", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 64, name: "عمر مصطفى عيد محمد (تابي ) Omar Mustafa Eid Muhammad (Tabi)", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 65, name: "خالد بشير أوان محمد بشير اختر Khaled Bashir Awan Mohammed Bashir Akhtar", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 66, name: "إبراهيم محسن قاسم عبدالله Ibrahim Mohsen Qasim Abdullah", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 67, name: "شركة دو  Du company", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 68, name: "sewa", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "" },
+  { id: 69, name: "فاروق احمد غلام اكبر-Farooq Ahmed Ghulam Akbar", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "PK" },
+  { id: 70, name: "ياروسلافا زولينا Yaroslava Zolina", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "UA" },
+  { id: 71, name: "راشد خميس فايز خميس مبارك-Rashid Khamis Fayez Khamis Mubarak", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 72, name: "محمد عبدالقادر سليمان حامد Mohammed Abdul Qader Suleiman Hamed", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "JO" },
+  { id: 73, name: "صلاح حسين حسن تهلك Salah Hussein Hassan perished", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 74, name: "خميس سعيد ساعد الحبسي Khamis Saeed Saad Al Habsi", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "" },
+  { id: 75, name: "كمال سالم راشد اليماحي Kamal Salem Rashid Al-Yamahi", type: "فرد", idNo: "", phone: "", email: "", emirate: "الفجيرة", address: "" },
+  { id: 76, name: "محمد خليفة عبدالله جاسم Mohammed Khalifa Abdullah Jassim", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 77, name: "كمال موسي حبيب حسن اليوسف Kamal Moussa Habib Hassan Al-Youssef", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 78, name: "محمود محمد غلاونجي Mahmoud Muhammad Ghalaounji", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "EG" },
+  { id: 79, name: "شيماء سعيد راشد ساعد الحبسي-Shaima Saeed Rashid Saad Al Habsi", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "" },
+  { id: 80, name: "سامي محروس عبدالغني مشعل-Sami Mahrous Abdelghani Mashal", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "EG" },
+  { id: 81, name: "رافي اكوب قره بتيان-Rafi Akop Karabetian", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "LB" },
+  { id: 82, name: "وزارة العدل- Ministry of Justice", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
+  { id: 83, name: "مؤسسة رواد-Pioneers Foundation", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "" },
+  { id: 84, name: "عبدالله الرستماني للعقارات-Abdullah Al Rostamani Real Estate", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
+  { id: 85, name: "إبراهيم علي عباس بيشوه البلوشي-Ibrahim Ali Abbas Bishouh Al-Balushi", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" }
+];
 
 const seedCases: CaseItem[] = [];
 
@@ -874,6 +984,340 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
 
 const inputCls = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200";
 
+// ============================================================
+// أكواد وشاشات Supabase RLS و User Approval Flow
+// ============================================================
+const SUPABASE_PROFILES_SQL = `-- 1. إنشاء جدول البروفايل مقترناً بـ Supabase Auth
+-- الحقل status قيمته الافتراضية 'pending' عند التسجيل
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  full_name TEXT NOT NULL,
+  role TEXT NOT NULL DEFAULT 'lawyer', -- 'admin', 'lawyer', 'secretary', 'accountant'
+  status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'approved', 'rejected', 'suspended'
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);`;
+
+const SUPABASE_RLS_SQL = `-- 2. تفعيل Row Level Security (RLS) على جميع جداول التطبيق
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.cases ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.hearings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
+
+-- 3. دالة فحص حالة المستخدم وهل تم اعتماد حسابه (status = 'approved')
+CREATE OR REPLACE FUNCTION public.is_approved_user()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1 FROM public.profiles
+    WHERE id = auth.uid() AND status IN ('approved', 'نشط')
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 4. سياسات RLS: تمنع القراءة أو التعديل لأي مستخدم ما لم تكن حالته 'approved'
+CREATE POLICY "السماح بالوصول للقضايا للمعتمدين فقط" ON public.cases
+  FOR ALL USING (public.is_approved_user());
+
+CREATE POLICY "السماح بالوصول للجلسات للمعتمدين فقط" ON public.hearings
+  FOR ALL USING (public.is_approved_user());
+
+CREATE POLICY "السماح بالوصول للموكلين للمعتمدين فقط" ON public.clients
+  FOR ALL USING (public.is_approved_user());
+
+CREATE POLICY "السماح بالوصول للمهام للمعتمدين فقط" ON public.tasks
+  FOR ALL USING (public.is_approved_user());
+
+CREATE POLICY "السماح بالوصول للفواتير للمعتمدين فقط" ON public.invoices
+  FOR ALL USING (public.is_approved_user());
+
+-- سياسة تمكين المستخدم من قراءة ملفه الشخصي لمعرفة حالته (pending / approved)
+CREATE POLICY "قراءة الملف الشخصي للمستخدم نفسه" ON public.profiles
+  FOR SELECT USING (auth.uid() = id OR public.is_approved_user());`;
+
+const SUPABASE_TRIGGER_SQL = `-- 5. إنشاء Trigger تلقائي لإنشاء بروفايل بحالة 'pending' فور تسجيل المستخدم في auth.users
+CREATE OR REPLACE FUNCTION public.handle_new_user_registration()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name, role, status)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', 'مستخدم جديد'),
+    'lawyer',
+    'pending' -- القيمة الافتراضية معلقة لحين موافقة الأدمن
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_registration();`;
+
+const REACT_PROTECTED_ROUTE_SQL = `// ============================================================
+// React Component: PendingApproval.jsx & ProtectedRoute
+// ============================================================
+import React, { useEffect, useState } from "react";
+import { supabase } from "./supabaseClient";
+
+export function ProtectedRoute({ children }) {
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState(null);
+
+  useEffect(() => {
+    async function checkUserStatus() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setStatus("unauthenticated");
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("status")
+        .eq("id", user.id)
+        .single();
+
+      if (error || !data) {
+        setStatus("pending");
+      } else {
+        setStatus(data.status); // 'pending' | 'approved' | 'نشط'
+      }
+      setLoading(false);
+    }
+
+    checkUserStatus();
+  }, []);
+
+  if (loading) return <div className="p-8 text-center font-bold">جاري التحقق من أمان الحساب...</div>;
+  if (status === "unauthenticated") return <LoginForm />;
+  if (status === "pending" || status === "معلق") return <PendingApprovalScreen />;
+
+  return children; // يوجه للوحة التحكم فقط إذا كان الحساب approved
+}`;
+
+interface SupabaseSqlModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onClose }) => {
+  const [activeTab, setActiveTab] = useState<"schema" | "rls" | "trigger" | "react">("schema");
+  const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
+
+  if (!isOpen) return null;
+
+  const getActiveCode = () => {
+    switch (activeTab) {
+      case "schema": return SUPABASE_PROFILES_SQL;
+      case "rls": return SUPABASE_RLS_SQL;
+      case "trigger": return SUPABASE_TRIGGER_SQL;
+      case "react": return REACT_PROTECTED_ROUTE_SQL;
+      default: return SUPABASE_PROFILES_SQL;
+    }
+  };
+
+  const handleCopy = (tabKey: string, codeText: string) => {
+    navigator.clipboard.writeText(codeText);
+    setCopiedIndex(tabKey);
+    setTimeout(() => setCopiedIndex(null), 2500);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-xs">
+      <div className="w-full max-w-3xl rounded-3xl bg-slate-900 text-slate-100 shadow-2xl border border-slate-700 overflow-hidden flex flex-col max-h-[90vh]">
+        {/* رأس المودال */}
+        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+              <Database size={20} />
+            </div>
+            <div>
+              <h3 className="font-bold text-white text-base">أكواد Supabase SQL و RLS الحية</h3>
+              <p className="text-xs text-slate-400">نظام إدارة العضويات، حظر الوصول (RLS) والموافقة على المستخدمين الجدد</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* أزرار التنقل بين السكريبتات */}
+        <div className="flex border-b border-slate-800 bg-slate-950/40 px-4 pt-2 gap-2 overflow-x-auto">
+          {[
+            { id: "schema", label: "1. جدول Profiles & Status", icon: Database },
+            { id: "rls", label: "2. سياسات RLS و is_approved_user", icon: ShieldCheck },
+            { id: "trigger", label: "3. Trigger التسجيل الآلي", icon: RefreshCw },
+            { id: "react", label: "4. كود React (ProtectedRoute)", icon: Code },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id as any)}
+              className={`flex items-center gap-2 px-4 py-2.5 text-xs font-bold rounded-t-xl transition border-b-2 whitespace-nowrap ${
+                activeTab === t.id
+                  ? "border-amber-400 text-amber-400 bg-slate-800/80"
+                  : "border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+              }`}
+            >
+              <t.icon size={15} /> {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* محتوى الكود المباشر */}
+        <div className="p-6 overflow-y-auto flex-1 space-y-4">
+          <div className="flex items-center justify-between bg-slate-800/60 p-3 rounded-xl border border-slate-700/60 text-xs text-slate-300">
+            <span>
+              {activeTab === "schema" && "أنشئ هذا الجدول في Supabase SQL Editor لربط بيانات البروفايل مع Supabase Auth بحالة افتراضية 'pending'."}
+              {activeTab === "rls" && "تفعيل RLS ودالة is_approved_user() لحظر أي محاولة قراءة أو كتابة على القضايا والجلسات للمستخدمين المعلقين."}
+              {activeTab === "trigger" && "ربط قاعدة البيانات بـ Auth Trigger لإدراج السجل تلقائياً بحالة معلقة بمجرد قيام المستخدم بالتسجيل."}
+              {activeTab === "react" && "مكون حماية المسارات (Protected Routes) في React لربط الواجهة وحجب الشاشات عن الحسابات غير المعتمَدة."}
+            </span>
+            <button
+              onClick={() => handleCopy(activeTab, getActiveCode())}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition shrink-0 text-xs"
+            >
+              {copiedIndex === activeTab ? <Check size={14} /> : <Copy size={14} />}
+              <span>{copiedIndex === activeTab ? "تم النسخ!" : "نسخ الكود"}</span>
+            </button>
+          </div>
+
+          <div className="relative rounded-2xl bg-slate-950 p-4 border border-slate-800 font-mono text-xs text-emerald-400 leading-relaxed overflow-x-auto shadow-inner">
+            <pre dir="ltr" className="whitespace-pre-wrap font-mono">
+              {getActiveCode()}
+            </pre>
+          </div>
+        </div>
+
+        {/* أسفل المودال */}
+        <div className="px-6 py-3 border-t border-slate-800 bg-slate-950 flex items-center justify-between text-xs text-slate-400">
+          <span className="flex items-center gap-1.5 text-amber-400 font-medium">
+            <ShieldCheck size={14} /> جاهز للتطبيق المباشر في Supabase SQL Editor
+          </span>
+          <button onClick={onClose} className="px-4 py-2 rounded-xl bg-slate-800 text-white font-bold hover:bg-slate-700 transition">
+            إغلاق
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const PendingApprovalScreen = ({
+  currentUser,
+  setCurrentUserId,
+  onOpenSqlModal
+}: {
+  currentUser: UserItem;
+  setCurrentUserId: (id: number) => void;
+  onOpenSqlModal: () => void;
+}) => {
+  const [checkState, setCheckState] = useState<string | null>(null);
+
+  const handleCheckStatus = () => {
+    if (currentUser.status === "نشط" || currentUser.status === "approved") {
+      setCheckState("approved");
+    } else {
+      setCheckState("still_pending");
+      setTimeout(() => setCheckState(null), 4000);
+    }
+  };
+
+  return (
+    <div className="min-h-[85vh] flex items-center justify-center p-4 sm:p-6 bg-slate-100/90">
+      <div className="w-full max-w-2xl rounded-3xl border border-amber-200 bg-white p-6 sm:p-8 shadow-xl space-y-6 text-right">
+        {/* رأس الصفحة والشعار */}
+        <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 border-b border-slate-100 pb-6 text-center sm:text-right">
+          <div className="flex items-center gap-3.5">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500 text-slate-900 shadow-md animate-pulse shrink-0">
+              <Hourglass size={30} />
+            </div>
+            <div>
+              <h2 className="text-xl font-black text-slate-900">طلب تفعيل الحساب قيد الانتظار</h2>
+              <p className="text-xs font-bold text-amber-700 mt-0.5">Pending Admin Approval • Supabase RLS Protected</p>
+            </div>
+          </div>
+          <span className="rounded-full bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1 text-xs font-bold shrink-0">
+            حساب معلق (Pending)
+          </span>
+        </div>
+
+        {/* الرسالة التوضيحية وسياسة الأمان */}
+        <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-xs text-amber-950 space-y-2 leading-relaxed">
+          <p className="font-bold text-sm flex items-center gap-2 text-amber-900">
+            <ShieldAlert size={18} className="text-amber-600 shrink-0" />
+            أهلاً بك، {currentUser.name}! تم تسجيل حسابك بنجاح في نظام إدارة المكتب.
+          </p>
+          <p>
+            وفقاً لنظام موافقة المستخدمين الجدد (User Approval Flow) ومحددات الأمان في <b>Supabase Row Level Security (RLS)</b>، تظل صلاحيات الاطلاع على القضايا والجلسات والمستندات محجوبة حتى يتلقى حسابه اعتماداً صريحاً من مدير النظام (Approved).
+          </p>
+        </div>
+
+        {/* بطاقة معلومات الحساب المعلق */}
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 space-y-2 text-xs">
+          <h3 className="font-bold text-slate-900 text-sm border-b border-slate-200 pb-2 flex items-center justify-between">
+            <span>تفاصيل طلب الحساب المقدم:</span>
+            <span className="text-slate-400 font-mono font-normal">ID: {currentUser.id}</span>
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-slate-700 pt-1">
+            <p><b>الاسم الكامل:</b> {currentUser.name}</p>
+            <p><b>البريد الإلكتروني:</b> {currentUser.email}</p>
+            <p><b>رقم الهاتف:</b> {currentUser.phone}</p>
+            <p><b>الدور المخصص:</b> {currentUser.roleTitle}</p>
+            <p><b>حالة الحساب الآن:</b> <span className="text-amber-700 font-bold">معلق (Pending Approval)</span></p>
+            <p><b>صلاحيات RLS:</b> <span className="text-red-600 font-bold">Access Denied (محظور)</span></p>
+          </div>
+        </div>
+
+        {/* إشعار فحص الحالة */}
+        {checkState === "still_pending" && (
+          <div className="p-3.5 rounded-xl bg-amber-100 border border-amber-300 text-xs text-amber-900 font-bold flex items-center gap-2">
+            <Info size={16} className="text-amber-600 shrink-0" />
+            <span>الحساب ما زال بحالة معلقة (Pending). يمكنك استخدام الزر أدناه للتبديل الفوري لحساب المدير وقبوله!</span>
+          </div>
+        )}
+
+        {/* أزرار الإجراءات التفاعلية */}
+        <div className="space-y-3 pt-2">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={handleCheckStatus}
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 px-4 text-xs font-bold text-white hover:bg-slate-800 transition shadow-sm"
+            >
+              <RefreshCw size={15} /> فحص وإعادة تحقق من الاعتماد
+            </button>
+            <button
+              onClick={onOpenSqlModal}
+              className="flex items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-50 py-3 px-4 text-xs font-bold text-amber-900 hover:bg-amber-100 transition"
+            >
+              <Database size={15} className="text-amber-600" /> عرض أكواد Supabase SQL
+            </button>
+          </div>
+
+          {/* زر تبديل سريع للمعاينة كمدير */}
+          <div className="rounded-2xl border border-blue-200 bg-blue-50/80 p-3.5 text-xs text-blue-900 space-y-2">
+            <p className="font-semibold flex items-center gap-1.5">
+              <UserCheck size={16} className="text-blue-600 shrink-0" /> تجربة النظام: التبديل إلى مدير النظام وتفعيل الحساب فوراً
+            </p>
+            <button
+              onClick={() => setCurrentUserId(1)} // سعود أحمد الشحي (المدير)
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-2.5 px-4 text-xs font-bold text-white hover:bg-blue-700 transition shadow-xs"
+            >
+              التبديل إلى حساب المدير (سعود أحمد الشحي) لـ قبول هذا الحساب
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const EmptyState = ({ icon: Icon, text }: { icon: any; text: string }) => (
   <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
     <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-100 text-slate-400">
@@ -1190,9 +1634,79 @@ export default function App() {
   const [q, setQ] = useState("");
   const [caseFilter, setCaseFilter] = useState("الكل");
 
+  // حالات إدارة الموكلين وجهات الاتصال
+  const [clientCategoryFilter, setClientCategoryFilter] = useState<string>("الكل");
+  const [clientSearch, setClientSearch] = useState<string>("");
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [clientToast, setClientToast] = useState<string | null>(null);
+
+  // نقل تصنيف الجهة أو الشخص يدوياً
+  const moveClientCategory = (clientId: number, newType: string) => {
+    if (!checkPerm("manageClients", "تعديل بيانات الموكل")) return;
+    const clientObj = clients.find((c) => c.id === clientId);
+    if (!clientObj) return;
+    setClients((prev) => prev.map((c) => (c.id === clientId ? { ...c, type: newType } : c)));
+    setClientToast(`تم نقل "${clientObj.name}" إلى تصنيف (${newType}) بنجاح`);
+    setTimeout(() => setClientToast(null), 4000);
+  };
+
+  // حفظ تعديل بيانات الموكل / جهة الاتصال
+  const saveEditClient = () => {
+    if (!checkPerm("manageClients", "تعديل بيانات الموكل")) return;
+    if (!editingClient || !editingClient.name) return;
+    setClients((prev) => prev.map((c) => (c.id === editingClient.id ? editingClient : c)));
+    setEditingClient(null);
+    setClientToast(`تم تحديث بيانات "${editingClient.name}" بنجاح`);
+    setTimeout(() => setClientToast(null), 4000);
+  };
+
+  // حذف موكل / جهة اتصال مع التحقق من وجود قضايا مرتبطة
+  const deleteClient = (clientId: number) => {
+    if (!checkPerm("manageClients", "حذف الموكل")) return;
+    const cObj = clients.find((c) => c.id === clientId);
+    if (!cObj) return;
+    const caseCount = cases.filter((x) => x.clientId === clientId).length;
+    if (caseCount > 0) {
+      alert(`لا يمكن حذف "${cObj.name}" لوجود ${caseCount} قضية مسجلة باسمه في النظام.`);
+      return;
+    }
+    if (confirm(`هل أنت تأكد من حذف "${cObj.name}" من سجل الموكلين وجهات الاتصال؟`)) {
+      setClients((prev) => prev.filter((c) => c.id !== clientId));
+      setClientToast(`تم حذف "${cObj.name}" بنجاح`);
+      setTimeout(() => setClientToast(null), 4000);
+    }
+  };
+
+  // حالة مودال Supabase SQL وتحديد المستخدمين المعلقين
+  const [showSupabaseModal, setShowSupabaseModal] = useState<boolean>(false);
+
+  const pendingUsers = useMemo(() => {
+    return users.filter((u) => u.status === "معلق" || u.status === "pending");
+  }, [users]);
+
   // المستخدم الحالي والصلاحيات النشطة
   const currentUser = useMemo(() => users.find((u) => u.id === currentUserId) || users[0], [users, currentUserId]);
   const userPerms = currentUser.permissions;
+
+  const approveUser = (userId: number) => {
+    if (!checkPerm("manageUsers", "الموافقة على المستخدمين")) return;
+    const target = users.find((u) => u.id === userId);
+    if (!target) return;
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, status: "نشط" } : u))
+    );
+    setPermissionNotice(`تم الاعتماد والقبول الصريح لحساب "${target.name}" بنجاح وتسليمه صلاحيات النظام!`);
+  };
+
+  const rejectUser = (userId: number) => {
+    if (!checkPerm("manageUsers", "إدارة المستخدمين")) return;
+    const target = users.find((u) => u.id === userId);
+    if (!target) return;
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, status: "موقف" } : u))
+    );
+    setPermissionNotice(`تم تعليق/رفض حساب "${target.name}".`);
+  };
 
   const clientName = (id: number) => clients.find((c) => c.id === id)?.name || "—";
   const caseNo = (id: number) => cases.find((c) => c.id === id)?.number || "—";
@@ -1750,7 +2264,7 @@ export default function App() {
   const NAV = [
     { id: "dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
     { id: "cases", label: "القضايا", icon: Briefcase },
-    { id: "clients", label: "الموكلون", icon: Users },
+    { id: "clients", label: "الموكلون وجهات الاتصال", icon: Users },
     { id: "hearings", label: "الجلسات والرول", icon: CalendarDays },
     { id: "courts_directory", label: "دليل المحاكم والجهات", icon: PhoneCall },
     { id: "tasks", label: "المهام", icon: ListChecks },
@@ -1776,7 +2290,7 @@ export default function App() {
   const selectedCase = cases.find((c) => c.id === caseView);
 
   return (
-    <div dir="rtl" className="min-h-screen bg-stone-100 text-slate-800 font-sans selection:bg-amber-200">
+    <div dir="rtl" className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-stone-100 text-slate-800 font-sans selection:bg-amber-200">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
         @media print {
@@ -1839,7 +2353,13 @@ export default function App() {
                 <Icon size={18} /><span>{label}</span>
                 {id === "poa" && stats.expiringPoa > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{stats.expiringPoa}</span>}
                 {id === "kyc" && kycDue > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{kycDue}</span>}
-                {id === "users" && <span className="mr-auto rounded-full bg-slate-800 border border-amber-500/40 text-[10px] px-1.5 py-0.2 text-amber-300 font-mono">{users.length}</span>}
+                {id === "users" && pendingUsers.length > 0 ? (
+                  <span className="mr-auto rounded-full bg-amber-500 text-slate-900 px-2 py-0.5 text-[11px] font-bold animate-pulse">
+                    {pendingUsers.length} معلق
+                  </span>
+                ) : id === "users" ? (
+                  <span className="mr-auto rounded-full bg-slate-800 border border-amber-500/40 text-[10px] px-1.5 py-0.2 text-amber-300 font-mono">{users.length}</span>
+                ) : null}
               </button>
             ))}
           </nav>
@@ -1850,7 +2370,7 @@ export default function App() {
         </aside>
 
         {/* ===== المحتوى ===== */}
-        <main className="flex-1">
+        <main className="flex-1 min-w-0 max-w-full overflow-x-hidden">
           {/* الشريط العلوي */}
           <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur md:px-6">
             <div className="flex items-center gap-2 md:hidden">
@@ -1893,6 +2413,10 @@ export default function App() {
               <Printer size={15} /> <span className="hidden sm:inline">تقرير القسم</span>
             </button>
 
+            <button onClick={() => setShowSupabaseModal(true)} className="flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900 hover:bg-amber-100 transition shadow-2xs" title="أكواد Supabase SQL و Row Level Security (RLS)">
+              <Database size={15} className="text-amber-600" /> <span className="hidden sm:inline">Supabase SQL & RLS</span>
+            </button>
+
             <button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100" aria-label="التنبيهات">
               <Bell size={20} />
               {notifCount > 0 && <span className="absolute -left-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">{notifCount}</span>}
@@ -1924,23 +2448,31 @@ export default function App() {
             ))}
           </div>
 
-          <div className="mx-auto max-w-6xl space-y-6 p-4 pb-24 md:p-6 md:pb-8">
+          <div className="mx-auto max-w-7xl w-full min-w-0 overflow-x-hidden space-y-6 p-3 sm:p-4 pb-24 md:p-6 md:pb-8">
 
-            {/* ================= لوحة التحكم ================= */}
-            {tab === "dashboard" && (
+            {currentUser.status === "معلق" || currentUser.status === "pending" ? (
+              <PendingApprovalScreen
+                currentUser={currentUser}
+                setCurrentUserId={setCurrentUserId}
+                onOpenSqlModal={() => setShowSupabaseModal(true)}
+              />
+            ) : (
               <>
-                <div className="flex flex-wrap items-end justify-between gap-3">
-                  <div>
-                    <h2 className="text-2xl font-bold text-slate-900">لوحة التحكم والأداء</h2>
-                    <p className="text-xs text-slate-500">نظرة عامة على أعمال المكتب والملفات القانونية والجلسات</p>
-                  </div>
-                  <button onClick={() => openModalWithCheck("case", "manageCases")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm">
-                    <Plus size={16} /> قضية جديدة
-                  </button>
-                </div>
+                {/* ================= لوحة التحكم ================= */}
+                {tab === "dashboard" && (
+                  <>
+                    <div className="flex flex-wrap items-end justify-between gap-3">
+                      <div>
+                        <h2 className="text-2xl font-bold text-slate-900">لوحة التحكم والأداء</h2>
+                        <p className="text-xs text-slate-500">نظرة عامة على أعمال المكتب والملفات القانونية والجلسات</p>
+                      </div>
+                      <button onClick={() => openModalWithCheck("case", "manageCases")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm">
+                        <Plus size={16} /> قضية جديدة
+                      </button>
+                    </div>
 
-                {/* بطاقات المؤشرات */}
-                <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                    {/* بطاقات المؤشرات */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                   {[
                     { label: "قضايا نشطة", value: stats.active, icon: Briefcase, tone: "bg-indigo-100 text-indigo-600" },
                     { label: "جلسات هذا الأسبوع", value: stats.weekHearings, icon: Gavel, tone: "bg-amber-100 text-amber-600" },
@@ -2138,44 +2670,343 @@ export default function App() {
               </>
             )}
 
-            {/* ================= الموكلون ================= */}
+            {/* ================= الموكلون وجهات الاتصال ================= */}
             {tab === "clients" && (
-              <>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold">إدارة الموكلين</h2>
-                    <p className="text-xs text-slate-500">سجل الشركات والأفراد المتعاملين مع المكتب</p>
+              <div className="space-y-6">
+                {/* تنبيه الإشعارات (Toast) */}
+                {clientToast && (
+                  <div className="flex items-center justify-between rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 shadow-sm transition">
+                    <span className="flex items-center gap-2 font-semibold">
+                      <CheckCircle2 size={18} className="text-emerald-600" /> {clientToast}
+                    </span>
+                    <button onClick={() => setClientToast(null)} className="text-emerald-700 hover:text-emerald-950">
+                      <X size={16} />
+                    </button>
                   </div>
-                  <button onClick={() => openModalWithCheck("client", "manageClients")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> موكل جديد</button>
+                )}
+
+                {/* العنوان ورأس الصفحة */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                      <Users className="text-amber-600" /> إدارة الموكلين وجهات الاتصال
+                    </h2>
+                    <p className="text-xs text-slate-500">سجل الأفراد والشركات والجهات الحكومية المتعاملة مع المكتب وتصنيفها</p>
+                  </div>
+                  <button
+                    onClick={() => openModalWithCheck("client", "manageClients")}
+                    className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 shadow-sm transition"
+                  >
+                    <Plus size={16} /> إضافة موكل / جهة اتصال جديدة
+                  </button>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {clients.map((c) => {
-                    const count = cases.filter((x) => x.clientId === c.id).length;
+
+                {/* كروت الإحصائيات السريعة والتوزيع */}
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-slate-500">إجمالي المسجلين</p>
+                      <p className="text-2xl font-black text-slate-900">{clients.length}</p>
+                    </div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+                      <Users size={20} />
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-blue-200 bg-blue-50/60 p-4 shadow-xs flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-blue-800">أفراد / أشخاص</p>
+                      <p className="text-2xl font-black text-blue-900">{clients.filter((c) => c.type === "فرد").length}</p>
+                    </div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+                      <User size={20} />
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4 shadow-xs flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-indigo-800">شركات ومؤسسات</p>
+                      <p className="text-2xl font-black text-indigo-900">{clients.filter((c) => c.type === "شركة").length}</p>
+                    </div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-700">
+                      <Building2 size={20} />
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 shadow-xs flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-semibold text-amber-800">جهات حكومية ورسمية</p>
+                      <p className="text-2xl font-black text-amber-950">{clients.filter((c) => c.type === "جهة حكومية").length}</p>
+                    </div>
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-800">
+                      <Landmark size={20} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* شريط الفرز والتصنيف + البحث السريع */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3 rounded-2xl border border-slate-200 shadow-xs">
+                  <div className="flex flex-wrap items-center gap-1.5 text-xs font-medium">
+                    {[
+                      { id: "الكل", label: "الكل", count: clients.length, icon: Users },
+                      { id: "فرد", label: "أفراد / أشخاص", count: clients.filter((c) => c.type === "فرد").length, icon: User },
+                      { id: "شركة", label: "شركات ومؤسسات", count: clients.filter((c) => c.type === "شركة").length, icon: Building2 },
+                      { id: "جهة حكومية", label: "جهات حكومية", count: clients.filter((c) => c.type === "جهة حكومية").length, icon: Landmark },
+                      { id: "جهة أخرى", label: "جهات أخرى", count: clients.filter((c) => c.type === "جهة أخرى").length, icon: Globe },
+                    ].map((cat) => {
+                      const IconComp = cat.icon;
+                      const isActive = clientCategoryFilter === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          onClick={() => setClientCategoryFilter(cat.id)}
+                          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition ${
+                            isActive
+                              ? "bg-slate-900 text-amber-400 font-bold shadow-xs"
+                              : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900"
+                          }`}
+                        >
+                          <IconComp size={14} />
+                          <span>{cat.label}</span>
+                          <span className={`rounded-full px-1.5 py-0.2 text-[10px] ${isActive ? "bg-amber-400 text-slate-900 font-bold" : "bg-slate-200 text-slate-800"}`}>
+                            {cat.count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="relative w-full sm:w-64">
+                    <Search size={15} className="absolute right-3 top-2.5 text-slate-400" />
+                    <input
+                      type="text"
+                      value={clientSearch}
+                      onChange={(e) => setClientSearch(e.target.value)}
+                      placeholder="بحث بالاسم، الرخصة، الهاتف..."
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50 pr-9 pl-8 py-1.5 text-xs focus:border-amber-500 focus:bg-white focus:outline-none"
+                    />
+                    {clientSearch && (
+                      <button onClick={() => setClientSearch("")} className="absolute left-2.5 top-2.5 text-slate-400 hover:text-slate-600">
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* قائمة الكروت للمتعاملين وجهات الاتصال */}
+                {(() => {
+                  const filteredList = clients.filter((c) => {
+                    const matchesCategory = clientCategoryFilter === "الكل" || c.type === clientCategoryFilter;
+                    const query = clientSearch.trim().toLowerCase();
+                    const matchesSearch =
+                      !query ||
+                      c.name.toLowerCase().includes(query) ||
+                      (c.idNo && c.idNo.toLowerCase().includes(query)) ||
+                      (c.phone && c.phone.includes(query)) ||
+                      (c.email && c.email.toLowerCase().includes(query)) ||
+                      (c.emirate && c.emirate.toLowerCase().includes(query)) ||
+                      (c.address && c.address.toLowerCase().includes(query));
+                    return matchesCategory && matchesSearch;
+                  });
+
+                  if (filteredList.length === 0) {
                     return (
-                      <div key={c.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div className="flex items-start gap-3">
-                          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${c.type === "شركة" ? "bg-indigo-100 text-indigo-600" : "bg-amber-100 text-amber-600"}`}>
-                            {c.type === "شركة" ? <Building2 size={20} /> : <Users size={20} />}
-                          </div>
-                          <div className="min-w-0">
-                            <h3 className="truncate font-bold">{c.name}</h3>
-                            <p className="text-xs text-slate-500">{c.type} — {c.idNo}</p>
-                          </div>
-                        </div>
-                        <div className="mt-4 space-y-1.5 text-xs text-slate-600">
-                          <p className="flex items-center gap-2"><Phone size={13} className="text-slate-400" /> {c.phone}</p>
-                          <p className="flex items-center gap-2"><Mail size={13} className="text-slate-400" /> {c.email}</p>
-                          <p className="flex items-center gap-2"><MapPin size={13} className="text-slate-400" /> {c.emirate} — {c.address}</p>
-                        </div>
-                        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
-                          <span className="text-xs text-slate-500">القضايا: <b className="text-slate-800">{count}</b></span>
-                          <button onClick={() => { setTab("cases"); setQ(c.name); }} className="text-xs font-semibold text-amber-600 hover:underline">عرض القضايا</button>
-                        </div>
+                      <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-500 space-y-2">
+                        <Users size={40} className="mx-auto text-slate-300" />
+                        <p className="font-bold text-slate-700">لا توجد نتائج مطابقة لتصنيفك أو كلمات البحث</p>
+                        <p className="text-xs">جرب تغيير التصنيف أو مسح كلمة البحث للإظهار.</p>
                       </div>
                     );
-                  })}
-                </div>
-              </>
+                  }
+
+                  return (
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {filteredList.map((c) => {
+                        const count = cases.filter((x) => x.clientId === c.id).length;
+                        const isGov = c.type === "جهة حكومية";
+                        const isCompany = c.type === "شركة";
+                        const isIndividual = c.type === "فرد";
+
+                        const badgeStyle = isGov
+                          ? "bg-amber-100 text-amber-900 border-amber-300"
+                          : isCompany
+                          ? "bg-indigo-100 text-indigo-900 border-indigo-300"
+                          : isIndividual
+                          ? "bg-blue-100 text-blue-900 border-blue-300"
+                          : "bg-slate-100 text-slate-800 border-slate-300";
+
+                        const IconComp = isGov ? Landmark : isCompany ? Building2 : isIndividual ? User : Globe;
+
+                        return (
+                          <div key={c.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition">
+                            <div>
+                              {/* شريط الكارت العلوي */}
+                              <div className="flex items-start justify-between gap-2">
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${badgeStyle}`}>
+                                    <IconComp size={20} />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <h3 className="truncate font-bold text-slate-900 text-sm" title={c.name}>{c.name}</h3>
+                                    <span className={`inline-block mt-0.5 rounded-md px-2 py-0.5 text-[10px] font-bold border ${badgeStyle}`}>
+                                      {c.type}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <button
+                                    onClick={() => setEditingClient(c)}
+                                    className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition"
+                                    title="تعديل البيانات"
+                                  >
+                                    <Edit2 size={14} />
+                                  </button>
+                                  <button
+                                    onClick={() => deleteClient(c.id)}
+                                    className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                                    title="حذف"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </div>
+
+                              {/* التفاصيل المعروضة */}
+                              <div className="mt-4 space-y-1.5 text-xs text-slate-600 border-t border-slate-100 pt-3">
+                                {c.idNo && <p className="font-mono text-[11px] text-slate-500">رقم الهوية / الرخصة: <b className="text-slate-800">{c.idNo}</b></p>}
+                                <p className="flex items-center gap-2"><Phone size={13} className="text-slate-400" /> {c.phone || "—"}</p>
+                                <p className="flex items-center gap-2"><Mail size={13} className="text-slate-400" /> {c.email || "—"}</p>
+                                <p className="flex items-center gap-2"><MapPin size={13} className="text-slate-400" /> {c.emirate} {c.address ? `— ${c.address}` : ""}</p>
+                              </div>
+                            </div>
+
+                            {/* أسفل الكارت: التحكم بالنقل اليدوي ورابط القضايا */}
+                            <div className="mt-4 pt-3 border-t border-slate-100 space-y-2">
+                              {/* ميزة النقل اليدوي السريع بين التصنيفات */}
+                              <div className="flex items-center justify-between bg-slate-50 px-2.5 py-1.5 rounded-xl border border-slate-200 text-xs">
+                                <span className="text-[11px] font-semibold text-slate-500 whitespace-nowrap">نقل التصنيف:</span>
+                                <select
+                                  value={c.type}
+                                  onChange={(e) => moveClientCategory(c.id, e.target.value)}
+                                  className="bg-transparent font-bold text-slate-800 focus:outline-none cursor-pointer text-xs"
+                                  title="نقل الشخص أو الجهة يدويًا إلى تصنيف مختلف"
+                                >
+                                  <option value="فرد">فرد (شخص)</option>
+                                  <option value="شركة">شركة / مؤسسة</option>
+                                  <option value="جهة حكومية">جهة حكومية</option>
+                                  <option value="جهة أخرى">جهة أخرى</option>
+                                </select>
+                              </div>
+
+                              <div className="flex items-center justify-between text-xs pt-1">
+                                <span className="text-slate-500">القضايا المسجلة: <b className="text-slate-900 font-bold">{count}</b></span>
+                                {count > 0 ? (
+                                  <button onClick={() => { setTab("cases"); setQ(c.name); }} className="font-semibold text-amber-600 hover:underline">
+                                    عرض القضايا ({count})
+                                  </button>
+                                ) : (
+                                  <span className="text-[11px] text-slate-400">لا توجد قضايا</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+
+                {/* مودال تعديل بيانات الموكل / جهة الاتصال */}
+                {editingClient && (
+                  <Modal title="تعديل بيانات الموكل / جهة الاتصال" onClose={() => setEditingClient(null)}>
+                    <div className="space-y-4 text-sm">
+                      <Field label="الاسم الكامل / اسم الشركة / الجهة">
+                        <input
+                          value={editingClient.name}
+                          onChange={(e) => setEditingClient({ ...editingClient, name: e.target.value })}
+                          placeholder="الاسم"
+                          className={inputCls}
+                        />
+                      </Field>
+                      <div className="grid grid-cols-2 gap-3">
+                        <Field label="الصفة / التصنيف">
+                          <select
+                            value={editingClient.type}
+                            onChange={(e) => setEditingClient({ ...editingClient, type: e.target.value })}
+                            className={inputCls}
+                          >
+                            <option value="فرد">فرد (شخص)</option>
+                            <option value="شركة">شركة / مؤسسة</option>
+                            <option value="جهة حكومية">جهة حكومية / رسمية</option>
+                            <option value="جهة أخرى">جهة أخرى</option>
+                          </select>
+                        </Field>
+                        <Field label="الهوية / الرخصة / الرقم الضريبي">
+                          <input
+                            value={editingClient.idNo || ""}
+                            onChange={(e) => setEditingClient({ ...editingClient, idNo: e.target.value })}
+                            placeholder="رقم الهوية أو الرخصة"
+                            className={inputCls}
+                          />
+                        </Field>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <Field label="رقم الهاتف">
+                          <input
+                            value={editingClient.phone || ""}
+                            onChange={(e) => setEditingClient({ ...editingClient, phone: e.target.value })}
+                            placeholder="050-XXXXXXX"
+                            className={inputCls}
+                          />
+                        </Field>
+                        <Field label="الإمارة / الموقع">
+                          <select
+                            value={editingClient.emirate || "دبي"}
+                            onChange={(e) => setEditingClient({ ...editingClient, emirate: e.target.value })}
+                            className={inputCls}
+                          >
+                            <option>دبي</option>
+                            <option>أبوظبي</option>
+                            <option>الشارقة</option>
+                            <option>رأس الخيمة</option>
+                            <option>عجمان</option>
+                            <option>أم القيوين</option>
+                            <option>الفجيرة</option>
+                            <option>خارج الدولة</option>
+                          </select>
+                        </Field>
+                      </div>
+                      <Field label="البريد الإلكتروني">
+                        <input
+                          value={editingClient.email || ""}
+                          onChange={(e) => setEditingClient({ ...editingClient, email: e.target.value })}
+                          placeholder="example@domain.ae"
+                          className={inputCls}
+                        />
+                      </Field>
+                      <Field label="العنوان / تفاصيل إضافية">
+                        <input
+                          value={editingClient.address || ""}
+                          onChange={(e) => setEditingClient({ ...editingClient, address: e.target.value })}
+                          placeholder="العنوان التفصيلي"
+                          className={inputCls}
+                        />
+                      </Field>
+                      <div className="flex gap-3 pt-2">
+                        <button
+                          onClick={saveEditClient}
+                          className="flex-1 rounded-xl bg-slate-900 py-2.5 font-bold text-white hover:bg-slate-800 transition"
+                        >
+                          حفظ التعديلات
+                        </button>
+                        <button
+                          onClick={() => setEditingClient(null)}
+                          className="rounded-xl border border-slate-300 px-4 py-2.5 font-bold text-slate-700 hover:bg-slate-100 transition"
+                        >
+                          إلغاء
+                        </button>
+                      </div>
+                    </div>
+                  </Modal>
+                )}
+              </div>
             )}
 
             {/* ================= الجلسات والرول والمواعيد ================= */}
@@ -3282,7 +4113,7 @@ export default function App() {
 
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-[11px] text-emerald-900 space-y-1.5">
           <p className="font-bold flex items-center gap-1.5"><CheckCircle2 size={14} /> ماذا يحدث تلقائياً عند الحفظ؟</p>
-          <p>1️⃣ الموكل الجديد يُضاف مباشرة إلى تبويب "الموكلون".</p>
+          <p>1️⃣ الموكل الجديد يُضاف مباشرة إلى تبويب "الموكلون وجهات الاتصال".</p>
           <p>2️⃣ تُنشأ اتفاقية أتعاب برقم AGR تلقائي في "اتفاقيات الأتعاب".</p>
           <p>3️⃣ الدفعات تنزل كجدول أقساط، والمسددة عند التوقيع يُنشأ لها سند قبض في "سندات القبض والدفعات".</p>
           <p>4️⃣ تُحفظ نسخة الاتفاقية بالأرشيف للطباعة في أي وقت.</p>
@@ -3744,6 +4575,82 @@ export default function App() {
                   </button>
                 </div>
 
+                {/* قسم طلبات التفعيل المعلقة Supabase User Approval Flow */}
+                <div className="rounded-2xl border border-amber-300 bg-amber-50/80 p-5 shadow-sm space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200 pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-slate-900 font-bold shadow-xs">
+                        <Hourglass size={20} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                          طلبات الاعتماد والموافقة على المستخدمين الجدد (User Approval Flow)
+                          {pendingUsers.length > 0 && (
+                            <span className="rounded-full bg-amber-500 text-slate-900 px-2.5 py-0.5 text-xs font-bold">
+                              {pendingUsers.length} معلق
+                            </span>
+                          )}
+                        </h3>
+                        <p className="text-xs text-slate-600">
+                          المستخدمون المسجلون بحالة معلقة (status: 'pending') بحاجة لموافقة صريحة لفك حظر Supabase RLS
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setShowSupabaseModal(true)}
+                      className="flex items-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
+                    >
+                      <Database size={15} /> عرض سكريبتات Supabase SQL & RLS
+                    </button>
+                  </div>
+
+                  {pendingUsers.length === 0 ? (
+                    <div className="p-4 rounded-xl bg-white border border-amber-200/80 text-xs text-slate-600 flex items-center justify-between">
+                      <p className="flex items-center gap-2">
+                        <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                        لا توجد طلبات تسجيل معلقة حالياً. جميع الحسابات نشطة ومصرح لها بالدخول للنظام.
+                      </p>
+                      <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">RLS Status: All Approved</span>
+                    </div>
+                  ) : (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {pendingUsers.map((pUser) => (
+                        <div key={pUser.id} className="rounded-2xl border border-amber-300 bg-white p-4 shadow-sm space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                                {pUser.name}
+                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold border border-amber-300">
+                                  معلق (Pending)
+                                </span>
+                              </h4>
+                              <p className="text-xs text-slate-500 mt-0.5">{pUser.email} • {pUser.phone}</p>
+                            </div>
+                            <span className="text-xs font-semibold px-2 py-1 rounded-lg bg-slate-100 text-slate-700 shrink-0">
+                              {pUser.roleTitle}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                            <button
+                              onClick={() => approveUser(pUser.id)}
+                              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-xs"
+                            >
+                              <UserCheck size={14} /> قبول وتفعيل الحساب (Approved)
+                            </button>
+                            <button
+                              onClick={() => rejectUser(pUser.id)}
+                              className="flex items-center justify-center gap-1 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100 transition"
+                            >
+                              <Trash2 size={14} /> رفض
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 {/* بطاقة الحساب الحالي الناشط */}
                 <div className="p-4 rounded-2xl bg-gradient-to-l from-slate-900 to-slate-800 text-white shadow-md flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
@@ -3828,9 +4735,28 @@ export default function App() {
                                 <p className="text-slate-400">{u.phone}</p>
                               </td>
                               <td className="px-4 py-3">
-                                <Badge className={u.status === "نشط" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}>
-                                  {u.status}
-                                </Badge>
+                                {u.status === "نشط" || u.status === "approved" ? (
+                                  <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold">
+                                    نشط (Approved)
+                                  </Badge>
+                                ) : u.status === "معلق" || u.status === "pending" ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <Badge className="bg-amber-100 text-amber-900 border border-amber-300 font-bold animate-pulse">
+                                      معلق (Pending)
+                                    </Badge>
+                                    <button
+                                      onClick={() => approveUser(u.id)}
+                                      className="px-2 py-0.5 rounded-lg bg-emerald-600 text-white font-bold text-[10px] hover:bg-emerald-700 transition"
+                                      title="قبول واعتماد الحساب"
+                                    >
+                                      قبول
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <Badge className="bg-slate-100 text-slate-500">
+                                    {u.status}
+                                  </Badge>
+                                )}
                               </td>
                               <td className="px-4 py-3 text-center">
                                 <span className="font-mono text-xs font-bold text-slate-800">
@@ -4264,8 +5190,8 @@ export default function App() {
                 })()}
               </div>
             )}
-
-
+          </>
+        )}
 
           </div>
         </main>
@@ -4312,20 +5238,22 @@ export default function App() {
       )}
 
       {modal === "client" && (
-        <Modal title="إضافة موكل جديد" onClose={() => setModal(null)}>
+        <Modal title="إضافة موكل / جهة اتصال جديدة" onClose={() => setModal(null)}>
           <div className="space-y-4 text-sm">
-            <Field label="اسم الموكل / الشركة">
-              <input onChange={f("name")} placeholder="الاسم الكامل أو اسم الشركة" className={inputCls} />
+            <Field label="الاسم الكامل / اسم الشركة / الجهة">
+              <input onChange={f("name")} placeholder="الاسم الكامل أو اسم الشركة أو الجهة" className={inputCls} />
             </Field>
             <div className="grid grid-cols-2 gap-3">
-              <Field label="الصفة">
+              <Field label="الصفة / التصنيف">
                 <select onChange={f("type")} className={inputCls}>
-                  <option>فرد</option>
-                  <option>شركة</option>
+                  <option value="فرد">فرد (شخص)</option>
+                  <option value="شركة">شركة / مؤسسة</option>
+                  <option value="جهة حكومية">جهة حكومية / رسمية</option>
+                  <option value="جهة أخرى">جهة أخرى</option>
                 </select>
               </Field>
-              <Field label="الهوية / الرخصة">
-                <input onChange={f("idNo")} placeholder="الهوية الإماراتية أو الرخصة" className={inputCls} />
+              <Field label="الهوية / الرخصة / الرقم الضريبي">
+                <input onChange={f("idNo")} placeholder="الهوية الإماراتية أو الرخصة التجارية" className={inputCls} />
               </Field>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -4333,7 +5261,7 @@ export default function App() {
                 <input onChange={f("phone")} placeholder="050-XXXXXXX" className={inputCls} />
               </Field>
 
-              <Field label="الإمارة">
+              <Field label="الإمارة / الموقع">
                 <select onChange={f("emirate")} className={inputCls}>
                   <option>دبي</option>
                   <option>أبوظبي</option>
@@ -4342,13 +5270,19 @@ export default function App() {
                   <option>عجمان</option>
                   <option>أم القيوين</option>
                   <option>الفجيرة</option>
+                  <option>خارج الدولة</option>
                 </select>
               </Field>
             </div>
             <Field label="البريد الإلكتروني">
               <input onChange={f("email")} placeholder="example@email.ae" className={inputCls} />
             </Field>
-            <button onClick={saveClient} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">حفظ الموكل</button>
+            <Field label="العنوان / تفاصيل إضافية">
+              <input onChange={f("address")} placeholder="العنوان التفصيلي" className={inputCls} />
+            </Field>
+            <button onClick={saveClient} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-800 transition">
+              حفظ وتأكيد الإضافة
+            </button>
           </div>
         </Modal>
       )}
@@ -5722,6 +6656,8 @@ export default function App() {
         );
       })()}
 
+      {/* ═══ مودال أكواد Supabase SQL و RLS ═══ */}
+      <SupabaseSqlModal isOpen={showSupabaseModal} onClose={() => setShowSupabaseModal(false)} />
     </div>
   );
 }
