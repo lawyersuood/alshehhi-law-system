@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { supabase, sendWhatsAppViaEdgeFunction } from "./supabaseClient";
 import {
   Scale, LayoutDashboard, Briefcase, Users, CalendarDays, ListChecks,
   Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, Building2,
@@ -6,7 +7,8 @@ import {
   Phone, Mail, MapPin, TrendingUp, ShieldCheck, Lock, UserCheck, Key,
   Check, Minus, Info, UserPlus, ShieldAlert, Edit2, User, RefreshCw,
   Send, MessageSquare, Share2, ExternalLink, FileText, CheckCheck, SendHorizontal, Filter,
-  Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download, Database, Code, LogOut
+  Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download, Database, Code, LogOut,
+  Inbox, Paperclip, RotateCw, QrCode
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -83,6 +85,10 @@ export interface UserItem {
   avatarBg: string;
   avatarText: string;
   permissions: RolePermissions;
+  canTransferContacts?: boolean;
+  canViewAgreements?: boolean;
+  canAccessWhatsapp?: boolean;
+  canViewFinances?: boolean;
 }
 
 export type FeeAgreementStatus = "نشطة" | "مسددة بالكامل" | "ملغاة";
@@ -1066,6 +1072,26 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_registration();`;
 
+const SUPABASE_WHATSAPP_MESSAGES_SQL = `-- 6. إنشاء جدول whatsapp_messages للمراسلات ومتابعة الـ Webhook و Edge Function
+CREATE TABLE IF NOT EXISTS public.whatsapp_messages (
+  id BIGSERIAL PRIMARY KEY,
+  phone_number TEXT NOT NULL,
+  contact_name TEXT,
+  sender TEXT NOT NULL CHECK (sender IN ('me', 'them', 'user', 'business')),
+  message_body TEXT NOT NULL,
+  status TEXT DEFAULT 'sent', -- 'sent', 'delivered', 'read', 'pending', 'failed'
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- تفعيل الـ RLS وتمكين المعتمدين من الاستعلام المباشر لحظياً
+ALTER TABLE public.whatsapp_messages ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "السماح بالمراسلات للمعتمدين فقط" ON public.whatsapp_messages
+  FOR ALL USING (public.is_approved_user());
+
+-- تفعيل Realtime على جدول المراسلات لتحديث المحادثات فورياً
+ALTER PUBLICATION supabase_realtime ADD TABLE public.whatsapp_messages;`;
+
 const REACT_PROTECTED_ROUTE_SQL = `// ============================================================
 // React Component: PendingApproval.jsx & ProtectedRoute
 // ============================================================
@@ -1115,7 +1141,7 @@ interface SupabaseSqlModalProps {
 }
 
 const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<"schema" | "rls" | "trigger" | "react">("schema");
+  const [activeTab, setActiveTab] = useState<"schema" | "rls" | "trigger" | "whatsapp" | "react">("schema");
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
 
   if (!isOpen) return null;
@@ -1125,6 +1151,7 @@ const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onClose }) 
       case "schema": return SUPABASE_PROFILES_SQL;
       case "rls": return SUPABASE_RLS_SQL;
       case "trigger": return SUPABASE_TRIGGER_SQL;
+      case "whatsapp": return SUPABASE_WHATSAPP_MESSAGES_SQL;
       case "react": return REACT_PROTECTED_ROUTE_SQL;
       default: return SUPABASE_PROFILES_SQL;
     }
@@ -1146,8 +1173,8 @@ const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onClose }) 
               <Database size={20} />
             </div>
             <div>
-              <h3 className="font-bold text-white text-base">أكواد Supabase SQL و RLS الحية</h3>
-              <p className="text-xs text-slate-400">نظام إدارة العضويات، حظر الوصول (RLS) والموافقة على المستخدمين الجدد</p>
+              <h3 className="font-bold text-white text-base">أكواد Supabase SQL و RLS و WhatsApp Edge Function</h3>
+              <p className="text-xs text-slate-400">نظام إدارة العضويات، حظر الوصول (RLS) ومزامنة جدول whatsapp_messages و Edge Function</p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition">
@@ -1161,7 +1188,8 @@ const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onClose }) 
             { id: "schema", label: "1. جدول Profiles & Status", icon: Database },
             { id: "rls", label: "2. سياسات RLS و is_approved_user", icon: ShieldCheck },
             { id: "trigger", label: "3. Trigger التسجيل الآلي", icon: RefreshCw },
-            { id: "react", label: "4. كود React (ProtectedRoute)", icon: Code },
+            { id: "whatsapp", label: "4. جدول whatsapp_messages & Realtime", icon: MessageSquare },
+            { id: "react", label: "5. كود React (ProtectedRoute)", icon: Code },
           ].map((t) => (
             <button
               key={t.id}
@@ -1184,6 +1212,7 @@ const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onClose }) 
               {activeTab === "schema" && "أنشئ هذا الجدول في Supabase SQL Editor لربط بيانات البروفايل مع Supabase Auth بحالة افتراضية 'pending'."}
               {activeTab === "rls" && "تفعيل RLS ودالة is_approved_user() لحظر أي محاولة قراءة أو كتابة على القضايا والجلسات للمستخدمين المعلقين."}
               {activeTab === "trigger" && "ربط قاعدة البيانات بـ Auth Trigger لإدراج السجل تلقائياً بحالة معلقة بمجرد قيام المستخدم بالتسجيل."}
+              {activeTab === "whatsapp" && "جدول whatsapp_messages مع تفعيل Supabase Realtime ودعم Edge Function: send-whatsapp-message."}
               {activeTab === "react" && "مكون حماية المسارات (Protected Routes) في React لربط الواجهة وحجب الشاشات عن الحسابات غير المعتمَدة."}
             </span>
             <button
@@ -1362,9 +1391,33 @@ interface LoginScreenProps {
 
 const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, onOpenSqlModal }) => {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
-  const [emailInput, setEmailInput] = useState<string>("");
-  const [passwordInput, setPasswordInput] = useState<string>("");
+  const [rememberMe, setRememberMe] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("law_firm_remember_me") === "true";
+    } catch {
+      return false;
+    }
+  });
+  const [emailInput, setEmailInput] = useState<string>(() => {
+    try {
+      return localStorage.getItem("law_firm_saved_email") || "";
+    } catch {
+      return "";
+    }
+  });
+  const [passwordInput, setPasswordInput] = useState<string>(() => {
+    try {
+      return localStorage.getItem("law_firm_saved_pass") || "";
+    } catch {
+      return "";
+    }
+  });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Forgot Password State
+  const [showForgotModal, setShowForgotModal] = useState<boolean>(false);
+  const [forgotEmail, setForgotEmail] = useState<string>("");
+  const [forgotSuccessMsg, setForgotSuccessMsg] = useState<string | null>(null);
 
   // Register Form State
   const [regName, setRegName] = useState("");
@@ -1389,11 +1442,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
       return;
     }
 
-    // دخول سريع للمبرمج أثناء وضع التطوير
-    if (cleanedEmail === "dev" || cleanedEmail === "admin" || cleanedEmail === "developer" || cleanedEmail === "1234") {
-      const adminUser = users.find((u) => u.roleKey === "admin") || users[0];
-      onLogin(adminUser.id);
-      return;
+    // حفظ أو مسح بيانات التذكر
+    try {
+      if (rememberMe) {
+        localStorage.setItem("law_firm_remember_me", "true");
+        localStorage.setItem("law_firm_saved_email", emailInput.trim());
+        localStorage.setItem("law_firm_saved_pass", passwordInput.trim());
+      } else {
+        localStorage.removeItem("law_firm_remember_me");
+        localStorage.removeItem("law_firm_saved_email");
+        localStorage.removeItem("law_firm_saved_pass");
+      }
+    } catch {
+      // تجاهل أخطاء التخزين في البيئات المقيّدة
     }
 
     const targetUser = users.find(
@@ -1401,7 +1462,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
     );
 
     if (!targetUser) {
-      setErrorMsg("اسم المستخدم أو البريد الإلكتروني غير مسجل بالنظام. يرجى التأكد من البيانات أو استخدام زر دخول المطور.");
+      setErrorMsg("اسم المستخدم أو البريد الإلكتروني غير مسجل بالنظام. يرجى التأكد من بيانات الحساب.");
       return;
     }
 
@@ -1412,7 +1473,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
 
     // التحقق من كلمة المرور
     const userPass = targetUser.password || "123456";
-    if (cleanedPass !== userPass && cleanedPass !== "123456" && cleanedPass !== "dev") {
+    if (cleanedPass !== userPass && cleanedPass !== "123456") {
       setErrorMsg("كلمة المرور غير صحيحة. يرجى التأكد من كلمة المرور المدخلة والتحقق من حسابك.");
       return;
     }
@@ -1452,16 +1513,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
           </div>
           <div>
             <h1 className="text-base font-bold text-white tracking-wide">سعود أحمد الشحي للمحاماة والاستشارات القانونية</h1>
-            <p className="text-[11px] text-amber-400 font-medium">البوابة الإلكترونية الموحدة • الشارقة، الإمارات</p>
+            <p className="text-[11px] text-amber-400 font-medium">البوابة الإلكترونية الموحدة • الإمارات العربية المتحدة</p>
           </div>
         </div>
-
-        <button
-          onClick={onOpenSqlModal}
-          className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 text-xs font-bold transition"
-        >
-          <Database size={15} /> Supabase SQL & RLS
-        </button>
       </header>
 
       {/* محتوى الشاشة */}
@@ -1527,9 +1581,18 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
-                    كلمة المرور السرية <span className="text-amber-400">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-300">
+                      كلمة المرور السرية <span className="text-amber-400">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotModal(true)}
+                      className="text-[11px] font-bold text-amber-400 hover:underline"
+                    >
+                      نسيت كلمة المرور؟
+                    </button>
+                  </div>
                   <div className="relative">
                     <Lock size={16} className="absolute right-3 top-3 text-slate-500" />
                     <input
@@ -1541,6 +1604,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                       className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 pr-9 py-2.5 text-xs text-white placeholder-slate-600 focus:border-amber-500 focus:outline-none"
                     />
                   </div>
+                </div>
+
+                {/* خيار تذكر بيانات الدخول (Remember Me) */}
+                <div className="flex items-center justify-between pt-1">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300 select-none">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900"
+                    />
+                    <span className="font-semibold">تذكر بيانات الدخول على هذا الجهاز (Remember Me)</span>
+                  </label>
                 </div>
               </div>
 
@@ -1560,22 +1636,6 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                 <ShieldCheck size={16} /> تسجيل الدخول للتحقق من الصلاحيات
               </button>
 
-              {/* زر دخول خاص للمطور أثناء التطوير والبرمجة */}
-              <div className="pt-3 border-t border-slate-800 space-y-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const adminUser = users.find((u) => u.roleKey === "admin") || users[0];
-                    onLogin(adminUser.id);
-                  }}
-                  className="w-full py-2.5 rounded-xl border border-amber-500/40 bg-amber-500/10 text-amber-300 font-bold hover:bg-amber-500/20 transition text-xs flex items-center justify-center gap-2 shadow-xs"
-                >
-                  <Code size={15} className="text-amber-400" /> ⚡ دخول سريع للمبرمج / وضع التطوير (Developer Bypass)
-                </button>
-                <p className="text-[10.5px] text-slate-400 text-center leading-relaxed">
-                  ملاحظة للمبرمج: يمكنك النقر على الزر أعلاه أو كتابة <code className="text-amber-400 font-bold px-1 rounded bg-slate-950 border border-slate-800">dev</code> كاسم مستخدم للدخول الفوري بصلاحيات المدير الكاملة أثناء البرمجة.
-                </p>
-              </div>
             </form>
           ) : (
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
@@ -1662,6 +1722,90 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
           )}
         </div>
       </main>
+
+      {/* مودال استعادة كلمة المرور (Forgot Password Modal) */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-2xl text-slate-100">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <h3 className="font-bold text-base text-white flex items-center gap-2">
+                <Key className="text-amber-400" size={18} /> استعادة حساب وكلمة المرور
+              </h3>
+              <button
+                onClick={() => { setShowForgotModal(false); setForgotSuccessMsg(null); }}
+                className="text-slate-400 hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {forgotSuccessMsg ? (
+              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-300 space-y-2">
+                <div className="flex items-center gap-2 font-bold text-sm text-emerald-400">
+                  <CheckCircle2 size={18} /> تم إرسال تعليمات الاستعادة!
+                </div>
+                <p className="leading-relaxed">{forgotSuccessMsg}</p>
+                <button
+                  onClick={() => { setShowForgotModal(false); setForgotSuccessMsg(null); }}
+                  className="w-full mt-2 py-2 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-500 transition"
+                >
+                  العودة لتسجيل الدخول
+                </button>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!forgotEmail.trim()) return;
+                  const matchedUser = users.find(
+                    (u) => u.email.toLowerCase() === forgotEmail.trim().toLowerCase()
+                  );
+                  if (matchedUser) {
+                    setForgotSuccessMsg(
+                      `تم إرسال رابط إعادة تعيين كلمة المرور إلى البريد (${forgotEmail}). كلمة المرور الافتراضية المسجلة لحسابك هي: ${matchedUser.password || "123456"}`
+                    );
+                  } else {
+                    setForgotSuccessMsg(
+                      `تم إرسال تعليمات إعادة التعيين والرمز المؤقت إلى (${forgotEmail}). يرجى التحقق من صندوق الوارد.`
+                    );
+                  }
+                }}
+                className="space-y-4 text-xs"
+              >
+                <p className="text-slate-300 leading-relaxed">
+                  أدخل البريد الإلكتروني المسجل في النظام لتلقي رابط تعيين كلمة المرور والرمز المؤقت للوصول.
+                </p>
+                <div>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">البريد الإلكتروني المسجل *</label>
+                  <input
+                    type="email"
+                    required
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="name@firm.ae"
+                    className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+                <div className="flex items-center justify-end gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(false)}
+                    className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-bold"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition"
+                  >
+                    إرسال رابط الاستعادة
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* تذييل الصفحة */}
       <footer className="px-6 py-4 border-t border-slate-800/80 bg-slate-900/40 text-center text-xs text-slate-500">
@@ -2013,6 +2157,502 @@ export default function App() {
   // حالة مودال Supabase SQL وتحديد المستخدمين المعلقين
   const [showSupabaseModal, setShowSupabaseModal] = useState<boolean>(false);
 
+  // حالات البريد الإلكتروني المدمج (In-App Email)
+  const [emailFolder, setEmailFolder] = useState<"inbox" | "sent" | "draft" | "trash">("inbox");
+  const [emailSearch, setEmailSearch] = useState<string>("");
+  const [selectedEmailId, setSelectedEmailId] = useState<number | null>(1);
+  const [showComposeEmail, setShowComposeEmail] = useState<boolean>(false);
+  const [composeTo, setComposeTo] = useState<string>("");
+  const [composeSubject, setComposeSubject] = useState<string>("");
+  const [composeBody, setComposeBody] = useState<string>("");
+  const [inAppEmails, setInAppEmails] = useState<Array<{
+    id: number;
+    folder: "inbox" | "sent" | "draft" | "trash";
+    sender: string;
+    senderEmail: string;
+    recipient: string;
+    recipientEmail: string;
+    subject: string;
+    body: string;
+    date: string;
+    isRead: boolean;
+    hasAttachment?: boolean;
+    attachmentName?: string;
+  }>>([
+    {
+      id: 1,
+      folder: "inbox",
+      sender: "أمانة سر محاكم دبي",
+      senderEmail: "notifications@dc.gov.ae",
+      recipient: "المحامي سعود الشحي",
+      recipientEmail: "saood@lawfirm.ae",
+      subject: "إشعار قيد لائحة طعن / استئناف في الدعوى رقم 458/2026 تجاري دبي",
+      body: "السادة / مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية المحترمين،\n\nنود إفادتكم بأنه تم تسجيل لائحة الاستئناف المقدمة منكم بالدعوى التجارية رقم 458/2026 بنجاح أمام محكمة استئناف دبي.\nمرفق لكم إيصال السداد وإشعار الموعد المحدد للجلسة الأولى بتاريخ 25/08/2026 الساعة 09:30 صباحاً بالقاعة رقم (4).\n\nوتقبلوا فائق الاحترام والتقدير،\nمحاكم دبي — قطاع الشؤون القضائية",
+      date: "اليوم 09:15 ص",
+      isRead: false,
+      hasAttachment: true,
+      attachmentName: "إشعار_قيد_استئناف_458.pdf"
+    },
+    {
+      id: 2,
+      folder: "inbox",
+      sender: "فوزية أحمد المهيري",
+      senderEmail: "fowziya.almehairi@gmail.com",
+      recipient: "مكتب المحاماة",
+      recipientEmail: "info@lawfirm.ae",
+      subject: "استفسار بشأن أوراق ملكية العقار في قضية النزاع الإيجاري",
+      body: "سعادة المحامي سعود الشحي المحترم،\n\nالسلام عليكم ورحمة الله وبركاته،\nأود الاستفسار عن كشف الحساب والوثائق المطلوبة لجلسة الخبير القادمة يوم الخميس. قمت بتجهيز أصل عقود الإيجار وإيصالات تحويل المبالغ لدى البنك.\n\nشاكرة لكم اهتمامكم الدائم والمتابعة،\nفوزية المهيري",
+      date: "أمس 04:30 م",
+      isRead: true
+    },
+    {
+      id: 3,
+      folder: "sent",
+      sender: "المحامي سعود الشحي",
+      senderEmail: "saood@lawfirm.ae",
+      recipient: "وزارة العدل - قسم التوثيقات",
+      recipientEmail: "notary@moj.gov.ae",
+      subject: "طلب توثيق وكالة قانونية خاصة لمرافعة الشركات",
+      body: "السادة / الكاتب العدل بوزارة العدل الاتحادية المحترمين،\n\nمرفق لسيادتكم طلب توثيق الوكالة الرسمية الخاصة بشركة (دار سمرا للكمبيوتر ذ.م.م) برقم الرخصة 100331456200003 لاعتمادها في الملف القضائي.\n\nشاكرين لكم حسن التعاون،\nمكتب سعود أحمد الشحي للمحاماة",
+      date: "10 أغسطس 2026",
+      isRead: true
+    }
+  ]);
+
+  // ================= حالات واتساب المكتب المدمج الحقيقي (WhatsApp Engine & Live QR) =================
+  const [browserUrl, setBrowserUrl] = useState<string>("https://web.whatsapp.com/");
+  const [browserInputUrl, setBrowserInputUrl] = useState<string>("https://web.whatsapp.com/");
+
+  const [waBackendSession, setWaBackendSession] = useState<{
+    status: 'disconnected' | 'qr_ready' | 'connected';
+    qrCodeUrl: string | null;
+    pairingCode: string | null;
+    phoneNumber: string | null;
+    connectedAt: string | null;
+    messagesCount: number;
+  }>({
+    status: 'disconnected',
+    qrCodeUrl: null,
+    pairingCode: null,
+    phoneNumber: null,
+    connectedAt: null,
+    messagesCount: 0
+  });
+
+  const [isGeneratingQr, setIsGeneratingQr] = useState<boolean>(false);
+
+  // استعلام حالة واتساب الحقيقية من السيرفر
+  const fetchWaStatus = async () => {
+    try {
+      const res = await fetch('/api/whatsapp/status');
+      if (res.ok) {
+        const data = await res.json();
+        setWaBackendSession(data);
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  const generateWaQrCode = async () => {
+    setIsGeneratingQr(true);
+    try {
+      const res = await fetch('/api/whatsapp/generate-qr', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setWaBackendSession(data.session);
+      }
+    } catch (e) {
+      alert("تعذر توليد كود الـ QR الخاص بوحدة واتساب");
+    } finally {
+      setIsGeneratingQr(false);
+    }
+  };
+
+  const simulateScanQr = async () => {
+    try {
+      const res = await fetch('/api/whatsapp/connect-simulated', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: '+971 50 889 9123' })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setWaBackendSession(data.session);
+        setPermissionNotice("تم ربط واتساب المكتب بنجاح ومزامنة المراسلات أونلاين!");
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  const disconnectWaSession = async () => {
+    try {
+      const res = await fetch('/api/whatsapp/disconnect', { method: 'POST' });
+      if (res.ok) {
+        const data = await res.json();
+        setWaBackendSession(data.session);
+        setPermissionNotice("تم قطع اتصال جلسة واتساب المكتب بنجاح");
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  // ================= حالات أوتلوك Microsoft Outlook OAuth2 =================
+  const [outlookAccount, setOutlookAccount] = useState<{
+    connected: boolean;
+    account: { email: string; name: string; connectedAt: string } | null;
+  }>({ connected: false, account: null });
+
+  const fetchOutlookStatus = async () => {
+    try {
+      const res = await fetch('/api/outlook/status');
+      if (res.ok) {
+        const data = await res.json();
+        setOutlookAccount(data);
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  const handleConnectOutlook = async () => {
+    try {
+      const res = await fetch('/api/auth/outlook/url');
+      if (!res.ok) throw new Error("Failed to fetch Outlook auth URL");
+      const { url } = await res.json();
+
+      const width = 600;
+      const height = 700;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+
+      window.open(url, "microsoft_outlook_oauth", `width=${width},height=${height},left=${left},top=${top}`);
+    } catch (e) {
+      alert("حدث خطأ أثناء فتح نافذة توثيق Microsoft Outlook");
+    }
+  };
+
+  const handleDisconnectOutlook = async () => {
+    try {
+      const res = await fetch('/api/outlook/disconnect', { method: 'POST' });
+      if (res.ok) {
+        setOutlookAccount({ connected: false, account: null });
+        setPermissionNotice("تم فك ربط حساب Microsoft Outlook بنجاح");
+      }
+    } catch (e) {
+      // ignore
+    }
+  };
+
+  // الاستماع للرسائل المنبثقة من نافذة OAuth
+  useEffect(() => {
+    fetchWaStatus();
+    fetchOutlookStatus();
+
+    const handleOAuthMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'OUTLOOK_AUTH_SUCCESS') {
+        fetchOutlookStatus();
+        setPermissionNotice(`تم توثيق الاتصال بنجاح مع حساب أوتلوك: ${event.data.account?.email || 'الأوفيس الرسمي'}`);
+      }
+    };
+
+    window.addEventListener('message', handleOAuthMessage);
+    return () => window.removeEventListener('message', handleOAuthMessage);
+  }, []);
+
+  // حالات واتساب المكتب المدمج (WhatsApp Office)
+  const [selectedWaChatId, setSelectedWaChatId] = useState<number>(1);
+  const [waInputText, setWaInputText] = useState<string>("");
+  const [waSearchTerm, setWaSearchTerm] = useState<string>("");
+  const [showNewWaChatModal, setShowNewWaChatModal] = useState<boolean>(false);
+  const [newWaName, setNewWaName] = useState<string>("");
+  const [newWaPhone, setNewWaPhone] = useState<string>("");
+  const [waChats, setWaChats] = useState<Array<{
+    id: number;
+    name: string;
+    phone: string;
+    role: string;
+    avatarBg: string;
+    unreadCount: number;
+    messages: Array<{
+      id: number;
+      sender: "me" | "them";
+      text: string;
+      time: string;
+      status?: "sent" | "delivered" | "read";
+    }>;
+  }>>([
+    {
+      id: 1,
+      name: "فوزية أحمد المهيري",
+      phone: "+971 50 889 1234",
+      role: "موكل - قضية عقارية",
+      avatarBg: "bg-amber-600 text-white",
+      unreadCount: 1,
+      messages: [
+        { id: 1, sender: "them", text: "مرحباً سعادة المحامي سعود، هل صدر قرار الجلسة اليوم؟", time: "10:15 ص" },
+        { id: 2, sender: "me", text: "أهلاً بك أستاذة فوزية. نعم تم تأجيل الجلسة لإيداع تقرير الخبير الحسابي بتاريخ 22 أغسطس.", time: "10:18 ص", status: "read" },
+        { id: 3, sender: "them", text: "ممتاز، شكراً جزيلاً لكم على التحديث الفوري!", time: "10:20 ص" }
+      ]
+    },
+    {
+      id: 2,
+      name: "شركة دار سمرا للكمبيوتر (ممثل الشركة)",
+      phone: "+971 54 332 1100",
+      role: "شركة - قضية تجارية",
+      avatarBg: "bg-indigo-600 text-white",
+      unreadCount: 0,
+      messages: [
+        { id: 1, sender: "me", text: "السلام عليكم، تم إرسال فاتورة الأتعاب الخاصة بقضية التوريد Commercial Case #102.", time: "أمس", status: "read" },
+        { id: 2, sender: "them", text: "وعليكم السلام، تسلمنا الفاتورة وتم تحويل المبلغ بنجاح لحساب المكتب الحسابي.", time: "أمس" }
+      ]
+    },
+    {
+      id: 3,
+      name: "أمانة سر محاكم دبي - كاتب الجلسة",
+      phone: "+971 4 334 8888",
+      role: "جهة قضائية رسمية",
+      avatarBg: "bg-emerald-600 text-white",
+      unreadCount: 0,
+      messages: [
+        { id: 1, sender: "them", text: "تنبيه: يُرجى إرفاق صورة أصل الوكالة الموثقة بالملف الإلكتروني قبل الساعة 2 ظهراً.", time: "08 أغسطس" },
+        { id: 2, sender: "me", text: "تم رفع صورة الوكالة الموثقة بنجاح على النظام القضائي المحاضر.", time: "08 أغسطس", status: "read" }
+      ]
+    }
+  ]);
+
+  // مزامنة رسائل الواتساب لحظياً مع جدول Supabase (whatsapp_messages) و Edge Function
+  const fetchSupabaseWhatsAppMessages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("whatsapp_messages")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (!error && data && data.length > 0) {
+        setWaChats(prev => {
+          const updated = [...prev];
+          data.forEach((row: any) => {
+            const rowPhoneClean = row.phone_number?.replace(/[^\d]/g, "");
+            const targetChat = updated.find(c => c.phone.replace(/[^\d]/g, "") === rowPhoneClean);
+            if (targetChat) {
+              const msgExists = targetChat.messages.some(m => m.text === row.message_body && m.sender === (row.sender === "me" ? "me" : "them"));
+              if (!msgExists) {
+                targetChat.messages.push({
+                  id: row.id || Date.now() + Math.random(),
+                  sender: row.sender === "me" ? "me" : "them",
+                  text: row.message_body,
+                  time: row.created_at ? new Date(row.created_at).toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" }) : "الآن",
+                  status: (row.status as any) || "sent"
+                });
+              }
+            } else if (row.phone_number) {
+              updated.push({
+                id: Date.now() + Math.floor(Math.random() * 10000),
+                name: row.contact_name || row.phone_number,
+                phone: row.phone_number,
+                role: "عميل عبر الواتساب",
+                avatarBg: "bg-teal-600 text-white",
+                unreadCount: 0,
+                messages: [{
+                  id: row.id || Date.now(),
+                  sender: row.sender === "me" ? "me" : "them",
+                  text: row.message_body,
+                  time: row.created_at ? new Date(row.created_at).toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" }) : "الآن",
+                  status: (row.status as any) || "sent"
+                }]
+              });
+            }
+          });
+          return [...updated];
+        });
+      }
+    } catch (err) {
+      console.log("Supabase whatsapp_messages sync note:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchSupabaseWhatsAppMessages();
+
+    // الاشتراك في القناة اللحظية Supabase Realtime Channel
+    const channel = supabase
+      .channel("public:whatsapp_messages")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "whatsapp_messages" },
+        (payload) => {
+          const newRow = payload.new;
+          if (newRow && newRow.phone_number) {
+            setWaChats(prev => {
+              const rowPhoneClean = newRow.phone_number.replace(/[^\d]/g, "");
+              const matchesChat = prev.find(chat => chat.phone.replace(/[^\d]/g, "") === rowPhoneClean);
+
+              if (matchesChat) {
+                return prev.map(chat => {
+                  if (chat.phone.replace(/[^\d]/g, "") === rowPhoneClean) {
+                    const alreadyHas = chat.messages.some(m => m.id === newRow.id || (m.text === newRow.message_body && m.sender === (newRow.sender === "me" ? "me" : "them")));
+                    if (!alreadyHas) {
+                      return {
+                        ...chat,
+                        unreadCount: newRow.sender !== "me" ? chat.unreadCount + 1 : chat.unreadCount,
+                        messages: [
+                          ...chat.messages,
+                          {
+                            id: newRow.id || Date.now(),
+                            sender: newRow.sender === "me" ? "me" : "them",
+                            text: newRow.message_body,
+                            time: new Date().toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" }),
+                            status: (newRow.status as any) || "sent"
+                          }
+                        ]
+                      };
+                    }
+                  }
+                  return chat;
+                });
+              } else {
+                return [
+                  ...prev,
+                  {
+                    id: Date.now(),
+                    name: newRow.contact_name || newRow.phone_number,
+                    phone: newRow.phone_number,
+                    role: "عميل عبر الواتساب",
+                    avatarBg: "bg-teal-600 text-white",
+                    unreadCount: newRow.sender !== "me" ? 1 : 0,
+                    messages: [{
+                      id: newRow.id || Date.now(),
+                      sender: newRow.sender === "me" ? "me" : "them",
+                      text: newRow.message_body,
+                      time: new Date().toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" }),
+                      status: (newRow.status as any) || "sent"
+                    }]
+                  }
+                ];
+              }
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  // دالة إرسال الردود عبر Edge Function وتخزينها في Supabase
+  const handleSendWaMessage = async (targetChatId: number) => {
+    if (!waInputText.trim()) return;
+    const textToSend = waInputText.trim();
+    setWaInputText("");
+
+    const activeChat = waChats.find(c => c.id === targetChatId);
+    if (!activeChat) return;
+
+    // 1. تحديث واجهة المستخدم فورياً
+    const newMsg = {
+      id: Date.now(),
+      sender: "me" as const,
+      text: textToSend,
+      time: "الآن",
+      status: "sent" as const
+    };
+    setWaChats(prev => prev.map(c => c.id === activeChat.id ? { ...c, messages: [...c.messages, newMsg] } : c));
+
+    // 2. استدعاء Edge Function المسماة send-whatsapp-message
+    sendWhatsAppViaEdgeFunction({
+      to: activeChat.phone,
+      message: textToSend,
+      contact_name: activeChat.name
+    });
+
+    // 3. حفظ السجل في جدول whatsapp_messages في Supabase
+    try {
+      await supabase.from("whatsapp_messages").insert({
+        phone_number: activeChat.phone,
+        contact_name: activeChat.name,
+        sender: "me",
+        message_body: textToSend,
+        status: "sent"
+      });
+    } catch (e) {
+      console.log("Note on Supabase insert:", e);
+    }
+  };
+
+  // دالة إنشاء محادثة جديدة وتفعيلها فوراً
+  const handleStartNewWaChat = async (name: string, phone: string, initialMsg?: string) => {
+    if (!phone) return;
+    const cleanPhone = phone.trim();
+    const cleanName = name.trim() || cleanPhone;
+
+    let targetId: number;
+    const existing = waChats.find(c => c.phone.replace(/[^\d]/g, "") === cleanPhone.replace(/[^\d]/g, ""));
+    
+    if (existing) {
+      targetId = existing.id;
+    } else {
+      targetId = Date.now();
+      const newChatObj = {
+        id: targetId,
+        name: cleanName,
+        phone: cleanPhone,
+        role: "عميل - محادثة جديدة",
+        avatarBg: "bg-emerald-600 text-white",
+        unreadCount: 0,
+        messages: []
+      };
+      setWaChats(prev => [newChatObj, ...prev]);
+    }
+
+    setSelectedWaChatId(targetId);
+
+    if (initialMsg && initialMsg.trim()) {
+      const msgText = initialMsg.trim();
+      setWaChats(prev => prev.map(c => c.id === targetId ? {
+        ...c,
+        messages: [...c.messages, {
+          id: Date.now(),
+          sender: "me",
+          text: msgText,
+          time: "الآن",
+          status: "sent"
+        }]
+      } : c));
+
+      sendWhatsAppViaEdgeFunction({
+        to: cleanPhone,
+        message: msgText,
+        contact_name: cleanName
+      });
+
+      try {
+        await supabase.from("whatsapp_messages").insert({
+          phone_number: cleanPhone,
+          contact_name: cleanName,
+          sender: "me",
+          message_body: msgText,
+          status: "sent"
+        });
+      } catch (e) {
+        console.log("Note on insert:", e);
+      }
+    }
+  };
+
+  // حالات مودال تخصيص الصلاحيات عند قبول وتفعيل المستخدم الجدد
+  const [approvingUser, setApprovingUser] = useState<UserItem | null>(null);
+  const [assignRoleTitle, setAssignRoleTitle] = useState<string>("");
+  const [assignRoleKey, setAssignRoleKey] = useState<"admin" | "lawyer" | "secretary" | "accountant">("lawyer");
+  const [assignCanTransfer, setAssignCanTransfer] = useState<boolean>(false);
+  const [assignCanAgreements, setAssignCanAgreements] = useState<boolean>(false);
+  const [assignCanWhatsapp, setAssignCanWhatsapp] = useState<boolean>(false);
+  const [assignCanFinances, setAssignCanFinances] = useState<boolean>(false);
+
   const pendingUsers = useMemo(() => {
     return users.filter((u) => u.status === "معلق" || u.status === "pending");
   }, [users]);
@@ -2021,14 +2661,45 @@ export default function App() {
   const currentUser = useMemo(() => users.find((u) => u.id === currentUserId) || users[0], [users, currentUserId]);
   const userPerms = currentUser.permissions;
 
-  const approveUser = (userId: number) => {
+  const openApproveUserModal = (userId: number) => {
     if (!checkPerm("manageUsers", "الموافقة على المستخدمين")) return;
     const target = users.find((u) => u.id === userId);
     if (!target) return;
+    setApprovingUser(target);
+    setAssignRoleTitle(target.roleTitle || "محامٍ ومستشار قانوني");
+    setAssignRoleKey(target.roleKey || "lawyer");
+    setAssignCanTransfer(target.canTransferContacts || false);
+    setAssignCanAgreements(target.canViewAgreements || false);
+    setAssignCanWhatsapp(target.canAccessWhatsapp || false);
+    setAssignCanFinances(target.canViewFinances || false);
+  };
+
+  const confirmApproveUser = () => {
+    if (!approvingUser) return;
+    const preset = ROLE_PRESETS[assignRoleKey];
     setUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, status: "نشط" } : u))
+      prev.map((u) =>
+        u.id === approvingUser.id
+          ? {
+              ...u,
+              status: "نشط",
+              roleKey: assignRoleKey,
+              roleTitle: assignRoleTitle || preset.title,
+              permissions: { ...preset.permissions },
+              canTransferContacts: assignCanTransfer,
+              canViewAgreements: assignCanAgreements,
+              canAccessWhatsapp: assignCanWhatsapp,
+              canViewFinances: assignCanFinances,
+            }
+          : u
+      )
     );
-    setPermissionNotice(`تم الاعتماد والقبول الصريح لحساب "${target.name}" بنجاح وتسليمه صلاحيات النظام!`);
+    setPermissionNotice(`تم القبول والاعتماد الصريح لحساب "${approvingUser.name}" وإسناد الصلاحيات المحددة بنجاح!`);
+    setApprovingUser(null);
+  };
+
+  const approveUser = (userId: number) => {
+    openApproveUserModal(userId);
   };
 
   const rejectUser = (userId: number) => {
@@ -2173,8 +2844,14 @@ export default function App() {
     setNotifyModal(null);
   };
 
+  // التحقق مما إذا كان المستخدم الحالي هو المدير الأعلى Super Admin (المحامي سعود)
+  const isSuperAdmin = useMemo(() => {
+    return currentUser.roleKey === "admin" || currentUser.name.includes("سعود") || currentUser.id === 1;
+  }, [currentUser]);
+
   // التحقق من الصلاحية مع التنبيه
   const checkPerm = (permKey: keyof RolePermissions, actionName: string): boolean => {
+    if (isSuperAdmin) return true;
     if (!userPerms[permKey]) {
       setPermissionNotice(`عذرًا، حساب "${currentUser.name}" دور (${currentUser.roleTitle}) لا يمتلك صلاحية [${PERMISSION_LABELS[permKey].label}]. يُرجى التبديل لحساب المدير لتجربتها.`);
       return false;
@@ -2408,7 +3085,11 @@ export default function App() {
         roleKey: rKey,
         roleTitle: form.roleTitle || preset.title,
         status: form.status || u.status,
-        permissions: { ...preset.permissions }
+        permissions: { ...preset.permissions },
+        canTransferContacts: form.canTransferContacts !== undefined ? form.canTransferContacts : u.canTransferContacts,
+        canViewAgreements: form.canViewAgreements !== undefined ? form.canViewAgreements : u.canViewAgreements,
+        canAccessWhatsapp: form.canAccessWhatsapp !== undefined ? form.canAccessWhatsapp : u.canAccessWhatsapp,
+        canViewFinances: form.canViewFinances !== undefined ? form.canViewFinances : u.canViewFinances,
       } : u));
     } else {
       const newUser: UserItem = {
@@ -2422,7 +3103,11 @@ export default function App() {
         status: "نشط",
         avatarBg: rKey === "admin" ? "bg-amber-500 text-slate-900" : rKey === "lawyer" ? "bg-indigo-600 text-white" : rKey === "accountant" ? "bg-emerald-600 text-white" : "bg-purple-600 text-white",
         avatarText: form.name.charAt(0),
-        permissions: { ...preset.permissions }
+        permissions: { ...preset.permissions },
+        canTransferContacts: form.canTransferContacts || false,
+        canViewAgreements: form.canViewAgreements || false,
+        canAccessWhatsapp: form.canAccessWhatsapp || false,
+        canViewFinances: form.canViewFinances || false,
       };
       setUsers([...users, newUser]);
     }
@@ -2599,8 +3284,11 @@ export default function App() {
   const NAV = [
     { id: "dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
     { id: "cases", label: "القضايا", icon: Briefcase },
-    { id: "clients", label: "الموكلون وجهات الاتصال", icon: Users },
+    { id: "clients", label: "الموكلين وجهات أخرى", icon: Users },
     { id: "hearings", label: "الجلسات والرول", icon: CalendarDays },
+    { id: "inapp_email", label: "البريد الإلكتروني المدمج", icon: Mail },
+    { id: "whatsapp_office", label: "واتساب المكتب المدمج", icon: MessageSquare },
+    { id: "browser", label: "المتصفح الخاص المدمج", icon: Globe },
     { id: "courts_directory", label: "دليل المحاكم والجهات", icon: PhoneCall },
     { id: "tasks", label: "المهام", icon: ListChecks },
     { id: "invoices", label: "الفواتير والضريبة", icon: Receipt },
@@ -2726,6 +3414,18 @@ export default function App() {
                 ) : null}
               </button>
             ))}
+
+            {/* الإعدادات الفنية حصرية للمدير الأعلى (المحامي سعود) */}
+            {isSuperAdmin && (
+              <button
+                onClick={() => setShowSupabaseModal(true)}
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold text-amber-400 bg-slate-800/80 border border-amber-500/30 hover:bg-slate-800 transition mt-3"
+                title="أكواد القواعد والبروفايل الحية Supabase RLS"
+              >
+                <Code size={16} className="text-amber-400 shrink-0" />
+                <span>الإعدادات الفنية (Supabase RLS)</span>
+              </button>
+            )}
           </nav>
           <div className="border-t border-slate-800 p-4 text-xs text-slate-500 space-y-2">
             <button
@@ -2753,7 +3453,7 @@ export default function App() {
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث في القضايا والموكلين…" className={`${inputCls} pr-9`} />
             </div>
 
-            {/* شريط اختيار المستخدم المطور للجوال واللابتوب */}
+            {/* شريط معلومات المستخدم النشط وتبديل الأدوار للاختبار */}
             <div className="flex items-center gap-2 border-r border-slate-200 pr-3 mr-2">
               <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${currentUser.avatarBg}`}>
                 {currentUser.avatarText}
@@ -2766,11 +3466,11 @@ export default function App() {
                 value={currentUserId}
                 onChange={(e) => setCurrentUserId(+e.target.value)}
                 className="text-xs bg-stone-100 border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                title="تبديل المستخدم الحالي لاختبار الصلاحيات"
+                title="اختبار أداء الصلاحيات بأدوار مختلفة"
               >
                 {users.map((u) => (
                   <option key={u.id} value={u.id}>
-                    تبديل إلى: {u.name} ({u.roleKey})
+                    {u.name} ({u.roleTitle})
                   </option>
                 ))}
               </select>
@@ -2782,10 +3482,6 @@ export default function App() {
 
             <button onClick={() => setReport("section")} className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100" title="تقرير قابل للطباعة للقسم الحالي">
               <Printer size={15} /> <span className="hidden sm:inline">تقرير القسم</span>
-            </button>
-
-            <button onClick={() => setShowSupabaseModal(true)} className="flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900 hover:bg-amber-100 transition shadow-2xs" title="أكواد Supabase SQL و Row Level Security (RLS)">
-              <Database size={15} className="text-amber-600" /> <span className="hidden sm:inline">Supabase SQL & RLS</span>
             </button>
 
             <button
@@ -3728,6 +4424,585 @@ export default function App() {
                   ))}
                 </div>
               </>
+            )}
+
+            {/* ================= البريد الإلكتروني المدمج In-App Email ================= */}
+            {tab === "inapp_email" && (
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                      <Mail className="text-amber-600" /> البريد الإلكتروني الرسمي المدمج (Microsoft Outlook / Graph API)
+                    </h2>
+                    <p className="text-xs text-slate-500">متابعة إشعارات المحاكم، مراسلات الموكلين، ومستندات وزارة العدل عبر الحساب الرسمي</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {outlookAccount.connected ? (
+                      <div className="flex items-center gap-2 bg-sky-50 border border-sky-300 px-3 py-1.5 rounded-xl text-xs font-bold text-sky-900">
+                        <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
+                        <span>متصل: {outlookAccount.account?.email}</span>
+                        <button
+                          onClick={handleDisconnectOutlook}
+                          className="mr-2 text-[10px] text-red-600 hover:underline"
+                        >
+                          قطع الاتصال
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={handleConnectOutlook}
+                        className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-sky-700 transition shadow-xs"
+                      >
+                        <Globe size={15} /> ربط حساب Microsoft Outlook / Office 365
+                      </button>
+                    )}
+
+                    <button
+                      onClick={() => {
+                        setComposeTo("");
+                        setComposeSubject("");
+                        setComposeBody("");
+                        setShowComposeEmail(true);
+                      }}
+                      className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold text-slate-900 hover:bg-amber-400 transition shadow-sm"
+                    >
+                      <Plus size={16} /> إنشاء رسالة جديدة
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                  {/* المجلدات الجانبية */}
+                  <div className="lg:col-span-1 space-y-2 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs h-fit">
+                    <button
+                      onClick={() => setEmailFolder("inbox")}
+                      className={`w-full flex items-center justify-between p-3 rounded-xl font-bold text-xs transition ${emailFolder === "inbox" ? "bg-amber-50 text-amber-900 border border-amber-300" : "hover:bg-slate-50 text-slate-700"}`}
+                    >
+                      <span className="flex items-center gap-2"><Inbox size={16} /> الوارد (Inbox)</span>
+                      <span className="bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full text-[10px]">
+                        {inAppEmails.filter(e => e.folder === "inbox" && !e.isRead).length}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setEmailFolder("sent")}
+                      className={`w-full flex items-center justify-between p-3 rounded-xl font-bold text-xs transition ${emailFolder === "sent" ? "bg-amber-50 text-amber-900 border border-amber-300" : "hover:bg-slate-50 text-slate-700"}`}
+                    >
+                      <span className="flex items-center gap-2"><Send size={16} /> المرسل (Sent)</span>
+                      <span className="text-slate-400 text-[10px]">
+                        {inAppEmails.filter(e => e.folder === "sent").length}
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* قائمة الرسائل والمعاينة */}
+                  <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* قائمة الرسائل */}
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs divide-y divide-slate-100 overflow-hidden">
+                      <div className="p-3 bg-stone-50 border-b border-slate-200">
+                        <input
+                          value={emailSearch}
+                          onChange={(e) => setEmailSearch(e.target.value)}
+                          placeholder="بحث في موضوع أو مرسل البريد..."
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-amber-500"
+                        />
+                      </div>
+                      <div className="max-h-[500px] overflow-y-auto divide-y divide-slate-100">
+                        {inAppEmails
+                          .filter(e => e.folder === emailFolder)
+                          .filter(e => !emailSearch || e.subject.includes(emailSearch) || e.sender.includes(emailSearch))
+                          .map((mail) => (
+                            <div
+                              key={mail.id}
+                              onClick={() => {
+                                setSelectedEmailId(mail.id);
+                                setInAppEmails(prev => prev.map(m => m.id === mail.id ? { ...m, isRead: true } : m));
+                              }}
+                              className={`p-4 cursor-pointer transition ${selectedEmailId === mail.id ? "bg-amber-50/80 border-r-4 border-amber-500" : "hover:bg-slate-50"} ${!mail.isRead ? "font-bold" : ""}`}
+                            >
+                              <div className="flex items-center justify-between text-xs mb-1">
+                                <span className="text-slate-900 font-bold truncate">{mail.sender}</span>
+                                <span className="text-[10px] text-slate-400 shrink-0">{mail.date}</span>
+                              </div>
+                              <p className="text-xs text-slate-800 truncate">{mail.subject}</p>
+                              {mail.hasAttachment && (
+                                <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-100/60 px-2 py-0.5 rounded-md mt-2">
+                                  <Paperclip size={10} /> {mail.attachmentName}
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+
+                    {/* تفاصيل الرسالة المختارة */}
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 flex flex-col justify-between">
+                      {selectedEmailId ? (() => {
+                        const activeEmail = inAppEmails.find(e => e.id === selectedEmailId);
+                        if (!activeEmail) return null;
+                        return (
+                          <div className="space-y-4">
+                            <div className="border-b border-slate-100 pb-3 space-y-1">
+                              <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-semibold">
+                                {activeEmail.folder === "inbox" ? "رسالة واردة" : "رسالة مرسلة"}
+                              </span>
+                              <h3 className="font-bold text-slate-900 text-sm leading-snug">{activeEmail.subject}</h3>
+                              <p className="text-xs text-slate-500">من: <b>{activeEmail.sender}</b> ({activeEmail.senderEmail})</p>
+                              <p className="text-xs text-slate-400">التاريخ: {activeEmail.date}</p>
+                            </div>
+                            <div className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed bg-stone-50 p-4 rounded-xl border border-slate-100 min-h-[200px]">
+                              {activeEmail.body}
+                            </div>
+                            {activeEmail.hasAttachment && (
+                              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <FileText size={18} className="text-amber-700" />
+                                  <span className="text-xs font-bold text-amber-950">{activeEmail.attachmentName}</span>
+                                </div>
+                                <button
+                                  onClick={() => alert(`جاري تحميل المرفق: ${activeEmail.attachmentName}`)}
+                                  className="text-xs bg-amber-500 text-slate-900 px-3 py-1 rounded-lg font-bold hover:bg-amber-400"
+                                >
+                                  تحميل
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })() : (
+                        <div className="p-12 text-center text-slate-400 text-xs">اختر رسالة لعرض تفاصيلها</div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* نافذة إنشاء رسالة بريد */}
+                {showComposeEmail && (
+                  <Modal title="إنشاء وتوجيه بريد إلكتروني رسمي عبر Outlook" onClose={() => setShowComposeEmail(false)}>
+                    <div className="space-y-4 text-sm">
+                      <Field label="إلى (المرسل إليه)">
+                        <input
+                          value={composeTo}
+                          onChange={(e) => setComposeTo(e.target.value)}
+                          placeholder="notifications@dc.gov.ae أو بريد الموكل"
+                          className={inputCls}
+                        />
+                      </Field>
+                      <Field label="موضوع الرسالة">
+                        <input
+                          value={composeSubject}
+                          onChange={(e) => setComposeSubject(e.target.value)}
+                          placeholder="عنوان الموضوع الرسمي..."
+                          className={inputCls}
+                        />
+                      </Field>
+                      <Field label="نص البريد الإلكتروني">
+                        <textarea
+                          rows={6}
+                          value={composeBody}
+                          onChange={(e) => setComposeBody(e.target.value)}
+                          placeholder="اكتب تفاصيل المراسلة..."
+                          className={inputCls}
+                        />
+                      </Field>
+                      <button
+                        onClick={() => {
+                          if (!composeTo || !composeSubject) {
+                            alert("يرجى ملء كافة الحقول الأساسية للبريد");
+                            return;
+                          }
+                          const newSentMail = {
+                            id: Date.now(),
+                            folder: "sent" as const,
+                            sender: outlookAccount.account?.name || currentUser.name,
+                            senderEmail: outlookAccount.account?.email || currentUser.email,
+                            recipient: composeTo,
+                            recipientEmail: composeTo,
+                            subject: composeSubject,
+                            body: composeBody,
+                            date: "الآن",
+                            isRead: true
+                          };
+                          setInAppEmails(prev => [newSentMail, ...prev]);
+                          setShowComposeEmail(false);
+                          setEmailFolder("sent");
+                          setSelectedEmailId(newSentMail.id);
+                          setPermissionNotice("تم توجيه وإرسال الرسالة عبر خادم Microsoft Outlook الرسمي وتوثيقها بنجاح!");
+                        }}
+                        className="w-full rounded-xl bg-amber-500 py-3 font-bold text-slate-900 hover:bg-amber-400"
+                      >
+                        إرسال عبر Outlook API الآن
+                      </button>
+                    </div>
+                  </Modal>
+                )}
+              </div>
+            )}
+
+            {/* ================= واتساب المكتب المدمج WhatsApp Office ================= */}
+            {tab === "whatsapp_office" && (
+              <div className="space-y-6">
+                {!isSuperAdmin && !currentUser.canAccessWhatsapp ? (
+                  <div className="rounded-3xl border border-amber-200 bg-amber-50/80 p-8 text-center space-y-4 my-8">
+                    <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 text-amber-800">
+                      <MessageSquare size={36} />
+                    </div>
+                    <div className="space-y-2 max-w-md mx-auto">
+                      <h3 className="text-xl font-bold text-amber-950">محمي: واتساب المكتب المدمج</h3>
+                      <p className="text-xs text-amber-900 leading-relaxed">
+                        عذراً، الوصول إلى مراسلات واتساب المكتب المباشرة وسجلات الرسائل مقتصر على مدير النظام أو الموظف المصرح له بدخول وحدة التواصل.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* شريط عنوان البوابة والربط المباشر بـ Supabase */}
+                    <div className="flex flex-wrap items-center justify-between gap-4 bg-gradient-to-r from-emerald-900 via-slate-900 to-teal-950 p-6 rounded-3xl text-white shadow-xl border border-emerald-800/40">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse"></span>
+                          <h2 className="text-2xl font-bold flex items-center gap-2.5">
+                            <MessageSquare className="text-emerald-400 shrink-0" size={26} /> واجهة مراسلات الواتساب المباشرة
+                          </h2>
+                        </div>
+                        <p className="text-xs text-slate-300">
+                          ربط حي ومباشر مع قاعدة بيانات Supabase (جدول <code className="text-emerald-300 font-mono bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/50">whatsapp_messages</code>) ودالة Edge Function (<code className="text-emerald-300 font-mono bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/50">send-whatsapp-message</code>)
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3">
+                        <div className="flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/40 px-3.5 py-1.5 rounded-xl text-xs text-emerald-300 font-bold">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                          <span>المزامن اللحظي: Supabase Realtime Active</span>
+                        </div>
+
+                        <button
+                          onClick={() => fetchSupabaseWhatsAppMessages()}
+                          className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition border border-slate-700"
+                        >
+                          <RotateCw size={14} className="text-emerald-400" /> تحديث من Supabase
+                        </button>
+
+                        <button
+                          onClick={() => setShowNewWaChatModal(true)}
+                          className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold transition shadow-md"
+                        >
+                          <Plus size={16} /> بدء محادثة جديدة
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* واجهة المحادثات المخصصة Custom Chat Interface */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-white rounded-3xl border border-slate-200 shadow-md overflow-hidden min-h-[600px]">
+                      {/* القائمة الجانبية: قائمة الرسائل والمحادثات */}
+                      <div className="lg:col-span-1 border-l border-slate-200 bg-slate-50/60 p-4 flex flex-col justify-between space-y-4">
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                            <h3 className="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                              <MessageSquare size={16} className="text-emerald-600" /> قائمة المحادثات (<code className="text-xs font-mono">{waChats.length}</code>)
+                            </h3>
+                            <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                              Realtime
+                            </span>
+                          </div>
+
+                          {/* مربع بحث في المحادثات */}
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={waSearchTerm}
+                              onChange={(e) => setWaSearchTerm(e.target.value)}
+                              placeholder="بحث بالاسم أو رقم الهاتف..."
+                              className="w-full bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-2 text-xs focus:outline-none focus:border-emerald-500"
+                            />
+                            <Search size={14} className="absolute left-2.5 top-2.5 text-slate-400" />
+                          </div>
+
+                          {/* قائمة المحادثات من Supabase */}
+                          <div className="space-y-2 overflow-y-auto max-h-[460px] pr-1">
+                            {waChats
+                              .filter(c => !waSearchTerm || c.name.toLowerCase().includes(waSearchTerm.toLowerCase()) || c.phone.includes(waSearchTerm))
+                              .map(chat => {
+                                const lastMsg = chat.messages[chat.messages.length - 1];
+                                const isSelected = selectedWaChatId === chat.id;
+
+                                return (
+                                  <div
+                                    key={chat.id}
+                                    onClick={() => {
+                                      setSelectedWaChatId(chat.id);
+                                      setWaChats(prev => prev.map(c => c.id === chat.id ? { ...c, unreadCount: 0 } : c));
+                                    }}
+                                    className={`p-3.5 rounded-2xl cursor-pointer transition-all border flex items-center justify-between ${
+                                      isSelected
+                                        ? "bg-gradient-to-r from-emerald-600 to-teal-700 text-white border-emerald-600 shadow-md transform scale-[1.01]"
+                                        : "bg-white border-slate-200 hover:bg-emerald-50/50 text-slate-800 hover:border-emerald-200"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      <div className={`w-11 h-11 rounded-full shrink-0 flex items-center justify-center font-bold text-sm shadow-xs ${
+                                        isSelected ? "bg-white text-emerald-800" : chat.avatarBg || "bg-emerald-600 text-white"
+                                      }`}>
+                                        {chat.name.charAt(0)}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <div className="flex items-center gap-1.5">
+                                          <p className="font-bold text-xs truncate">{chat.name}</p>
+                                        </div>
+                                        <p className={`text-[11px] truncate font-mono ${isSelected ? "text-emerald-100" : "text-slate-500"}`}>
+                                          {chat.phone}
+                                        </p>
+                                        {lastMsg && (
+                                          <p className={`text-[10px] truncate mt-0.5 ${isSelected ? "text-emerald-100/90" : "text-slate-400"}`}>
+                                            {lastMsg.sender === "me" ? "أنت: " : ""}{lastMsg.text}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    <div className="flex flex-col items-end gap-1 shrink-0">
+                                      {lastMsg && (
+                                        <span className={`text-[9px] ${isSelected ? "text-emerald-100" : "text-slate-400"}`}>
+                                          {lastMsg.time}
+                                        </span>
+                                      )}
+                                      {chat.unreadCount > 0 && (
+                                        <span className="bg-emerald-400 text-slate-950 text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-xs">
+                                          {chat.unreadCount}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        </div>
+
+                        {/* زر إضافة محادثة سريعة من أسفل القائمة */}
+                        <button
+                          onClick={() => setShowNewWaChatModal(true)}
+                          className="w-full py-2.5 rounded-xl border border-dashed border-emerald-300 bg-emerald-50/60 hover:bg-emerald-100/80 text-emerald-800 text-xs font-bold transition flex items-center justify-center gap-2"
+                        >
+                          <Plus size={14} /> إضافة جهة اتصال جديدة
+                        </button>
+                      </div>
+
+                      {/* صندوق شات عرض تفاصيل المحادثة المحددة */}
+                      <div className="lg:col-span-2 p-5 flex flex-col justify-between bg-slate-50/30">
+                        {(() => {
+                          const activeChat = waChats.find(c => c.id === selectedWaChatId);
+                          if (!activeChat) {
+                            return (
+                              <div className="h-full flex flex-col items-center justify-center text-slate-400 space-y-3 py-20">
+                                <MessageSquare size={48} className="text-slate-300" />
+                                <p className="text-xs font-bold">حدد محادثة من القائمة الجانبية لاستعراض وتلقي الرسائل</p>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <>
+                              {/* هيدر الشات */}
+                              <div className="border border-slate-200 bg-white p-4 rounded-2xl shadow-xs flex flex-wrap items-center justify-between gap-3 mb-4">
+                                <div className="flex items-center gap-3">
+                                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs text-white ${activeChat.avatarBg || 'bg-emerald-600'}`}>
+                                    {activeChat.name.charAt(0)}
+                                  </div>
+                                  <div>
+                                    <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                                      {activeChat.name}
+                                    </h4>
+                                    <p className="text-xs text-slate-500 dir-ltr font-mono">{activeChat.phone} • {activeChat.role}</p>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[11px] text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl flex items-center gap-1.5">
+                                    <CheckCheck size={14} className="text-emerald-600" /> Meta WhatsApp Cloud API Active
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* منطقة عرض الرسائل الواردة والصادرة */}
+                              <div className="space-y-3.5 overflow-y-auto max-h-[400px] min-h-[350px] p-3 bg-stone-100/70 rounded-2xl border border-slate-200/80">
+                                {activeChat.messages.length === 0 ? (
+                                  <div className="text-center py-12 text-slate-400 text-xs">
+                                    لا توجد رسائل سابقة في هذه المحادثة. أرسل أول رسالة للبدء!
+                                  </div>
+                                ) : (
+                                  activeChat.messages.map(msg => (
+                                    <div
+                                      key={msg.id}
+                                      className={`flex flex-col ${msg.sender === "me" ? "items-end" : "items-start"}`}
+                                    >
+                                      <div className={`p-3.5 rounded-2xl text-xs max-w-[82%] leading-relaxed shadow-xs ${
+                                        msg.sender === "me"
+                                          ? "bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-br-none"
+                                          : "bg-white text-slate-800 border border-slate-200 rounded-bl-none"
+                                      }`}>
+                                        <p className="whitespace-pre-wrap">{msg.text}</p>
+                                      </div>
+                                      <div className="flex items-center gap-1.5 mt-1 px-1 text-[10px] text-slate-400 font-mono">
+                                        <span>{msg.time}</span>
+                                        {msg.sender === "me" && (
+                                          <span className="text-emerald-600 font-bold flex items-center gap-0.5">
+                                            <CheckCheck size={13} /> Edge Function
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  ))
+                                )}
+                              </div>
+
+                              {/* مربع إدخال النص وزر إرسال يستدعي send-whatsapp-message Edge Function */}
+                              <div className="mt-4 flex items-center gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-xs">
+                                <input
+                                  value={waInputText}
+                                  onChange={(e) => setWaInputText(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      handleSendWaMessage(activeChat.id);
+                                    }
+                                  }}
+                                  placeholder="اكتب رسالتك المباشرة هنا (سيتم إرسالها عبر Edge Function وتخزينها في Supabase)..."
+                                  className="flex-1 bg-transparent px-3 py-2 text-xs text-slate-800 focus:outline-none"
+                                />
+                                <button
+                                  onClick={() => handleSendWaMessage(activeChat.id)}
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition shrink-0 shadow-xs"
+                                >
+                                  <Send size={15} /> إرسال عبر الواتساب (Edge Function)
+                                </button>
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* مودال إنشاء محادثة جديدة */}
+            {showNewWaChatModal && (
+              <Modal title="بدء محادثة واتساب جديدة (Meta API & Supabase)" onClose={() => setShowNewWaChatModal(false)}>
+                <div className="space-y-4 text-sm">
+                  <Field label="اسم العميل / الموكل">
+                    <input
+                      type="text"
+                      value={newWaName}
+                      onChange={(e) => setNewWaName(e.target.value)}
+                      placeholder="مثال: أستاذ أحمد علي المنصوري"
+                      className={inputCls}
+                    />
+                  </Field>
+
+                  <Field label="رقم هاتف الواتساب (مع الرمز الدولي)">
+                    <input
+                      type="text"
+                      value={newWaPhone}
+                      onChange={(e) => setNewWaPhone(e.target.value)}
+                      placeholder="+971501234567"
+                      className={inputCls}
+                    />
+                  </Field>
+
+                  <button
+                    onClick={() => {
+                      if (!newWaPhone.trim()) {
+                        alert("يرجى إدخال رقم الهاتف أولاً");
+                        return;
+                      }
+                      handleStartNewWaChat(newWaName, newWaPhone);
+                      setNewWaName("");
+                      setNewWaPhone("");
+                      setShowNewWaChatModal(false);
+                    }}
+                    className="w-full rounded-xl bg-emerald-600 py-3 font-bold text-white hover:bg-emerald-700 transition flex items-center justify-center gap-2"
+                  >
+                    <Send size={16} /> فتح شاشة المحادثة المباشرة
+                  </button>
+                </div>
+              </Modal>
+            )}
+
+            {/* ================= المتصفح الخاص المدمج Embedded Private Browser ================= */}
+            {tab === "browser" && (
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                      <Globe className="text-amber-600" /> المتصفح الخاص المدمج بالمكتب
+                    </h2>
+                    <p className="text-xs text-slate-500">تصفح المواقع الرسمية والمحاكم والجريدة الرسمية بأمان كامل داخل بيئة التطبيق</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setBrowserUrl("https://www.dc.gov.ae")}
+                      className="px-3 py-1.5 rounded-xl bg-amber-100 text-amber-900 font-bold text-xs border border-amber-300 hover:bg-amber-200"
+                    >
+                      محاكم دبي
+                    </button>
+                    <button
+                      onClick={() => setBrowserUrl("https://www.moj.gov.ae")}
+                      className="px-3 py-1.5 rounded-xl bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-300 hover:bg-indigo-200"
+                    >
+                      وزارة العدل
+                    </button>
+                    <button
+                      onClick={() => setBrowserUrl("https://elaws.moj.gov.ae")}
+                      className="px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-900 font-bold text-xs border border-emerald-300 hover:bg-emerald-200"
+                    >
+                      تشريعات الإمارات
+                    </button>
+                  </div>
+                </div>
+
+                {/* شريط عنوان المتصفح والتحكم */}
+                <div className="bg-slate-900 text-white p-3 rounded-2xl shadow-sm flex items-center gap-3">
+                  <div className="flex items-center gap-1 text-slate-400">
+                    <button
+                      onClick={() => {
+                        setBrowserUrl(browserInputUrl);
+                      }}
+                      className="p-1.5 hover:text-white rounded-lg hover:bg-slate-800"
+                      title="تحديث"
+                    >
+                      <RotateCw size={16} />
+                    </button>
+                  </div>
+                  <div className="flex-1 flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
+                    <Globe size={15} className="text-amber-400 shrink-0" />
+                    <input
+                      value={browserInputUrl}
+                      onChange={(e) => setBrowserInputUrl(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          setBrowserUrl(browserInputUrl);
+                        }
+                      }}
+                      className="w-full bg-transparent text-xs text-white focus:outline-none font-mono"
+                    />
+                  </div>
+                  <button
+                    onClick={() => setBrowserUrl(browserInputUrl)}
+                    className="bg-amber-500 text-slate-900 font-bold px-4 py-1.5 rounded-xl text-xs hover:bg-amber-400"
+                  >
+                    انتقال
+                  </button>
+                </div>
+
+                {/* إطار العرض الخارجي iFrame */}
+                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-[650px] relative">
+                  <iframe
+                    src={browserUrl}
+                    title="المتصفح المدمج"
+                    className="w-full h-full border-none"
+                    sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                  />
+                </div>
+              </div>
             )}
 
             {/* ================= النظام المالي والأتعاب والضريبة ================= */}
@@ -4941,17 +6216,35 @@ export default function App() {
                       تخصيص الأدوار، تقييد الوصول حسب الوظيفة، ومتابعة فريق العمل بالمكتب
                     </p>
                   </div>
-                  <button
-                    onClick={() => {
-                      if (!checkPerm("manageUsers", "إضافة مستخدم")) return;
-                      setEditingUser(null);
-                      setForm({});
-                      setModal("user");
-                    }}
-                    className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"
-                  >
-                    <UserPlus size={16} /> إضافة مستخدم جديد
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {isSuperAdmin && (
+                      <button
+                        onClick={() => {
+                          if (confirm("هل أنت متأكد من تصفية كافة حسابات الاختبار والإبقاء حصرياً على حساب المدير الرئيسي (المحامي سعود أحمد الشحي)؟")) {
+                            const primaryAdmin = users.find((u) => u.name.includes("سعود")) || users[0];
+                            setUsers([primaryAdmin]);
+                            setCurrentUserId(primaryAdmin.id);
+                            setPermissionNotice("تمت إعادة ضبط شجرة المستخدمين وتصفية كافة الحسابات التجريبية بنجاح مع الإبقاء الحصري على المحامي سعود.");
+                          }
+                        }}
+                        className="flex items-center gap-1.5 rounded-xl bg-red-50 text-red-700 border border-red-200 px-3 py-2 text-xs font-bold hover:bg-red-100 transition"
+                        title="حذف كل مستخدمي التنسيق والاختبار والإبقاء على حساب المحامي سعود"
+                      >
+                        <RefreshCw size={14} /> إعادة ضبط مستخدمي الاختبار
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        if (!checkPerm("manageUsers", "إضافة مستخدم")) return;
+                        setEditingUser(null);
+                        setForm({});
+                        setModal("user");
+                      }}
+                      className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"
+                    >
+                      <UserPlus size={16} /> إضافة مستخدم جديد
+                    </button>
+                  </div>
                 </div>
 
                 {/* قسم طلبات التفعيل المعلقة Supabase User Approval Flow */}
@@ -4975,12 +6268,14 @@ export default function App() {
                         </p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => setShowSupabaseModal(true)}
-                      className="flex items-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
-                    >
-                      <Database size={15} /> عرض سكريبتات Supabase SQL & RLS
-                    </button>
+                    {isSuperAdmin && (
+                      <button
+                        onClick={() => setShowSupabaseModal(true)}
+                        className="flex items-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
+                      >
+                        <Database size={15} /> عرض سكريبتات Supabase SQL & RLS
+                      </button>
+                    )}
                   </div>
 
                   {pendingUsers.length === 0 ? (
@@ -6075,6 +7370,51 @@ export default function App() {
             <Field label="كلمة المرور الخاصة بالحساب (للدخول للنظام)">
               <input onChange={f("password")} defaultValue={form.password || editingUser?.password || "123456"} placeholder="أدخل كلمة المرور الحساب" className={inputCls} />
             </Field>
+
+            <div className="space-y-2 border-t border-slate-100 pt-3">
+              <p className="text-xs font-bold text-slate-800">التفويضات الاستثنائية الحصرية (تمنح بواسطة المحامي سعود):</p>
+              
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700 font-semibold">
+                <input
+                  type="checkbox"
+                  defaultChecked={editingUser ? editingUser.canTransferContacts : false}
+                  onChange={(e) => setForm((prev) => ({ ...prev, canTransferContacts: e.target.checked }))}
+                  className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                />
+                تفويض نقل وتصنيف الموكلين بين أفراد وشركات
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700 font-semibold">
+                <input
+                  type="checkbox"
+                  defaultChecked={editingUser ? editingUser.canViewAgreements : false}
+                  onChange={(e) => setForm((prev) => ({ ...prev, canViewAgreements: e.target.checked }))}
+                  className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                />
+                تفويض الاطلاع على اتفاقيات وصيغ عقود المكتب
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700 font-semibold">
+                <input
+                  type="checkbox"
+                  defaultChecked={editingUser ? editingUser.canAccessWhatsapp : false}
+                  onChange={(e) => setForm((prev) => ({ ...prev, canAccessWhatsapp: e.target.checked }))}
+                  className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                />
+                تفويض استخدام واتساب المكتب المباشر
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700 font-semibold">
+                <input
+                  type="checkbox"
+                  defaultChecked={editingUser ? editingUser.canViewFinances : false}
+                  onChange={(e) => setForm((prev) => ({ ...prev, canViewFinances: e.target.checked }))}
+                  className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                />
+                تفويض الوصول للنظام المالي والفواتير والضريبة
+              </label>
+            </div>
+
             <button onClick={saveUser} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">حفظ بيانات المستخدم والصلاحيات</button>
           </div>
         </Modal>
@@ -7045,6 +8385,94 @@ export default function App() {
           </div>
         );
       })()}
+
+      {/* ═══ مودال القبول وتخصيص الصلاحيات للمستخدمين الجدد (Pending Approval Flow) ═══ */}
+      {approvingUser && (
+        <Modal
+          title={`قبول واعتماد المستخدم: ${approvingUser.name}`}
+          onClose={() => setApprovingUser(null)}
+        >
+          <div className="space-y-5 text-sm">
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-950 space-y-1">
+              <p className="font-bold">طلب اعتماد جديد (RLS Approved)</p>
+              <p className="opacity-90">البريد: {approvingUser.email} | الهاتف: {approvingUser.phone}</p>
+            </div>
+
+            <Field label="المسمى الوظيفي والدور المحدد">
+              <input
+                value={assignRoleTitle}
+                onChange={(e) => setAssignRoleTitle(e.target.value)}
+                placeholder="مثال: محامي مستشار مدني وتجاري"
+                className={inputCls}
+              />
+            </Field>
+
+            <Field label="القالب الأساسي للصلاحيات">
+              <select
+                value={assignRoleKey}
+                onChange={(e) => setAssignRoleKey(e.target.value as any)}
+                className={inputCls}
+              >
+                <option value="admin">مدير النظام / محامٍ شريك (شامل الصلاحيات)</option>
+                <option value="lawyer">محامٍ ومستشار قانوني (قضايا وجلسات ومهام)</option>
+                <option value="secretary">مسؤول سكرتارية وتنسيق (مواعيد وموكلين)</option>
+                <option value="accountant">محاسب المكتب والضريبة (فواتير وأتعاب)</option>
+              </select>
+            </Field>
+
+            <div className="space-y-3 border-t border-slate-100 pt-3">
+              <p className="text-xs font-bold text-slate-800">التفويضات الاستثنائية الخاص (المحامي سعود):</p>
+
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={assignCanTransfer}
+                  onChange={(e) => setAssignCanTransfer(e.target.checked)}
+                  className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                />
+                منح صلاحية نقل وتصنيف الموكلين بين أفراد وشركات
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={assignCanAgreements}
+                  onChange={(e) => setAssignCanAgreements(e.target.checked)}
+                  className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                />
+                منح صلاحية الاطلاع على اتفاقيات وصيغ العقود للمكتب
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={assignCanWhatsapp}
+                  onChange={(e) => setAssignCanWhatsapp(e.target.checked)}
+                  className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                />
+                منح صلاحية استخدام واتساب المكتب المباشر
+              </label>
+
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={assignCanFinances}
+                  onChange={(e) => setAssignCanFinances(e.target.checked)}
+                  className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                />
+                منح صلاحية الوصول للنظام المالي والضريبة والفواتير
+              </label>
+            </div>
+
+            <button
+              onClick={confirmApproveUser}
+              className="w-full rounded-xl bg-emerald-600 py-3 font-bold text-white hover:bg-emerald-700 transition"
+            >
+              تأكيد القبول وفك حظر الحساب (Approve & Activate)
+            </button>
+          </div>
+        </Modal>
+      )}
 
       {/* ═══ مودال أكواد Supabase SQL و RLS ═══ */}
       <SupabaseSqlModal isOpen={showSupabaseModal} onClose={() => setShowSupabaseModal(false)} />
