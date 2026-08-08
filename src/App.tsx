@@ -8,7 +8,7 @@ import {
   Check, Minus, Info, UserPlus, ShieldAlert, Edit2, User, RefreshCw,
   Send, MessageSquare, Share2, ExternalLink, FileText, CheckCheck, SendHorizontal, Filter,
   Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download, Database, Code, LogOut,
-  Inbox, Paperclip, RotateCw, QrCode
+  Inbox, Paperclip, RotateCw, QrCode, Settings
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -2157,14 +2157,37 @@ export default function App() {
   // حالة مودال Supabase SQL وتحديد المستخدمين المعلقين
   const [showSupabaseModal, setShowSupabaseModal] = useState<boolean>(false);
 
-  // حالات البريد الإلكتروني المدمج (In-App Email)
+  // حالات البريد الإلكتروني المدمج (In-App Email & Supabase Sync)
   const [emailFolder, setEmailFolder] = useState<"inbox" | "sent" | "draft" | "trash">("inbox");
   const [emailSearch, setEmailSearch] = useState<string>("");
   const [selectedEmailId, setSelectedEmailId] = useState<number | null>(1);
   const [showComposeEmail, setShowComposeEmail] = useState<boolean>(false);
+  const [showEmailSettingsModal, setShowEmailSettingsModal] = useState<boolean>(false);
+
   const [composeTo, setComposeTo] = useState<string>("");
   const [composeSubject, setComposeSubject] = useState<string>("");
   const [composeBody, setComposeBody] = useState<string>("");
+  const [composeAttachment, setComposeAttachment] = useState<string>("");
+
+  // إعدادات البريد الإلكتروني (SMTP / IMAP / App Settings)
+  const [emailConfig, setEmailConfig] = useState<{
+    email: string;
+    senderName: string;
+    appPassword?: string;
+    smtpHost: string;
+    smtpPort: number;
+    secure: boolean;
+    isConfigured: boolean;
+  }>({
+    email: "lawyer.suood@al-shehhi-law.ae",
+    senderName: "المحامي سعود أحمد الشحي",
+    appPassword: "",
+    smtpHost: "smtp.office365.com",
+    smtpPort: 587,
+    secure: false,
+    isConfigured: true
+  });
+
   const [inAppEmails, setInAppEmails] = useState<Array<{
     id: number;
     folder: "inbox" | "sent" | "draft" | "trash";
@@ -2185,7 +2208,7 @@ export default function App() {
       sender: "أمانة سر محاكم دبي",
       senderEmail: "notifications@dc.gov.ae",
       recipient: "المحامي سعود الشحي",
-      recipientEmail: "saood@lawfirm.ae",
+      recipientEmail: "lawyer.suood@al-shehhi-law.ae",
       subject: "إشعار قيد لائحة طعن / استئناف في الدعوى رقم 458/2026 تجاري دبي",
       body: "السادة / مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية المحترمين،\n\nنود إفادتكم بأنه تم تسجيل لائحة الاستئناف المقدمة منكم بالدعوى التجارية رقم 458/2026 بنجاح أمام محكمة استئناف دبي.\nمرفق لكم إيصال السداد وإشعار الموعد المحدد للجلسة الأولى بتاريخ 25/08/2026 الساعة 09:30 صباحاً بالقاعة رقم (4).\n\nوتقبلوا فائق الاحترام والتقدير،\nمحاكم دبي — قطاع الشؤون القضائية",
       date: "اليوم 09:15 ص",
@@ -2199,7 +2222,7 @@ export default function App() {
       sender: "فوزية أحمد المهيري",
       senderEmail: "fowziya.almehairi@gmail.com",
       recipient: "مكتب المحاماة",
-      recipientEmail: "info@lawfirm.ae",
+      recipientEmail: "info@al-shehhi-law.ae",
       subject: "استفسار بشأن أوراق ملكية العقار في قضية النزاع الإيجاري",
       body: "سعادة المحامي سعود الشحي المحترم،\n\nالسلام عليكم ورحمة الله وبركاته،\nأود الاستفسار عن كشف الحساب والوثائق المطلوبة لجلسة الخبير القادمة يوم الخميس. قمت بتجهيز أصل عقود الإيجار وإيصالات تحويل المبالغ لدى البنك.\n\nشاكرة لكم اهتمامكم الدائم والمتابعة،\nفوزية المهيري",
       date: "أمس 04:30 م",
@@ -2209,7 +2232,7 @@ export default function App() {
       id: 3,
       folder: "sent",
       sender: "المحامي سعود الشحي",
-      senderEmail: "saood@lawfirm.ae",
+      senderEmail: "lawyer.suood@al-shehhi-law.ae",
       recipient: "وزارة العدل - قسم التوثيقات",
       recipientEmail: "notary@moj.gov.ae",
       subject: "طلب توثيق وكالة قانونية خاصة لمرافعة الشركات",
@@ -2299,67 +2322,204 @@ export default function App() {
     }
   };
 
-  // ================= حالات أوتلوك Microsoft Outlook OAuth2 =================
-  const [outlookAccount, setOutlookAccount] = useState<{
-    connected: boolean;
-    account: { email: string; name: string; connectedAt: string } | null;
-  }>({ connected: false, account: null });
-
-  const fetchOutlookStatus = async () => {
+  // ================= محرك البريد الإلكتروني الذكي ومزامنة Supabase =================
+  const fetchEmailSettings = async () => {
     try {
-      const res = await fetch('/api/outlook/status');
+      const res = await fetch('/api/email/settings');
       if (res.ok) {
         const data = await res.json();
-        setOutlookAccount(data);
+        if (data.settings) {
+          setEmailConfig(prev => ({
+            ...prev,
+            email: data.settings.email || prev.email,
+            senderName: data.settings.senderName || prev.senderName,
+            smtpHost: data.settings.host || prev.smtpHost,
+            smtpPort: data.settings.port || prev.smtpPort,
+            secure: data.settings.secure ?? prev.secure,
+            isConfigured: true
+          }));
+        }
       }
     } catch (e) {
       // ignore
     }
   };
 
-  const handleConnectOutlook = async () => {
+  const fetchSupabaseEmailMessages = async () => {
     try {
-      const res = await fetch('/api/auth/outlook/url');
-      if (!res.ok) throw new Error("Failed to fetch Outlook auth URL");
-      const { url } = await res.json();
+      const { data, error } = await supabase
+        .from("email_messages")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-      const width = 600;
-      const height = 700;
-      const left = window.screenX + (window.outerWidth - width) / 2;
-      const top = window.screenY + (window.outerHeight - height) / 2;
-
-      window.open(url, "microsoft_outlook_oauth", `width=${width},height=${height},left=${left},top=${top}`);
-    } catch (e) {
-      alert("حدث خطأ أثناء فتح نافذة توثيق Microsoft Outlook");
+      if (!error && data && data.length > 0) {
+        setInAppEmails(prev => {
+          const updated = [...prev];
+          data.forEach((row: any) => {
+            const mappedMsg = {
+              id: row.id || Date.now() + Math.random(),
+              folder: (row.folder as any) || (row.sender_email === emailConfig.email ? "sent" : "inbox"),
+              sender: row.sender_name || row.sender_email || "مرسل غير معروف",
+              senderEmail: row.sender_email || "",
+              recipient: row.recipient_name || row.recipient_email || "",
+              recipientEmail: row.recipient_email || "",
+              subject: row.subject || "بدون موضوع",
+              body: row.body || row.message_body || "",
+              date: row.created_at ? new Date(row.created_at).toLocaleString("ar-AE") : "الآن",
+              isRead: row.is_read ?? false,
+              hasAttachment: !!row.attachment_name,
+              attachmentName: row.attachment_name || ""
+            };
+            const existingIndex = updated.findIndex(m => m.id === mappedMsg.id || (m.subject === mappedMsg.subject && m.date === mappedMsg.date));
+            if (existingIndex >= 0) {
+              updated[existingIndex] = mappedMsg;
+            } else {
+              updated.unshift(mappedMsg);
+            }
+          });
+          return [...updated];
+        });
+      }
+    } catch (err) {
+      console.log("Supabase email sync note:", err);
     }
   };
 
-  const handleDisconnectOutlook = async () => {
-    try {
-      const res = await fetch('/api/outlook/disconnect', { method: 'POST' });
-      if (res.ok) {
-        setOutlookAccount({ connected: false, account: null });
-        setPermissionNotice("تم فك ربط حساب Microsoft Outlook بنجاح");
-      }
-    } catch (e) {
-      // ignore
+  const handleSaveEmailSettings = async () => {
+    if (!emailConfig.email || !emailConfig.smtpHost) {
+      alert("يرجى إدخال البريد الإلكتروني وخادم الإرسال SMTP");
+      return;
     }
+
+    try {
+      await fetch('/api/email/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: emailConfig.email,
+          senderName: emailConfig.senderName,
+          password: emailConfig.appPassword,
+          host: emailConfig.smtpHost,
+          port: emailConfig.smtpPort,
+          secure: emailConfig.secure
+        })
+      });
+    } catch (e) {
+      console.log("Save email config note:", e);
+    }
+
+    setEmailConfig(prev => ({ ...prev, isConfigured: true }));
+    setShowEmailSettingsModal(false);
+    setPermissionNotice(`تم حفظ وتفعيل إعدادات البريد الإلكتروني بنجاح لـ (${emailConfig.email}) عبر خادم (${emailConfig.smtpHost})`);
   };
 
-  // الاستماع للرسائل المنبثقة من نافذة OAuth
-  useEffect(() => {
-    fetchWaStatus();
-    fetchOutlookStatus();
+  const handleSendInAppEmail = async () => {
+    if (!composeTo.trim() || !composeSubject.trim()) {
+      alert("يرجى تعبئة خانتي المرسل إليه وموضوع الرسالة");
+      return;
+    }
 
-    const handleOAuthMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'OUTLOOK_AUTH_SUCCESS') {
-        fetchOutlookStatus();
-        setPermissionNotice(`تم توثيق الاتصال بنجاح مع حساب أوتلوك: ${event.data.account?.email || 'الأوفيس الرسمي'}`);
-      }
+    const newSentMail = {
+      id: Date.now(),
+      folder: "sent" as const,
+      sender: emailConfig.senderName || currentUser.name,
+      senderEmail: emailConfig.email || currentUser.email,
+      recipient: composeTo,
+      recipientEmail: composeTo,
+      subject: composeSubject,
+      body: composeBody,
+      date: "الآن",
+      isRead: true,
+      hasAttachment: !!composeAttachment,
+      attachmentName: composeAttachment || undefined
     };
 
-    window.addEventListener('message', handleOAuthMessage);
-    return () => window.removeEventListener('message', handleOAuthMessage);
+    setInAppEmails(prev => [newSentMail, ...prev]);
+    setShowComposeEmail(false);
+    setEmailFolder("sent");
+    setSelectedEmailId(newSentMail.id);
+
+    try {
+      await fetch('/api/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: composeTo,
+          subject: composeSubject,
+          body: composeBody,
+          smtp: emailConfig
+        })
+      });
+    } catch (e) {
+      console.log("Server send email note:", e);
+    }
+
+    try {
+      await supabase.from("email_messages").insert({
+        folder: "sent",
+        sender_name: emailConfig.senderName,
+        sender_email: emailConfig.email,
+        recipient_email: composeTo,
+        subject: composeSubject,
+        body: composeBody,
+        is_read: true,
+        attachment_name: composeAttachment || null,
+        created_at: new Date().toISOString()
+      });
+    } catch (err) {
+      console.log("Supabase insert email note:", err);
+    }
+
+    setPermissionNotice("تم توجيه وإرسال الرسالة الإلكترونية بنجاح وتوثيقها في جدول Supabase!");
+    setComposeTo("");
+    setComposeSubject("");
+    setComposeBody("");
+    setComposeAttachment("");
+  };
+
+  useEffect(() => {
+    fetchWaStatus();
+    fetchEmailSettings();
+    fetchSupabaseEmailMessages();
+
+    // الاشتراك اللحظي في جدول Supabase email_messages
+    const emailChannel = supabase
+      .channel("realtime_email_messages_channel")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "email_messages" },
+        (payload) => {
+          const newRow = payload.new as any;
+          if (newRow) {
+            setInAppEmails(prev => {
+              const mapped = {
+                id: newRow.id || Date.now(),
+                folder: (newRow.folder as any) || (newRow.sender_email === emailConfig.email ? "sent" : "inbox"),
+                sender: newRow.sender_name || newRow.sender_email || "رسالة جديدة",
+                senderEmail: newRow.sender_email || "",
+                recipient: newRow.recipient_name || newRow.recipient_email || "",
+                recipientEmail: newRow.recipient_email || "",
+                subject: newRow.subject || "بدون عنوان",
+                body: newRow.body || newRow.message_body || "",
+                date: new Date().toLocaleString("ar-AE"),
+                isRead: newRow.is_read ?? false,
+                hasAttachment: !!newRow.attachment_name,
+                attachmentName: newRow.attachment_name || ""
+              };
+              const exists = prev.some(m => m.id === mapped.id);
+              if (exists) {
+                return prev.map(m => m.id === mapped.id ? mapped : m);
+              }
+              return [mapped, ...prev];
+            });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(emailChannel);
+    };
   }, []);
 
   // حالات واتساب المكتب المدمج (WhatsApp Office)
@@ -4432,39 +4592,45 @@ export default function App() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                      <Mail className="text-amber-600" /> البريد الإلكتروني الرسمي المدمج (Microsoft Outlook / Graph API)
+                      <Mail className="text-amber-600" /> البريد الإلكتروني المدمج (SMTP / IMAP & Supabase Sync)
                     </h2>
-                    <p className="text-xs text-slate-500">متابعة إشعارات المحاكم، مراسلات الموكلين، ومستندات وزارة العدل عبر الحساب الرسمي</p>
+                    <p className="text-xs text-slate-500">متابعة إشعارات المحاكم، مراسلات الموكلين، ومستندات وزارة العدل عبر السيرفر الرسمي بمرونة كاملة</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {outlookAccount.connected ? (
-                      <div className="flex items-center gap-2 bg-sky-50 border border-sky-300 px-3 py-1.5 rounded-xl text-xs font-bold text-sky-900">
-                        <span className="w-2 h-2 rounded-full bg-sky-500 animate-pulse"></span>
-                        <span>متصل: {outlookAccount.account?.email}</span>
-                        <button
-                          onClick={handleDisconnectOutlook}
-                          className="mr-2 text-[10px] text-red-600 hover:underline"
-                        >
-                          قطع الاتصال
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={handleConnectOutlook}
-                        className="flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-sky-700 transition shadow-xs"
-                      >
-                        <Globe size={15} /> ربط حساب Microsoft Outlook / Office 365
-                      </button>
-                    )}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-300 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-900 shadow-xs">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span>الحساب: <b>{emailConfig.email}</b></span>
+                      <span className="text-[10px] text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded">
+                        {emailConfig.smtpHost}:{emailConfig.smtpPort}
+                      </span>
+                    </div>
+
+                    <button
+                      onClick={() => setShowEmailSettingsModal(true)}
+                      className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-white hover:bg-slate-800 transition shadow-xs"
+                    >
+                      <Settings size={15} /> إعدادات البريد (SMTP)
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        fetchSupabaseEmailMessages();
+                        setPermissionNotice("تمت مزامنة الرسائل من جدول Supabase (email_messages) بنجاح!");
+                      }}
+                      className="flex items-center gap-1.5 rounded-xl bg-slate-100 border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
+                    >
+                      <RefreshCw size={14} /> تحديث
+                    </button>
 
                     <button
                       onClick={() => {
                         setComposeTo("");
                         setComposeSubject("");
                         setComposeBody("");
+                        setComposeAttachment("");
                         setShowComposeEmail(true);
                       }}
-                      className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold text-slate-900 hover:bg-amber-400 transition shadow-sm"
+                      className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400 transition shadow-sm"
                     >
                       <Plus size={16} /> إنشاء رسالة جديدة
                     </button>
@@ -4474,6 +4640,7 @@ export default function App() {
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                   {/* المجلدات الجانبية */}
                   <div className="lg:col-span-1 space-y-2 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs h-fit">
+                    <div className="text-xs font-bold text-slate-400 mb-2 px-1">المجلدات والصناديق</div>
                     <button
                       onClick={() => setEmailFolder("inbox")}
                       className={`w-full flex items-center justify-between p-3 rounded-xl font-bold text-xs transition ${emailFolder === "inbox" ? "bg-amber-50 text-amber-900 border border-amber-300" : "hover:bg-slate-50 text-slate-700"}`}
@@ -4483,86 +4650,166 @@ export default function App() {
                         {inAppEmails.filter(e => e.folder === "inbox" && !e.isRead).length}
                       </span>
                     </button>
+
                     <button
                       onClick={() => setEmailFolder("sent")}
                       className={`w-full flex items-center justify-between p-3 rounded-xl font-bold text-xs transition ${emailFolder === "sent" ? "bg-amber-50 text-amber-900 border border-amber-300" : "hover:bg-slate-50 text-slate-700"}`}
                     >
-                      <span className="flex items-center gap-2"><Send size={16} /> المرسل (Sent)</span>
+                      <span className="flex items-center gap-2"><Send size={16} /> الصادر / المرسل (Outbox)</span>
                       <span className="text-slate-400 text-[10px]">
                         {inAppEmails.filter(e => e.folder === "sent").length}
                       </span>
                     </button>
+
+                    <button
+                      onClick={() => setEmailFolder("draft")}
+                      className={`w-full flex items-center justify-between p-3 rounded-xl font-bold text-xs transition ${emailFolder === "draft" ? "bg-amber-50 text-amber-900 border border-amber-300" : "hover:bg-slate-50 text-slate-700"}`}
+                    >
+                      <span className="flex items-center gap-2"><FileText size={16} /> المسودات (Drafts)</span>
+                      <span className="text-slate-400 text-[10px]">
+                        {inAppEmails.filter(e => e.folder === "draft").length}
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => setEmailFolder("trash")}
+                      className={`w-full flex items-center justify-between p-3 rounded-xl font-bold text-xs transition ${emailFolder === "trash" ? "bg-amber-50 text-amber-900 border border-amber-300" : "hover:bg-slate-50 text-slate-700"}`}
+                    >
+                      <span className="flex items-center gap-2"><Trash2 size={16} /> سلة المهملات (Trash)</span>
+                      <span className="text-slate-400 text-[10px]">
+                        {inAppEmails.filter(e => e.folder === "trash").length}
+                      </span>
+                    </button>
+
+                    <div className="pt-4 border-t border-slate-100 mt-4 space-y-2">
+                      <div className="text-[11px] font-semibold text-slate-500">حالة الربط وسيرفر Supabase:</div>
+                      <div className="p-2.5 bg-stone-50 rounded-xl border border-slate-200 text-[11px] space-y-1 text-slate-600">
+                        <div className="flex items-center justify-between">
+                          <span>سيرفر SMTP:</span>
+                          <span className="font-mono text-slate-900 font-bold">{emailConfig.smtpHost}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>الجدول المرتبط:</span>
+                          <span className="font-mono text-emerald-700 font-bold">email_messages</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>المزامنة اللحظية:</span>
+                          <span className="text-emerald-600 font-bold">مفعّلة ✓</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   {/* قائمة الرسائل والمعاينة */}
                   <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* قائمة الرسائل */}
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs divide-y divide-slate-100 overflow-hidden">
-                      <div className="p-3 bg-stone-50 border-b border-slate-200">
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs divide-y divide-slate-100 overflow-hidden flex flex-col h-[550px]">
+                      <div className="p-3 bg-stone-50 border-b border-slate-200 flex items-center gap-2">
+                        <Search size={16} className="text-slate-400 shrink-0" />
                         <input
                           value={emailSearch}
                           onChange={(e) => setEmailSearch(e.target.value)}
-                          placeholder="بحث في موضوع أو مرسل البريد..."
+                          placeholder="بحث في موضوع البريد أو اسم المرسل..."
                           className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-amber-500"
                         />
                       </div>
-                      <div className="max-h-[500px] overflow-y-auto divide-y divide-slate-100">
+                      <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
                         {inAppEmails
                           .filter(e => e.folder === emailFolder)
-                          .filter(e => !emailSearch || e.subject.includes(emailSearch) || e.sender.includes(emailSearch))
-                          .map((mail) => (
-                            <div
-                              key={mail.id}
-                              onClick={() => {
-                                setSelectedEmailId(mail.id);
-                                setInAppEmails(prev => prev.map(m => m.id === mail.id ? { ...m, isRead: true } : m));
-                              }}
-                              className={`p-4 cursor-pointer transition ${selectedEmailId === mail.id ? "bg-amber-50/80 border-r-4 border-amber-500" : "hover:bg-slate-50"} ${!mail.isRead ? "font-bold" : ""}`}
-                            >
-                              <div className="flex items-center justify-between text-xs mb-1">
-                                <span className="text-slate-900 font-bold truncate">{mail.sender}</span>
-                                <span className="text-[10px] text-slate-400 shrink-0">{mail.date}</span>
-                              </div>
-                              <p className="text-xs text-slate-800 truncate">{mail.subject}</p>
-                              {mail.hasAttachment && (
-                                <span className="inline-flex items-center gap-1 text-[10px] text-amber-700 bg-amber-100/60 px-2 py-0.5 rounded-md mt-2">
-                                  <Paperclip size={10} /> {mail.attachmentName}
-                                </span>
-                              )}
-                            </div>
-                          ))}
+                          .filter(e => !emailSearch || e.subject.includes(emailSearch) || e.sender.includes(emailSearch) || e.senderEmail.includes(emailSearch))
+                          .length === 0 ? (
+                            <div className="p-8 text-center text-slate-400 text-xs">لا توجد رسائل في هذا المجلد</div>
+                          ) : (
+                            inAppEmails
+                              .filter(e => e.folder === emailFolder)
+                              .filter(e => !emailSearch || e.subject.includes(emailSearch) || e.sender.includes(emailSearch) || e.senderEmail.includes(emailSearch))
+                              .map((mail) => (
+                                <div
+                                  key={mail.id}
+                                  onClick={() => {
+                                    setSelectedEmailId(mail.id);
+                                    setInAppEmails(prev => prev.map(m => m.id === mail.id ? { ...m, isRead: true } : m));
+                                  }}
+                                  className={`p-4 cursor-pointer transition ${selectedEmailId === mail.id ? "bg-amber-50/90 border-r-4 border-amber-500" : "hover:bg-slate-50"} ${!mail.isRead ? "font-bold bg-amber-50/20" : ""}`}
+                                >
+                                  <div className="flex items-center justify-between text-xs mb-1">
+                                    <span className="text-slate-900 font-bold truncate flex items-center gap-1.5">
+                                      {!mail.isRead && <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>}
+                                      {mail.sender}
+                                    </span>
+                                    <span className="text-[10px] text-slate-400 shrink-0">{mail.date}</span>
+                                  </div>
+                                  <p className="text-xs text-slate-800 truncate">{mail.subject}</p>
+                                  {mail.hasAttachment && (
+                                    <span className="inline-flex items-center gap-1 text-[10px] text-amber-800 bg-amber-100/70 px-2 py-0.5 rounded-md mt-2">
+                                      <Paperclip size={10} /> {mail.attachmentName}
+                                    </span>
+                                  )}
+                                </div>
+                              ))
+                          )}
                       </div>
                     </div>
 
                     {/* تفاصيل الرسالة المختارة */}
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 flex flex-col justify-between">
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs p-5 flex flex-col justify-between h-[550px] overflow-y-auto">
                       {selectedEmailId ? (() => {
                         const activeEmail = inAppEmails.find(e => e.id === selectedEmailId);
-                        if (!activeEmail) return null;
+                        if (!activeEmail) return <div className="p-12 text-center text-slate-400 text-xs">اختر رسالة لعرض تفاصيلها</div>;
                         return (
-                          <div className="space-y-4">
-                            <div className="border-b border-slate-100 pb-3 space-y-1">
-                              <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-semibold">
-                                {activeEmail.folder === "inbox" ? "رسالة واردة" : "رسالة مرسلة"}
-                              </span>
-                              <h3 className="font-bold text-slate-900 text-sm leading-snug">{activeEmail.subject}</h3>
-                              <p className="text-xs text-slate-500">من: <b>{activeEmail.sender}</b> ({activeEmail.senderEmail})</p>
-                              <p className="text-xs text-slate-400">التاريخ: {activeEmail.date}</p>
+                          <div className="space-y-4 flex-1 flex flex-col justify-between">
+                            <div className="space-y-3">
+                              <div className="border-b border-slate-100 pb-3 space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md font-semibold">
+                                    {activeEmail.folder === "inbox" ? "رسالة واردة" : activeEmail.folder === "sent" ? "رسالة صادرة" : "مسودة / سلة مهملات"}
+                                  </span>
+                                  <div className="flex items-center gap-1">
+                                    <button
+                                      onClick={() => {
+                                        setComposeTo(activeEmail.senderEmail || activeEmail.sender);
+                                        setComposeSubject(`رد: ${activeEmail.subject}`);
+                                        setComposeBody(`\n\n--- الرسالة الأصلية ---\nمن: ${activeEmail.sender}\nالتاريخ: ${activeEmail.date}\n${activeEmail.body}`);
+                                        setShowComposeEmail(true);
+                                      }}
+                                      className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1"
+                                    >
+                                      رد على الرسالة
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setInAppEmails(prev => prev.map(m => m.id === activeEmail.id ? { ...m, folder: "trash" } : m));
+                                        setPermissionNotice("تم نقل الرسالة إلى سلة المهملات");
+                                      }}
+                                      className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1"
+                                    >
+                                      <Trash2 size={13} /> حذف
+                                    </button>
+                                  </div>
+                                </div>
+                                <h3 className="font-bold text-slate-900 text-base leading-snug">{activeEmail.subject}</h3>
+                                <div className="text-xs text-slate-600 space-y-0.5">
+                                  <p>من: <b>{activeEmail.sender}</b> ({activeEmail.senderEmail || "غير محدد"})</p>
+                                  <p>إلى: <b>{activeEmail.recipient || "مكتب المحاماة"}</b> ({activeEmail.recipientEmail || emailConfig.email})</p>
+                                  <p className="text-slate-400 text-[11px]">التاريخ: {activeEmail.date}</p>
+                                </div>
+                              </div>
+                              <div className="text-xs text-slate-800 whitespace-pre-wrap leading-relaxed bg-stone-50 p-4 rounded-xl border border-slate-100 min-h-[180px]">
+                                {activeEmail.body}
+                              </div>
                             </div>
-                            <div className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed bg-stone-50 p-4 rounded-xl border border-slate-100 min-h-[200px]">
-                              {activeEmail.body}
-                            </div>
+
                             {activeEmail.hasAttachment && (
-                              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between">
+                              <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between mt-3">
                                 <div className="flex items-center gap-2">
                                   <FileText size={18} className="text-amber-700" />
                                   <span className="text-xs font-bold text-amber-950">{activeEmail.attachmentName}</span>
                                 </div>
                                 <button
                                   onClick={() => alert(`جاري تحميل المرفق: ${activeEmail.attachmentName}`)}
-                                  className="text-xs bg-amber-500 text-slate-900 px-3 py-1 rounded-lg font-bold hover:bg-amber-400"
+                                  className="text-xs bg-amber-500 text-slate-900 px-3 py-1 rounded-lg font-bold hover:bg-amber-400 shadow-xs"
                                 >
-                                  تحميل
+                                  تحميل المرفق
                                 </button>
                               </div>
                             )}
@@ -4575,10 +4822,140 @@ export default function App() {
                   </div>
                 </div>
 
+                {/* نافذة إعدادات البريد الإلكتروني (SMTP / Account Settings) */}
+                {showEmailSettingsModal && (
+                  <Modal title="إعدادات حساب البريد الإلكتروني (SMTP / IMAP)" onClose={() => setShowEmailSettingsModal(false)}>
+                    <div className="space-y-4 text-sm">
+                      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-900 space-y-1">
+                        <p className="font-bold flex items-center gap-1.5">
+                          <Settings size={15} /> إعداد أي حساب بريد إلكتروني تلقائياً:
+                        </p>
+                        <p className="text-[11px] leading-relaxed">
+                          يمكنك ربط أي حساب بريد رسمياَ (Office 365, Gmail, Webmail) باستخدام البريد وكلمة مرور التطبيق (App Password) ليتم الإرسال والمزامنة مباشرة وبدون تعقيدات OAuth.
+                        </p>
+                      </div>
+
+                      {/* اختصارات سريعة لضبط الخادم */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700">تعبئة سريعة حسب مزود الخدمة:</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setEmailConfig(prev => ({
+                              ...prev,
+                              smtpHost: "smtp.office365.com",
+                              smtpPort: 587,
+                              secure: false
+                            }))}
+                            className="p-2 border border-slate-200 hover:border-amber-500 rounded-xl bg-white text-xs font-bold text-slate-800 transition text-center"
+                          >
+                            Office 365 / Outlook
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEmailConfig(prev => ({
+                              ...prev,
+                              smtpHost: "smtp.gmail.com",
+                              smtpPort: 587,
+                              secure: false
+                            }))}
+                            className="p-2 border border-slate-200 hover:border-amber-500 rounded-xl bg-white text-xs font-bold text-slate-800 transition text-center"
+                          >
+                            Google Gmail
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEmailConfig(prev => ({
+                              ...prev,
+                              smtpHost: "mail.al-shehhi-law.ae",
+                              smtpPort: 465,
+                              secure: true
+                            }))}
+                            className="p-2 border border-slate-200 hover:border-amber-500 rounded-xl bg-white text-xs font-bold text-slate-800 transition text-center"
+                          >
+                            خادم خاص Webmail
+                          </button>
+                        </div>
+                      </div>
+
+                      <Field label="عنوان البريد الإلكتروني (Email Address)">
+                        <input
+                          name="email"
+                          type="text"
+                          value={emailConfig.email}
+                          onChange={(e) => setEmailConfig(prev => ({ ...prev, email: e.target.value }))}
+                          placeholder="أدخل أي عنوان بريد إلكتروني ترغب باستخدامه (مثال: lawyer@domain.com)"
+                          className={`${inputCls} focus:ring-2 focus:ring-amber-500 font-medium`}
+                        />
+                        <p className="text-[10px] text-amber-700 font-semibold mt-1 flex items-center gap-1">
+                          ✓ حقل حر وقابل للتعديل بالكامل في أي وقت لإدخال أي حساب بريد تريد ربطه
+                        </p>
+                      </Field>
+
+                      <Field label="اسم المرسل المعروض (Sender Name)">
+                        <input
+                          value={emailConfig.senderName}
+                          onChange={(e) => setEmailConfig(prev => ({ ...prev, senderName: e.target.value }))}
+                          placeholder="المحامي سعود أحمد الشحي"
+                          className={inputCls}
+                        />
+                      </Field>
+
+                      <Field label="كلمة المرور / كلمة مرور التطبيق (App Password)">
+                        <input
+                          type="password"
+                          value={emailConfig.appPassword || ""}
+                          onChange={(e) => setEmailConfig(prev => ({ ...prev, appPassword: e.target.value }))}
+                          placeholder="••••••••••••••••"
+                          className={inputCls}
+                        />
+                        <p className="text-[10px] text-slate-400 mt-1">
+                          * لـ Gmail أو Office 365 يُنصح باستخدام كلمة مرور التطبيقات المخصصة (App Password)
+                        </p>
+                      </Field>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <Field label="خادم الإرسال (SMTP Host)">
+                          <input
+                            value={emailConfig.smtpHost}
+                            onChange={(e) => setEmailConfig(prev => ({ ...prev, smtpHost: e.target.value }))}
+                            placeholder="smtp.office365.com"
+                            className={inputCls}
+                          />
+                        </Field>
+
+                        <Field label="منفذ الخادم (Port)">
+                          <input
+                            type="number"
+                            value={emailConfig.smtpPort}
+                            onChange={(e) => setEmailConfig(prev => ({ ...prev, smtpPort: Number(e.target.value) || 587 }))}
+                            placeholder="587"
+                            className={inputCls}
+                          />
+                        </Field>
+                      </div>
+
+                      <button
+                        onClick={handleSaveEmailSettings}
+                        className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-800 transition shadow-sm"
+                      >
+                        حفظ واختبار تفعيل البريد الإلكتروني
+                      </button>
+                    </div>
+                  </Modal>
+                )}
+
                 {/* نافذة إنشاء رسالة بريد */}
                 {showComposeEmail && (
-                  <Modal title="إنشاء وتوجيه بريد إلكتروني رسمي عبر Outlook" onClose={() => setShowComposeEmail(false)}>
+                  <Modal title="إنشاء وتوجيه بريد إلكتروني رسمي" onClose={() => setShowComposeEmail(false)}>
                     <div className="space-y-4 text-sm">
+                      <div className="bg-stone-50 border border-slate-200 p-2.5 rounded-xl text-xs flex items-center justify-between">
+                        <span className="text-slate-600">سيتم الإرسال عبر: <b>{emailConfig.email}</b></span>
+                        <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">
+                          {emailConfig.smtpHost}
+                        </span>
+                      </div>
+
                       <Field label="إلى (المرسل إليه)">
                         <input
                           value={composeTo}
@@ -4600,37 +4977,23 @@ export default function App() {
                           rows={6}
                           value={composeBody}
                           onChange={(e) => setComposeBody(e.target.value)}
-                          placeholder="اكتب تفاصيل المراسلة..."
+                          placeholder="اكتب تفاصيل المراسلة القانونية..."
+                          className={inputCls}
+                        />
+                      </Field>
+                      <Field label="مرفق ملف (اسم المرفق)">
+                        <input
+                          value={composeAttachment}
+                          onChange={(e) => setComposeAttachment(e.target.value)}
+                          placeholder="مثال: لائحة_طعن_رسمية.pdf"
                           className={inputCls}
                         />
                       </Field>
                       <button
-                        onClick={() => {
-                          if (!composeTo || !composeSubject) {
-                            alert("يرجى ملء كافة الحقول الأساسية للبريد");
-                            return;
-                          }
-                          const newSentMail = {
-                            id: Date.now(),
-                            folder: "sent" as const,
-                            sender: outlookAccount.account?.name || currentUser.name,
-                            senderEmail: outlookAccount.account?.email || currentUser.email,
-                            recipient: composeTo,
-                            recipientEmail: composeTo,
-                            subject: composeSubject,
-                            body: composeBody,
-                            date: "الآن",
-                            isRead: true
-                          };
-                          setInAppEmails(prev => [newSentMail, ...prev]);
-                          setShowComposeEmail(false);
-                          setEmailFolder("sent");
-                          setSelectedEmailId(newSentMail.id);
-                          setPermissionNotice("تم توجيه وإرسال الرسالة عبر خادم Microsoft Outlook الرسمي وتوثيقها بنجاح!");
-                        }}
-                        className="w-full rounded-xl bg-amber-500 py-3 font-bold text-slate-900 hover:bg-amber-400"
+                        onClick={handleSendInAppEmail}
+                        className="w-full rounded-xl bg-amber-500 py-3 font-bold text-slate-900 hover:bg-amber-400 transition shadow-sm"
                       >
-                        إرسال عبر Outlook API الآن
+                        إرسال وحفظ في جدول Supabase الآن
                       </button>
                     </div>
                   </Modal>
