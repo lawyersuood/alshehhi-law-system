@@ -1187,28 +1187,40 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
         const user = authData.user;
         // Direct database query for user status in profiles table
         let statusFromDb: string | null = null;
+        let profileFound = false;
+
         const { data: profileRow } = await supabase
           .from('profiles')
           .select('status')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (profileRow) {
           statusFromDb = profileRow.status;
+          profileFound = true;
         } else {
           // Fallback query by email if id query did not return
           const { data: profileByEmail } = await supabase
             .from('profiles')
             .select('status')
             .eq('email', user.email?.toLowerCase())
-            .single();
+            .maybeSingle();
           if (profileByEmail) {
             statusFromDb = profileByEmail.status;
+            profileFound = true;
           }
         }
 
-        // Allow entry ONLY if status === 'approved' or 'نشط' or 'active'
-        if (!statusFromDb || statusFromDb === 'pending' || statusFromDb === 'معلق') {
+        // If record was removed from profiles or status is rejected/deleted
+        if (!profileFound || statusFromDb === 'rejected' || statusFromDb === 'deleted' || statusFromDb === 'موقف' || statusFromDb === 'معطل') {
+          alert("This account has been revoked or removed by the admin");
+          await supabase.auth.signOut();
+          setErrorMsg("This account has been revoked or removed by the admin");
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (statusFromDb === 'pending' || statusFromDb === 'معلق') {
           alert("Your account is pending admin approval");
           await supabase.auth.signOut();
           setErrorMsg("Your account is pending admin approval");
@@ -1217,9 +1229,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
         }
 
         if (statusFromDb !== 'approved' && statusFromDb !== 'نشط' && statusFromDb !== 'active') {
-          alert("Your account status prevents login");
+          alert("This account has been revoked or removed by the admin");
           await supabase.auth.signOut();
-          setErrorMsg("Your account status prevents login");
+          setErrorMsg("This account has been revoked or removed by the admin");
           setIsSubmitting(false);
           return;
         }
@@ -1318,25 +1330,42 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
 
       const registeredUserId = authData?.user?.id;
 
-      // 2. مزامنة بيانات المستخدم المباشرة مع جدول profiles في Supabase Database
-      const profileDataToSave: any = {
-        email: cleanEmail,
-        full_name: cleanName,
-        phone: cleanPhone || "0500000000",
-        role: regRoleKey,
-        status: "pending"
-      };
+      // 2. Direct insertion/upsert into public.profiles table with id, email, full_name, phone, status, role
       if (registeredUserId) {
-        profileDataToSave.id = registeredUserId;
-      }
+        const { error: profileError } = await supabase.from("profiles").upsert([
+          {
+            id: registeredUserId,
+            email: cleanEmail,
+            full_name: cleanName,
+            phone: cleanPhone || "0500000000",
+            status: "pending",
+            role: regRoleKey
+          }
+        ], { onConflict: "id" });
 
-      const { error: profileError } = await supabase.from("profiles").upsert(
-        profileDataToSave,
-        { onConflict: registeredUserId ? "id" : "email" }
-      );
-
-      if (profileError) {
-        console.warn("Supabase profiles table sync note:", profileError.message);
+        if (profileError) {
+          console.warn("Supabase profiles table sync note:", profileError.message);
+          await supabase.from("profiles").upsert([
+            {
+              id: registeredUserId,
+              email: cleanEmail,
+              full_name: cleanName,
+              phone: cleanPhone || "0500000000",
+              status: "pending",
+              role: regRoleKey
+            }
+          ], { onConflict: "email" });
+        }
+      } else {
+        await supabase.from("profiles").upsert([
+          {
+            email: cleanEmail,
+            full_name: cleanName,
+            phone: cleanPhone || "0500000000",
+            status: "pending",
+            role: regRoleKey
+          }
+        ], { onConflict: "email" });
       }
 
       const roleTitleMap = {
@@ -1648,15 +1677,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                   const matchedUser = users.find(
                     (u) => u.email.toLowerCase() === forgotEmail.trim().toLowerCase()
                   );
-                  if (matchedUser) {
-                    setForgotSuccessMsg(
-                      `تم إرسال رابط إعادة تعيين كلمة المرور إلى البريد (${forgotEmail}). كلمة المرور الافتراضية المسجلة لحسابك هي: ${matchedUser.password || "123456"}`
-                    );
-                  } else {
-                    setForgotSuccessMsg(
-                      `تم إرسال تعليمات إعادة التعيين والرمز المؤقت إلى (${forgotEmail}). يرجى التحقق من صندوق الوارد.`
-                    );
-                  }
+                  setForgotSuccessMsg(
+                    `تم إرسال تعليمات ورابط إعادة تعيين كلمة المرور إلى البريد الإلكتروني (${forgotEmail}). يرجى التحقق من صندوق الوارد.`
+                  );
                 }}
                 className="space-y-4 text-xs"
               >
@@ -2287,18 +2310,40 @@ export default function App() {
   const fetchSupabaseProfiles = async () => {
     try {
       const { data, error } = await supabase.from("profiles").select("*");
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         setUsers((prev) => {
           let updated = [...prev];
           let changed = false;
+
+          const dbIds = new Set(data.map((p: any) => p.id).filter(Boolean));
+          const dbEmails = new Set(data.map((p: any) => p.email?.trim().toLowerCase()).filter(Boolean));
+
+          // Filter out users that were removed from Supabase profiles (unless primary local admin)
+          const initialLen = updated.length;
+          updated = updated.filter((u) => {
+            if (u.id === 1 || u.name.includes("سعود")) return true;
+            if (u.supabaseId && !dbIds.has(u.supabaseId) && !dbEmails.has(u.email.toLowerCase())) return false;
+            return true;
+          });
+          if (updated.length !== initialLen) changed = true;
+
           data.forEach((p: any) => {
             const emailClean = p.email?.trim().toLowerCase();
             if (!emailClean) return;
             const existingIdx = updated.findIndex((u) => u.email.toLowerCase() === emailClean);
             const pPhone = p.phone || p.phone_number || "0500000000";
             const pName = p.full_name || p.name || emailClean.split("@")[0];
-            const pStatus = (p.status === "pending" || p.status === "معلق") ? "pending" : (p.status === "approved" || p.status === "نشط" || p.status === "active") ? "approved" : "موقف";
-            
+            const pStatus = (p.status === "pending" || p.status === "معلق") ? "pending" : (p.status === "approved" || p.status === "نشط" || p.status === "active") ? "approved" : "rejected";
+
+            // If profile status is rejected or deleted, remove from state
+            if (pStatus === "rejected") {
+              if (existingIdx >= 0) {
+                updated.splice(existingIdx, 1);
+                changed = true;
+              }
+              return;
+            }
+
             if (existingIdx >= 0) {
               const cur = updated[existingIdx];
               if (cur.status !== pStatus || (pPhone && cur.phone !== pPhone) || (pName && cur.name !== pName) || p.id !== cur.supabaseId) {
@@ -2880,6 +2925,7 @@ export default function App() {
     const preset = ROLE_PRESETS[assignRoleKey];
     const targetUserId = approvingUser.supabaseId || approvingUser.id;
 
+    // Instantly update local UI state
     setUsers((prev) =>
       prev.map((u) =>
         u.id === approvingUser.id
@@ -2909,17 +2955,21 @@ export default function App() {
         .eq("id", targetUserId);
 
       if (updateErr) {
-        await supabase
+        console.error("Approval failed:", updateErr.message);
+        const { error: emailUpdateErr } = await supabase
           .from("profiles")
           .update({
             status: "approved",
             role: assignRoleKey,
             role_title: assignRoleTitle || preset.title
           })
-          .eq("email", approvingUser.email);
+          .eq("email", approvingUser.email.toLowerCase());
+        if (emailUpdateErr) {
+          console.error("Approval failed by email:", emailUpdateErr.message);
+        }
       }
-    } catch (e) {
-      console.log("Error updating profile status:", e);
+    } catch (e: any) {
+      console.error("Approval failed:", e?.message || e);
     }
 
     setPermissionNotice(`تم القبول والاعتماد الصريح لحساب "${approvingUser.name}" وإسناد الصلاحيات المحددة بنجاح!`);
@@ -2930,26 +2980,97 @@ export default function App() {
     openApproveUserModal(userId);
   };
 
+  const handleDeleteUser = async (userId: number) => {
+    if (!checkPerm("manageUsers", "حذف مستخدم")) return;
+    const target = users.find((u) => u.id === userId);
+    if (!target) return;
+
+    if (target.id === currentUserId) {
+      alert("لا يمكنك حذف حسابك الحالي الناشط");
+      return;
+    }
+
+    if (!confirm(`هل أنت متأكد من حذف حساب "${target.name}" نهائياً من النظام؟`)) {
+      return;
+    }
+
+    // Immediately remove from active state so row disappears
+    setUsers((prev) => prev.filter((u) => u.id !== userId));
+
+    const targetUserId = target.supabaseId || target.id;
+
+    try {
+      // 1. Direct deletion query on public.profiles
+      const { error: deleteErr } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", targetUserId);
+
+      if (deleteErr) {
+        // Try direct deletion by email
+        const { error: deleteEmailErr } = await supabase
+          .from("profiles")
+          .delete()
+          .eq("email", target.email.toLowerCase());
+
+        if (deleteEmailErr) {
+          // 2. Fallback soft delete (status = 'rejected') if direct delete restricted by RLS or FK
+          const { error: updateErr } = await supabase
+            .from("profiles")
+            .update({ status: "rejected" })
+            .eq("id", targetUserId);
+
+          if (updateErr) {
+            await supabase
+              .from("profiles")
+              .update({ status: "rejected" })
+              .eq("email", target.email.toLowerCase());
+          }
+        }
+      }
+    } catch (e) {
+      console.log("Error during profile deletion:", e);
+      try {
+        await supabase
+          .from("profiles")
+          .update({ status: "rejected" })
+          .eq("email", target.email.toLowerCase());
+      } catch (err) {
+        console.log("Fallback soft delete failed:", err);
+      }
+    }
+
+    setPermissionNotice(`تم حذف واستبعاد حساب "${target.name}" بنجاح.`);
+  };
+
   const rejectUser = async (userId: number) => {
     if (!checkPerm("manageUsers", "إدارة المستخدمين")) return;
     const target = users.find((u) => u.id === userId);
     if (!target) return;
-    setUsers((prev) =>
-      prev.map((u) => (u.id === userId ? { ...u, status: "موقف" } : u))
-    );
+    
+    // Instantly remove from state
+    setUsers((prev) => prev.filter((u) => u.id !== userId));
+
     const targetUserId = target.supabaseId || target.id;
     try {
-      await supabase
+      const { error: deleteErr } = await supabase
         .from("profiles")
-        .update({ status: "rejected" })
+        .delete()
         .eq("id", targetUserId);
+
+      if (deleteErr) {
+        await supabase
+          .from("profiles")
+          .update({ status: "rejected" })
+          .eq("id", targetUserId);
+      }
     } catch (e) {
       await supabase
         .from("profiles")
         .update({ status: "rejected" })
-        .eq("email", target.email);
+        .eq("email", target.email.toLowerCase());
     }
-    setPermissionNotice(`تم تعليق/رفض حساب "${target.name}".`);
+    setPermissionNotice(`تم رفض واستبعاد حساب "${target.name}".`);
   };
 
   const clientName = (id: number) => clients.find((c) => c.id === id)?.name || "—";
@@ -6883,9 +7004,9 @@ export default function App() {
                                 <p className="text-slate-400">{u.phone}</p>
                               </td>
                               <td className="px-4 py-3 text-xs">
-                                <span className="inline-flex items-center gap-1 bg-stone-100 border border-stone-200 px-2.5 py-1 rounded-lg text-slate-800 font-mono font-bold">
+                                <span className="inline-flex items-center gap-1 bg-stone-100 border border-stone-200 px-2.5 py-1 rounded-lg text-slate-800 font-mono font-bold" title="مشفّرة في Supabase Auth">
                                   <Lock size={12} className="text-amber-600" />
-                                  {u.password || "123456"}
+                                  ••••••••
                                 </span>
                               </td>
                               <td className="px-4 py-3">
@@ -6945,6 +7066,15 @@ export default function App() {
                                   >
                                     تجربة الحساب
                                   </button>
+                                  {u.id !== currentUserId && (
+                                    <button
+                                      onClick={() => handleDeleteUser(u.id)}
+                                      className="p-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition"
+                                      title="حذف هذا الحساب نهائياً من النظام"
+                                    >
+                                      <Trash2 size={16} />
+                                    </button>
+                                  )}
                                 </div>
                               </td>
                             </tr>
@@ -7840,8 +7970,8 @@ export default function App() {
             <Field label="المسمى الوظيفي">
               <input onChange={f("roleTitle")} defaultValue={form.roleTitle || ""} placeholder="مثال: محامي استئناف ومدني" className={inputCls} />
             </Field>
-            <Field label="كلمة المرور الخاصة بالحساب (للدخول للنظام)">
-              <input onChange={f("password")} defaultValue={form.password || editingUser?.password || "123456"} placeholder="أدخل كلمة المرور الحساب" className={inputCls} />
+            <Field label="كلمة المرور المسجلة (تشفير أمان Supabase Auth)">
+              <input type="password" readOnly disabled value="••••••••" className={`${inputCls} bg-stone-100 text-slate-500 cursor-not-allowed`} />
             </Field>
 
             <div className="space-y-2 border-t border-slate-100 pt-3">
@@ -7888,7 +8018,25 @@ export default function App() {
               </label>
             </div>
 
-            <button onClick={saveUser} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">حفظ بيانات المستخدم والصلاحيات</button>
+            <div className="flex items-center justify-between gap-3 pt-2 border-t border-slate-100">
+              {editingUser && editingUser.id !== currentUserId ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const uId = editingUser.id;
+                    setEditingUser(null);
+                    setModal(null);
+                    handleDeleteUser(uId);
+                  }}
+                  className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-bold text-red-700 hover:bg-red-100 transition"
+                >
+                  <Trash2 size={15} /> حذف الحساب
+                </button>
+              ) : <div />}
+              <button onClick={saveUser} className="rounded-xl bg-slate-900 px-6 py-2.5 text-xs font-bold text-white hover:bg-slate-700">
+                حفظ بيانات المستخدم والصلاحيات
+              </button>
+            </div>
           </div>
         </Modal>
       )}
