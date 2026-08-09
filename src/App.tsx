@@ -1231,7 +1231,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
       roleTitle: roleTitleMap[regRoleKey]
     });
 
-    setSuccessMsg("✅ تم إرسال طلب تسجيل الحساب بنجاح إلى لوحة تحكم إدارة المستخدمين لمدير النظام (المحامي سعود). سيتم تفعيل حسابك بمجرد الموافقة.");
+    setSuccessMsg("✅ تم إرسال طلب تسجيل الحساب بنجاح للاعتماد، وسوف يصلك إشعار بالاعتماد على البريد الإلكتروني.");
     setErrorMsg(null);
     setRegName("");
     setRegEmail("");
@@ -3233,6 +3233,28 @@ export default function App() {
               saveStorage("firm_users", updated);
               return updated;
             });
+            // إضافة إشعار لمدير النظام برغبة مستخدم جديد بالانضمام
+            setNotifications((prev) => [
+              {
+                id: Date.now(),
+                title: "طلب تسجيل حساب جديد (قيد الاعتماد)",
+                desc: `قدم ${newUser.name} (${newUser.email}) طلب حساب بدور (${newUser.roleTitle}). الطلب ينتظر موافقة مدير النظام.`,
+                date: todayISO(),
+                type: "تأكيد",
+                read: false
+              },
+              ...prev
+            ]);
+            try {
+              supabase.from("profiles").insert({
+                email: newUser.email,
+                full_name: newUser.name,
+                role: newUser.roleKey,
+                status: "pending"
+              });
+            } catch (e) {
+              // ignore
+            }
           }}
           onOpenSqlModal={() => setShowSupabaseModal(true)}
         />
