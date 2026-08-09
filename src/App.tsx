@@ -2346,13 +2346,17 @@ export default function App() {
 
             if (existingIdx >= 0) {
               const cur = updated[existingIdx];
-              if (cur.status !== pStatus || (pPhone && cur.phone !== pPhone) || (pName && cur.name !== pName) || p.id !== cur.supabaseId) {
+              const pRoleKey = (p.role as any) || cur.roleKey;
+              const pRoleTitle = p.role_title || cur.roleTitle;
+              if (cur.status !== pStatus || (pPhone && cur.phone !== pPhone) || (pName && cur.name !== pName) || p.id !== cur.supabaseId || cur.roleKey !== pRoleKey || cur.roleTitle !== pRoleTitle) {
                 updated[existingIdx] = { 
                   ...cur, 
                   status: pStatus,
                   phone: pPhone || cur.phone,
                   name: pName || cur.name,
-                  supabaseId: p.id || cur.supabaseId
+                  supabaseId: p.id || cur.supabaseId,
+                  roleKey: pRoleKey,
+                  roleTitle: pRoleTitle
                 };
                 changed = true;
               }
@@ -2925,55 +2929,82 @@ export default function App() {
     const preset = ROLE_PRESETS[assignRoleKey];
     const targetUserId = approvingUser.supabaseId || approvingUser.id;
 
-    // Instantly update local UI state
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === approvingUser.id
-          ? {
-              ...u,
-              status: "approved",
-              roleKey: assignRoleKey,
-              roleTitle: assignRoleTitle || preset.title,
-              permissions: { ...preset.permissions },
-              canTransferContacts: assignCanTransfer,
-              canViewAgreements: assignCanAgreements,
-              canAccessWhatsapp: assignCanWhatsapp,
-              canViewFinances: assignCanFinances,
-            }
-          : u
-      )
-    );
+    console.log("Target User ID for approval:", targetUserId, "Email:", approvingUser.email);
 
     try {
-      const { error: updateErr } = await supabase
+      // Direct update in Supabase profiles by ID
+      const { data, error } = await supabase
         .from("profiles")
         .update({
           status: "approved",
           role: assignRoleKey,
           role_title: assignRoleTitle || preset.title
         })
-        .eq("id", targetUserId);
+        .eq("id", targetUserId)
+        .select();
 
-      if (updateErr) {
-        console.error("Approval failed:", updateErr.message);
-        const { error: emailUpdateErr } = await supabase
+      console.log("Update result by ID:", data, "Error:", error);
+
+      let isSuccess = !error && data && data.length > 0;
+
+      // Fallback update by email if ID update returned empty or error
+      if (!isSuccess) {
+        console.log("Attempting fallback update by email:", approvingUser.email);
+        const { data: emailData, error: emailError } = await supabase
           .from("profiles")
           .update({
             status: "approved",
             role: assignRoleKey,
             role_title: assignRoleTitle || preset.title
           })
-          .eq("email", approvingUser.email.toLowerCase());
-        if (emailUpdateErr) {
-          console.error("Approval failed by email:", emailUpdateErr.message);
+          .eq("email", approvingUser.email.toLowerCase())
+          .select();
+
+        console.log("Email Update result:", emailData, "Error:", emailError);
+
+        if (!emailError && emailData && emailData.length > 0) {
+          isSuccess = true;
+        } else if (!error && !emailError) {
+          // If update succeeded without RLS return
+          isSuccess = true;
+        } else {
+          const finalErr = emailError || error;
+          console.error("Database update failed:", finalErr);
+          alert("Approval failed: " + (finalErr?.message || "Database update failed"));
+          return;
         }
       }
-    } catch (e: any) {
-      console.error("Approval failed:", e?.message || e);
-    }
 
-    setPermissionNotice(`تم القبول والاعتماد الصريح لحساب "${approvingUser.name}" وإسناد الصلاحيات المحددة بنجاح!`);
-    setApprovingUser(null);
+      if (isSuccess) {
+        // Update local state after DB confirmation
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === approvingUser.id
+              ? {
+                  ...u,
+                  status: "approved",
+                  roleKey: assignRoleKey,
+                  roleTitle: assignRoleTitle || preset.title,
+                  permissions: { ...preset.permissions },
+                  canTransferContacts: assignCanTransfer,
+                  canViewAgreements: assignCanAgreements,
+                  canAccessWhatsapp: assignCanWhatsapp,
+                  canViewFinances: assignCanFinances,
+                }
+              : u
+          )
+        );
+
+        // Re-fetch users from database to ensure source of truth
+        await fetchSupabaseProfiles();
+
+        setPermissionNotice(`تم القبول والاعتماد الصريح لحساب "${approvingUser.name}" وإسناد الصلاحيات المحددة بنجاح!`);
+        setApprovingUser(null);
+      }
+    } catch (e: any) {
+      console.error("Database update failed with exception:", e);
+      alert("Approval failed: " + (e?.message || "Error during approval process"));
+    }
   };
 
   const approveUser = (userId: number) => {
