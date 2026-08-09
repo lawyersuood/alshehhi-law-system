@@ -25,6 +25,23 @@ const supabaseAnonKey = getSanitisedKey();
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+export async function getSupabaseSession() {
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) return null;
+    return data.session;
+  } catch (err) {
+    return null;
+  }
+}
+
+export function onSupabaseAuthStateChange(callback: (event: string, session: any) => void) {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    callback(event, session);
+  });
+  return subscription;
+}
+
 export interface SupabaseWhatsAppMessage {
   id?: string | number;
   phone_number: string;

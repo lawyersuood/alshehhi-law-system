@@ -1585,8 +1585,21 @@ export default function App() {
       return u;
     });
   });
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [currentUserId, setCurrentUserId] = useState<number>(1); // الافتراضي: سعود الشحي (المدير)
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("firm_is_logged_in") === "true";
+    } catch {
+      return false;
+    }
+  });
+  const [currentUserId, setCurrentUserId] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem("firm_logged_in_user_id");
+      return saved ? Number(saved) : 1;
+    } catch {
+      return 1;
+    }
+  });
   const [clients, setClients] = useState<Client[]>(() => loadStorage("firm_clients", seedClients));
   const [feeAgreements, setFeeAgreements] = useState<FeeAgreement[]>(() => loadStorage("firm_fee_agreements", seedFeeAgreements));
   const [payments, setPayments] = useState<PaymentReceipt[]>(() => loadStorage("firm_payments", seedPayments));
@@ -2305,11 +2318,69 @@ export default function App() {
     setComposeAttachment("");
   };
 
+  const handleLogout = async () => {
+    setIsLoggedIn(false);
+    try {
+      localStorage.removeItem("firm_is_logged_in");
+      localStorage.removeItem("firm_logged_in_user_id");
+      await supabase.auth.signOut();
+    } catch (e) {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     fetchWaStatus();
     fetchEmailSettings();
     fetchSupabaseEmailMessages();
     fetchSupabaseProfiles();
+
+    // التحقق المباشر من جلسة Supabase ومتابعة تغيرات الجلسة (onAuthStateChange)
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.email) {
+        const email = session.user.email.toLowerCase();
+        const found = users.find((u) => u.email.toLowerCase() === email);
+        if (found) {
+          setCurrentUserId(found.id);
+          setIsLoggedIn(true);
+          try {
+            localStorage.setItem("firm_is_logged_in", "true");
+            localStorage.setItem("firm_logged_in_user_id", String(found.id));
+          } catch (e) {}
+        } else {
+          setIsLoggedIn(true);
+          try {
+            localStorage.setItem("firm_is_logged_in", "true");
+          } catch (e) {}
+        }
+      }
+    });
+
+    const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user?.email) {
+        const email = session.user.email.toLowerCase();
+        const found = users.find((u) => u.email.toLowerCase() === email);
+        if (found) {
+          setCurrentUserId(found.id);
+          setIsLoggedIn(true);
+          try {
+            localStorage.setItem("firm_is_logged_in", "true");
+            localStorage.setItem("firm_logged_in_user_id", String(found.id));
+          } catch (e) {}
+        } else {
+          setIsLoggedIn(true);
+          try {
+            localStorage.setItem("firm_is_logged_in", "true");
+          } catch (e) {}
+        }
+      } else if (event === "SIGNED_OUT") {
+        setIsLoggedIn(false);
+        try {
+          localStorage.removeItem("firm_is_logged_in");
+          localStorage.removeItem("firm_logged_in_user_id");
+        } catch (e) {}
+      }
+    });
 
     // الاشتراك اللحظي في جدول Supabase profiles
     const profilesChannel = supabase
@@ -2359,6 +2430,7 @@ export default function App() {
       .subscribe();
 
     return () => {
+      authSub?.unsubscribe();
       supabase.removeChannel(profilesChannel);
       supabase.removeChannel(emailChannel);
     };
@@ -3305,6 +3377,10 @@ export default function App() {
           onLogin={(userId) => {
             setCurrentUserId(userId);
             setIsLoggedIn(true);
+            try {
+              localStorage.setItem("firm_is_logged_in", "true");
+              localStorage.setItem("firm_logged_in_user_id", String(userId));
+            } catch (e) {}
           }}
           onRegister={(newUser) => {
             const created: UserItem = {
@@ -3440,7 +3516,7 @@ export default function App() {
           </nav>
           <div className="border-t border-[#0f4340] p-4 text-xs text-teal-300/60 space-y-2 bg-[#051a19]">
             <button
-              onClick={() => setIsLoggedIn(false)}
+              onClick={handleLogout}
               className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#0d3f3c] py-2.5 px-3 text-xs font-bold text-red-300 hover:bg-red-900/40 transition border border-red-500/20"
               title="تسجيل الخروج والعودة لشاشة الدخول"
             >
