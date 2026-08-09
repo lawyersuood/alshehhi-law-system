@@ -503,13 +503,13 @@ const seedUsers: UserItem[] = [
   {
     id: 1,
     name: "سعود أحمد الشحي",
-    email: "saood@lawfirm.ae",
+    email: "info@lawyersuood.com",
     phone: "0501234567",
     password: "123456",
     roleTitle: "محامٍ شريك / مدير النظام",
     roleKey: "admin",
     status: "نشط",
-    avatarBg: "bg-amber-500",
+    avatarBg: "bg-[#0c4a47]",
     avatarText: "سش",
     permissions: ROLE_PRESETS.admin.permissions
   }
@@ -1260,7 +1260,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                 <Lock size={20} className="text-[#e5c388]" /> الدخول إلى البوابة القانونية
               </h2>
               <p className="text-xs text-teal-200/80 max-w-md mx-auto mt-1">
-                يتطلب الوصول إلى النظام مصادقة آمنة ومحمية ببروتوكولات <span className="text-[#e5c388] font-bold">Supabase Row Level Security (RLS)</span>.
+                يرجى إدخال بيانات حسابك المعتمد للوصول إلى نظام إدارة القضايا والخدمات
               </p>
             </div>
           </div>
@@ -1273,7 +1273,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                 authMode === "login" ? "bg-[#b89b6a] text-slate-950 font-black shadow-sm" : "text-teal-200/70 hover:text-white"
               }`}
             >
-              <Key size={15} /> تسجيل الدخول (Sign In)
+              <Key size={15} /> تسجيل الدخول
             </button>
             <button
               onClick={() => { setAuthMode("register"); setErrorMsg(null); setSuccessMsg(null); }}
@@ -1281,7 +1281,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                 authMode === "register" ? "bg-[#b89b6a] text-slate-950 font-black shadow-sm" : "text-teal-200/70 hover:text-white"
               }`}
             >
-              <UserPlus size={15} /> طلب انضمام جديد (Register)
+              <UserPlus size={15} /> طلب انضمام جديد
             </button>
           </div>
 
@@ -1305,7 +1305,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
               <div className="space-y-3.5">
                 <div>
                   <label className="block text-xs font-bold text-slate-300 mb-1">
-                    اسم المستخدم أو البريد الإلكتروني <span className="text-amber-400">*</span>
+                    البريد الإلكتروني أو اسم المستخدم <span className="text-[#e5c388]">*</span>
                   </label>
                   <div className="relative">
                     <User size={16} className="absolute right-3 top-3 text-slate-500" />
@@ -1314,8 +1314,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                       required
                       value={emailInput}
                       onChange={(e) => setEmailInput(e.target.value)}
-                      placeholder="مثال: saood@lawfirm.ae أو سعود أحمد الشحي"
-                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 pr-9 py-2.5 text-xs text-white placeholder-slate-600 focus:border-amber-500 focus:outline-none"
+                      placeholder="info@lawyersuood.com أو الاسم"
+                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 pr-9 py-2.5 text-xs text-white placeholder-slate-600 focus:border-[#b89b6a] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1323,12 +1323,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-xs font-bold text-slate-300">
-                      كلمة المرور السرية <span className="text-amber-400">*</span>
+                      كلمة المرور السرية <span className="text-[#e5c388]">*</span>
                     </label>
                     <button
                       type="button"
                       onClick={() => setShowForgotModal(true)}
-                      className="text-[11px] font-bold text-amber-400 hover:underline"
+                      className="text-[11px] font-bold text-[#e5c388] hover:underline"
                     >
                       نسيت كلمة المرور؟
                     </button>
@@ -1341,7 +1341,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                       value={passwordInput}
                       onChange={(e) => setPasswordInput(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 pr-9 py-2.5 text-xs text-white placeholder-slate-600 focus:border-amber-500 focus:outline-none"
+                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 pr-9 py-2.5 text-xs text-white placeholder-slate-600 focus:border-[#b89b6a] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1353,19 +1353,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-amber-500 focus:ring-amber-500 focus:ring-offset-slate-900"
+                      className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-[#b89b6a] focus:ring-[#b89b6a] focus:ring-offset-slate-900"
                     />
-                    <span className="font-semibold">تذكر بيانات الدخول على هذا الجهاز (Remember Me)</span>
+                    <span className="font-semibold">تذكر بيانات الدخول على هذا الجهاز</span>
                   </label>
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-400 space-y-1">
-                <p className="font-bold text-amber-400 flex items-center gap-1">
-                  <ShieldCheck size={14} /> الدخول المصرح به فقط
+              <div className="p-3 rounded-xl bg-[#061e1d] border border-[#104845] text-[11px] text-teal-200/80 space-y-1">
+                <p className="font-bold text-[#e5c388] flex items-center gap-1">
+                  <ShieldCheck size={14} /> بوابة مصرح بها للمستخدمين
                 </p>
                 <p className="leading-normal">
-                  يجب إدخال اسم المستخدم أو البريد الإلكتروني المسجل في قاعدة البيانات للتحقق من صلاحيات RLS.
+                  يرجى إدخال البريد الإلكتروني وكلمة المرور الخاصة بحسابك المسجل والمعتمد بالمكتب.
                 </p>
               </div>
 
@@ -1373,7 +1373,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                 type="submit"
                 className="w-full py-3.5 rounded-xl bg-[#b89b6a] text-slate-950 font-black hover:bg-[#a38555] transition shadow-md flex items-center justify-center gap-2 text-xs"
               >
-                <ShieldCheck size={16} /> تسجيل الدخول للتحقق من الصلاحيات
+                <ShieldCheck size={16} /> تسجيل الدخول
               </button>
 
             </form>
@@ -1388,7 +1388,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
                     placeholder="مثال: أ. محمد عبدالله الشامسي"
-                    className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+                    className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-[#b89b6a] focus:outline-none"
                   />
                 </div>
 
@@ -1400,8 +1400,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                       required
                       value={regEmail}
                       onChange={(e) => setRegEmail(e.target.value)}
-                      placeholder="name@firm.ae"
-                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+                      placeholder="name@lawyersuood.com"
+                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-[#b89b6a] focus:outline-none"
                     />
                   </div>
                   <div>
@@ -1411,7 +1411,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                       value={regPhone}
                       onChange={(e) => setRegPhone(e.target.value)}
                       placeholder="+971 50 123 4567"
-                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-[#b89b6a] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1424,7 +1424,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     placeholder="أدخل كلمة مرور قوية"
-                    className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+                    className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-[#b89b6a] focus:outline-none"
                   />
                 </div>
 
@@ -1433,7 +1433,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                   <select
                     value={regRoleKey}
                     onChange={(e) => setRegRoleKey(e.target.value as any)}
-                    className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
+                    className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-[#b89b6a] focus:outline-none"
                   >
                     <option value="lawyer">محامٍ ومستشار قانوني</option>
                     <option value="secretary">إدارة وسكرتارية قانونية</option>
@@ -1442,19 +1442,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                   </select>
                 </div>
 
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-300 leading-relaxed space-y-1">
-                  <p className="font-bold flex items-center gap-1.5">
-                    <Hourglass size={14} className="text-amber-400 shrink-0" /> آلية الاعتماد (User Approval Flow):
+                <div className="p-3 rounded-xl bg-[#061e1d] border border-[#104845] text-[11px] text-teal-200/80 leading-relaxed space-y-1">
+                  <p className="font-bold flex items-center gap-1.5 text-[#e5c388]">
+                    <Hourglass size={14} className="shrink-0" /> آلية تفعيل الحساب:
                   </p>
                   <p>
-                    سيتم تقديم طلبك بحالة <span className="font-bold underline">معلق (Pending)</span>، وسيظل وصولك محجوباً بواسطة قواعد RLS حتى يقوم مدير النظام باعتماطه.
+                    يتم تقديم طلب الانضمام مباشرة للمراجعة والاعتماد لدى مدير النظام، وسوف يصلك إشعار فور الموافقة.
                   </p>
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition shadow-md flex items-center justify-center gap-2 text-xs"
+                className="w-full py-3.5 rounded-xl bg-[#b89b6a] text-slate-950 font-black hover:bg-[#a38555] transition shadow-md flex items-center justify-center gap-2 text-xs"
               >
                 <UserPlus size={16} /> تقديم طلب الانضمام
               </button>
@@ -1522,7 +1522,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                     required
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
-                    placeholder="name@firm.ae"
+                    placeholder="info@lawyersuood.com"
                     className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-amber-500 focus:outline-none"
                   />
                 </div>
@@ -1575,7 +1575,16 @@ function saveStorage<T>(key: string, value: T): void {
 // ============================================================
 export default function App() {
   const [tab, setTab] = useState("dashboard");
-  const [users, setUsers] = useState<UserItem[]>(() => loadStorage("firm_users", seedUsers));
+  const [users, setUsers] = useState<UserItem[]>(() => {
+    const loaded = loadStorage<UserItem[]>("firm_users", seedUsers);
+    const initial = (!loaded || loaded.length === 0) ? seedUsers : loaded;
+    return initial.map((u) => {
+      if (u.id === 1 || u.roleKey === "admin" || u.name.includes("سعود")) {
+        return { ...u, email: "info@lawyersuood.com" };
+      }
+      return u;
+    });
+  });
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [currentUserId, setCurrentUserId] = useState<number>(1); // الافتراضي: سعود الشحي (المدير)
   const [clients, setClients] = useState<Client[]>(() => loadStorage("firm_clients", seedClients));
@@ -1948,7 +1957,7 @@ export default function App() {
     secure: boolean;
     isConfigured: boolean;
   }>({
-    email: "lawyer.suood@al-shehhi-law.ae",
+    email: "info@lawyersuood.com",
     senderName: "المحامي سعود أحمد الشحي",
     appPassword: "",
     smtpHost: "smtp.office365.com",
@@ -2114,6 +2123,56 @@ export default function App() {
     }
   };
 
+  const fetchSupabaseProfiles = async () => {
+    try {
+      const { data, error } = await supabase.from("profiles").select("*");
+      if (!error && data && data.length > 0) {
+        setUsers((prev) => {
+          let updated = [...prev];
+          let changed = false;
+          data.forEach((p: any) => {
+            const emailClean = p.email?.trim().toLowerCase();
+            if (!emailClean) return;
+            const existingIdx = updated.findIndex((u) => u.email.toLowerCase() === emailClean);
+            const pStatus = (p.status === "pending" || p.status === "معلق") ? "معلق" : (p.status === "active" || p.status === "approved" || p.status === "نشط") ? "نشط" : "موقف";
+            
+            if (existingIdx >= 0) {
+              if (updated[existingIdx].status !== pStatus) {
+                updated[existingIdx] = { ...updated[existingIdx], status: pStatus };
+                changed = true;
+              }
+            } else {
+              const roleKey = (p.role as any) || "lawyer";
+              const roleTitle = p.role_title || (ROLE_PRESETS[roleKey]?.title) || "محامٍ ومستشار";
+              const newUser: UserItem = {
+                id: Date.now() + Math.floor(Math.random() * 1000),
+                name: p.full_name || p.name || emailClean.split("@")[0],
+                email: emailClean,
+                phone: p.phone || "0500000000",
+                password: p.password || "123456",
+                roleKey: roleKey as any,
+                roleTitle: roleTitle,
+                status: pStatus,
+                avatarBg: "bg-amber-600 text-white",
+                avatarText: (p.full_name || p.name || emailClean).slice(0, 2),
+                permissions: ROLE_PRESETS[roleKey]?.permissions || ROLE_PRESETS.lawyer.permissions
+              };
+              updated.push(newUser);
+              changed = true;
+            }
+          });
+          if (changed) {
+            saveStorage("firm_users", updated);
+            return updated;
+          }
+          return prev;
+        });
+      }
+    } catch (err) {
+      console.log("Supabase profiles sync note:", err);
+    }
+  };
+
   const fetchSupabaseEmailMessages = async () => {
     try {
       const { data, error } = await supabase
@@ -2250,6 +2309,19 @@ export default function App() {
     fetchWaStatus();
     fetchEmailSettings();
     fetchSupabaseEmailMessages();
+    fetchSupabaseProfiles();
+
+    // الاشتراك اللحظي في جدول Supabase profiles
+    const profilesChannel = supabase
+      .channel("realtime_profiles_channel")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "profiles" },
+        () => {
+          fetchSupabaseProfiles();
+        }
+      )
+      .subscribe();
 
     // الاشتراك اللحظي في جدول Supabase email_messages
     const emailChannel = supabase
@@ -2287,6 +2359,7 @@ export default function App() {
       .subscribe();
 
     return () => {
+      supabase.removeChannel(profilesChannel);
       supabase.removeChannel(emailChannel);
     };
   }, []);
@@ -2592,6 +2665,15 @@ export default function App() {
           : u
       )
     );
+    try {
+      supabase.from("profiles").update({
+        status: "approved",
+        role: assignRoleKey,
+        role_title: assignRoleTitle || preset.title
+      }).eq("email", approvingUser.email).then(() => {});
+    } catch (e) {
+      // ignore
+    }
     setPermissionNotice(`تم القبول والاعتماد الصريح لحساب "${approvingUser.name}" وإسناد الصلاحيات المحددة بنجاح!`);
     setApprovingUser(null);
   };
@@ -2607,6 +2689,11 @@ export default function App() {
     setUsers((prev) =>
       prev.map((u) => (u.id === userId ? { ...u, status: "موقف" } : u))
     );
+    try {
+      supabase.from("profiles").update({ status: "rejected" }).eq("email", target.email).then(() => {});
+    } catch (e) {
+      // ignore
+    }
     setPermissionNotice(`تم تعليق/رفض حساب "${target.name}".`);
   };
 
