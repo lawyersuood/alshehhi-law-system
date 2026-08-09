@@ -511,71 +511,6 @@ const seedUsers: UserItem[] = [
     avatarBg: "bg-amber-500",
     avatarText: "سش",
     permissions: ROLE_PRESETS.admin.permissions
-  },
-  {
-    id: 2,
-    name: "مستشار قانوني",
-    email: "lawyer@lawfirm.ae",
-    phone: "0502345678",
-    password: "123456",
-    roleTitle: "محامٍ ومستشار قانوني",
-    roleKey: "lawyer",
-    status: "نشط",
-    avatarBg: "bg-blue-500",
-    avatarText: "مق",
-    permissions: ROLE_PRESETS.lawyer.permissions
-  },
-  {
-    id: 3,
-    name: "منسق السكرتارية",
-    email: "info@lawfirm.ae",
-    phone: "0503456789",
-    password: "123456",
-    roleTitle: "مسؤول سكرتارية وتنسيق",
-    roleKey: "secretary",
-    status: "نشط",
-    avatarBg: "bg-emerald-500",
-    avatarText: "سك",
-    permissions: ROLE_PRESETS.secretary.permissions
-  },
-  {
-    id: 4,
-    name: "محاسب المكتب",
-    email: "accounts@lawfirm.ae",
-    phone: "0504567890",
-    password: "123456",
-    roleTitle: "محاسب المكتب والضريبة",
-    roleKey: "accountant",
-    status: "نشط",
-    avatarBg: "bg-purple-500",
-    avatarText: "مح",
-    permissions: ROLE_PRESETS.accountant.permissions
-  },
-  {
-    id: 5,
-    name: "أ. خالد بن سيف آل علي",
-    email: "khaled.alali@lawfirm.ae",
-    phone: "0505566778",
-    password: "123456",
-    roleTitle: "محامٍ متدرب (قيد التفعيل)",
-    roleKey: "lawyer",
-    status: "معلق",
-    avatarBg: "bg-amber-600 text-white",
-    avatarText: "خع",
-    permissions: ROLE_PRESETS.lawyer.permissions
-  },
-  {
-    id: 6,
-    name: "أ. مريم الحوسني",
-    email: "maryam.hosani@lawfirm.ae",
-    phone: "0506677889",
-    password: "123456",
-    roleTitle: "منسقة شؤون الموكلين (جديد)",
-    roleKey: "secretary",
-    status: "معلق",
-    avatarBg: "bg-rose-500 text-white",
-    avatarText: "مح",
-    permissions: ROLE_PRESETS.secretary.permissions
   }
 ];
 
@@ -583,93 +518,7 @@ export const seedFeeAgreements: FeeAgreement[] = [];
 
 export const seedPayments: PaymentReceipt[] = [];
 
-const seedClients: Client[] = [
-  { id: 1, name: "فوزية احمد عتيق علي المهيري", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 2, name: "خط السماء لصناعة عوادم السيارات- مؤسسة فردية", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 3, name: "دار سمرا للكمبيوتر ذ.م.م Dar Samra Computer L.L.C", type: "شركة", idNo: "100331456200003", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 4, name: "بريدج لخدمات الترجمة القانونية", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 5, name: "PAKIZA PROPERTIES L.L.C باكيزا للعقارات ش.ذ.م.م", type: "شركة", idNo: "105100974200003", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 6, name: "JOAN DAYAN CASTILLO", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "PH" },
-  { id: 7, name: "ابو بكر عبدالعزيز طلحة", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "SD" },
-  { id: 8, name: "Anthropic, PBC", type: "شركة", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "" },
-  { id: 9, name: "محمد سلطان الشامسي", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 10, name: "احمد مختار عيد محمد", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "EG" },
-  { id: 11, name: "aly mohsmed aly mohamed rehan", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "EG" },
-  { id: 12, name: "بنك المارية المحلي", type: "شركة", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
-  { id: 13, name: "بوابة الابتكار للحلول التكنولوجية", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 14, name: "شما جمال عبدالله سالم السويدي shamma jamal abdalla salim alsuwaidi", type: "فرد", idNo: "", phone: "", email: "shammaalsuwaidi5555@outlook.com", emirate: "دبي", address: "" },
-  { id: 15, name: "هونج كونج لتجارة أدوات التجميل ش.ذ.م.م HONG KONG COSMETICS TRADING L.L.C", type: "شركة", idNo: "104912672300003", phone: "", email: "hkcosmetics.pro@gmail.com", emirate: "دبي", address: "" },
-  { id: 16, name: "الاوائل لصناعة البلاستك ذ.م.م Al-Awail Plastic Manufacturing LLC", type: "شركة", idNo: "", phone: "", email: "Alawaelplasticindustry@gmail.com", emirate: "الشارقة", address: "" },
-  { id: 17, name: "محمد صدام محمد نواز Muhammad Saddam Muhammad Nawaz", type: "فرد", idNo: "", phone: "0501043543", email: "sadamnawaz23006@gmail.com", emirate: "دبي", address: "" },
-  { id: 18, name: "Day to day", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 19, name: "دار القضاء الشارقة-Sharjah Court House", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "" },
-  { id: 20, name: "مهند صالح- Muhannad Saleh", type: "فرد", idNo: "", phone: "", email: "Mohaneds45@hotmail.com", emirate: "خارج الدولة", address: "GB" },
-  { id: 21, name: "الأستاذ المحامي / هيثم احمد سيف العامري-Lawyer/Professor Haitham Ahmed Saif Al-Amri", type: "فرد", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
-  { id: 22, name: "الصافي لتنقية مياه الشرب-Al Safi for drinking water purification", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 23, name: "الهيئة العامة للمعاشات-General Authority for Pensions", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
-  { id: 24, name: "الشوؤن القانونية في دبي-Legal Affairs in Dubai", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 25, name: "الهيئة الاتحادية للضرائب-Federal Tax Authority", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
-  { id: 26, name: "FEDERAL TAX AUTHORITY", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
-  { id: 27, name: "ارامكس- Aramex", type: "شركة", idNo: "100212963100003", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 28, name: "name.com", type: "شركة", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "" },
-  { id: 29, name: "GOOGEL", type: "شركة", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "" },
-  { id: 30, name: "وزارة الموارد البشرية والتوطين-Ministry of Human Resources and Emiratization", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 31, name: "احمد طلال اليمن- Ahmed Talal Yemen", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "LB" },
-  { id: 32, name: "دائرة التنمية الاقتصادية بشارقة-Sharjah Department of Economic Development", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "" },
-  { id: 33, name: "بخيته صالح راشد راشد المنصوري-Bakhita Saleh Rashid Rashid Al Mansouri", type: "فرد", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
-  { id: 34, name: "Usk zinc industries", type: "شركة", idNo: "", phone: "", email: "mohammadumer.khalid@hotmail.com", emirate: "دبي", address: "" },
-  { id: 35, name: "Elin foodstuff treding", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 36, name: "PNP GLOBAL SUPPLY COMPANY LIMITED", type: "شركة", idNo: "", phone: "+84911330257", email: "michael.hua@pnpglobalsupply.com", emirate: "خارج الدولة", address: "VN" },
-  { id: 37, name: "Sharjah Electricity & Water Authority", type: "جهة حكومية", idNo: "100394961500003", phone: "", email: "", emirate: "الشارقة", address: "" },
-  { id: 38, name: "محمد عمر بن خالد خالد بشير-Muhammad Omar bin Khalid Khalid Bashir", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "PK" },
-  { id: 39, name: "نسرين انطونيوس ظاهر-Nasreen Antonios Daher", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "SY" },
-  { id: 40, name: "خليفة محمد احمد بيبي الشحي Khalifa Mohammed Ahmed Bibi Al Shehhi", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "" },
-  { id: 41, name: "بدر سعيد راشد سعيد الحبسي-Badr Saeed Rashid Saeed Al Habsi", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "" },
-  { id: 42, name: "Wafeq FZ LLC (Main)", type: "شركة", idNo: "100584752800003", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 43, name: "METHAQ TAKAFUL INSURANCE COMPANY", type: "شركة", idNo: "100000232700003", phone: "", email: "", emirate: "أبوظبي", address: "" },
-  { id: 44, name: "MINISTRY OF JUSTICE", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
-  { id: 45, name: "du", type: "شركة", idNo: "100001397700003", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 46, name: "محمد احمد عبيد بن جرش الفلاسي-Mohammed Ahmed Obeid between Jarash Al-Fals", type: "فرد", idNo: "", phone: "", email: "M.falasi87@gmail.com", emirate: "دبي", address: "" },
-  { id: 47, name: "ناعومي كمال الدين ظريف-Naomi Kamal El-Din Zarif", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 48, name: "عزة راشد سعيد ساعد الشميلي-Azza Rashid Saeed Saad Al-Shumaili", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "" },
-  { id: 49, name: "محمد صالح-Muhammad Saleh", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 50, name: "مريم محمد راشد-Maryam Mohammed Rashid", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 51, name: "نور عماد الدين إبراهيم-Nour Emad El-Din Ibrahim", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 52, name: "USK METALS L L C", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 53, name: "زينب بنت عبدالله بن غلوم البلوشية-Zainab bint Abdullah bin Ghloum Al Balushi", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 54, name: "خالد خليفة عبيد الغول-Khaled Khalifa Obaid Al-Ghul", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 55, name: "عمر مصطفى عيد محمد-Omar Mustafa Eid Muhammad", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 56, name: "عبدالله محمد عبدالله المازمي-Abdullah Mohammed Abdullah Al Mazmi", type: "فرد", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "" },
-  { id: 57, name: "أمير حسين جواد اقاباباني-Amir Hussein Jawad Aghababani", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "IR" },
-  { id: 58, name: "عذاري سعيد محمد الظنحاني Adhari Saeed Mohammed Al Dhanhani", type: "فرد", idNo: "", phone: "", email: "", emirate: "الفجيرة", address: "" },
-  { id: 59, name: "يعقوب حسن أحمد البنا-Yaqub Hassan Ahmed Al-Banna", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 60, name: "علا تحسين عبدالرؤف الفارس-Alaa Tahseen Abdul Raouf Al-Fares", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 61, name: "نادية يونس عثمان- Nadia Younes Othman", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 62, name: "احمد راشد الشميلي- Ahmed Rashid Al-Shumaili", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "" },
-  { id: 63, name: "امينة آل بيات Amina Al-Bayat", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 64, name: "عمر مصطفى عيد محمد (تابي ) Omar Mustafa Eid Muhammad (Tabi)", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 65, name: "خالد بشير أوان محمد بشير اختر Khaled Bashir Awan Mohammed Bashir Akhtar", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 66, name: "إبراهيم محسن قاسم عبدالله Ibrahim Mohsen Qasim Abdullah", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 67, name: "شركة دو  Du company", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 68, name: "sewa", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "" },
-  { id: 69, name: "فاروق احمد غلام اكبر-Farooq Ahmed Ghulam Akbar", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "PK" },
-  { id: 70, name: "ياروسلافا زولينا Yaroslava Zolina", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "UA" },
-  { id: 71, name: "راشد خميس فايز خميس مبارك-Rashid Khamis Fayez Khamis Mubarak", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 72, name: "محمد عبدالقادر سليمان حامد Mohammed Abdul Qader Suleiman Hamed", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "JO" },
-  { id: 73, name: "صلاح حسين حسن تهلك Salah Hussein Hassan perished", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 74, name: "خميس سعيد ساعد الحبسي Khamis Saeed Saad Al Habsi", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "" },
-  { id: 75, name: "كمال سالم راشد اليماحي Kamal Salem Rashid Al-Yamahi", type: "فرد", idNo: "", phone: "", email: "", emirate: "الفجيرة", address: "" },
-  { id: 76, name: "محمد خليفة عبدالله جاسم Mohammed Khalifa Abdullah Jassim", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 77, name: "كمال موسي حبيب حسن اليوسف Kamal Moussa Habib Hassan Al-Youssef", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 78, name: "محمود محمد غلاونجي Mahmoud Muhammad Ghalaounji", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "EG" },
-  { id: 79, name: "شيماء سعيد راشد ساعد الحبسي-Shaima Saeed Rashid Saad Al Habsi", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "" },
-  { id: 80, name: "سامي محروس عبدالغني مشعل-Sami Mahrous Abdelghani Mashal", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "EG" },
-  { id: 81, name: "رافي اكوب قره بتيان-Rafi Akop Karabetian", type: "فرد", idNo: "", phone: "", email: "", emirate: "خارج الدولة", address: "LB" },
-  { id: 82, name: "وزارة العدل- Ministry of Justice", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "أبوظبي", address: "" },
-  { id: 83, name: "مؤسسة رواد-Pioneers Foundation", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "" },
-  { id: 84, name: "عبدالله الرستماني للعقارات-Abdullah Al Rostamani Real Estate", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "" },
-  { id: 85, name: "إبراهيم علي عباس بيشوه البلوشي-Ibrahim Ali Abbas Bishouh Al-Balushi", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "" }
-];
+const seedClients: Client[] = [];
 
 const seedCases: CaseItem[] = [];
 
@@ -711,138 +560,7 @@ const seedInstallments: InvoiceInstallment[] = [];
 
 const seedStrReports: StrReport[] = [];
 
-const seedCourtContacts: CourtContact[] = [
-  {
-    id: 1,
-    courtName: "محاكم دبي الابتدائية",
-    emirate: "دبي",
-    department: "قسم قيد الدعاوى والمذكرات التجارية",
-    titleOrEmployee: "أمين سر قيد الدعاوى التجارية - شباك 3",
-    phone: "04-3347777",
-    extOrSeal: "خاتم رقم 104 — تمديدة 4120",
-    email: "registration.commercial@dc.gov.ae",
-    operatingHours: "07:30 ص - 02:30 م",
-    location: "مبنى محاكم دبي - القرهود - الطابق الأول",
-    notes: "استقبال المذكرات وإيداعها حتى الساعة 1:30 ظهراً أو رفعها عبر بوابة الخدمة الإلكترونية (CIMS)."
-  },
-  {
-    id: 2,
-    courtName: "محاكم دبي - محكمة التنفيذ",
-    emirate: "دبي",
-    department: "إدارة التنفيذ والإنابات القضائية",
-    titleOrEmployee: "منسق طلبات التنفيذ وأوامر الضبط والاحضار",
-    phone: "04-3347888",
-    extOrSeal: "خاتم رقم 215 — تمديدة 5510 (شباك 8)",
-    email: "execution.service@dc.gov.ae",
-    operatingHours: "08:00 ص - 03:00 م",
-    location: "مبنى محكمة التنفيذ - العوير - الطابق الأرضي",
-    notes: "متابعة كتابة خطابات الحجز على الحسابات والسيارات يومياً من 9:00 ص إلى 12:00 م."
-  },
-  {
-    id: 3,
-    courtName: "دائرة القضاء - أبوظبي",
-    emirate: "أبوظبي",
-    department: "قسم الطعون والاستئناف المدني",
-    titleOrEmployee: "أمين سر دائرة الاستئناف التجارية الثانية",
-    phone: "02-6512222",
-    extOrSeal: "خاتم رقم 308 — تمديدة 6105 (شباك 12)",
-    email: "appeal.civil@adjd.gov.ae",
-    operatingHours: "07:30 ص - 03:00 م",
-    location: "مبنى دائرة القضاء الرئيسي - شارع الخليج العربي - الطابق الثالث - قاعة 14",
-    notes: "تقديم المذكرات الجوابية الأصلية مرفقة بالهويات الوطنية قبل الجلسة بـ 48 ساعة."
-  },
-  {
-    id: 4,
-    courtName: "دائرة القضاء - أبوظبي",
-    emirate: "أبوظبي",
-    department: "قسم أمانات الخبراء والتقارير المحاسبية",
-    titleOrEmployee: "المنسق المالي لأمانات الخبراء القضائيين",
-    phone: "02-6512900",
-    extOrSeal: "خاتم رقم 119 — تمديدة 3340",
-    email: "experts.dep@adjd.gov.ae",
-    operatingHours: "08:00 ص - 02:30 م",
-    location: "المبنى الإداري - الطابق الأول - مكتب 108",
-    notes: "إيداع أمانة الخبير فور صدور القرار التمهيدي أو إرفاق السند المالي بملف الدعوى الإلكتروني."
-  },
-  {
-    id: 5,
-    courtName: "المحكمة الاتحادية العليا",
-    emirate: "الشارقة",
-    department: "قلم كتاب محكمة الطعن والتمييز الاتحادية",
-    titleOrEmployee: "رئيس قلم الطعون الاتحادية العليا",
-    phone: "06-5075555",
-    extOrSeal: "خاتم رقم 501 — تمديدة 7712 (شباك 1)",
-    email: "supreme.court@moj.gov.ae",
-    operatingHours: "07:30 ص - 02:30 م",
-    location: "مجمع المحاكم الاتحادية بالشارقة - شارع المليحة - الطابق الرابع",
-    notes: "صحيفة الطعن الاتحادية تتطلب التوقيع المعتمد ورسم الطعن التمييزي البالغ 5,000 درهم."
-  },
-  {
-    id: 6,
-    courtName: "مركز فض المنازعات الإيجارية (RDC)",
-    emirate: "دبي",
-    department: "لجنة المنازعات الابتدائية والاستئنافية",
-    titleOrEmployee: "أمين سر لجان الإيجارات والتحكيم",
-    phone: "04-2030555",
-    extOrSeal: "خاتم رقم 112 — تمديدة 2200",
-    email: "rdc-support@dubailand.gov.ae",
-    operatingHours: "07:30 ص - 03:30 م",
-    location: "دائرة الأراضي والأملاك - الفرهود - الطابق الأرضي",
-    notes: "يجب إرفاق عقد الإيجار الموثق (إيجاري) ونسخة الإخطار العدلي شرطاً لقبول قيد الشكوى الإيجارية."
-  },
-  {
-    id: 7,
-    courtName: "محكمة عجمان الاتحادية",
-    emirate: "عجمان",
-    department: "قسم الأحوال الشخصية والتركات",
-    titleOrEmployee: "أمين سر دائرة التركات والأحوال",
-    phone: "06-7014444",
-    extOrSeal: "خاتم رقم 703 — تمديدة 1022 (شباك 5)",
-    email: "ajman.personal@moj.gov.ae",
-    operatingHours: "07:30 ص - 02:30 م",
-    location: "مبنى محكمة عجمان - شارع الاتحاد - الطابق الثاني",
-    notes: "تقديم حصر التركة وإعلام الوراثة المعتمد يدوياً وعبر البوابة القضائية الموحدة لوزارة العدل."
-  },
-  {
-    id: 8,
-    courtName: "محاكم رأس الخيمة",
-    emirate: "رأس الخيمة",
-    department: "قسم خدمات المتعاملين وقيد الدعاوى",
-    titleOrEmployee: "مسجل الدعاوى التجارية والعمالية",
-    phone: "07-2070000",
-    extOrSeal: "خاتم رقم 809 — تمديدة 4099 (شباك 2)",
-    email: "courts.cases@rak.ae",
-    operatingHours: "07:30 ص - 03:00 م",
-    location: "مبنى محاكم رأس الخيمة - شارع النخيل - الطابق الأرضي",
-    notes: "الدعم الفني والخدمات الميدانية متوفرة للمحامين المسجلين عبر البوابة القضائية لرأس الخيمة."
-  },
-  {
-    id: 9,
-    courtName: "محاكم مركز دبي المالي العالمي (DIFC Courts)",
-    emirate: "دبي",
-    department: "Registry & Case Management Office",
-    titleOrEmployee: "Assistant Registrar / Case Manager",
-    phone: "04-4273333",
-    extOrSeal: "Stamp #DIFC-09 — Ext 104",
-    email: "registry@difccourts.ae",
-    operatingHours: "08:00 ص - 04:00 م",
-    location: "DIFC Building 4 - Level 3 - Gate District",
-    notes: "جميع المذكرات والصحف تُرفع باللغة الإنجليزية عبر البوابة الإلكترونية المعتمدة لمجلس DIFC."
-  },
-  {
-    id: 10,
-    courtName: "محكمة الفجيرة الاتحادية",
-    emirate: "الفجيرة",
-    department: "قسم الأمور المستعجلة والعرائض",
-    titleOrEmployee: "أمين سر قاضي الأمور المستعجلة",
-    phone: "09-2022222",
-    extOrSeal: "خاتم رقم 604 — تمديدة 3100",
-    email: "fujairah.summary@moj.gov.ae",
-    operatingHours: "07:30 ص - 02:30 م",
-    location: "مجمع محاكم الفجيرة - شارع الشرقي - الطابق الأول",
-    notes: "العرائض والطلبات الوقتية تُعرض فوراً على القاضي المختص فور سداد الرسم واستكمال البيانات."
-  }
-];
+const seedCourtContacts: CourtContact[] = [];
 
 const DOC_TEMPLATES: DocTemplate[] = [
   {
@@ -1336,17 +1054,14 @@ const PendingApprovalScreen = ({
             </button>
           </div>
 
-          {/* زر تبديل سريع للمعاينة كمدير */}
-          <div className="rounded-2xl border border-blue-200 bg-blue-50/80 p-3.5 text-xs text-blue-900 space-y-2">
-            <p className="font-semibold flex items-center gap-1.5">
-              <UserCheck size={16} className="text-blue-600 shrink-0" /> تجربة النظام: التبديل إلى مدير النظام وتفعيل الحساب فوراً
+          {/* إشعار الانتظار للمراجعة والاعتماد */}
+          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700 space-y-2">
+            <p className="font-bold flex items-center gap-1.5 text-slate-900">
+              <Clock size={16} className="text-amber-600 shrink-0" /> متابعة حالة الطلب:
             </p>
-            <button
-              onClick={() => setCurrentUserId(1)} // سعود أحمد الشحي (المدير)
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-2.5 px-4 text-xs font-bold text-white hover:bg-blue-700 transition shadow-xs"
-            >
-              التبديل إلى حساب المدير (سعود أحمد الشحي) لـ قبول هذا الحساب
-            </button>
+            <p>
+              تم تسجيل الطلب وإرساله إلى لوحة تحكم إدارة المستخدمين لدى مدير النظام (المحامي سعود). سيصلك إشعار فور قبول وتفعيل حسابك.
+            </p>
           </div>
         </div>
       </div>
@@ -1413,6 +1128,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
     }
   });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Forgot Password State
   const [showForgotModal, setShowForgotModal] = useState<boolean>(false);
@@ -1429,6 +1145,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    setSuccessMsg(null);
 
     const cleanedEmail = emailInput.trim().toLowerCase();
     const cleanedPass = passwordInput.trim();
@@ -1466,6 +1183,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
       return;
     }
 
+    if (targetUser.status === "معلق" || targetUser.status === "pending") {
+      setErrorMsg("عذراً، هذا الحساب بحالة (معلق) قيد المراجعة بانتظار الاعتماد والموافقة من قبل مدير النظام (المحامي سعود). سيتم تفعيل حسابك بمجرد الموافقة.");
+      return;
+    }
+
     if (targetUser.status === "موقف" || targetUser.status === "معطل") {
       setErrorMsg("عذراً، هذا الحساب موقف أو معطل حالياً من قبل إدارة النظام.");
       return;
@@ -1487,6 +1209,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
       setErrorMsg("يرجى إدخال جميع البيانات المطلوبة لتقديم طلب الحساب.");
       return;
     }
+
+    // Check if email already exists
+    const existing = users.find(u => u.email.toLowerCase() === regEmail.trim().toLowerCase());
+    if (existing) {
+      setErrorMsg("البريد الإلكتروني المدخل مسجل مسبقاً بالنظام.");
+      return;
+    }
+
     const roleTitleMap = {
       admin: "مدير النظام",
       lawyer: "محامٍ ومستشار",
@@ -1494,13 +1224,20 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
       accountant: "محاسب قانوني"
     };
     onRegister({
-      name: regName,
-      email: regEmail,
-      phone: regPhone || "0500000000",
+      name: regName.trim(),
+      email: regEmail.trim(),
+      phone: regPhone.trim() || "0500000000",
       password: regPassword || "123456",
       roleKey: regRoleKey,
       roleTitle: roleTitleMap[regRoleKey]
     });
+
+    setSuccessMsg("✅ تم إرسال طلب تسجيل الحساب بنجاح إلى لوحة تحكم إدارة المستخدمين لمدير النظام (المحامي سعود). سيتم تفعيل حسابك بمجرد الموافقة.");
+    setErrorMsg(null);
+    setRegName("");
+    setRegEmail("");
+    setRegPhone("");
+    setAuthMode("login");
   };
 
   return (
@@ -1535,7 +1272,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
           {/* تبويب الدخول / التسجيل */}
           <div className="flex rounded-2xl bg-slate-950 p-1.5 border border-slate-800 text-xs font-bold">
             <button
-              onClick={() => { setAuthMode("login"); setErrorMsg(null); }}
+              onClick={() => { setAuthMode("login"); setErrorMsg(null); setSuccessMsg(null); }}
               className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-2 ${
                 authMode === "login" ? "bg-amber-500 text-slate-950 shadow-sm" : "text-slate-400 hover:text-slate-200"
               }`}
@@ -1543,7 +1280,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
               <Key size={15} /> تسجيل الدخول (Sign In)
             </button>
             <button
-              onClick={() => { setAuthMode("register"); setErrorMsg(null); }}
+              onClick={() => { setAuthMode("register"); setErrorMsg(null); setSuccessMsg(null); }}
               className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-2 ${
                 authMode === "register" ? "bg-amber-500 text-slate-950 shadow-sm" : "text-slate-400 hover:text-slate-200"
               }`}
@@ -1552,9 +1289,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
             </button>
           </div>
 
+          {successMsg && (
+            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-400 font-bold flex items-center gap-2 leading-relaxed">
+              <CheckCircle2 size={18} className="shrink-0 text-emerald-400" />
+              <span>{successMsg}</span>
+            </div>
+          )}
+
           {errorMsg && (
-            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 font-bold flex items-center gap-2">
-              <AlertCircle size={16} className="shrink-0" />
+            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 font-bold flex items-center gap-2 leading-relaxed">
+              <AlertCircle size={18} className="shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
@@ -3491,8 +3235,6 @@ export default function App() {
               permissions: ROLE_PRESETS[newUser.roleKey]?.permissions || ROLE_PRESETS.lawyer.permissions
             };
             setUsers((prev) => [...prev, created]);
-            setCurrentUserId(created.id);
-            setIsLoggedIn(true);
           }}
           onOpenSqlModal={() => setShowSupabaseModal(true)}
         />
