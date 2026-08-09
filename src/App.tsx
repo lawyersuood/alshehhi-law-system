@@ -76,6 +76,7 @@ export interface RolePermissions {
 
 export interface UserItem {
   id: number;
+  supabaseId?: string;
   name: string;
   email: string;
   phone: string;
@@ -1183,19 +1184,49 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
       });
 
       if (!authError && authData?.user) {
-        const userEmail = authData.user.email?.toLowerCase() || cleanedEmail;
+        const user = authData.user;
+        // Direct database query for user status in profiles table
+        let statusFromDb: string | null = null;
+        const { data: profileRow } = await supabase
+          .from('profiles')
+          .select('status')
+          .eq('id', user.id)
+          .single();
+
+        if (profileRow) {
+          statusFromDb = profileRow.status;
+        } else {
+          // Fallback query by email if id query did not return
+          const { data: profileByEmail } = await supabase
+            .from('profiles')
+            .select('status')
+            .eq('email', user.email?.toLowerCase())
+            .single();
+          if (profileByEmail) {
+            statusFromDb = profileByEmail.status;
+          }
+        }
+
+        // Allow entry ONLY if status === 'approved' or 'نشط' or 'active'
+        if (!statusFromDb || statusFromDb === 'pending' || statusFromDb === 'معلق') {
+          alert("Your account is pending admin approval");
+          await supabase.auth.signOut();
+          setErrorMsg("Your account is pending admin approval");
+          setIsSubmitting(false);
+          return;
+        }
+
+        if (statusFromDb !== 'approved' && statusFromDb !== 'نشط' && statusFromDb !== 'active') {
+          alert("Your account status prevents login");
+          await supabase.auth.signOut();
+          setErrorMsg("Your account status prevents login");
+          setIsSubmitting(false);
+          return;
+        }
+
+        const userEmail = user.email?.toLowerCase() || cleanedEmail;
         const target = users.find((u) => u.email.toLowerCase() === userEmail);
         if (target) {
-          if (target.status === "معلق" || target.status === "pending") {
-            setErrorMsg("عذراً، هذا الحساب بحالة (معلق) قيد المراجعة بانتظار الاعتماد والموافقة من قبل مدير النظام. سيتم تفعيل حسابك بمجرد الموافقة.");
-            setIsSubmitting(false);
-            return;
-          }
-          if (target.status === "موقف" || target.status === "معطل") {
-            setErrorMsg("عذراً، هذا الحساب موقف أو معطل حالياً من قبل إدارة النظام.");
-            setIsSubmitting(false);
-            return;
-          }
           onLogin(target.id);
           setIsSubmitting(false);
           return;
@@ -1217,12 +1248,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
     }
 
     if (targetUser.status === "معلق" || targetUser.status === "pending") {
-      setErrorMsg("عذراً، هذا الحساب بحالة (معلق) قيد المراجعة بانتظار الاعتماد والموافقة من قبل مدير النظام. سيتم تفعيل حسابك بمجرد الموافقة.");
+      alert("Your account is pending admin approval");
+      await supabase.auth.signOut();
+      setErrorMsg("Your account is pending admin approval");
       setIsSubmitting(false);
       return;
     }
 
     if (targetUser.status === "موقف" || targetUser.status === "معطل") {
+      alert("Your account status prevents login");
+      await supabase.auth.signOut();
       setErrorMsg("عذراً، هذا الحساب موقف أو معطل حالياً من قبل إدارة النظام.");
       setIsSubmitting(false);
       return;
@@ -1281,16 +1316,23 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
         return;
       }
 
+      const registeredUserId = authData?.user?.id;
+
       // 2. مزامنة بيانات المستخدم المباشرة مع جدول profiles في Supabase Database
+      const profileDataToSave: any = {
+        email: cleanEmail,
+        full_name: cleanName,
+        phone: cleanPhone || "0500000000",
+        role: regRoleKey,
+        status: "pending"
+      };
+      if (registeredUserId) {
+        profileDataToSave.id = registeredUserId;
+      }
+
       const { error: profileError } = await supabase.from("profiles").upsert(
-        {
-          email: cleanEmail,
-          full_name: cleanName,
-          phone: cleanPhone || "0500000000",
-          role: regRoleKey,
-          status: "pending"
-        },
-        { onConflict: "email" }
+        profileDataToSave,
+        { onConflict: registeredUserId ? "id" : "email" }
       );
 
       if (profileError) {
@@ -2253,11 +2295,20 @@ export default function App() {
             const emailClean = p.email?.trim().toLowerCase();
             if (!emailClean) return;
             const existingIdx = updated.findIndex((u) => u.email.toLowerCase() === emailClean);
-            const pStatus = (p.status === "pending" || p.status === "معلق") ? "معلق" : (p.status === "active" || p.status === "approved" || p.status === "نشط") ? "نشط" : "موقف";
+            const pPhone = p.phone || p.phone_number || "0500000000";
+            const pName = p.full_name || p.name || emailClean.split("@")[0];
+            const pStatus = (p.status === "pending" || p.status === "معلق") ? "pending" : (p.status === "approved" || p.status === "نشط" || p.status === "active") ? "approved" : "موقف";
             
             if (existingIdx >= 0) {
-              if (updated[existingIdx].status !== pStatus) {
-                updated[existingIdx] = { ...updated[existingIdx], status: pStatus };
+              const cur = updated[existingIdx];
+              if (cur.status !== pStatus || (pPhone && cur.phone !== pPhone) || (pName && cur.name !== pName) || p.id !== cur.supabaseId) {
+                updated[existingIdx] = { 
+                  ...cur, 
+                  status: pStatus,
+                  phone: pPhone || cur.phone,
+                  name: pName || cur.name,
+                  supabaseId: p.id || cur.supabaseId
+                };
                 changed = true;
               }
             } else {
@@ -2265,15 +2316,16 @@ export default function App() {
               const roleTitle = p.role_title || (ROLE_PRESETS[roleKey]?.title) || "محامٍ ومستشار";
               const newUser: UserItem = {
                 id: Date.now() + Math.floor(Math.random() * 1000),
-                name: p.full_name || p.name || emailClean.split("@")[0],
+                supabaseId: p.id,
+                name: pName,
                 email: emailClean,
-                phone: p.phone || "0500000000",
+                phone: pPhone,
                 password: p.password || "123456",
                 roleKey: roleKey as any,
                 roleTitle: roleTitle,
                 status: pStatus,
                 avatarBg: "bg-amber-600 text-white",
-                avatarText: (p.full_name || p.name || emailClean).slice(0, 2),
+                avatarText: pName.slice(0, 2),
                 permissions: ROLE_PRESETS[roleKey]?.permissions || ROLE_PRESETS.lawyer.permissions
               };
               updated.push(newUser);
@@ -2823,15 +2875,17 @@ export default function App() {
     setAssignCanFinances(target.canViewFinances || false);
   };
 
-  const confirmApproveUser = () => {
+  const confirmApproveUser = async () => {
     if (!approvingUser) return;
     const preset = ROLE_PRESETS[assignRoleKey];
+    const targetUserId = approvingUser.supabaseId || approvingUser.id;
+
     setUsers((prev) =>
       prev.map((u) =>
         u.id === approvingUser.id
           ? {
               ...u,
-              status: "نشط",
+              status: "approved",
               roleKey: assignRoleKey,
               roleTitle: assignRoleTitle || preset.title,
               permissions: { ...preset.permissions },
@@ -2843,15 +2897,31 @@ export default function App() {
           : u
       )
     );
+
     try {
-      supabase.from("profiles").update({
-        status: "approved",
-        role: assignRoleKey,
-        role_title: assignRoleTitle || preset.title
-      }).eq("email", approvingUser.email).then(() => {});
+      const { error: updateErr } = await supabase
+        .from("profiles")
+        .update({
+          status: "approved",
+          role: assignRoleKey,
+          role_title: assignRoleTitle || preset.title
+        })
+        .eq("id", targetUserId);
+
+      if (updateErr) {
+        await supabase
+          .from("profiles")
+          .update({
+            status: "approved",
+            role: assignRoleKey,
+            role_title: assignRoleTitle || preset.title
+          })
+          .eq("email", approvingUser.email);
+      }
     } catch (e) {
-      // ignore
+      console.log("Error updating profile status:", e);
     }
+
     setPermissionNotice(`تم القبول والاعتماد الصريح لحساب "${approvingUser.name}" وإسناد الصلاحيات المحددة بنجاح!`);
     setApprovingUser(null);
   };
@@ -2860,17 +2930,24 @@ export default function App() {
     openApproveUserModal(userId);
   };
 
-  const rejectUser = (userId: number) => {
+  const rejectUser = async (userId: number) => {
     if (!checkPerm("manageUsers", "إدارة المستخدمين")) return;
     const target = users.find((u) => u.id === userId);
     if (!target) return;
     setUsers((prev) =>
       prev.map((u) => (u.id === userId ? { ...u, status: "موقف" } : u))
     );
+    const targetUserId = target.supabaseId || target.id;
     try {
-      supabase.from("profiles").update({ status: "rejected" }).eq("email", target.email).then(() => {});
+      await supabase
+        .from("profiles")
+        .update({ status: "rejected" })
+        .eq("id", targetUserId);
     } catch (e) {
-      // ignore
+      await supabase
+        .from("profiles")
+        .update({ status: "rejected" })
+        .eq("email", target.email);
     }
     setPermissionNotice(`تم تعليق/رفض حساب "${target.name}".`);
   };
@@ -6637,22 +6714,6 @@ export default function App() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {isSuperAdmin && (
-                      <button
-                        onClick={() => {
-                          if (confirm("هل أنت متأكد من تصفية كافة حسابات الاختبار والإبقاء حصرياً على حساب المدير الرئيسي (المحامي سعود أحمد الشحي)؟")) {
-                            const primaryAdmin = users.find((u) => u.name.includes("سعود")) || users[0];
-                            setUsers([primaryAdmin]);
-                            setCurrentUserId(primaryAdmin.id);
-                            setPermissionNotice("تمت إعادة ضبط شجرة المستخدمين وتصفية كافة الحسابات التجريبية بنجاح مع الإبقاء الحصري على المحامي سعود.");
-                          }
-                        }}
-                        className="flex items-center gap-1.5 rounded-xl bg-red-50 text-red-700 border border-red-200 px-3 py-2 text-xs font-bold hover:bg-red-100 transition"
-                        title="حذف كل مستخدمي التنسيق والاختبار والإبقاء على حساب المحامي سعود"
-                      >
-                        <RefreshCw size={14} /> إعادة ضبط مستخدمي الاختبار
-                      </button>
-                    )}
                     <button
                       onClick={() => {
                         if (!checkPerm("manageUsers", "إضافة مستخدم")) return;
@@ -6684,18 +6745,10 @@ export default function App() {
                           )}
                         </h3>
                         <p className="text-xs text-slate-600">
-                          المستخدمون المسجلون بحالة معلقة (status: 'pending') بحاجة لموافقة صريحة لفك حظر Supabase RLS
+                          المستخدمون المسجلون بحالة معلقة (status: 'pending') بحاجة لموافقة صريحة للوصول إلى النظام
                         </p>
                       </div>
                     </div>
-                    {isSuperAdmin && (
-                      <button
-                        onClick={() => setShowSupabaseModal(true)}
-                        className="flex items-center gap-2 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
-                      >
-                        <Database size={15} /> عرض سكريبتات Supabase SQL & RLS
-                      </button>
-                    )}
                   </div>
 
                   {pendingUsers.length === 0 ? (
