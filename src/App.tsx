@@ -1039,6 +1039,19 @@ const PendingApprovalScreen = ({
 
         {/* أزرار الإجراءات التفاعلية */}
         <div className="space-y-3 pt-2">
+          {/* زر التبديل الفوري لحساب المدير لربط التجربة */}
+          <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 text-right space-y-2">
+            <p className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+              <UserCheck size={16} className="text-blue-600 shrink-0" /> تجربة النظام: التبديل إلى مدير النظام وتفعيل الحساب فوراً
+            </p>
+            <button
+              onClick={() => setCurrentUserId(1)}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 px-4 text-xs font-bold text-white hover:bg-blue-700 transition shadow-sm"
+            >
+              <UserCheck size={16} /> التبديل إلى حساب المدير (سعود أحمد الشحي) لـ قبول هذا الحساب
+            </button>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={handleCheckStatus}
@@ -1559,22 +1572,39 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
   );
 };
 
+function loadStorage<T>(key: string, fallback: T): T {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function saveStorage<T>(key: string, value: T): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.error("Storage save error:", e);
+  }
+}
+
 // ============================================================
 export default function App() {
   const [tab, setTab] = useState("dashboard");
-  const [users, setUsers] = useState<UserItem[]>(seedUsers);
+  const [users, setUsers] = useState<UserItem[]>(() => loadStorage("firm_users", seedUsers));
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [currentUserId, setCurrentUserId] = useState<number>(1); // الافتراضي: سعود الشحي (المدير)
-  const [clients, setClients] = useState<Client[]>(seedClients);
-  const [feeAgreements, setFeeAgreements] = useState<FeeAgreement[]>(seedFeeAgreements);
-  const [payments, setPayments] = useState<PaymentReceipt[]>(seedPayments);
-  const [cases, setCases] = useState<CaseItem[]>(seedCases);
-  const [hearings, setHearings] = useState<Hearing[]>(seedHearings);
-  const [tasks, setTasks] = useState<TaskItem[]>(seedTasks);
-  const [invoices, setInvoices] = useState<Invoice[]>(seedInvoices);
-  const [docs, setDocs] = useState<DocItem[]>(seedDocs);
-  const [poas, setPoas] = useState<PoaItem[]>(seedPoas);
-  const [kyc, setKyc] = useState<KycItem[]>(seedKyc);
+  const [clients, setClients] = useState<Client[]>(() => loadStorage("firm_clients", seedClients));
+  const [feeAgreements, setFeeAgreements] = useState<FeeAgreement[]>(() => loadStorage("firm_fee_agreements", seedFeeAgreements));
+  const [payments, setPayments] = useState<PaymentReceipt[]>(() => loadStorage("firm_payments", seedPayments));
+  const [cases, setCases] = useState<CaseItem[]>(() => loadStorage("firm_cases", seedCases));
+  const [hearings, setHearings] = useState<Hearing[]>(() => loadStorage("firm_hearings", seedHearings));
+  const [tasks, setTasks] = useState<TaskItem[]>(() => loadStorage("firm_tasks", seedTasks));
+  const [invoices, setInvoices] = useState<Invoice[]>(() => loadStorage("firm_invoices", seedInvoices));
+  const [docs, setDocs] = useState<DocItem[]>(() => loadStorage("firm_docs", seedDocs));
+  const [poas, setPoas] = useState<PoaItem[]>(() => loadStorage("firm_poas", seedPoas));
+  const [kyc, setKyc] = useState<KycItem[]>(() => loadStorage("firm_kyc", seedKyc));
   const [notifications, setNotifications] = useState<NotificationLog[]>(seedNotifications);
   const [timeLogs, setTimeLogs] = useState<TimeLog[]>(seedTimeLogs);
   const [caseExpenses, setCaseExpenses] = useState<CaseExpense[]>(seedCaseExpenses);
@@ -1582,8 +1612,20 @@ export default function App() {
   const [deadlines, setDeadlines] = useState<JudgmentDeadline[]>(seedDeadlines);
   const [installments, setInstallments] = useState<InvoiceInstallment[]>(seedInstallments);
   const [strReports, setStrReports] = useState<StrReport[]>(seedStrReports);
-  const [courtContacts, setCourtContacts] = useState<CourtContact[]>(seedCourtContacts);
-  const [officeAgreements, setOfficeAgreements] = useState<OfficeAgreement[]>([]);
+  const [courtContacts, setCourtContacts] = useState<CourtContact[]>(() => loadStorage("firm_court_contacts", seedCourtContacts));
+  const [officeAgreements, setOfficeAgreements] = useState<OfficeAgreement[]>(() => loadStorage("firm_office_agreements", []));
+
+  useEffect(() => { saveStorage("firm_clients", clients); }, [clients]);
+  useEffect(() => { saveStorage("firm_cases", cases); }, [cases]);
+  useEffect(() => { saveStorage("firm_users", users); }, [users]);
+  useEffect(() => { saveStorage("firm_fee_agreements", feeAgreements); }, [feeAgreements]);
+  useEffect(() => { saveStorage("firm_payments", payments); }, [payments]);
+  useEffect(() => { saveStorage("firm_office_agreements", officeAgreements); }, [officeAgreements]);
+  useEffect(() => { saveStorage("firm_invoices", invoices); }, [invoices]);
+  useEffect(() => { saveStorage("firm_docs", docs); }, [docs]);
+  useEffect(() => { saveStorage("firm_poas", poas); }, [poas]);
+  useEffect(() => { saveStorage("firm_kyc", kyc); }, [kyc]);
+  useEffect(() => { saveStorage("firm_court_contacts", courtContacts); }, [courtContacts]);
   const [agrPreviewId, setAgrPreviewId] = useState<number | null>(null);
   const [deleteAgrConfirm, setDeleteAgrConfirm] = useState<OfficeAgreement | null>(null);
   const emptyAgrForm = () => ({
@@ -2287,45 +2329,14 @@ export default function App() {
       time: string;
       status?: "sent" | "delivered" | "read";
     }>;
-  }>>([
-    {
-      id: 1,
-      name: "فوزية أحمد المهيري",
-      phone: "+971 50 889 1234",
-      role: "موكل - قضية عقارية",
-      avatarBg: "bg-amber-600 text-white",
-      unreadCount: 1,
-      messages: [
-        { id: 1, sender: "them", text: "مرحباً سعادة المحامي سعود، هل صدر قرار الجلسة اليوم؟", time: "10:15 ص" },
-        { id: 2, sender: "me", text: "أهلاً بك أستاذة فوزية. نعم تم تأجيل الجلسة لإيداع تقرير الخبير الحسابي بتاريخ 22 أغسطس.", time: "10:18 ص", status: "read" },
-        { id: 3, sender: "them", text: "ممتاز، شكراً جزيلاً لكم على التحديث الفوري!", time: "10:20 ص" }
-      ]
-    },
-    {
-      id: 2,
-      name: "شركة دار سمرا للكمبيوتر (ممثل الشركة)",
-      phone: "+971 54 332 1100",
-      role: "شركة - قضية تجارية",
-      avatarBg: "bg-indigo-600 text-white",
-      unreadCount: 0,
-      messages: [
-        { id: 1, sender: "me", text: "السلام عليكم، تم إرسال فاتورة الأتعاب الخاصة بقضية التوريد Commercial Case #102.", time: "أمس", status: "read" },
-        { id: 2, sender: "them", text: "وعليكم السلام، تسلمنا الفاتورة وتم تحويل المبلغ بنجاح لحساب المكتب الحسابي.", time: "أمس" }
-      ]
-    },
-    {
-      id: 3,
-      name: "أمانة سر محاكم دبي - كاتب الجلسة",
-      phone: "+971 4 334 8888",
-      role: "جهة قضائية رسمية",
-      avatarBg: "bg-emerald-600 text-white",
-      unreadCount: 0,
-      messages: [
-        { id: 1, sender: "them", text: "تنبيه: يُرجى إرفاق صورة أصل الوكالة الموثقة بالملف الإلكتروني قبل الساعة 2 ظهراً.", time: "08 أغسطس" },
-        { id: 2, sender: "me", text: "تم رفع صورة الوكالة الموثقة بنجاح على النظام القضائي المحاضر.", time: "08 أغسطس", status: "read" }
-      ]
-    }
-  ]);
+  }>>(() => {
+    const loaded = loadStorage<any[]>("firm_wa_chats", []);
+    return loaded.filter(c => c.name !== "فوزية أحمد المهيري" && c.name !== "شركة دار سمرا للكمبيوتر (ممثل الشركة)" && c.name !== "أمانة سر محاكم دبي - كاتب الجلسة");
+  });
+
+  useEffect(() => {
+    saveStorage("firm_wa_chats", waChats);
+  }, [waChats]);
 
   // مزامنة رسائل الواتساب لحظياً مع جدول Supabase (whatsapp_messages) و Edge Function
   const fetchSupabaseWhatsAppMessages = async () => {
@@ -3234,7 +3245,11 @@ export default function App() {
               avatarText: newUser.name.slice(0, 2),
               permissions: ROLE_PRESETS[newUser.roleKey]?.permissions || ROLE_PRESETS.lawyer.permissions
             };
-            setUsers((prev) => [...prev, created]);
+            setUsers((prev) => {
+              const updated = [...prev, created];
+              saveStorage("firm_users", updated);
+              return updated;
+            });
           }}
           onOpenSqlModal={() => setShowSupabaseModal(true)}
         />
@@ -3447,6 +3462,31 @@ export default function App() {
                         <Plus size={16} /> قضية جديدة
                       </button>
                     </div>
+
+                    {/* تنبيه وجود طلبات تسجيل حساب معلقة تحتاج موافقة */}
+                    {pendingUsers.length > 0 && (
+                      <div className="p-4 rounded-2xl bg-amber-50 border-2 border-amber-400 text-amber-950 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2.5 bg-amber-500 text-slate-900 rounded-xl font-bold shrink-0 animate-pulse">
+                            <Users size={20} />
+                          </div>
+                          <div>
+                            <h4 className="font-bold text-sm text-slate-900">
+                              تنبيه مهم: يوجد {pendingUsers.length} طلب تسجيل حساب جديد بحاجة للقبول والاعتماد!
+                            </h4>
+                            <p className="text-xs text-slate-700 mt-0.5">
+                              الطلبات المعلقة: {pendingUsers.map(u => `${u.name} (${u.email})`).join("، ")}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => { setTab("users"); }}
+                          className="px-4 py-2.5 bg-slate-900 text-amber-400 rounded-xl text-xs font-bold hover:bg-slate-800 transition shrink-0 shadow-sm flex items-center gap-1.5"
+                        >
+                          <UserCheck size={15} /> الانتقال للموافقة أو الرفض
+                        </button>
+                      </div>
+                    )}
 
                     {/* بطاقات المؤشرات */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
