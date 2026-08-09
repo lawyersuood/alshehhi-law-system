@@ -1128,6 +1128,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
   });
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Forgot Password State
   const [showForgotModal, setShowForgotModal] = useState<boolean>(false);
@@ -1141,7 +1142,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
   const [regPassword, setRegPassword] = useState("123456");
   const [regRoleKey, setRegRoleKey] = useState<"admin" | "lawyer" | "secretary" | "accountant">("lawyer");
 
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     setSuccessMsg(null);
@@ -1158,7 +1159,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
       return;
     }
 
-    // حفظ أو مسح بيانات التذكر
+    setIsSubmitting(true);
+
     try {
       if (rememberMe) {
         localStorage.setItem("law_firm_remember_me", "true");
@@ -1170,73 +1172,159 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
         localStorage.removeItem("law_firm_saved_pass");
       }
     } catch {
-      // تجاهل أخطاء التخزين في البيئات المقيّدة
+      // ignore
     }
 
+    // 1. محاولة تسجيل الدخول عبر Supabase Authentication أولاً
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: cleanedEmail,
+        password: cleanedPass
+      });
+
+      if (!authError && authData?.user) {
+        const userEmail = authData.user.email?.toLowerCase() || cleanedEmail;
+        const target = users.find((u) => u.email.toLowerCase() === userEmail);
+        if (target) {
+          if (target.status === "معلق" || target.status === "pending") {
+            setErrorMsg("عذراً، هذا الحساب بحالة (معلق) قيد المراجعة بانتظار الاعتماد والموافقة من قبل مدير النظام. سيتم تفعيل حسابك بمجرد الموافقة.");
+            setIsSubmitting(false);
+            return;
+          }
+          if (target.status === "موقف" || target.status === "معطل") {
+            setErrorMsg("عذراً، هذا الحساب موقف أو معطل حالياً من قبل إدارة النظام.");
+            setIsSubmitting(false);
+            return;
+          }
+          onLogin(target.id);
+          setIsSubmitting(false);
+          return;
+        }
+      }
+    } catch (e) {
+      console.log("Supabase Auth sign-in attempt note:", e);
+    }
+
+    // 2. المطابقة مع سجل المستخدمين المسجلين في النظام
     const targetUser = users.find(
       (u) => u.email.toLowerCase() === cleanedEmail || u.name.toLowerCase() === cleanedEmail
     );
 
     if (!targetUser) {
       setErrorMsg("اسم المستخدم أو البريد الإلكتروني غير مسجل بالنظام. يرجى التأكد من بيانات الحساب.");
+      setIsSubmitting(false);
       return;
     }
 
     if (targetUser.status === "معلق" || targetUser.status === "pending") {
-      setErrorMsg("عذراً، هذا الحساب بحالة (معلق) قيد المراجعة بانتظار الاعتماد والموافقة من قبل مدير النظام (المحامي سعود). سيتم تفعيل حسابك بمجرد الموافقة.");
+      setErrorMsg("عذراً، هذا الحساب بحالة (معلق) قيد المراجعة بانتظار الاعتماد والموافقة من قبل مدير النظام. سيتم تفعيل حسابك بمجرد الموافقة.");
+      setIsSubmitting(false);
       return;
     }
 
     if (targetUser.status === "موقف" || targetUser.status === "معطل") {
       setErrorMsg("عذراً، هذا الحساب موقف أو معطل حالياً من قبل إدارة النظام.");
+      setIsSubmitting(false);
       return;
     }
 
-    // التحقق من كلمة المرور
     const userPass = targetUser.password || "123456";
     if (cleanedPass !== userPass && cleanedPass !== "123456") {
       setErrorMsg("كلمة المرور غير صحيحة. يرجى التأكد من كلمة المرور المدخلة والتحقق من حسابك.");
+      setIsSubmitting(false);
       return;
     }
 
     onLogin(targetUser.id);
+    setIsSubmitting(false);
   };
 
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regName.trim() || !regEmail.trim()) {
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    const cleanName = regName.trim();
+    const cleanEmail = regEmail.trim().toLowerCase();
+    const cleanPhone = regPhone.trim();
+    const cleanPass = regPassword.trim();
+
+    if (!cleanName || !cleanEmail || !cleanPass) {
       setErrorMsg("يرجى إدخال جميع البيانات المطلوبة لتقديم طلب الحساب.");
       return;
     }
 
-    // Check if email already exists
-    const existing = users.find(u => u.email.toLowerCase() === regEmail.trim().toLowerCase());
-    if (existing) {
-      setErrorMsg("البريد الإلكتروني المدخل مسجل مسبقاً بالنظام.");
+    if (cleanPass.length < 6) {
+      setErrorMsg("كلمة المرور يجب ألا تقل عن 6 أحرف/أرقام.");
       return;
     }
 
-    const roleTitleMap = {
-      admin: "مدير النظام",
-      lawyer: "محامٍ ومستشار",
-      secretary: "إدارة وسكرتارية",
-      accountant: "محاسب قانوني"
-    };
-    onRegister({
-      name: regName.trim(),
-      email: regEmail.trim(),
-      phone: regPhone.trim() || "0500000000",
-      password: regPassword || "123456",
-      roleKey: regRoleKey,
-      roleTitle: roleTitleMap[regRoleKey]
-    });
+    setIsSubmitting(true);
 
-    setSuccessMsg("✅ تم إرسال طلب تسجيل الحساب بنجاح للاعتماد، وسوف يصلك إشعار بالاعتماد على البريد الإلكتروني.");
-    setErrorMsg(null);
-    setRegName("");
-    setRegEmail("");
-    setRegPhone("");
-    setAuthMode("login");
+    try {
+      // 1. الإرسال الفعلي والمباشر إلى Supabase Authentication
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: cleanEmail,
+        password: cleanPass,
+        options: {
+          data: {
+            full_name: cleanName,
+            role: regRoleKey,
+            phone: cleanPhone
+          }
+        }
+      });
+
+      if (authError) {
+        setErrorMsg(`خطأ من خادم Supabase Auth: ${authError.message}`);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 2. مزامنة بيانات المستخدم المباشرة مع جدول profiles في Supabase Database
+      const { error: profileError } = await supabase.from("profiles").upsert(
+        {
+          email: cleanEmail,
+          full_name: cleanName,
+          phone: cleanPhone || "0500000000",
+          role: regRoleKey,
+          status: "pending"
+        },
+        { onConflict: "email" }
+      );
+
+      if (profileError) {
+        console.warn("Supabase profiles table sync note:", profileError.message);
+      }
+
+      const roleTitleMap = {
+        admin: "مدير النظام",
+        lawyer: "محامٍ ومستشار",
+        secretary: "إدارة وسكرتارية",
+        accountant: "محاسب قانوني"
+      };
+
+      onRegister({
+        name: cleanName,
+        email: cleanEmail,
+        phone: cleanPhone || "0500000000",
+        password: cleanPass,
+        roleKey: regRoleKey,
+        roleTitle: roleTitleMap[regRoleKey]
+      });
+
+      setSuccessMsg("✅ تم تسجيل الحساب بنجاح في قائمة Supabase Authentication! طلبك الآن في انتظار اعتماد وتفعيل مدير النظام.");
+      setErrorMsg(null);
+      setRegName("");
+      setRegEmail("");
+      setRegPhone("");
+      setRegPassword("123456");
+      setAuthMode("login");
+    } catch (err: any) {
+      setErrorMsg(err?.message || "حدث خطأ أثناء التواصل مع خادم Supabase.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -1371,9 +1459,18 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
 
               <button
                 type="submit"
-                className="w-full py-3.5 rounded-xl bg-[#b89b6a] text-slate-950 font-black hover:bg-[#a38555] transition shadow-md flex items-center justify-center gap-2 text-xs"
+                disabled={isSubmitting}
+                className="w-full py-3.5 rounded-xl bg-[#b89b6a] text-slate-950 font-black hover:bg-[#a38555] transition shadow-md flex items-center justify-center gap-2 text-xs disabled:opacity-50 cursor-pointer"
               >
-                <ShieldCheck size={16} /> تسجيل الدخول
+                {isSubmitting ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" /> جارٍ تسجيل الدخول...
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck size={16} /> تسجيل الدخول
+                  </>
+                )}
               </button>
 
             </form>
@@ -1437,7 +1534,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                   >
                     <option value="lawyer">محامٍ ومستشار قانوني</option>
                     <option value="secretary">إدارة وسكرتارية قانونية</option>
-                    <option value="accountant">محاسب مالية ومستحقات</option>
+                    <option value="accountant">محاسب مالية ومستحقين</option>
                     <option value="admin">مدير نظام شريك</option>
                   </select>
                 </div>
@@ -1447,16 +1544,25 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                     <Hourglass size={14} className="shrink-0" /> آلية تفعيل الحساب:
                   </p>
                   <p>
-                    يتم تقديم طلب الانضمام مباشرة للمراجعة والاعتماد لدى مدير النظام، وسوف يصلك إشعار فور الموافقة.
+                    يتم إنشاء الحساب فوراً في قائمة Supabase Authentication وتقديم الطلب لمراجعة واعتماد مدير النظام.
                   </p>
                 </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full py-3.5 rounded-xl bg-[#b89b6a] text-slate-950 font-black hover:bg-[#a38555] transition shadow-md flex items-center justify-center gap-2 text-xs"
+                disabled={isSubmitting}
+                className="w-full py-3.5 rounded-xl bg-[#b89b6a] text-slate-950 font-black hover:bg-[#a38555] transition shadow-md flex items-center justify-center gap-2 text-xs disabled:opacity-50 cursor-pointer"
               >
-                <UserPlus size={16} /> تقديم طلب الانضمام
+                {isSubmitting ? (
+                  <>
+                    <RefreshCw size={16} className="animate-spin" /> جارٍ الإرسال إلى Supabase...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus size={16} /> إرسال طلب الانضمام إلى Supabase
+                  </>
+                )}
               </button>
             </form>
           )}
