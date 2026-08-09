@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
+import Logo from "./components/Logo";
 import { supabase, sendWhatsAppViaEdgeFunction } from "./supabaseClient";
 import {
   Scale, LayoutDashboard, Briefcase, Users, CalendarDays, ListChecks,
@@ -965,12 +966,10 @@ const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onClose }) 
 
 const PendingApprovalScreen = ({
   currentUser,
-  setCurrentUserId,
-  onOpenSqlModal
+  onLogout
 }: {
   currentUser: UserItem;
-  setCurrentUserId: (id: number) => void;
-  onOpenSqlModal: () => void;
+  onLogout: () => void;
 }) => {
   const [checkState, setCheckState] = useState<string | null>(null);
 
@@ -984,48 +983,48 @@ const PendingApprovalScreen = ({
   };
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center p-4 sm:p-6 bg-slate-100/90">
-      <div className="w-full max-w-2xl rounded-3xl border border-amber-200 bg-white p-6 sm:p-8 shadow-xl space-y-6 text-right">
+    <div className="min-h-[85vh] flex items-center justify-center p-4 sm:p-6 bg-stone-100/90">
+      <div className="w-full max-w-2xl rounded-3xl border-2 border-[#b89b6a]/40 bg-white p-6 sm:p-8 shadow-2xl space-y-6 text-right">
         {/* رأس الصفحة والشعار */}
-        <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 border-b border-slate-100 pb-6 text-center sm:text-right">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-4 border-b border-stone-200 pb-6 text-center sm:text-right">
           <div className="flex items-center gap-3.5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500 text-slate-900 shadow-md animate-pulse shrink-0">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0c4a47] text-[#e5c388] shadow-md animate-pulse shrink-0">
               <Hourglass size={30} />
             </div>
             <div>
-              <h2 className="text-xl font-black text-slate-900">طلب تفعيل الحساب قيد الانتظار</h2>
-              <p className="text-xs font-bold text-amber-700 mt-0.5">Pending Admin Approval • Supabase RLS Protected</p>
+              <h2 className="text-xl font-black text-[#0c4a47]">طلب تفعيل الحساب قيد الانتظار والاعتماد</h2>
+              <p className="text-xs font-bold text-[#b89b6a] mt-0.5">Pending Admin Approval • Supabase RLS Protected</p>
             </div>
           </div>
-          <span className="rounded-full bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1 text-xs font-bold shrink-0">
-            حساب معلق (Pending)
+          <span className="rounded-full bg-amber-100 text-amber-900 border border-amber-300 px-3.5 py-1 text-xs font-bold shrink-0">
+            حساب معلق (Pending Approval)
           </span>
         </div>
 
         {/* الرسالة التوضيحية وسياسة الأمان */}
-        <div className="rounded-2xl border border-amber-200 bg-amber-50/80 p-4 text-xs text-amber-950 space-y-2 leading-relaxed">
+        <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-950 space-y-2 leading-relaxed shadow-2xs">
           <p className="font-bold text-sm flex items-center gap-2 text-amber-900">
             <ShieldAlert size={18} className="text-amber-600 shrink-0" />
-            أهلاً بك، {currentUser.name}! تم تسجيل حسابك بنجاح في نظام إدارة المكتب.
+            أهلاً بك، {currentUser.name}! تم تقديم طلب تسجيل حسابك بنجاح.
           </p>
           <p>
-            وفقاً لنظام موافقة المستخدمين الجدد (User Approval Flow) ومحددات الأمان في <b>Supabase Row Level Security (RLS)</b>، تظل صلاحيات الاطلاع على القضايا والجلسات والمستندات محجوبة حتى يتلقى حسابه اعتماداً صريحاً من مدير النظام (Approved).
+            وفقاً لسياسة الأمان والاعتماد المعتمدة وحماية البيانات في <b>Supabase Row Level Security (RLS)</b>، تظل جميع صلاحيات الوصول ومحتويات النظام محجوبة حتى يتلقى حسابك تفعيلاً وموافقة صريحة من مدير النظام (المحامي سعود أحمد الشحي).
           </p>
         </div>
 
         {/* بطاقة معلومات الحساب المعلق */}
-        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 space-y-2 text-xs">
-          <h3 className="font-bold text-slate-900 text-sm border-b border-slate-200 pb-2 flex items-center justify-between">
-            <span>تفاصيل طلب الحساب المقدم:</span>
-            <span className="text-slate-400 font-mono font-normal">ID: {currentUser.id}</span>
+        <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4 space-y-2 text-xs">
+          <h3 className="font-bold text-slate-900 text-sm border-b border-stone-200 pb-2 flex items-center justify-between">
+            <span>بيانات طلب الانضمام المقدم:</span>
+            <span className="text-slate-400 font-mono font-normal">ID: #{currentUser.id}</span>
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-slate-700 pt-1">
             <p><b>الاسم الكامل:</b> {currentUser.name}</p>
             <p><b>البريد الإلكتروني:</b> {currentUser.email}</p>
             <p><b>رقم الهاتف:</b> {currentUser.phone}</p>
             <p><b>الدور المخصص:</b> {currentUser.roleTitle}</p>
-            <p><b>حالة الحساب الآن:</b> <span className="text-amber-700 font-bold">معلق (Pending Approval)</span></p>
-            <p><b>صلاحيات RLS:</b> <span className="text-red-600 font-bold">Access Denied (محظور)</span></p>
+            <p><b>حالة الطلب الآن:</b> <span className="text-amber-700 font-bold">معلق بانتظار المدير (Pending)</span></p>
+            <p><b>صلاحيات RLS:</b> <span className="text-red-600 font-bold">محظور مؤقتاً (Access Denied)</span></p>
           </div>
         </div>
 
@@ -1033,47 +1032,34 @@ const PendingApprovalScreen = ({
         {checkState === "still_pending" && (
           <div className="p-3.5 rounded-xl bg-amber-100 border border-amber-300 text-xs text-amber-900 font-bold flex items-center gap-2">
             <Info size={16} className="text-amber-600 shrink-0" />
-            <span>الحساب ما زال بحالة معلقة (Pending). يمكنك استخدام الزر أدناه للتبديل الفوري لحساب المدير وقبوله!</span>
+            <span>طلبك لا يزال قيد المراجعة والاعتماد لدى مدير النظام. سيتم تفعيل حسابك فور الموافقة عليه من لوحة تحكم المستخدمين والصلاحيات.</span>
           </div>
         )}
 
         {/* أزرار الإجراءات التفاعلية */}
         <div className="space-y-3 pt-2">
-          {/* زر التبديل الفوري لحساب المدير لربط التجربة */}
-          <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 text-right space-y-2">
-            <p className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
-              <UserCheck size={16} className="text-blue-600 shrink-0" /> تجربة النظام: التبديل إلى مدير النظام وتفعيل الحساب فوراً
-            </p>
-            <button
-              onClick={() => setCurrentUserId(1)}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 px-4 text-xs font-bold text-white hover:bg-blue-700 transition shadow-sm"
-            >
-              <UserCheck size={16} /> التبديل إلى حساب المدير (سعود أحمد الشحي) لـ قبول هذا الحساب
-            </button>
-          </div>
-
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={handleCheckStatus}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 px-4 text-xs font-bold text-white hover:bg-slate-800 transition shadow-sm"
+              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-[#0c4a47] py-3.5 px-4 text-xs font-bold text-white hover:bg-[#073331] transition shadow-md"
             >
-              <RefreshCw size={15} /> فحص وإعادة تحقق من الاعتماد
+              <RefreshCw size={15} /> إعادة التحقق من حالة التفعيل
             </button>
             <button
-              onClick={onOpenSqlModal}
-              className="flex items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-50 py-3 px-4 text-xs font-bold text-amber-900 hover:bg-amber-100 transition"
+              onClick={onLogout}
+              className="flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 py-3.5 px-6 text-xs font-bold text-red-700 hover:bg-red-100 transition shadow-2xs"
             >
-              <Database size={15} className="text-amber-600" /> عرض أكواد Supabase SQL
+              <LogOut size={15} /> تسجيل الخروج
             </button>
           </div>
 
           {/* إشعار الانتظار للمراجعة والاعتماد */}
-          <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700 space-y-2">
+          <div className="rounded-2xl border border-stone-200 bg-stone-50 p-4 text-xs text-slate-700 space-y-2">
             <p className="font-bold flex items-center gap-1.5 text-slate-900">
-              <Clock size={16} className="text-amber-600 shrink-0" /> متابعة حالة الطلب:
+              <Clock size={16} className="text-[#b89b6a] shrink-0" /> خطوة الاعتماد:
             </p>
             <p>
-              تم تسجيل الطلب وإرساله إلى لوحة تحكم إدارة المستخدمين لدى مدير النظام (المحامي سعود). سيصلك إشعار فور قبول وتفعيل حسابك.
+              يوجد طلبك الآن في قائمة الطلبات المعلقة داخل لوحة تحكم "المستخدمون والصلاحيات" لدى مدير المكتب. فور الضغط على (قبول وتفعيل الحساب)، ستتمكن فوراً من دخول النظام.
             </p>
           </div>
         </div>
@@ -1254,40 +1240,37 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
   };
 
   return (
-    <div dir="rtl" className="min-h-screen w-full bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-amber-500 selection:text-slate-950">
+    <div dir="rtl" className="min-h-screen w-full bg-[#072422] text-slate-100 flex flex-col justify-between selection:bg-[#b89b6a] selection:text-slate-950">
       {/* الشريط العلوي */}
-      <header className="px-6 py-4 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-slate-950 font-black shadow-md">
-            <Scale size={22} />
-          </div>
-          <div>
-            <h1 className="text-base font-bold text-white tracking-wide">سعود أحمد الشحي للمحاماة والاستشارات القانونية</h1>
-            <p className="text-[11px] text-amber-400 font-medium">البوابة الإلكترونية الموحدة • الإمارات العربية المتحدة</p>
-          </div>
-        </div>
+      <header className="px-6 py-4 border-b border-[#0f4340] bg-[#0a3330]/90 backdrop-blur flex items-center justify-between">
+        <Logo variant="horizontal" mode="dark" size="md" />
+        <span className="hidden sm:inline-block px-3 py-1 rounded-full bg-[#114b48] border border-[#1b615d] text-[11px] font-bold text-[#e5c388]">
+          البوابة الرقمية الموحدة • دولة الإمارات
+        </span>
       </header>
 
       {/* محتوى الشاشة */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-6">
-        <div className="w-full max-w-xl rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl p-6 sm:p-8 space-y-6">
-          {/* شعار وعنوان النموذج */}
-          <div className="text-center space-y-2">
-            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-600 to-amber-400 text-slate-950 shadow-lg mb-1">
-              <Lock size={28} />
+        <div className="w-full max-w-xl rounded-3xl bg-[#0a3835] border border-[#14524f] shadow-2xl p-6 sm:p-8 space-y-6">
+          {/* الشعار الرسمي وعنوان النموذج */}
+          <div className="text-center space-y-2 flex flex-col items-center">
+            <Logo variant="full" mode="dark" size="xl" className="mb-2" />
+            <div className="pt-2 border-t border-[#125854] w-full">
+              <h2 className="text-xl sm:text-2xl font-black text-white flex items-center justify-center gap-2">
+                <Lock size={20} className="text-[#e5c388]" /> الدخول إلى البوابة القانونية
+              </h2>
+              <p className="text-xs text-teal-200/80 max-w-md mx-auto mt-1">
+                يتطلب الوصول إلى النظام مصادقة آمنة ومحمية ببروتوكولات <span className="text-[#e5c388] font-bold">Supabase Row Level Security (RLS)</span>.
+              </p>
             </div>
-            <h2 className="text-xl sm:text-2xl font-black text-white">الدخول إلى البوابة القانونية</h2>
-            <p className="text-xs text-slate-400 max-w-md mx-auto">
-              يتطلب الوصول إلى النظام مصادقة آمنة ومحمية ببروتوكولات <span className="text-amber-400 font-bold">Supabase Row Level Security (RLS)</span>.
-            </p>
           </div>
 
           {/* تبويب الدخول / التسجيل */}
-          <div className="flex rounded-2xl bg-slate-950 p-1.5 border border-slate-800 text-xs font-bold">
+          <div className="flex rounded-2xl bg-[#061e1d] p-1.5 border border-[#104845] text-xs font-bold">
             <button
               onClick={() => { setAuthMode("login"); setErrorMsg(null); setSuccessMsg(null); }}
               className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-2 ${
-                authMode === "login" ? "bg-amber-500 text-slate-950 shadow-sm" : "text-slate-400 hover:text-slate-200"
+                authMode === "login" ? "bg-[#b89b6a] text-slate-950 font-black shadow-sm" : "text-teal-200/70 hover:text-white"
               }`}
             >
               <Key size={15} /> تسجيل الدخول (Sign In)
@@ -1295,7 +1278,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
             <button
               onClick={() => { setAuthMode("register"); setErrorMsg(null); setSuccessMsg(null); }}
               className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-2 ${
-                authMode === "register" ? "bg-amber-500 text-slate-950 shadow-sm" : "text-slate-400 hover:text-slate-200"
+                authMode === "register" ? "bg-[#b89b6a] text-slate-950 font-black shadow-sm" : "text-teal-200/70 hover:text-white"
               }`}
             >
               <UserPlus size={15} /> طلب انضمام جديد (Register)
@@ -1388,7 +1371,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
 
               <button
                 type="submit"
-                className="w-full py-3 rounded-xl bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition shadow-md flex items-center justify-center gap-2 text-xs"
+                className="w-full py-3.5 rounded-xl bg-[#b89b6a] text-slate-950 font-black hover:bg-[#a38555] transition shadow-md flex items-center justify-center gap-2 text-xs"
               >
                 <ShieldCheck size={16} /> تسجيل الدخول للتحقق من الصلاحيات
               </button>
@@ -3259,9 +3242,9 @@ export default function App() {
   }
 
   return (
-    <div dir="rtl" className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-stone-100 text-slate-800 font-sans selection:bg-amber-200">
+    <div dir="rtl" className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-[#faf8f5] text-slate-800 font-sans selection:bg-[#b89b6a]/30">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&display=swap');
         @media print {
           body * { visibility: hidden; }
           .print-area, .print-area * { visibility: visible; }
@@ -3282,52 +3265,54 @@ export default function App() {
         }
       `}</style>
       <div className="flex min-h-screen">
-        {/* ===== الشريط الجانبي ===== */}
-        <aside className="hidden w-64 shrink-0 flex-col bg-slate-900 text-slate-300 md:flex">
-          <div className="flex items-center gap-3 border-b border-slate-800 px-5 py-5">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-500 text-slate-900"><Scale size={24} /></div>
-            <div>
-              <h1 className="text-sm font-bold text-white">سعود أحمد الشحي</h1>
-              <p className="text-[11px] text-slate-400">للمحاماة والاستشارات القانونية</p>
-            </div>
+        {/* ===== الشريط الجانبي الفخم ===== */}
+        <aside className="hidden w-64 shrink-0 flex-col bg-[#072a28] border-l border-[#0f4340] text-teal-100 md:flex shadow-xl">
+          <div className="flex items-center justify-center border-b border-[#0f4340] px-4 py-5 bg-[#051f1e]">
+            <Logo variant="horizontal" mode="dark" size="md" />
           </div>
 
-          {/* تبديل سريع للمستخدم الحالي */}
-          <div className="mx-3 my-3 rounded-xl bg-slate-800/80 p-3 border border-slate-700/50">
+          {/* تبديل سريع للمستخدم الحالي (للمدير فقط) */}
+          <div className="mx-3 my-3 rounded-xl bg-[#0b3c39] p-3 border border-[#14524f]">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-semibold text-amber-400 flex items-center gap-1">
+              <span className="text-[11px] font-semibold text-[#e5c388] flex items-center gap-1">
                 <UserCheck size={13} /> الحساب النشط الآن:
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 font-mono">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#072422] text-[#e5c388] font-mono border border-[#1b615d]">
                 {currentUser.roleKey.toUpperCase()}
               </span>
             </div>
-            <select
-              value={currentUserId}
-              onChange={(e) => setCurrentUserId(+e.target.value)}
-              className="w-full rounded-lg bg-slate-900 border border-slate-700 text-xs font-medium text-white px-2 py-1.5 focus:outline-none focus:border-amber-500"
-            >
-              {users.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} ({u.roleTitle})
-                </option>
-              ))}
-            </select>
+            {currentUser.roleKey === "admin" && (currentUser.status === "نشط" || currentUser.status === "approved") ? (
+              <select
+                value={currentUserId}
+                onChange={(e) => setCurrentUserId(+e.target.value)}
+                className="w-full rounded-lg bg-[#061d1c] border border-[#114b48] text-xs font-medium text-white px-2 py-1.5 focus:outline-none focus:border-[#b89b6a]"
+              >
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.roleTitle})
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <p className="text-xs font-bold text-white px-1 py-1 truncate">
+                {currentUser.name} ({currentUser.roleTitle})
+              </p>
+            )}
           </div>
 
           <nav className="flex-1 space-y-1 p-3">
             {NAV.map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => { setTab(id); setCaseView(null); }}
-                className={`flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition ${tab === id ? "bg-amber-500 text-slate-900 font-bold" : "hover:bg-slate-800 hover:text-white"}`}>
+                className={`flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition ${tab === id ? "bg-[#b89b6a] text-slate-950 font-black shadow-md" : "text-teal-100/80 hover:bg-[#0c403d] hover:text-white"}`}>
                 <Icon size={18} /><span>{label}</span>
                 {id === "poa" && stats.expiringPoa > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{stats.expiringPoa}</span>}
                 {id === "kyc" && kycDue > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{kycDue}</span>}
                 {id === "users" && pendingUsers.length > 0 ? (
-                  <span className="mr-auto rounded-full bg-amber-500 text-slate-900 px-2 py-0.5 text-[11px] font-bold animate-pulse">
+                  <span className="mr-auto rounded-full bg-[#e5c388] text-slate-950 px-2 py-0.5 text-[11px] font-bold animate-pulse">
                     {pendingUsers.length} معلق
                   </span>
                 ) : id === "users" ? (
-                  <span className="mr-auto rounded-full bg-slate-800 border border-amber-500/40 text-[10px] px-1.5 py-0.2 text-amber-300 font-mono">{users.length}</span>
+                  <span className="mr-auto rounded-full bg-[#051f1e] border border-[#b89b6a]/40 text-[10px] px-1.5 py-0.2 text-[#e5c388] font-mono">{users.length}</span>
                 ) : null}
               </button>
             ))}
@@ -3336,61 +3321,61 @@ export default function App() {
             {isSuperAdmin && (
               <button
                 onClick={() => setShowSupabaseModal(true)}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold text-amber-400 bg-slate-800/80 border border-amber-500/30 hover:bg-slate-800 transition mt-3"
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold text-[#e5c388] bg-[#0c403d]/80 border border-[#b89b6a]/30 hover:bg-[#0e4845] transition mt-3"
                 title="أكواد القواعد والبروفايل الحية Supabase RLS"
               >
-                <Code size={16} className="text-amber-400 shrink-0" />
+                <Code size={16} className="text-[#e5c388] shrink-0" />
                 <span>الإعدادات الفنية (Supabase RLS)</span>
               </button>
             )}
           </nav>
-          <div className="border-t border-slate-800 p-4 text-xs text-slate-500 space-y-2">
+          <div className="border-t border-[#0f4340] p-4 text-xs text-teal-300/60 space-y-2 bg-[#051a19]">
             <button
               onClick={() => setIsLoggedIn(false)}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-800 py-2.5 px-3 text-xs font-bold text-red-400 hover:bg-red-950/40 hover:text-red-300 transition"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#0d3f3c] py-2.5 px-3 text-xs font-bold text-red-300 hover:bg-red-900/40 transition border border-red-500/20"
               title="تسجيل الخروج والعودة لشاشة الدخول"
             >
               <LogOut size={15} /> تسجيل الخروج
             </button>
-            <p>ضريبة القيمة المضافة: 5% (UAE VAT)</p>
-            <p className="text-slate-400">النظام الذكي — الإمارات</p>
+            <p className="text-[11px] text-center text-teal-200/50">ضريبة القيمة المضافة: 5% (UAE VAT)</p>
           </div>
         </aside>
 
         {/* ===== المحتوى ===== */}
         <main className="flex-1 min-w-0 max-w-full overflow-x-hidden">
           {/* الشريط العلوي */}
-          <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur md:px-6">
+          <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-stone-200 bg-white/95 px-4 py-3 backdrop-blur md:px-6 shadow-2xs">
             <div className="flex items-center gap-2 md:hidden">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-500 text-slate-900"><Scale size={18} /></div>
-              <span className="font-bold text-xs">سعود أحمد الشحي للمحاماة</span>
+              <Logo variant="horizontal" mode="light" size="sm" />
             </div>
             <div className="relative mr-auto hidden max-w-xs flex-1 md:block">
               <Search size={16} className="absolute right-3 top-2.5 text-slate-400" />
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث في القضايا والموكلين…" className={`${inputCls} pr-9`} />
             </div>
 
-            {/* شريط معلومات المستخدم النشط وتبديل الأدوار للاختبار */}
+            {/* شريط معلومات المستخدم النشط */}
             <div className="flex items-center gap-2 border-r border-slate-200 pr-3 mr-2">
               <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${currentUser.avatarBg}`}>
                 {currentUser.avatarText}
               </div>
               <div className="hidden sm:block text-xs leading-tight">
                 <p className="font-bold text-slate-900">{currentUser.name}</p>
-                <p className="text-[11px] text-amber-700 font-medium">{currentUser.roleTitle}</p>
+                <p className="text-[11px] text-[#b89b6a] font-bold">{currentUser.roleTitle}</p>
               </div>
-              <select
-                value={currentUserId}
-                onChange={(e) => setCurrentUserId(+e.target.value)}
-                className="text-xs bg-stone-100 border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                title="اختبار أداء الصلاحيات بأدوار مختلفة"
-              >
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.roleTitle})
-                  </option>
-                ))}
-              </select>
+              {currentUser.roleKey === "admin" && (currentUser.status === "نشط" || currentUser.status === "approved") && (
+                <select
+                  value={currentUserId}
+                  onChange={(e) => setCurrentUserId(+e.target.value)}
+                  className="text-xs bg-stone-100 border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#b89b6a]"
+                  title="اختبار أداء الصلاحيات بأدوار مختلفة (للمدير فقط)"
+                >
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.roleTitle})
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <button onClick={() => setClientPortalId(clients[0]?.id || 1)} className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 shadow-sm" title="معاينة بوابة الموكل الإلكترونية">
@@ -3445,8 +3430,7 @@ export default function App() {
             {currentUser.status === "معلق" || currentUser.status === "pending" ? (
               <PendingApprovalScreen
                 currentUser={currentUser}
-                setCurrentUserId={setCurrentUserId}
-                onOpenSqlModal={() => setShowSupabaseModal(true)}
+                onLogout={() => setIsLoggedIn(false)}
               />
             ) : (
               <>
@@ -8229,17 +8213,14 @@ export default function App() {
 
               {/* محتوى التقرير الذي سيتم طباعته رسمياً */}
               <div className="p-8 space-y-6 text-slate-900 leading-relaxed font-sans">
-                {/* ترويسة المكتب الرسمية */}
-                <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4">
-                  <div>
-                    <h1 className="text-xl font-bold text-slate-900">سعود أحمد الشحي للمحاماة والاستشارات القانونية</h1>
-                    <p className="text-xs text-slate-600 mt-0.5">Saud Ahmad Al Shehhi Advocates & Legal Consultants</p>
-                    <p className="text-[11px] text-slate-500">دبي / أبوظبي — الإمارات العربية المتحدة | هاتف: 04-3300000</p>
-                  </div>
-                  <div className="text-left text-xs text-slate-600">
-                    <p className="font-bold text-slate-900">تاريخ التقرير: {fmtDate(todayISO())}</p>
-                    <p className="text-[11px] text-slate-500">المستخدم المستخرج: {currentUser.name}</p>
-                    <p className="text-[11px] text-amber-700 font-semibold">{currentUser.roleTitle}</p>
+                {/* ترويسة المكتب الرسمية مع الشعار الأصلي */}
+                <div className="flex items-center justify-between border-b-2 border-[#0c4a47] pb-4">
+                  <Logo variant="horizontal" mode="light" size="lg" />
+                  <div className="text-left text-xs text-slate-600 space-y-0.5">
+                    <p className="font-bold text-[#0c4a47]">تاريخ التقرير: {fmtDate(todayISO())}</p>
+                    <p className="text-[11px] text-slate-600">المستخدم المستخرج: {currentUser.name}</p>
+                    <p className="text-[11px] text-[#b89b6a] font-bold">{currentUser.roleTitle}</p>
+                    <p className="text-[10px] text-slate-400">الإمارات العربية المتحدة • UAE</p>
                   </div>
                 </div>
 
