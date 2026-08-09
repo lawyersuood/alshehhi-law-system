@@ -62,16 +62,28 @@ const handleDownloadPDF = (elementId: string, filename: string) => {
 
 // ---------- الأنواع والواجهات ----------
 export interface RolePermissions {
-  manageCases: boolean;      // إضافة وتعديل القضايا
-  deleteCases: boolean;      // حذف القضايا والملفات
-  manageHearings: boolean;   // جدولة وإدارة الجلسات
-  manageTasks: boolean;      // إدارة وتعيين المهام
-  viewInvoices: boolean;     // الاطلاع على الفواتير والأتعاب
-  manageInvoices: boolean;   // إصدار الفواتير وتحصيل المبالغ
-  manageClients: boolean;    // إدارة وتعديل الموكلين
-  manageDocs: boolean;       // رفع والمستندات والوكالات
-  manageUsers: boolean;      // إدارة المستخدمين والصلاحيات
-  viewReports: boolean;      // الاطلاع على التقارير والإحصائيات
+  dashboard: boolean;     // 1. لوحة التحكم
+  cases: boolean;         // 2. القضايا
+  clients: boolean;       // 3. الموكلين وجهات أخرى
+  calendar: boolean;      // 4. الجلسات والرول
+  email: boolean;         // 5. البريد الإلكتروني المدمج
+  whatsapp: boolean;      // 6. واتساب المكتب المدمج
+  browser: boolean;       // 7. المتصفح الخاص المدمج
+  directory: boolean;     // 8. دليل المحاكم والجهات
+  tasks: boolean;         // 9. المهام
+  finance: boolean;       // 10. الفواتير والضريبة
+  agreements: boolean;    // 11. اتفاقية المكتب المعتمدة
+  kyc: boolean;           // 12. اعرف عميلك KYC / الوكالات والمستندات
+  manageCases?: boolean;
+  deleteCases?: boolean;
+  manageHearings?: boolean;
+  manageTasks?: boolean;
+  viewInvoices?: boolean;
+  manageInvoices?: boolean;
+  manageClients?: boolean;
+  manageDocs?: boolean;
+  manageUsers?: boolean;
+  viewReports?: boolean;
 }
 
 export interface UserItem {
@@ -82,7 +94,7 @@ export interface UserItem {
   phone: string;
   password?: string;
   roleTitle: string;
-  roleKey: "admin" | "lawyer" | "secretary" | "accountant";
+  roleKey: "admin" | "supervisor" | "lawyer" | "secretary" | "accountant";
   status: "نشط" | "معطل" | "معلق" | "موقف" | "approved" | "pending";
   avatarBg: string;
   avatarText: string;
@@ -423,11 +435,101 @@ export function saveLetterhead(config: { headerImg: string; footerImg: string })
   }
 }
 
+// ---------- وحدات وأقسام النظام الـ 12 الأساسية ----------
+export const PERMISSION_MODULES: Array<{
+  id: keyof RolePermissions;
+  label: string;
+  desc: string;
+  navTabIds: string[];
+}> = [
+  { id: "dashboard", label: "لوحة التحكم", desc: "الوصول للإحصائيات ونظرة عامة على المكتب", navTabIds: ["dashboard"] },
+  { id: "cases", label: "القضايا", desc: "إدارة الملفات والقضايا والدعاوى", navTabIds: ["cases"] },
+  { id: "clients", label: "الموكلين وجهات أخرى", desc: "سجل بيانات الموكلين والأطراف", navTabIds: ["clients"] },
+  { id: "calendar", label: "الجلسات والرول", desc: "جدولة متابعة جلسات المحاكم", navTabIds: ["hearings"] },
+  { id: "email", label: "البريد الإلكتروني المدمج", desc: "الاطلاع واستخدام البريد الإلكتروني المدمج", navTabIds: ["inapp_email"] },
+  { id: "whatsapp", label: "واتساب المكتب المدمج", desc: "المراسلات الفورية وتنبيهات الموكلين عبر الواتساب", navTabIds: ["whatsapp_office"] },
+  { id: "browser", label: "المتصفح الخاص المدمج", desc: "تصفح البوابات القضائية والحكومية من داخل التطبيق", navTabIds: ["browser"] },
+  { id: "directory", label: "دليل المحاكم والجهات", desc: "دليل التواصل المباشر مع المحاكم والنيابات", navTabIds: ["courts_directory"] },
+  { id: "tasks", label: "المهام", desc: "إسناد ومتابعة المهام الإدارية والقانونية", navTabIds: ["tasks"] },
+  { id: "finance", label: "الفواتير والضريبة", desc: "الاطلاع والتحكم بالفواتير والحسابات والضريبة", navTabIds: ["invoices"] },
+  { id: "agreements", label: "اتفاقية المكتب المعتمدة", desc: "صياغة وإنشاء اتفاقيات الأتعاب المعتمدة", navTabIds: ["office_agreement"] },
+  { id: "kyc", label: "اعرف عميلك KYC / الوكالات والمستندات", desc: "مراجعات الفحص والأرشيف الإلكتروني والوكالات", navTabIds: ["kyc", "docs", "poa"] },
+];
+
+// فحص صلاحيات الوصول للتبويب المحدد مع تطبيق سياسة الحظر الافتراضي (Default-Deny Policy)
+export const hasTabPermission = (user: UserItem | null | undefined, tabId: string): boolean => {
+  if (!user) return false;
+  // مدير النظام له جميع الصلاحيات الكاملة بلا استثناء
+  if (user.roleKey === "admin" || (user as any).role === "admin") return true;
+
+  // تبويب إدارة المستخدمين حصر للمدير أو من لديه صلاحية صريحة
+  if (tabId === "users") {
+    return Boolean(user.permissions?.manageUsers);
+  }
+
+  // البحث عن القسم المناسب للتبويب المحدد
+  const moduleDef = PERMISSION_MODULES.find((m) => m.navTabIds.includes(tabId));
+  if (!moduleDef) {
+    // سياسة الحظر الافتراضي: أي ميزة أو تبويب جديد غير معرف يكون مخفياً تلقائياً لغير المدير
+    return false;
+  }
+
+  const moduleKey = moduleDef.id;
+  const perms = user.permissions;
+  if (!perms) return false;
+
+  // إذا كانت الصلاحيات مخزنة كمصفوفة نصوص
+  if (Array.isArray(perms)) {
+    return (perms as string[]).includes(moduleKey) || (perms as string[]).includes(tabId);
+  }
+
+  // إذا كانت الصلاحيات مخزنة ككائن
+  if (typeof perms === "object") {
+    if (perms[moduleKey as keyof RolePermissions] === true) return true;
+    
+    // فحص الصلاحيات السابقة للتوافقية
+    if (tabId === "invoices" && (perms.viewInvoices || perms.manageInvoices || perms.finance)) return true;
+    if (tabId === "cases" && perms.manageCases) return true;
+    if (tabId === "hearings" && perms.manageHearings) return true;
+    if (tabId === "tasks" && perms.manageTasks) return true;
+    if (tabId === "clients" && perms.manageClients) return true;
+    if ((tabId === "docs" || tabId === "poa") && perms.manageDocs) return true;
+  }
+
+  return false;
+};
+
+// حساب عدد الصلاحيات المتاحة الفعلية من أصل 12 قسم
+export const getActivePermissionsCount = (user: UserItem | null | undefined): number => {
+  if (!user) return 0;
+  if (user.roleKey === "admin" || (user as any).role === "admin") return 12;
+
+  let count = 0;
+  PERMISSION_MODULES.forEach((mod) => {
+    if (hasTabPermission(user, mod.navTabIds[0])) {
+      count++;
+    }
+  });
+  return count;
+};
+
 // ---------- القوالب المسبقة للأدوار ----------
 const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions }> = {
   admin: {
     title: "محامٍ شريك / مدير النظام",
     permissions: {
+      dashboard: true,
+      cases: true,
+      clients: true,
+      calendar: true,
+      email: true,
+      whatsapp: true,
+      browser: true,
+      directory: true,
+      tasks: true,
+      finance: true,
+      agreements: true,
+      kyc: true,
       manageCases: true,
       deleteCases: true,
       manageHearings: true,
@@ -440,9 +542,48 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       viewReports: true,
     },
   },
+  supervisor: {
+    title: "مشرف ومراجع إداري",
+    permissions: {
+      dashboard: true,
+      cases: true,
+      clients: true,
+      calendar: true,
+      email: true,
+      whatsapp: false,
+      browser: true,
+      directory: true,
+      tasks: true,
+      finance: true,
+      agreements: true,
+      kyc: true,
+      manageCases: true,
+      deleteCases: false,
+      manageHearings: true,
+      manageTasks: true,
+      viewInvoices: true,
+      manageInvoices: false,
+      manageClients: true,
+      manageDocs: true,
+      manageUsers: false,
+      viewReports: true,
+    },
+  },
   lawyer: {
     title: "محامٍ ومستشار قانوني",
     permissions: {
+      dashboard: true,
+      cases: true,
+      clients: true,
+      calendar: true,
+      email: false,
+      whatsapp: false,
+      browser: true,
+      directory: true,
+      tasks: true,
+      finance: false,
+      agreements: true,
+      kyc: true,
       manageCases: true,
       deleteCases: false,
       manageHearings: true,
@@ -458,6 +599,18 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
   secretary: {
     title: "مسؤول سكرتارية وتنسيق",
     permissions: {
+      dashboard: true,
+      cases: false,
+      clients: true,
+      calendar: true,
+      email: false,
+      whatsapp: true,
+      browser: false,
+      directory: true,
+      tasks: true,
+      finance: false,
+      agreements: false,
+      kyc: false,
       manageCases: false,
       deleteCases: false,
       manageHearings: true,
@@ -473,6 +626,18 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
   accountant: {
     title: "محاسب المكتب والضريبة",
     permissions: {
+      dashboard: true,
+      cases: false,
+      clients: true,
+      calendar: false,
+      email: false,
+      whatsapp: false,
+      browser: false,
+      directory: false,
+      tasks: true,
+      finance: true,
+      agreements: true,
+      kyc: false,
       manageCases: false,
       deleteCases: false,
       manageHearings: false,
@@ -488,16 +653,28 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
 };
 
 const PERMISSION_LABELS: Record<keyof RolePermissions, { label: string; desc: string }> = {
-  manageCases: { label: "إدارة القضايا", desc: "قيد وتحديث القضايا وتغيير حالاتها" },
+  dashboard: { label: "1. لوحة التحكم", desc: "إحصائيات المكتب والأنشطة والملخص" },
+  cases: { label: "2. القضايا", desc: "قيد وتحديث القضايا وتغيير حالاتها" },
+  clients: { label: "3. الموكلين جهات أخرى", desc: "إدارة وتعديل بيانات الموكلين" },
+  calendar: { label: "4. الجلسات والرول", desc: "إضافة وتعديل مواعيد وقاعات الجلسات" },
+  email: { label: "5. البريد الإلكتروني المدمج", desc: "الاطلاع واستخدام البريد الإلكتروني المدمج" },
+  whatsapp: { label: "6. واتساب المكتب المدمج", desc: "المراسلات والتنبهات الفورية عبر الواتساب" },
+  browser: { label: "7. المتصفح الخاص المدمج", desc: "تصفح البوابات القضائية والحكومية" },
+  directory: { label: "8. دليل المحاكم والجهات", desc: "وسائل التواصل مع المحاكم والنيابات" },
+  tasks: { label: "9. المهام", desc: "إنشاء وتعيين متابعة أداء المهام" },
+  finance: { label: "10. الفواتير والضريبة", desc: "إصدار وتعديل سندات القبض والضريبة" },
+  agreements: { label: "11. اتفاقية المكتب المعتمدة", desc: "إنشاء وصياغة اتفاقيات الأتعاب" },
+  kyc: { label: "12. اعرف عميلك KYC / المستندات", desc: "مراجعات الفحص والوكالات والأرشيف" },
+  manageCases: { label: "إدارة القضايا الفرعية", desc: "قيد وتحديث القضايا" },
   deleteCases: { label: "حذف القضايا والملفات", desc: "صلاحية الحذف النهائي للملفات" },
-  manageHearings: { label: "جدولة الجلسات", desc: "إضافة وتعديل مواعيد وقاعات الجلسات" },
-  manageTasks: { label: "إدارة المهام", desc: "إنشاء وتعيين متابعة أداء المهام" },
-  viewInvoices: { label: "عرض الفواتير", desc: "الاطلاع على أتعاب القضايا والتحصيلات" },
+  manageHearings: { label: "جدولة الجلسات", desc: "إضافة وتعديل مواعيد الجلسات" },
+  manageTasks: { label: "إدارة المهام الفرعية", desc: "تعيين أداء المهام" },
+  viewInvoices: { label: "عرض الفواتير", desc: "الاطلاع على أتعاب القضايا" },
   manageInvoices: { label: "إصدار الفواتير", desc: "إنشاء وتعديل سندات القبض والضريبة" },
-  manageClients: { label: "إدارة الموكلين", desc: "إضافة وتعديل بيانات الموكلين" },
+  manageClients: { label: "إدارة الموكلين الفرعية", desc: "تعديل بيانات الموكلين" },
   manageDocs: { label: "إدارة المستندات", desc: "رفع وحفظ أوراق ومستندات القضية" },
   manageUsers: { label: "إدارة المستخدمين", desc: "إضافة وتعديل صلاحيات فريق العمل" },
-  viewReports: { label: "التقارير والإحصائيات", desc: "الاطلاع على تقارير الأداء والمالية" }
+  viewReports: { label: "التقارير والإحصائيات", desc: "الاطلاع على تقارير الأداء" }
 };
 
 const seedUsers: UserItem[] = [
@@ -2319,12 +2496,18 @@ export default function App() {
     try {
       const { data, error } = await supabase.from("profiles").select("*");
       if (!error && data) {
+        // Deduplicate fetched profiles before processing
+        const fetchedProfiles = data || [];
+        const uniqueProfiles = Array.from(
+          new Map(fetchedProfiles.map((p: any) => [p.id || p.email?.trim().toLowerCase(), p])).values()
+        );
+
         setUsers((prev) => {
           let updated = [...prev];
           let changed = false;
 
-          const dbIds = new Set(data.map((p: any) => p.id).filter(Boolean));
-          const dbEmails = new Set(data.map((p: any) => p.email?.trim().toLowerCase()).filter(Boolean));
+          const dbIds = new Set(uniqueProfiles.map((p: any) => p.id).filter(Boolean));
+          const dbEmails = new Set(uniqueProfiles.map((p: any) => p.email?.trim().toLowerCase()).filter(Boolean));
 
           // Filter out users that were removed from Supabase profiles (unless primary local admin)
           const initialLen = updated.length;
@@ -2335,10 +2518,10 @@ export default function App() {
           });
           if (updated.length !== initialLen) changed = true;
 
-          data.forEach((p: any) => {
+          uniqueProfiles.forEach((p: any) => {
             const emailClean = p.email?.trim().toLowerCase();
             if (!emailClean) return;
-            const existingIdx = updated.findIndex((u) => u.email.toLowerCase() === emailClean);
+            const existingIdx = updated.findIndex((u) => u.email.toLowerCase() === emailClean || (p.id && u.supabaseId === p.id));
             const pPhone = p.phone || p.phone_number || "0500000000";
             const pName = p.full_name || p.name || emailClean.split("@")[0];
             const pStatus = (p.status === "pending" || p.status === "معلق") ? "pending" : (p.status === "approved" || p.status === "نشط" || p.status === "active") ? "approved" : "rejected";
@@ -2356,7 +2539,24 @@ export default function App() {
               const cur = updated[existingIdx];
               const pRoleKey = (p.role as any) || cur.roleKey;
               const pRoleTitle = p.role_title || cur.roleTitle;
-              if (cur.status !== pStatus || (pPhone && cur.phone !== pPhone) || (pName && cur.name !== pName) || p.id !== cur.supabaseId || cur.roleKey !== pRoleKey || cur.roleTitle !== pRoleTitle) {
+              let dbPerms = cur.permissions;
+              if (p.permissions) {
+                if (typeof p.permissions === "string") {
+                  try { dbPerms = JSON.parse(p.permissions); } catch (e) {}
+                } else if (typeof p.permissions === "object") {
+                  dbPerms = p.permissions;
+                }
+              }
+
+              if (
+                cur.status !== pStatus ||
+                (pPhone && cur.phone !== pPhone) ||
+                (pName && cur.name !== pName) ||
+                p.id !== cur.supabaseId ||
+                cur.roleKey !== pRoleKey ||
+                cur.roleTitle !== pRoleTitle ||
+                JSON.stringify(cur.permissions) !== JSON.stringify(dbPerms)
+              ) {
                 updated[existingIdx] = { 
                   ...cur, 
                   status: pStatus,
@@ -2364,13 +2564,23 @@ export default function App() {
                   name: pName || cur.name,
                   supabaseId: p.id || cur.supabaseId,
                   roleKey: pRoleKey,
-                  roleTitle: pRoleTitle
+                  roleTitle: pRoleTitle,
+                  permissions: dbPerms
                 };
                 changed = true;
               }
             } else {
               const roleKey = (p.role as any) || "lawyer";
               const roleTitle = p.role_title || (ROLE_PRESETS[roleKey]?.title) || "محامٍ ومستشار";
+              let dbPerms = ROLE_PRESETS[roleKey]?.permissions || ROLE_PRESETS.lawyer.permissions;
+              if (p.permissions) {
+                if (typeof p.permissions === "string") {
+                  try { dbPerms = JSON.parse(p.permissions); } catch (e) {}
+                } else if (typeof p.permissions === "object") {
+                  dbPerms = p.permissions;
+                }
+              }
+
               const newUser: UserItem = {
                 id: Date.now() + Math.floor(Math.random() * 1000),
                 supabaseId: p.id,
@@ -2383,15 +2593,26 @@ export default function App() {
                 status: pStatus,
                 avatarBg: "bg-amber-600 text-white",
                 avatarText: pName.slice(0, 2),
-                permissions: ROLE_PRESETS[roleKey]?.permissions || ROLE_PRESETS.lawyer.permissions
+                permissions: dbPerms
               };
               updated.push(newUser);
               changed = true;
             }
           });
-          if (changed) {
-            saveStorage("firm_users", updated);
-            return updated;
+
+          // Deduplicate final users array by unique id / email
+          const deduplicatedMap = new Map();
+          updated.forEach((u) => {
+            const key = u.supabaseId || u.email?.toLowerCase() || u.id;
+            if (!deduplicatedMap.has(key)) {
+              deduplicatedMap.set(key, u);
+            }
+          });
+          const deduplicated = Array.from(deduplicatedMap.values());
+
+          if (changed || deduplicated.length !== prev.length) {
+            saveStorage("firm_users", deduplicated);
+            return deduplicated;
           }
           return prev;
         });
@@ -2912,12 +3133,25 @@ export default function App() {
   const [assignCanFinances, setAssignCanFinances] = useState<boolean>(false);
 
   const pendingUsers = useMemo(() => {
-    return users.filter((u) => u.status === "معلق" || u.status === "pending");
+    const map = new Map();
+    users.forEach((u) => {
+      if (u.status === "معلق" || u.status === "pending") {
+        const key = u.supabaseId || u.email?.toLowerCase() || u.id;
+        if (!map.has(key)) {
+          map.set(key, u);
+        }
+      }
+    });
+    return Array.from(map.values()) as UserItem[];
   }, [users]);
 
   // المستخدم الحالي والصلاحيات النشطة
   const currentUser = useMemo(() => users.find((u) => u.id === currentUserId) || users[0], [users, currentUserId]);
   const userPerms = currentUser.permissions;
+
+  const isAdmin = useMemo(() => {
+    return currentUser?.roleKey === "admin" || (currentUser as any)?.role === "admin";
+  }, [currentUser]);
 
   const openApproveUserModal = (userId: number) => {
     if (!checkPerm("manageUsers", "الموافقة على المستخدمين")) return;
@@ -3474,9 +3708,12 @@ export default function App() {
 
     const rKey = (form.roleKey || "lawyer") as "admin" | "lawyer" | "secretary" | "accountant";
     const preset = ROLE_PRESETS[rKey];
+    const userPermissions = form.permissions ? { ...form.permissions } : { ...preset.permissions };
+
+    let updatedList: UserItem[] = [];
 
     if (editingUser) {
-      setUsers(users.map((u) => u.id === editingUser.id ? {
+      updatedList = users.map((u) => u.id === editingUser.id ? {
         ...u,
         name: form.name,
         email: form.email,
@@ -3485,12 +3722,12 @@ export default function App() {
         roleKey: rKey,
         roleTitle: form.roleTitle || preset.title,
         status: form.status || u.status,
-        permissions: { ...preset.permissions },
+        permissions: userPermissions,
         canTransferContacts: form.canTransferContacts !== undefined ? form.canTransferContacts : u.canTransferContacts,
         canViewAgreements: form.canViewAgreements !== undefined ? form.canViewAgreements : u.canViewAgreements,
         canAccessWhatsapp: form.canAccessWhatsapp !== undefined ? form.canAccessWhatsapp : u.canAccessWhatsapp,
         canViewFinances: form.canViewFinances !== undefined ? form.canViewFinances : u.canViewFinances,
-      } : u));
+      } : u);
     } else {
       const newUser: UserItem = {
         id: nextId(users),
@@ -3503,27 +3740,81 @@ export default function App() {
         status: "نشط",
         avatarBg: rKey === "admin" ? "bg-amber-500 text-slate-900" : rKey === "lawyer" ? "bg-indigo-600 text-white" : rKey === "accountant" ? "bg-emerald-600 text-white" : "bg-purple-600 text-white",
         avatarText: form.name.charAt(0),
-        permissions: { ...preset.permissions },
+        permissions: userPermissions,
         canTransferContacts: form.canTransferContacts || false,
         canViewAgreements: form.canViewAgreements || false,
         canAccessWhatsapp: form.canAccessWhatsapp || false,
         canViewFinances: form.canViewFinances || false,
       };
-      setUsers([...users, newUser]);
+      updatedList = [...users, newUser];
     }
+
+    setUsers(updatedList);
+    saveStorage("firm_users", updatedList);
+
+    // المزامنة الفورية المباشرة مع جدول public.profiles في Supabase
+    try {
+      supabase.from("profiles").upsert([
+        {
+          ...(editingUser?.supabaseId ? { id: editingUser.supabaseId } : {}),
+          email: form.email.trim().toLowerCase(),
+          full_name: form.name,
+          phone: form.phone || "050-0000000",
+          role: rKey,
+          role_title: form.roleTitle || preset.title,
+          permissions: userPermissions,
+          status: "approved"
+        }
+      ], { onConflict: "email" }).then(({ error }) => {
+        if (error) console.warn("Supabase profiles update note:", error.message);
+      });
+    } catch (e) {
+      console.warn("Supabase profiles save exception:", e);
+    }
+
     setEditingUser(null);
     setModal(null);
   };
 
   const toggleUserPermission = (userId: number, permKey: keyof RolePermissions) => {
     if (!checkPerm("manageUsers", "تعديل الصلاحيات")) return;
-    setUsers(users.map((u) => u.id === userId ? {
-      ...u,
-      permissions: {
-        ...u.permissions,
-        [permKey]: !u.permissions[permKey]
-      }
-    } : u));
+    setUsers((prevUsers) => {
+      const updated = prevUsers.map((u) => {
+        if (u.id === userId) {
+          const currentVal = Boolean(hasTabPermission(u, permKey as string) || u.permissions?.[permKey]);
+          const newPerms = {
+            ...(u.permissions || {}),
+            [permKey]: !currentVal
+          };
+
+          // المزامنة الفورية المباشرة مع جدول public.profiles في Supabase
+          if (u.email) {
+            try {
+              supabase.from("profiles").upsert([
+                {
+                  ...(u.supabaseId ? { id: u.supabaseId } : {}),
+                  email: u.email.trim().toLowerCase(),
+                  full_name: u.name,
+                  permissions: newPerms
+                }
+              ], { onConflict: "email" }).then(({ error }) => {
+                if (error) console.warn("Supabase profile toggle permission note:", error.message);
+              });
+            } catch (e) {
+              console.warn("Supabase profile toggle exception:", e);
+            }
+          }
+
+          return {
+            ...u,
+            permissions: newPerms
+          };
+        }
+        return u;
+      });
+      saveStorage("firm_users", updated);
+      return updated;
+    });
   };
 
   const saveTimeLog = () => {
@@ -3829,13 +4120,13 @@ export default function App() {
           </div>
 
           <nav className="flex-1 space-y-1 p-3">
-            {NAV.map(({ id, label, icon: Icon }) => (
+            {NAV.filter(({ id }) => hasTabPermission(currentUser, id)).map(({ id, label, icon: Icon }) => (
               <button key={id} onClick={() => { setTab(id); setCaseView(null); }}
                 className={`flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition ${tab === id ? "bg-[#b89b6a] text-slate-950 font-black shadow-md" : "text-teal-100/80 hover:bg-[#0c403d] hover:text-white"}`}>
                 <Icon size={18} /><span>{label}</span>
                 {id === "poa" && stats.expiringPoa > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{stats.expiringPoa}</span>}
                 {id === "kyc" && kycDue > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{kycDue}</span>}
-                {id === "users" && pendingUsers.length > 0 ? (
+                {id === "users" && pendingUsers.length > 0 && isAdmin ? (
                   <span className="mr-auto rounded-full bg-[#e5c388] text-slate-950 px-2 py-0.5 text-[11px] font-bold animate-pulse">
                     {pendingUsers.length} معلق
                   </span>
@@ -3975,8 +4266,8 @@ export default function App() {
                       </button>
                     </div>
 
-                    {/* تنبيه وجود طلبات تسجيل حساب معلقة تحتاج موافقة */}
-                    {pendingUsers.length > 0 && (
+                    {/* تنبيه وجود طلبات تسجيل حساب معلقة تحتاج موافقة (Admin Only) */}
+                    {isAdmin && pendingUsers.length > 0 && (
                       <div className="p-4 rounded-2xl bg-amber-50 border-2 border-amber-400 text-amber-950 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                           <div className="p-2.5 bg-amber-500 text-slate-900 rounded-xl font-bold shrink-0 animate-pulse">
@@ -4005,7 +4296,7 @@ export default function App() {
                   {[
                     { label: "قضايا نشطة", value: stats.active, icon: Briefcase, tone: "bg-indigo-100 text-indigo-600" },
                     { label: "جلسات هذا الأسبوع", value: stats.weekHearings, icon: Gavel, tone: "bg-amber-100 text-amber-600" },
-                    { label: "مبالغ مستحقة (شامل الضريبة 5%)", value: fmtAED(stats.dueAmount), icon: TrendingUp, tone: "bg-emerald-100 text-emerald-600" },
+                    { label: "مبالغ مستحقة (شامل الضريبة 5%)", value: (isAdmin || currentUser?.canViewFinances || userPerms?.viewInvoices || userPerms?.manageInvoices) ? fmtAED(stats.dueAmount) : "•••••• (غير مصرح)", icon: TrendingUp, tone: "bg-emerald-100 text-emerald-600" },
                     { label: "وكالات تنتهي خلال 60 يومًا", value: stats.expiringPoa, icon: AlertTriangle, tone: "bg-red-100 text-red-600" },
                   ].map((k) => (
                     <div key={k.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -6888,75 +7179,77 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* قسم طلبات التفعيل المعلقة Supabase User Approval Flow */}
-                <div className="rounded-2xl border border-amber-300 bg-amber-50/80 p-5 shadow-sm space-y-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200 pb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-slate-900 font-bold shadow-xs">
-                        <Hourglass size={20} />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-                          طلبات الاعتماد والموافقة على المستخدمين الجدد (User Approval Flow)
-                          {pendingUsers.length > 0 && (
-                            <span className="rounded-full bg-amber-500 text-slate-900 px-2.5 py-0.5 text-xs font-bold">
-                              {pendingUsers.length} معلق
-                            </span>
-                          )}
-                        </h3>
-                        <p className="text-xs text-slate-600">
-                          المستخدمون المسجلون بحالة معلقة (status: 'pending') بحاجة لموافقة صريحة للوصول إلى النظام
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {pendingUsers.length === 0 ? (
-                    <div className="p-4 rounded-xl bg-white border border-amber-200/80 text-xs text-slate-600 flex items-center justify-between">
-                      <p className="flex items-center gap-2">
-                        <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                        لا توجد طلبات تسجيل معلقة حالياً. جميع الحسابات نشطة ومصرح لها بالدخول للنظام.
-                      </p>
-                      <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">RLS Status: All Approved</span>
-                    </div>
-                  ) : (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {pendingUsers.map((pUser) => (
-                        <div key={pUser.id} className="rounded-2xl border border-amber-300 bg-white p-4 shadow-sm space-y-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div>
-                              <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
-                                {pUser.name}
-                                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold border border-amber-300">
-                                  معلق (Pending)
-                                </span>
-                              </h4>
-                              <p className="text-xs text-slate-500 mt-0.5">{pUser.email} • {pUser.phone}</p>
-                            </div>
-                            <span className="text-xs font-semibold px-2 py-1 rounded-lg bg-slate-100 text-slate-700 shrink-0">
-                              {pUser.roleTitle}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-                            <button
-                              onClick={() => approveUser(pUser.id)}
-                              className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-xs"
-                            >
-                              <UserCheck size={14} /> قبول وتفعيل الحساب (Approved)
-                            </button>
-                            <button
-                              onClick={() => rejectUser(pUser.id)}
-                              className="flex items-center justify-center gap-1 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100 transition"
-                            >
-                              <Trash2 size={14} /> رفض
-                            </button>
-                          </div>
+                {/* قسم طلبات التفعيل المعلقة Supabase User Approval Flow (Admin Only) */}
+                {isAdmin && (
+                  <div className="rounded-2xl border border-amber-300 bg-amber-50/80 p-5 shadow-sm space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200 pb-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500 text-slate-900 font-bold shadow-xs">
+                          <Hourglass size={20} />
                         </div>
-                      ))}
+                        <div>
+                          <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                            طلبات الاعتماد والموافقة على المستخدمين الجدد (User Approval Flow)
+                            {pendingUsers.length > 0 && (
+                              <span className="rounded-full bg-amber-500 text-slate-900 px-2.5 py-0.5 text-xs font-bold">
+                                {pendingUsers.length} معلق
+                              </span>
+                            )}
+                          </h3>
+                          <p className="text-xs text-slate-600">
+                            المستخدمون المسجلون بحالة معلقة (status: 'pending') بحاجة لموافقة صريحة للوصول إلى النظام
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
+
+                    {pendingUsers.length === 0 ? (
+                      <div className="p-4 rounded-xl bg-white border border-amber-200/80 text-xs text-slate-600 flex items-center justify-between">
+                        <p className="flex items-center gap-2">
+                          <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+                          لا توجد طلبات تسجيل معلقة حالياً. جميع الحسابات نشطة ومصرح لها بالدخول للنظام.
+                        </p>
+                        <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">RLS Status: All Approved</span>
+                      </div>
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {pendingUsers.map((pUser) => (
+                          <div key={pUser.id} className="rounded-2xl border border-amber-300 bg-white p-4 shadow-sm space-y-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <h4 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                                  {pUser.name}
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 font-bold border border-amber-300">
+                                    معلق (Pending)
+                                  </span>
+                                </h4>
+                                <p className="text-xs text-slate-500 mt-0.5">{pUser.email} • {pUser.phone}</p>
+                              </div>
+                              <span className="text-xs font-semibold px-2 py-1 rounded-lg bg-slate-100 text-slate-700 shrink-0">
+                                {pUser.roleTitle}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                              <button
+                                onClick={() => approveUser(pUser.id)}
+                                className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-emerald-600 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-xs"
+                              >
+                                <UserCheck size={14} /> قبول وتفعيل الحساب (Approved)
+                              </button>
+                              <button
+                                onClick={() => rejectUser(pUser.id)}
+                                className="flex items-center justify-center gap-1 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100 transition"
+                              >
+                                <Trash2 size={14} /> رفض
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* بطاقة الحساب الحالي الناشط */}
                 <div className="p-4 rounded-2xl bg-gradient-to-l from-slate-900 to-slate-800 text-white shadow-md flex flex-wrap items-center justify-between gap-4">
@@ -6976,7 +7269,7 @@ export default function App() {
                   </div>
                   <div className="flex items-center gap-2 text-xs bg-slate-800/80 p-2 rounded-xl border border-slate-700">
                     <Key size={14} className="text-amber-400" />
-                    <span>الصلاحيات المتاحة: <b>{Object.values(currentUser.permissions).filter(Boolean).length} من {Object.keys(currentUser.permissions).length}</b></span>
+                    <span>الصلاحيات المتاحة: <b>{getActivePermissionsCount(currentUser)} من 12</b></span>
                   </div>
                 </div>
 
@@ -7019,7 +7312,8 @@ export default function App() {
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {users.map((u) => {
-                          const openCount = Object.values(u.permissions).filter(Boolean).length;
+                          const openCount = getActivePermissionsCount(u);
+                          const totalCount = 12;
                           return (
                             <tr key={u.id} className="hover:bg-amber-50/40">
                               <td className="px-4 py-3 font-semibold">
@@ -7074,7 +7368,7 @@ export default function App() {
                               </td>
                               <td className="px-4 py-3 text-center">
                                 <span className="font-mono text-xs font-bold text-slate-800">
-                                  {openCount} / {Object.keys(u.permissions).length}
+                                  {openCount} / {totalCount}
                                 </span>
                               </td>
                               <td className="px-4 py-3 text-center">
@@ -7091,6 +7385,7 @@ export default function App() {
                                         roleKey: u.roleKey,
                                         roleTitle: u.roleTitle,
                                         status: u.status,
+                                        permissions: { ...u.permissions }
                                       });
                                       setModal("user");
                                     }}
@@ -7124,40 +7419,52 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* مصفوفة الصلاحيات التفصيلية التفاعلية */}
+                {/* مصفوفة الصلاحيات التفصيلية التفاعلية للأقسام الـ 12 */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-base">مصفوفة التحكم التفاعلية بالصلاحيات (Permission Matrix)</h3>
-                    <p className="text-xs text-slate-500">يمكنك الضغط على خانة أي صلاحية لتفعيلها أو إلغائها فورًا لكل عضو</p>
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
+                        <ShieldCheck className="text-amber-600" /> مصفوفة التحكم التفاعلية بالأقسام الـ 12 (Permission Matrix)
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        سياسة الحظر الافتراضي (Default-Deny Policy): يمكنك الضغط على خانة أي قسم لتفعيله أو إلغائه فوراً لكل عضو (المزامنة حية ومباشرة مع Supabase Profiles)
+                      </p>
+                    </div>
+                    <Badge className="bg-amber-100 text-amber-900 font-bold border border-amber-300">
+                      إجمالي الأقسام: 12
+                    </Badge>
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs">
                       <thead className="bg-slate-900 text-white text-right">
                         <tr>
-                          <th className="p-3 rounded-r-xl">نوع الصلاحية</th>
+                          <th className="p-3 rounded-r-xl">القسم / الموديول (12 قسم)</th>
                           {users.map((u) => (
                             <th key={u.id} className="p-3 text-center font-bold">
                               {u.name}
                               <span className="block text-[10px] text-amber-400 font-normal">{u.roleTitle.split("—")[0]}</span>
+                              <span className="block text-[10px] font-mono font-normal text-slate-300 mt-0.5">
+                                ({getActivePermissionsCount(u)}/12)
+                              </span>
                             </th>
                           ))}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
-                        {(Object.keys(PERMISSION_LABELS) as Array<keyof RolePermissions>).map((pKey) => (
-                          <tr key={pKey} className="hover:bg-slate-50">
+                        {PERMISSION_MODULES.map((mod) => (
+                          <tr key={mod.id} className="hover:bg-slate-50">
                             <td className="p-3 font-semibold text-slate-800">
-                              <p className="font-bold text-slate-900">{PERMISSION_LABELS[pKey].label}</p>
-                              <p className="text-[11px] text-slate-400 font-normal">{PERMISSION_LABELS[pKey].desc}</p>
+                              <p className="font-bold text-slate-900">{mod.label}</p>
+                              <p className="text-[11px] text-slate-400 font-normal">{mod.desc}</p>
                             </td>
                             {users.map((u) => {
-                              const hasIt = u.permissions[pKey];
+                              const hasIt = hasTabPermission(u, mod.navTabIds[0]);
                               return (
                                 <td key={u.id} className="p-3 text-center">
                                   <button
-                                    onClick={() => toggleUserPermission(u.id, pKey)}
+                                    onClick={() => toggleUserPermission(u.id, mod.id)}
                                     className={`w-7 h-7 rounded-lg inline-flex items-center justify-center transition ${hasIt ? "bg-emerald-500 text-white shadow-sm" : "bg-slate-100 text-slate-300 hover:bg-slate-200"}`}
-                                    title={`انقر لتعديل صلاحية [${PERMISSION_LABELS[pKey].label}] لـ ${u.name}`}
+                                    title={`انقر لتعديل صلاحية قسم [${mod.label}] لـ ${u.name}`}
                                   >
                                     {hasIt ? <Check size={16} /> : <Minus size={16} />}
                                   </button>
@@ -7999,8 +8306,22 @@ export default function App() {
               </Field>
             </div>
             <Field label="الدور / القالب المسبق">
-              <select onChange={f("roleKey")} defaultValue={form.roleKey || "lawyer"} className={inputCls}>
+              <select
+                value={form.roleKey || "lawyer"}
+                onChange={(e) => {
+                  const rKey = e.target.value;
+                  const preset = ROLE_PRESETS[rKey];
+                  setForm((prev) => ({
+                    ...prev,
+                    roleKey: rKey,
+                    roleTitle: preset ? preset.title : prev.roleTitle,
+                    permissions: preset ? { ...preset.permissions } : prev.permissions
+                  }));
+                }}
+                className={inputCls}
+              >
                 <option value="admin">مدير النظام / محامٍ شريك (كل الصلاحيات)</option>
+                <option value="supervisor">مشرف ومراجع إداري (شامل الإشراف والتصاريح)</option>
                 <option value="lawyer">محامٍ ومستشار قانوني (قضايا وجلسات ومهام)</option>
                 <option value="secretary">مسؤول سكرتارية وتنسيق (مواعيد وموكلين)</option>
                 <option value="accountant">محاسب المكتب والضريبة (فواتير وأتعاب)</option>
@@ -8012,6 +8333,59 @@ export default function App() {
             <Field label="كلمة المرور المسجلة (تشفير أمان Supabase Auth)">
               <input type="password" readOnly disabled value="••••••••" className={`${inputCls} bg-stone-100 text-slate-500 cursor-not-allowed`} />
             </Field>
+
+            {/* تخصيص صلاحيات الوصول للأقسام الـ 12 */}
+            <div className="space-y-2 border-t border-slate-200 pt-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                  <ShieldCheck size={15} className="text-amber-600" />
+                  تخصيص صلاحيات الأقسام الـ 12 (Comprehensive 12 Modules):
+                </p>
+                <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 font-mono">
+                  {Object.values(form.permissions || ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions || {}).filter(Boolean).length} / 12
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-snug">
+                تطبيق حظر افتراضي تلقائي: الأقسام المحددة باللون الأخضر فقط هي ما يستطيع الموظف مشاهدته بالقائمة الجانبية.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto p-2 border border-slate-200 rounded-xl bg-slate-50/50">
+                {PERMISSION_MODULES.map((mod) => {
+                  const activePerms = form.permissions || (editingUser ? editingUser.permissions : ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions) || {};
+                  const isEnabled = Boolean(activePerms[mod.id] || (editingUser && hasTabPermission(editingUser, mod.navTabIds[0])));
+                  return (
+                    <label
+                      key={mod.id}
+                      className={`flex items-start gap-2 p-2 rounded-xl border transition cursor-pointer ${
+                        isEnabled ? "bg-emerald-50 border-emerald-300 text-slate-900" : "bg-white border-slate-200 text-slate-400 hover:bg-slate-100"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isEnabled}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setForm((prev) => {
+                            const basePerms = prev.permissions || (editingUser ? editingUser.permissions : ROLE_PRESETS[prev.roleKey || "lawyer"]?.permissions) || {};
+                            return {
+                              ...prev,
+                              permissions: {
+                                ...basePerms,
+                                [mod.id]: checked
+                              }
+                            };
+                          });
+                        }}
+                        className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <div className="text-xs">
+                        <span className="font-bold block leading-tight text-slate-900">{mod.label}</span>
+                        <span className="text-[10px] text-slate-500 block mt-0.5 leading-snug">{mod.desc}</span>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
 
             <div className="space-y-2 border-t border-slate-100 pt-3">
               <p className="text-xs font-bold text-slate-800">التفويضات الاستثنائية الحصرية (تمنح بواسطة المحامي سعود):</p>
