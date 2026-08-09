@@ -1316,21 +1316,19 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
         options: {
           data: {
             full_name: cleanName,
-            role: regRoleKey,
-            phone: cleanPhone
+            phone: cleanPhone,
+            role: regRoleKey || "lawyer"
           }
         }
       });
 
       if (authError) {
-        setErrorMsg(`خطأ من خادم Supabase Auth: ${authError.message}`);
-        setIsSubmitting(false);
-        return;
+        throw authError;
       }
 
       const registeredUserId = authData?.user?.id;
 
-      // 2. Direct insertion/upsert into public.profiles table with id, email, full_name, phone, status, role
+      // 2. Direct insertion/upsert into public.profiles table
       if (registeredUserId) {
         const { error: profileError } = await supabase.from("profiles").upsert([
           {
@@ -1339,33 +1337,41 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
             full_name: cleanName,
             phone: cleanPhone || "0500000000",
             status: "pending",
-            role: regRoleKey
+            role: regRoleKey || "lawyer"
           }
         ], { onConflict: "id" });
 
         if (profileError) {
           console.warn("Supabase profiles table sync note:", profileError.message);
-          await supabase.from("profiles").upsert([
+          const { error: profileEmailErr } = await supabase.from("profiles").upsert([
             {
               id: registeredUserId,
               email: cleanEmail,
               full_name: cleanName,
               phone: cleanPhone || "0500000000",
               status: "pending",
-              role: regRoleKey
+              role: regRoleKey || "lawyer"
             }
           ], { onConflict: "email" });
+
+          if (profileEmailErr) {
+            console.warn("Secondary profile sync note:", profileEmailErr.message);
+          }
         }
       } else {
-        await supabase.from("profiles").upsert([
+        const { error: profileEmailErr } = await supabase.from("profiles").upsert([
           {
             email: cleanEmail,
             full_name: cleanName,
             phone: cleanPhone || "0500000000",
             status: "pending",
-            role: regRoleKey
+            role: regRoleKey || "lawyer"
           }
         ], { onConflict: "email" });
+
+        if (profileEmailErr) {
+          console.warn("Primary profile email sync note:", profileEmailErr.message);
+        }
       }
 
       const roleTitleMap = {
@@ -1392,6 +1398,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
       setRegPassword("123456");
       setAuthMode("login");
     } catch (err: any) {
+      console.error("Registration submission error:", err);
+      alert('Registration Failed: ' + (err?.message || "Error during registration"));
       setErrorMsg(err?.message || "حدث خطأ أثناء التواصل مع خادم Supabase.");
     } finally {
       setIsSubmitting(false);

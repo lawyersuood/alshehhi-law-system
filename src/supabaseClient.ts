@@ -5,7 +5,7 @@ const DEFAULT_URL = "https://ywfddjrrgqwxbomjxsgq.supabase.co";
 const DEFAULT_KEY = "sb_publishable_rBfdJsk33ImjcyHHhjnu7w_VaBaDi22";
 
 function getSanitisedUrl(): string {
-  const raw = (import.meta as any).env?.VITE_SUPABASE_URL;
+  const raw = (import.meta as any).env?.VITE_SUPABASE_URL || (import.meta as any).env?.SUPABASE_URL || (typeof process !== "undefined" && (process as any).env?.VITE_SUPABASE_URL) || (typeof process !== "undefined" && (process as any).env?.SUPABASE_URL);
   if (!raw || typeof raw !== "string") return DEFAULT_URL;
   const match = raw.match(/https?:\/\/[^\s\]\)\"\']+/);
   if (match) return match[0];
@@ -14,7 +14,7 @@ function getSanitisedUrl(): string {
 }
 
 function getSanitisedKey(): string {
-  const raw = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
+  const raw = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || (import.meta as any).env?.SUPABASE_ANON_KEY || (typeof process !== "undefined" && (process as any).env?.VITE_SUPABASE_ANON_KEY) || (typeof process !== "undefined" && (process as any).env?.SUPABASE_ANON_KEY);
   if (!raw || typeof raw !== "string") return DEFAULT_KEY;
   const cleaned = raw.trim().replace(/^['"]|['"]$/g, "");
   return cleaned || DEFAULT_KEY;
