@@ -68,12 +68,11 @@ export interface RolePermissions {
   calendar: boolean;      // 4. الجلسات والرول
   email: boolean;         // 5. البريد الإلكتروني المدمج
   whatsapp: boolean;      // 6. واتساب المكتب المدمج
-  browser: boolean;       // 7. المتصفح الخاص المدمج
-  directory: boolean;     // 8. دليل المحاكم والجهات
-  tasks: boolean;         // 9. المهام
-  finance: boolean;       // 10. الفواتير والضريبة
-  agreements: boolean;    // 11. اتفاقية المكتب المعتمدة
-  kyc: boolean;           // 12. اعرف عميلك KYC / الوكالات والمستندات
+  directory: boolean;     // 7. دليل المحاكم والجهات
+  tasks: boolean;         // 8. المهام
+  finance: boolean;       // 9. الفواتير والضريبة
+  agreements: boolean;    // 10. اتفاقية المكتب المعتمدة
+  kyc: boolean;           // 11. اعرف عميلك KYC / الوكالات والمستندات
   manageCases?: boolean;
   deleteCases?: boolean;
   manageHearings?: boolean;
@@ -435,7 +434,7 @@ export function saveLetterhead(config: { headerImg: string; footerImg: string })
   }
 }
 
-// ---------- وحدات وأقسام النظام الـ 12 الأساسية ----------
+// ---------- وحدات وأقسام النظام الـ 11 الأساسية ----------
 export const PERMISSION_MODULES: Array<{
   id: keyof RolePermissions;
   label: string;
@@ -448,7 +447,6 @@ export const PERMISSION_MODULES: Array<{
   { id: "calendar", label: "الجلسات والرول", desc: "جدولة متابعة جلسات المحاكم", navTabIds: ["hearings"] },
   { id: "email", label: "البريد الإلكتروني المدمج", desc: "الاطلاع واستخدام البريد الإلكتروني المدمج", navTabIds: ["inapp_email"] },
   { id: "whatsapp", label: "واتساب المكتب المدمج", desc: "المراسلات الفورية وتنبيهات الموكلين عبر الواتساب", navTabIds: ["whatsapp_office"] },
-  { id: "browser", label: "المتصفح الخاص المدمج", desc: "تصفح البوابات القضائية والحكومية من داخل التطبيق", navTabIds: ["browser"] },
   { id: "directory", label: "دليل المحاكم والجهات", desc: "دليل التواصل المباشر مع المحاكم والنيابات", navTabIds: ["courts_directory"] },
   { id: "tasks", label: "المهام", desc: "إسناد ومتابعة المهام الإدارية والقانونية", navTabIds: ["tasks"] },
   { id: "finance", label: "الفواتير والضريبة", desc: "الاطلاع والتحكم بالفواتير والحسابات والضريبة", navTabIds: ["invoices"] },
@@ -499,10 +497,10 @@ export const hasTabPermission = (user: UserItem | null | undefined, tabId: strin
   return false;
 };
 
-// حساب عدد الصلاحيات المتاحة الفعلية من أصل 12 قسم
+// حساب عدد الصلاحيات المتاحة الفعلية من أصل 11 قسم
 export const getActivePermissionsCount = (user: UserItem | null | undefined): number => {
   if (!user) return 0;
-  if (user.roleKey === "admin" || (user as any).role === "admin") return 12;
+  if (user.roleKey === "admin" || (user as any).role === "admin") return 11;
 
   let count = 0;
   PERMISSION_MODULES.forEach((mod) => {
@@ -524,7 +522,6 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       calendar: true,
       email: true,
       whatsapp: true,
-      browser: true,
       directory: true,
       tasks: true,
       finance: true,
@@ -551,7 +548,6 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       calendar: true,
       email: true,
       whatsapp: false,
-      browser: true,
       directory: true,
       tasks: true,
       finance: true,
@@ -578,7 +574,6 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       calendar: true,
       email: false,
       whatsapp: false,
-      browser: true,
       directory: true,
       tasks: true,
       finance: false,
@@ -605,7 +600,6 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       calendar: true,
       email: false,
       whatsapp: true,
-      browser: false,
       directory: true,
       tasks: true,
       finance: false,
@@ -632,7 +626,6 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       calendar: false,
       email: false,
       whatsapp: false,
-      browser: false,
       directory: false,
       tasks: true,
       finance: true,
@@ -659,12 +652,11 @@ const PERMISSION_LABELS: Record<keyof RolePermissions, { label: string; desc: st
   calendar: { label: "4. الجلسات والرول", desc: "إضافة وتعديل مواعيد وقاعات الجلسات" },
   email: { label: "5. البريد الإلكتروني المدمج", desc: "الاطلاع واستخدام البريد الإلكتروني المدمج" },
   whatsapp: { label: "6. واتساب المكتب المدمج", desc: "المراسلات والتنبهات الفورية عبر الواتساب" },
-  browser: { label: "7. المتصفح الخاص المدمج", desc: "تصفح البوابات القضائية والحكومية" },
-  directory: { label: "8. دليل المحاكم والجهات", desc: "وسائل التواصل مع المحاكم والنيابات" },
-  tasks: { label: "9. المهام", desc: "إنشاء وتعيين متابعة أداء المهام" },
-  finance: { label: "10. الفواتير والضريبة", desc: "إصدار وتعديل سندات القبض والضريبة" },
-  agreements: { label: "11. اتفاقية المكتب المعتمدة", desc: "إنشاء وصياغة اتفاقيات الأتعاب" },
-  kyc: { label: "12. اعرف عميلك KYC / المستندات", desc: "مراجعات الفحص والوكالات والأرشيف" },
+  directory: { label: "7. دليل المحاكم والجهات", desc: "وسائل التواصل مع المحاكم والنيابات" },
+  tasks: { label: "8. المهام", desc: "إنشاء وتعيين متابعة أداء المهام" },
+  finance: { label: "9. الفواتير والضريبة", desc: "إصدار وتعديل سندات القبض والضريبة" },
+  agreements: { label: "10. اتفاقية المكتب المعتمدة", desc: "إنشاء وصياغة اتفاقيات الأتعاب" },
+  kyc: { label: "11. اعرف عميلك KYC / المستندات", desc: "مراجعات الفحص والوكالات والأرشيف" },
   manageCases: { label: "إدارة القضايا الفرعية", desc: "قيد وتحديث القضايا" },
   deleteCases: { label: "حذف القضايا والملفات", desc: "صلاحية الحذف النهائي للملفات" },
   manageHearings: { label: "جدولة الجلسات", desc: "إضافة وتعديل مواعيد الجلسات" },
@@ -2389,10 +2381,6 @@ export default function App() {
     }
   ]);
 
-  // ================= حالات واتساب المكتب المدمج الحقيقي (WhatsApp Engine & Live QR) =================
-  const [browserUrl, setBrowserUrl] = useState<string>("https://web.whatsapp.com/");
-  const [browserInputUrl, setBrowserInputUrl] = useState<string>("https://web.whatsapp.com/");
-
   const [waBackendSession, setWaBackendSession] = useState<{
     status: 'disconnected' | 'qr_ready' | 'connected';
     qrCodeUrl: string | null;
@@ -3979,7 +3967,6 @@ export default function App() {
     { id: "hearings", label: "الجلسات والرول", icon: CalendarDays },
     { id: "inapp_email", label: "البريد الإلكتروني المدمج", icon: Mail },
     { id: "whatsapp_office", label: "واتساب المكتب المدمج", icon: MessageSquare },
-    { id: "browser", label: "المتصفح الخاص المدمج", icon: Globe },
     { id: "courts_directory", label: "دليل المحاكم والجهات", icon: PhoneCall },
     { id: "tasks", label: "المهام", icon: ListChecks },
     { id: "invoices", label: "الفواتير والضريبة", icon: Receipt },
@@ -5873,84 +5860,6 @@ export default function App() {
                   </button>
                 </div>
               </Modal>
-            )}
-
-            {/* ================= المتصفح الخاص المدمج Embedded Private Browser ================= */}
-            {tab === "browser" && (
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                      <Globe className="text-amber-600" /> المتصفح الخاص المدمج بالمكتب
-                    </h2>
-                    <p className="text-xs text-slate-500">تصفح المواقع الرسمية والمحاكم والجريدة الرسمية بأمان كامل داخل بيئة التطبيق</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setBrowserUrl("https://www.dc.gov.ae")}
-                      className="px-3 py-1.5 rounded-xl bg-amber-100 text-amber-900 font-bold text-xs border border-amber-300 hover:bg-amber-200"
-                    >
-                      محاكم دبي
-                    </button>
-                    <button
-                      onClick={() => setBrowserUrl("https://www.moj.gov.ae")}
-                      className="px-3 py-1.5 rounded-xl bg-indigo-100 text-indigo-900 font-bold text-xs border border-indigo-300 hover:bg-indigo-200"
-                    >
-                      وزارة العدل
-                    </button>
-                    <button
-                      onClick={() => setBrowserUrl("https://elaws.moj.gov.ae")}
-                      className="px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-900 font-bold text-xs border border-emerald-300 hover:bg-emerald-200"
-                    >
-                      تشريعات الإمارات
-                    </button>
-                  </div>
-                </div>
-
-                {/* شريط عنوان المتصفح والتحكم */}
-                <div className="bg-slate-900 text-white p-3 rounded-2xl shadow-sm flex items-center gap-3">
-                  <div className="flex items-center gap-1 text-slate-400">
-                    <button
-                      onClick={() => {
-                        setBrowserUrl(browserInputUrl);
-                      }}
-                      className="p-1.5 hover:text-white rounded-lg hover:bg-slate-800"
-                      title="تحديث"
-                    >
-                      <RotateCw size={16} />
-                    </button>
-                  </div>
-                  <div className="flex-1 flex items-center gap-2 bg-slate-800 px-3 py-1.5 rounded-xl border border-slate-700">
-                    <Globe size={15} className="text-amber-400 shrink-0" />
-                    <input
-                      value={browserInputUrl}
-                      onChange={(e) => setBrowserInputUrl(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          setBrowserUrl(browserInputUrl);
-                        }
-                      }}
-                      className="w-full bg-transparent text-xs text-white focus:outline-none font-mono"
-                    />
-                  </div>
-                  <button
-                    onClick={() => setBrowserUrl(browserInputUrl)}
-                    className="bg-amber-500 text-slate-900 font-bold px-4 py-1.5 rounded-xl text-xs hover:bg-amber-400"
-                  >
-                    انتقال
-                  </button>
-                </div>
-
-                {/* إطار العرض الخارجي iFrame */}
-                <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden h-[650px] relative">
-                  <iframe
-                    src={browserUrl}
-                    title="المتصفح المدمج"
-                    className="w-full h-full border-none"
-                    sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
-                  />
-                </div>
-              </div>
             )}
 
             {/* ================= النظام المالي والأتعاب والضريبة ================= */}
