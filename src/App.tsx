@@ -4837,26 +4837,33 @@ export default function App() {
     setTimeLogs(timeLogs.map((t) => t.id === log.id ? { ...t, billed: true } : t));
   };
 
-  // ---------- التبويبات ----------
+  // ---------- التبويبات حسب الأولوية التنظيمية للمكتب ----------
   const NAV = [
-    { id: "dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
-    { id: "cases", label: "القضايا", icon: Briefcase },
-    { id: "booking_consultation", label: "حجز استشارة مرئية", icon: Video },
-    { id: "clients", label: "الموكلين", icon: Users },
-    { id: "hearings", label: "الجلسات والرول", icon: CalendarDays },
-    { id: "inapp_email", label: "البريد الإلكتروني المدمج", icon: Mail },
-    { id: "whatsapp_office", label: "واتساب المكتب المدمج", icon: MessageSquare },
-    { id: "courts_directory", label: "دليل المحاكم والجهات", icon: PhoneCall },
-    { id: "tasks", label: "المهام", icon: ListChecks },
-    { id: "invoices", label: "الفواتير والضريبة", icon: Receipt },
-    { id: "office_agreement", label: "اتفاقية المكتب المعتمدة", icon: FileCheck },
-    { id: "docs", label: "المستندات", icon: FolderOpen },
-    { id: "poa", label: "الوكالات", icon: FileSignature },
-    { id: "kyc", label: "اعرف عميلك KYC", icon: ShieldCheck },
-    { id: "employees", label: "الموظفون والكادر (HR)", icon: UserCheck },
-    { id: "precedents", label: "المبادئ والأحكام القضائية", icon: BookOpen },
-    { id: "audit_log", label: "سجل التدقيق والأنشطة", icon: History },
-    { id: "users", label: "المستخدمون والصلاحيات", icon: Lock },
+    // 1. العمليات القانونية الرئيسية
+    { id: "dashboard", label: "لوحة التحكم", icon: LayoutDashboard, category: "العمليات القانونية" },
+    { id: "cases", label: "القضايا والترافع", icon: Briefcase, category: "العمليات القانونية" },
+    { id: "hearings", label: "الجلسات والرول", icon: CalendarDays, category: "العمليات القانونية" },
+    { id: "clients", label: "الموكلين والعملاء", icon: Users, category: "العمليات القانونية" },
+    { id: "booking_consultation", label: "حجز استشارة مرئية", icon: Video, category: "العمليات القانونية" },
+
+    // 2. التواصل والمهام اليومية
+    { id: "tasks", label: "المهام والتكليفات", icon: ListChecks, category: "التواصل والمهام" },
+    { id: "whatsapp_office", label: "واتساب المكتب المدمج", icon: MessageSquare, category: "التواصل والمهام" },
+    { id: "inapp_email", label: "البريد الإلكتروني المدمج", icon: Mail, category: "التواصل والمهام" },
+    { id: "courts_directory", label: "دليل المحاكم والجهات", icon: PhoneCall, category: "التواصل والمهام" },
+
+    // 3. المستندات والمالية والتوثيق
+    { id: "docs", label: "المستندات والأرشيف", icon: FolderOpen, category: "المالية والعقود" },
+    { id: "poa", label: "الوكالات القانونية", icon: FileSignature, category: "المالية والعقود" },
+    { id: "office_agreement", label: "اتفاقية أتعاب المكتب", icon: FileCheck, category: "المالية والعقود" },
+    { id: "invoices", label: "الفواتير والضريبة", icon: Receipt, category: "المالية والعقود" },
+
+    // 4. الامتثال والإدارة
+    { id: "kyc", label: "اعرف عميلك (KYC)", icon: ShieldCheck, category: "الإدارة والامتثال" },
+    { id: "precedents", label: "المبادئ والأحكام القضائية", icon: BookOpen, category: "الإدارة والامتثال" },
+    { id: "employees", label: "الموظفون والكادر (HR)", icon: UserCheck, category: "الإدارة والامتثال" },
+    { id: "audit_log", label: "سجل التدقيق والأنشطة", icon: History, category: "الإدارة والامتثال" },
+    { id: "users", label: "المستخدمون والصلاحيات", icon: Lock, category: "الإدارة والامتثال" },
   ];
 
   // مراجعات KYC المستحقة أو القريبة (خلال 30 يومًا)
@@ -5008,33 +5015,44 @@ export default function App() {
             )}
           </div>
 
-          <nav className="flex-1 space-y-1 p-3">
-            {NAV.filter(({ id }) => hasTabPermission(currentUser, id)).map(({ id, label, icon: Icon }) => (
-              <button key={id} onClick={() => { setTab(id); setCaseView(null); }}
-                className={`flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium transition ${tab === id ? "bg-[#b89b6a] text-slate-950 font-black shadow-md" : "text-teal-100/80 hover:bg-[#0c403d] hover:text-white"}`}>
-                <Icon size={18} /><span>{label}</span>
-                {id === "poa" && stats.expiringPoa > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{stats.expiringPoa}</span>}
-                {id === "kyc" && kycDue > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{kycDue}</span>}
-                {id === "tasks" && overdueTasks > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{overdueTasks}</span>}
-                {id === "employees" && (leaveRequests.filter(l => l.status === "PENDING").length + employeeExpenses.filter(e => e.status === "PENDING").length) > 0 && (
-                  <span className="mr-auto rounded-full bg-amber-500 px-2 text-xs font-bold text-slate-950">
-                    {leaveRequests.filter(l => l.status === "PENDING").length + employeeExpenses.filter(e => e.status === "PENDING").length}
-                  </span>
-                )}
-                {id === "booking_consultation" && consultationBookings.filter(b => b.status === "pending_assignment").length > 0 && (
-                  <span className="mr-auto rounded-full bg-amber-400 text-slate-950 px-2 text-xs font-black animate-pulse">
-                    {consultationBookings.filter(b => b.status === "pending_assignment").length} جديد
-                  </span>
-                )}
-                {id === "users" && pendingUsers.length > 0 && isAdmin ? (
-                  <span className="mr-auto rounded-full bg-[#e5c388] text-slate-950 px-2 py-0.5 text-[11px] font-bold animate-pulse">
-                    {pendingUsers.length} معلق
-                  </span>
-                ) : id === "users" ? (
-                  <span className="mr-auto rounded-full bg-[#051f1e] border border-[#b89b6a]/40 text-[10px] px-1.5 py-0.2 text-[#e5c388] font-mono">{users.length}</span>
-                ) : null}
-              </button>
-            ))}
+          <nav className="flex-1 space-y-1 p-3 overflow-y-auto max-h-[calc(100vh-140px)] custom-scrollbar">
+            {NAV.filter(({ id }) => hasTabPermission(currentUser, id)).map(({ id, label, icon: Icon, category }, idx, filteredNav) => {
+              const showCategoryHeader = idx === 0 || category !== filteredNav[idx - 1].category;
+              return (
+                <React.Fragment key={id}>
+                  {showCategoryHeader && category && (
+                    <div className="px-2 pt-3 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[#e5c388] flex items-center gap-1.5 border-b border-[#0f4340]/60 mb-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#b89b6a]" />
+                      <span>{category}</span>
+                    </div>
+                  )}
+                  <button onClick={() => { setTab(id); setCaseView(null); }}
+                    className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${tab === id ? "bg-[#b89b6a] text-slate-950 font-black shadow-md" : "text-teal-100/80 hover:bg-[#0c403d] hover:text-white"}`}>
+                    <Icon size={17} /><span>{label}</span>
+                    {id === "poa" && stats.expiringPoa > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{stats.expiringPoa}</span>}
+                    {id === "kyc" && kycDue > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{kycDue}</span>}
+                    {id === "tasks" && overdueTasks > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{overdueTasks}</span>}
+                    {id === "employees" && (leaveRequests.filter(l => l.status === "PENDING").length + employeeExpenses.filter(e => e.status === "PENDING").length) > 0 && (
+                      <span className="mr-auto rounded-full bg-amber-500 px-2 text-xs font-bold text-slate-950">
+                        {leaveRequests.filter(l => l.status === "PENDING").length + employeeExpenses.filter(e => e.status === "PENDING").length}
+                      </span>
+                    )}
+                    {id === "booking_consultation" && consultationBookings.filter(b => b.status === "pending_assignment").length > 0 && (
+                      <span className="mr-auto rounded-full bg-amber-400 text-slate-950 px-2 text-xs font-black animate-pulse">
+                        {consultationBookings.filter(b => b.status === "pending_assignment").length} جديد
+                      </span>
+                    )}
+                    {id === "users" && pendingUsers.length > 0 && isAdmin ? (
+                      <span className="mr-auto rounded-full bg-[#e5c388] text-slate-950 px-2 py-0.5 text-[11px] font-bold animate-pulse">
+                        {pendingUsers.length} معلق
+                      </span>
+                    ) : id === "users" ? (
+                      <span className="mr-auto rounded-full bg-[#051f1e] border border-[#b89b6a]/40 text-[10px] px-1.5 py-0.2 text-[#e5c388] font-mono">{users.length}</span>
+                    ) : null}
+                  </button>
+                </React.Fragment>
+              );
+            })}
 
             <button
               onClick={() => setCurrentRoute("public_consultation")}
