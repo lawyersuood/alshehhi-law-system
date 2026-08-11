@@ -9,7 +9,7 @@ import {
   Check, Minus, Info, UserPlus, ShieldAlert, Edit2, User, RefreshCw,
   Send, MessageSquare, Share2, ExternalLink, FileText, CheckCheck, SendHorizontal, Filter,
   Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download, Database, Code, LogOut,
-  Inbox, Paperclip, RotateCw, QrCode, Settings
+  Inbox, Paperclip, RotateCw, QrCode, Settings, History, BookOpen, UploadCloud
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -38,6 +38,38 @@ const VAT_RATE = 0.05; // ضريبة القيمة المضافة في الإما
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const addDays = (d: number) => { const t = new Date(); t.setDate(t.getDate() + d); return t.toISOString().slice(0, 10); };
+const addDaysFrom = (baseDate: string, d: number) => { const t = new Date(baseDate); t.setDate(t.getDate() + d); return t.toISOString().slice(0, 10); };
+
+const TASK_TEMPLATES = [
+  {
+    id: "template_first_instance",
+    name: "دعوى ابتدائية (قياسية)",
+    tasks: [
+      { title: "قيد الدعوى ودفع الرسوم", daysOffset: 0, priority: "عالية" as const },
+      { title: "إعلان الخصوم بصحيفة الدعوى", daysOffset: 3, priority: "عالية" as const },
+      { title: "حضور الجلسة الأولى (إدارة الدعوى)", daysOffset: 14, priority: "متوسطة" as const },
+      { title: "إعداد المذكرة الجوابية الأولى", daysOffset: 20, priority: "عالية" as const }
+    ]
+  },
+  {
+    id: "template_labor",
+    name: "دعوى عمالية",
+    tasks: [
+      { title: "قيد الشكوى العمالية", daysOffset: 0, priority: "عالية" as const },
+      { title: "متابعة التسوية الودية", daysOffset: 7, priority: "متوسطة" as const },
+      { title: "إحالة النزاع للمحكمة (عند التعذر)", daysOffset: 14, priority: "عالية" as const }
+    ]
+  },
+  {
+    id: "template_appeal",
+    name: "لائحة استئناف",
+    tasks: [
+      { title: "صياغة لائحة الاستئناف", daysOffset: 2, priority: "عالية" as const },
+      { title: "قيد الاستئناف وسداد الرسوم", daysOffset: 5, priority: "عالية" as const },
+      { title: "إعلان المستأنف ضده", daysOffset: 10, priority: "متوسطة" as const }
+    ]
+  }
+];
 
 // دالة تصدير ملفات PDF مباشرة إلى جهاز المستخدم
 const handleDownloadPDF = (elementId: string, filename: string) => {
@@ -64,7 +96,7 @@ const handleDownloadPDF = (elementId: string, filename: string) => {
 export interface RolePermissions {
   dashboard: boolean;     // 1. لوحة التحكم
   cases: boolean;         // 2. القضايا
-  clients: boolean;       // 3. الموكلين وجهات أخرى
+  clients: boolean;       // 3. الموكلين
   calendar: boolean;      // 4. الجلسات والرول
   email: boolean;         // 5. البريد الإلكتروني المدمج
   whatsapp: boolean;      // 6. واتساب المكتب المدمج
@@ -83,6 +115,11 @@ export interface RolePermissions {
   manageDocs?: boolean;
   manageUsers?: boolean;
   viewReports?: boolean;
+  precedents?: boolean;
+  hr?: boolean;
+  manageEmployees?: boolean;
+  auditLog?: boolean;
+  managePrecedents?: boolean;
 }
 
 export interface UserItem {
@@ -250,6 +287,20 @@ export interface NotificationLog {
   relatedRef?: string;
 }
 
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  userName: string;
+  userEmail: string;
+  userRole: string;
+  actionType: "DELETE" | "UPDATE" | "CREATE" | "STATUS_CHANGE" | "PERMISSION_CHANGE";
+  targetModule: string;
+  targetId: string | number;
+  targetTitle: string;
+  details: string;
+  ipAddress?: string;
+}
+
 export interface TimeLog {
   id: number;
   caseId: number;
@@ -366,6 +417,51 @@ export interface OfficeAgreement {
   createdAt: string;
 }
 
+export interface Employee {
+  id: string;
+  userId?: string | null;
+  fullName: string;
+  jobTitle: string;
+  email: string;
+  phone: string;
+  passportNumber: string;
+  emiratesId: string;
+  idExpiryDate: string;
+  licenseNumber?: string;
+  basicSalary: number;
+  housingAllowance: number;
+  transportAllowance: number;
+  joinDate: string;
+  status: "ACTIVE" | "ON_LEAVE" | "TERMINATED";
+  createdAt?: string;
+}
+
+export interface LeaveRequest {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  leaveType: "ANNUAL" | "SICK" | "EMERGENCY" | "UNPAID";
+  startDate: string;
+  endDate: string;
+  totalDays: number;
+  reason: string;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  approvedBy?: string | null;
+  createdAt: string;
+}
+
+export interface EmployeeExpense {
+  id: string;
+  employeeId: string;
+  employeeName: string;
+  caseId?: number | null;
+  amount: number;
+  category: "COURT_FEES" | "TRANSPORT" | "SUPPLIES" | "OTHER";
+  receiptUrl?: string | null;
+  status: "PENDING" | "PAID" | "REJECTED";
+  createdAt: string;
+}
+
 // البنود الثابتة للاتفاقية المعتمدة (1-8) — لا تتغير من عميل لآخر
 const OFFICE_AGREEMENT_CLAUSES: { ar: string; en: string }[] = [
   {
@@ -443,7 +539,7 @@ export const PERMISSION_MODULES: Array<{
 }> = [
   { id: "dashboard", label: "لوحة التحكم", desc: "الوصول للإحصائيات ونظرة عامة على المكتب", navTabIds: ["dashboard"] },
   { id: "cases", label: "القضايا", desc: "إدارة الملفات والقضايا والدعاوى", navTabIds: ["cases"] },
-  { id: "clients", label: "الموكلين وجهات أخرى", desc: "سجل بيانات الموكلين والأطراف", navTabIds: ["clients"] },
+  { id: "clients", label: "الموكلين", desc: "سجل بيانات الموكلين والأطراف", navTabIds: ["clients"] },
   { id: "calendar", label: "الجلسات والرول", desc: "جدولة متابعة جلسات المحاكم", navTabIds: ["hearings"] },
   { id: "email", label: "البريد الإلكتروني المدمج", desc: "الاطلاع واستخدام البريد الإلكتروني المدمج", navTabIds: ["inapp_email"] },
   { id: "whatsapp", label: "واتساب المكتب المدمج", desc: "المراسلات الفورية وتنبيهات الموكلين عبر الواتساب", navTabIds: ["whatsapp_office"] },
@@ -452,6 +548,9 @@ export const PERMISSION_MODULES: Array<{
   { id: "finance", label: "الفواتير والضريبة", desc: "الاطلاع والتحكم بالفواتير والحسابات والضريبة", navTabIds: ["invoices"] },
   { id: "agreements", label: "اتفاقية المكتب المعتمدة", desc: "صياغة وإنشاء اتفاقيات الأتعاب المعتمدة", navTabIds: ["office_agreement"] },
   { id: "kyc", label: "اعرف عميلك KYC / الوكالات والمستندات", desc: "مراجعات الفحص والأرشيف الإلكتروني والوكالات", navTabIds: ["kyc", "docs", "poa"] },
+  { id: "hr", label: "الموظفون والكادر (HR)", desc: "إدارة بيانات الموظفين والرواتب والإجازات والمصروفات", navTabIds: ["employees"] },
+  { id: "precedents", label: "المبادئ والأحكام القضائية", desc: "مكتبة وسجل المبادئ القانونية والسوابق القضائية", navTabIds: ["precedents"] },
+  { id: "auditLog", label: "سجل التدقيق والأنشطة (Audit Log)", desc: "رقابة وتتبع عمليات الحذف والتعديل وتغييرات الصلاحيات الحساسة", navTabIds: ["audit_log"] },
 ];
 
 // فحص صلاحيات الوصول للتبويب المحدد مع تطبيق سياسة الحظر الافتراضي (Default-Deny Policy)
@@ -459,6 +558,14 @@ export const hasTabPermission = (user: UserItem | null | undefined, tabId: strin
   if (!user) return false;
   // مدير النظام له جميع الصلاحيات الكاملة بلا استثناء
   if (user.roleKey === "admin" || (user as any).role === "admin") return true;
+
+  // تبويب المبادئ والأحكام القضائية متاح للجميع افتراضياً وللكادر القانوني
+  if (tabId === "precedents") return true;
+
+  // تبويب سجل التدقيق والأنشطة
+  if (tabId === "audit_log") {
+    return Boolean(user.permissions?.manageUsers || user.permissions?.auditLog);
+  }
 
   // تبويب إدارة المستخدمين حصر للمدير أو من لديه صلاحية صريحة
   if (tabId === "users") {
@@ -648,7 +755,7 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
 const PERMISSION_LABELS: Record<keyof RolePermissions, { label: string; desc: string }> = {
   dashboard: { label: "1. لوحة التحكم", desc: "إحصائيات المكتب والأنشطة والملخص" },
   cases: { label: "2. القضايا", desc: "قيد وتحديث القضايا وتغيير حالاتها" },
-  clients: { label: "3. الموكلين جهات أخرى", desc: "إدارة وتعديل بيانات الموكلين" },
+  clients: { label: "3. الموكلين", desc: "إدارة وتعديل بيانات الموكلين" },
   calendar: { label: "4. الجلسات والرول", desc: "إضافة وتعديل مواعيد وقاعات الجلسات" },
   email: { label: "5. البريد الإلكتروني المدمج", desc: "الاطلاع واستخدام البريد الإلكتروني المدمج" },
   whatsapp: { label: "6. واتساب المكتب المدمج", desc: "المراسلات والتنبهات الفورية عبر الواتساب" },
@@ -666,7 +773,12 @@ const PERMISSION_LABELS: Record<keyof RolePermissions, { label: string; desc: st
   manageClients: { label: "إدارة الموكلين الفرعية", desc: "تعديل بيانات الموكلين" },
   manageDocs: { label: "إدارة المستندات", desc: "رفع وحفظ أوراق ومستندات القضية" },
   manageUsers: { label: "إدارة المستخدمين", desc: "إضافة وتعديل صلاحيات فريق العمل" },
-  viewReports: { label: "التقارير والإحصائيات", desc: "الاطلاع على تقارير الأداء" }
+  viewReports: { label: "التقارير والإحصائيات", desc: "الاطلاع على تقارير الأداء" },
+  precedents: { label: "12. المبادئ والأحكام القضائية", desc: "مكتبة وسجل المبادئ القانونية والسوابق القضائية" },
+  hr: { label: "13. الموظفون والكادر (HR)", desc: "إدارة الكادر البشري والرواتب والمستحقات" },
+  manageEmployees: { label: "إدارة الكادر الوظيفي", desc: "إضافة وتعديل بيانات الموظفين" },
+  auditLog: { label: "سجل التدقيق والأنشطة", desc: "مراقبة وتتبع السجلات الحساسة" },
+  managePrecedents: { label: "إدارة المبادئ القضائية", desc: "إضافة وحذف السوابق القضائية" }
 };
 
 const seedUsers: UserItem[] = [
@@ -731,7 +843,130 @@ const seedInstallments: InvoiceInstallment[] = [];
 
 const seedStrReports: StrReport[] = [];
 
+const seedEmployees: Employee[] = [];
+
+const seedLeaveRequests: LeaveRequest[] = [];
+
+const seedEmployeeExpenses: EmployeeExpense[] = [];
+
 const seedCourtContacts: CourtContact[] = [];
+
+const seedAuditLogs: AuditLogEntry[] = [
+  {
+    id: "audit-101",
+    timestamp: "2026-08-10T10:12:00.000Z",
+    userName: "سعود أحمد الشحي",
+    userEmail: "info@lawyersuood.com",
+    userRole: "مدير النظام / الشريك الرئيسي",
+    actionType: "PERMISSION_CHANGE",
+    targetModule: "المستخدمون والصلاحيات",
+    targetId: "usr-102",
+    targetTitle: "المستخدم: المستشار أحمد علي",
+    details: "تحديث مصفوفة الصلاحيات وإتاحة الوصول لقسم إدارة الكادر والرواتب HR",
+    ipAddress: "192.168.1.10"
+  },
+  {
+    id: "audit-102",
+    timestamp: "2026-08-10T09:45:15.000Z",
+    userName: "أحمد عبد الله العلي",
+    userEmail: "ahmed.ali@law.ae",
+    userRole: "مستشار قانوني أول",
+    actionType: "STATUS_CHANGE",
+    targetModule: "القضايا",
+    targetId: "case-102",
+    targetTitle: "قضية رقم 2026/884 تجاري",
+    details: "تعديل حالة القضية من (متداولة) إلى (محجوزة للحكم)",
+    ipAddress: "192.168.1.15"
+  },
+  {
+    id: "audit-103",
+    timestamp: "2026-08-09T16:20:00.000Z",
+    userName: "فاطمة محمد الملا",
+    userEmail: "fatima.m@law.ae",
+    userRole: "محاسب المكتب والمالية",
+    actionType: "DELETE",
+    targetModule: "الفواتير والضريبة",
+    targetId: "inv-2026-009",
+    targetTitle: "فاتورة ضريبية #INV-2026-009",
+    details: "حذف فاتورة ملغاة بقيمة 12,500 درهم إماراتي شاملة الضريبة بناءً على تسوية الموكل",
+    ipAddress: "192.168.1.22"
+  },
+  {
+    id: "audit-104",
+    timestamp: "2026-08-08T11:05:30.000Z",
+    userName: "مريم سالم الكعبي",
+    userEmail: "maryam.k@law.ae",
+    userRole: "مسؤول سكرتارية وتنسيق",
+    actionType: "UPDATE",
+    targetModule: "المستندات والوكالات",
+    targetId: "poa-55",
+    targetTitle: "وكالة رقم 2024/9912",
+    details: "تعديل تاريخ انتهاء الوكالة وتحديث رقم القيد المعتمد بمحاكم دبي",
+    ipAddress: "192.168.1.30"
+  }
+];
+
+export interface LegalPrecedent {
+  id: string | number;
+  title: string;
+  court_name: string;
+  ruling_year: number;
+  category: string;
+  circuit_name?: string;
+  appeal_number: string;
+  summary_text: string;
+  pdf_file_url?: string;
+  word_file_url?: string;
+  created_at?: string;
+}
+
+const seedLegalPrecedents: LegalPrecedent[] = [
+  {
+    id: "prec-1",
+    title: "بطلان الشرط المانع من التعويض في عقود المقاولات عند الخطأ الجسيم",
+    court_name: "المحكمة الاتحادية العليا",
+    ruling_year: 2024,
+    category: "تجاري",
+    circuit_name: "الدائرة التجارية والمدنية",
+    appeal_number: "طعن رقم 412 لسنة 2024 تجاري",
+    summary_text: "لا يجوز الاتفاق على الاعفاء من المسؤولية عن الفعل الضار أو الخطأ الجسيم في عقود المقاولات والتوريد، ويقع باطلاً كل شرط يقضي بغير ذلك عملاً بأحكام المادتين 296 و878 من قانون المعاملات المدنية الاتحادي.",
+    pdf_file_url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+    created_at: "2026-01-15T10:00:00.000Z"
+  },
+  {
+    id: "prec-2",
+    title: "عدم جواز إنهاء عقد العمل غير المحدود المدة تعسفياً بدون إخطار أو سبب مشروع",
+    court_name: "محكمة تمييز دبي",
+    ruling_year: 2023,
+    category: "عمالي",
+    circuit_name: "دائرة العمال والتأمين",
+    appeal_number: "طعن رقم 189 لسنة 2023 عمالي",
+    summary_text: "إنهاء خدمة العامل بسبب المطالبة بحقوقه العمالية أو تقديم شكوى لوزارة الموارد البشرية والتوطين يعتبر إنهاءً تعسفياً موجباً للتعويض المستقل عما يوازي أجر ثلاثة أشهر كحد أقصى وفق قانون تنظيم علاقات العمل الصادر بالمرسوم بقانون اتحادي رقم 33 لسنة 2021.",
+    created_at: "2026-02-10T11:30:00.000Z"
+  },
+  {
+    id: "prec-3",
+    title: "سقوط الحق في الفسخ في العقود العقارية عند فوات مهلة إخطار الوفاء بالتزامات التطوير",
+    court_name: "محكمة نقض أبوظبي",
+    ruling_year: 2024,
+    category: "عقاري",
+    circuit_name: "دائرة البيوع والعقار",
+    appeal_number: "طعن رقم 775 لسنة 2024 عقاري",
+    summary_text: "تخلف المشتري عن سداد الأقساط المتبقية لا يمنح المطور عقارياً حق الفسخ التلقائي دون توجيه إعذار رسمي محدد بالمدة عبر الجهة التنظيمية المختصة (دائرة الأراضي والبلديات) ومنح المهلة القانونية المقررة.",
+    created_at: "2026-03-05T09:15:00.000Z"
+  },
+  {
+    id: "prec-4",
+    title: "مسؤولية الشريك المدير في الشركة ذات المسؤولية المحدودة عن التصرفات الضارة بمال الشركة",
+    court_name: "محكمة تمييز رأس الخيمة",
+    ruling_year: 2022,
+    category: "تجاري",
+    circuit_name: "الدائرة التجارية الاستئنافية",
+    appeal_number: "طعن رقم 98 لسنة 2022 تجاري",
+    summary_text: "مسؤولية المدير أو الشريك المدير في الشركة ذات المسؤولية المحدودة مسؤولية شخصية ومباشرة عن أعمال الغش وإساءة استعمال السلطة أو مخالفتها لأحكام قانون الشركات التجارية ولا تحول دونها تبرئة ذمته من الجمعية العمومية.",
+    created_at: "2026-04-12T14:20:00.000Z"
+  }
+];
 
 const DOC_TEMPLATES: DocTemplate[] = [
   {
@@ -1979,6 +2214,260 @@ export default function App() {
   useEffect(() => { saveStorage("firm_poas", poas); }, [poas]);
   useEffect(() => { saveStorage("firm_kyc", kyc); }, [kyc]);
   useEffect(() => { saveStorage("firm_court_contacts", courtContacts); }, [courtContacts]);
+
+  const [employees, setEmployees] = useState<Employee[]>(() => loadStorage("firm_employees", seedEmployees));
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(() => loadStorage("firm_leave_requests", seedLeaveRequests));
+  const [employeeExpenses, setEmployeeExpenses] = useState<EmployeeExpense[]>(() => loadStorage("firm_employee_expenses", seedEmployeeExpenses));
+  const [hrSubTab, setHrSubTab] = useState<"directory" | "leaves" | "expenses">("directory");
+  const [employeeSearchQuery, setEmployeeSearchQuery] = useState("");
+
+  useEffect(() => { saveStorage("firm_employees", employees); }, [employees]);
+  useEffect(() => { saveStorage("firm_leave_requests", leaveRequests); }, [leaveRequests]);
+  useEffect(() => { saveStorage("firm_employee_expenses", employeeExpenses); }, [employeeExpenses]);
+
+  // ---------- سجل التدقيق والأنشطة (Audit Log) ----------
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(() => loadStorage("firm_audit_logs", seedAuditLogs));
+  const [auditSearchTerm, setAuditSearchTerm] = useState<string>("");
+  const [auditActionFilter, setAuditActionFilter] = useState<string>("الكل");
+  const [auditModuleFilter, setAuditModuleFilter] = useState<string>("الكل");
+
+  useEffect(() => { saveStorage("firm_audit_logs", auditLogs); }, [auditLogs]);
+
+  const logAuditAction = (
+    actionType: "DELETE" | "UPDATE" | "CREATE" | "STATUS_CHANGE" | "PERMISSION_CHANGE",
+    targetModule: string,
+    targetTitle: string,
+    details: string,
+    targetId?: string | number
+  ) => {
+    const activeUser = users.find((u) => u.id === currentUserId);
+    const newEntry: AuditLogEntry = {
+      id: "audit-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
+      timestamp: new Date().toISOString(),
+      userName: activeUser?.name || "مستخدم للنظام",
+      userEmail: activeUser?.email || "info@lawyersuood.com",
+      userRole: activeUser?.roleKey === "admin" ? "مدير النظام" : (activeUser?.jobTitle || "موظف"),
+      actionType,
+      targetModule,
+      targetId: targetId || "—",
+      targetTitle,
+      details,
+      ipAddress: "192.168.1.10"
+    };
+    setAuditLogs((prev) => [newEntry, ...prev]);
+  };
+
+  const canViewAuditLog = useMemo(() => {
+    const activeUser = users.find((u) => u.id === currentUserId);
+    if (!activeUser) return false;
+    if (activeUser.roleKey === "admin" || (activeUser as any).role === "admin") return true;
+    if (activeUser.permissions?.manageUsers || activeUser.permissions?.auditLog) return true;
+    return false;
+  }, [users, currentUserId]);
+
+  const filteredAuditLogs = useMemo(() => {
+    return auditLogs.filter((log) => {
+      const matchesAction = auditActionFilter === "الكل" || log.actionType === auditActionFilter;
+      const matchesModule = auditModuleFilter === "الكل" || log.targetModule === auditModuleFilter;
+      const q = auditSearchTerm.trim().toLowerCase();
+      const matchesQuery = !q ||
+        log.userName.toLowerCase().includes(q) ||
+        log.userEmail.toLowerCase().includes(q) ||
+        log.targetTitle.toLowerCase().includes(q) ||
+        log.details.toLowerCase().includes(q) ||
+        (log.targetId && String(log.targetId).toLowerCase().includes(q));
+      return matchesAction && matchesModule && matchesQuery;
+    });
+  }, [auditLogs, auditActionFilter, auditModuleFilter, auditSearchTerm]);
+
+  // ---------- المبادئ والأحكام القضائية (Legal Precedents) ----------
+  const [precedents, setPrecedents] = useState<LegalPrecedent[]>(() => loadStorage("firm_legal_precedents", seedLegalPrecedents));
+  const [precedentSearch, setPrecedentSearch] = useState<string>("");
+  const [precedentCourtFilter, setPrecedentCourtFilter] = useState<string>("الكل");
+  const [precedentCategoryFilter, setPrecedentCategoryFilter] = useState<string>("الكل");
+  const [precedentYearFilter, setPrecedentYearFilter] = useState<string>("الكل");
+  const [showAddPrecedentModal, setShowAddPrecedentModal] = useState<boolean>(false);
+  const [selectedPrecedent, setSelectedPrecedent] = useState<LegalPrecedent | null>(null);
+
+  useEffect(() => { saveStorage("firm_legal_precedents", precedents); }, [precedents]);
+
+  // Fetch precedents from Supabase table if available
+  useEffect(() => {
+    async function fetchSupabasePrecedents() {
+      try {
+        const { data, error } = await supabase.from("legal_precedents").select("*").order("ruling_year", { ascending: false });
+        if (!error && data && data.length > 0) {
+          setPrecedents((prev) => {
+            const map = new Map<string, LegalPrecedent>();
+            prev.forEach((p) => map.set(String(p.id), p));
+            data.forEach((p: any) => {
+              map.set(String(p.id), {
+                id: p.id,
+                title: p.title || p.title_ar || "مبدأ قضائي",
+                court_name: p.court_name || p.court || "المحكمة الاتحادية العليا",
+                ruling_year: p.ruling_year || p.year || 2024,
+                category: p.category || "تجاري",
+                circuit_name: p.circuit_name || p.circuit || "",
+                appeal_number: p.appeal_number || p.case_number || "غير محدد",
+                summary_text: p.summary_text || p.summary || p.principle || "",
+                pdf_file_url: p.pdf_file_url || p.pdf_url || undefined,
+                word_file_url: p.word_file_url || p.word_url || undefined,
+                created_at: p.created_at || new Date().toISOString()
+              });
+            });
+            return Array.from(map.values());
+          });
+        }
+      } catch (err) {
+        console.warn("Supabase legal_precedents fetch note:", err);
+      }
+    }
+    fetchSupabasePrecedents();
+  }, []);
+
+  // Form State for Add Precedent
+  const [precedentLoading, setPrecedentLoading] = useState(false);
+  const [precedentForm, setPrecedentForm] = useState({
+    title: "",
+    court_name: "المحكمة الاتحادية العليا",
+    ruling_year: new Date().getFullYear(),
+    category: "تجاري",
+    circuit_name: "الدائرة التجارية",
+    appeal_number: "",
+    summary_text: "",
+  });
+  const [precedentPdfFile, setPrecedentPdfFile] = useState<File | null>(null);
+  const [precedentWordFile, setPrecedentWordFile] = useState<File | null>(null);
+
+  // Helper to upload files to Supabase Storage or fallback to ObjectURL
+  const uploadPrecedentFile = async (file: File | null, folder: string): Promise<string | null> => {
+    if (!file) return null;
+    try {
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${folder}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const { data, error } = await supabase.storage
+        .from("precedents-documents")
+        .upload(fileName, file);
+
+      if (error) {
+        console.warn("Supabase storage bucket note:", error);
+        return URL.createObjectURL(file);
+      }
+
+      const { data: publicUrlData } = supabase.storage
+        .from("precedents-documents")
+        .getPublicUrl(fileName);
+
+      return publicUrlData?.publicUrl || URL.createObjectURL(file);
+    } catch (err) {
+      console.warn("Storage upload fallback:", err);
+      return URL.createObjectURL(file);
+    }
+  };
+
+  const handlePrecedentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!precedentForm.title.trim() || !precedentForm.summary_text.trim()) {
+      alert("يرجى إدخال عنوان المبدأ ونص القاعدة القانونية");
+      return;
+    }
+    setPrecedentLoading(true);
+
+    try {
+      const pdfUrl = await uploadPrecedentFile(precedentPdfFile, "pdf_files");
+      const wordUrl = await uploadPrecedentFile(precedentWordFile, "word_files");
+
+      const newPrecedent: LegalPrecedent = {
+        id: "prec-" + Date.now(),
+        title: precedentForm.title.trim(),
+        court_name: precedentForm.court_name,
+        ruling_year: Number(precedentForm.ruling_year) || new Date().getFullYear(),
+        category: precedentForm.category,
+        circuit_name: precedentForm.circuit_name.trim(),
+        appeal_number: precedentForm.appeal_number.trim() || "غير محدد",
+        summary_text: precedentForm.summary_text.trim(),
+        pdf_file_url: pdfUrl || undefined,
+        word_file_url: wordUrl || undefined,
+        created_at: new Date().toISOString()
+      };
+
+      // Attempt Supabase DB Insert
+      try {
+        await supabase.from("legal_precedents").insert([
+          {
+            title: newPrecedent.title,
+            court_name: newPrecedent.court_name,
+            ruling_year: newPrecedent.ruling_year,
+            category: newPrecedent.category,
+            circuit_name: newPrecedent.circuit_name,
+            appeal_number: newPrecedent.appeal_number,
+            summary_text: newPrecedent.summary_text,
+            pdf_file_url: pdfUrl,
+            word_file_url: wordUrl,
+          }
+        ]);
+      } catch (e) {
+        console.warn("Supabase legal_precedents insert note:", e);
+      }
+
+      setPrecedents((prev) => [newPrecedent, ...prev]);
+
+      logAuditAction(
+        "CREATE",
+        "المبادئ والأحكام القضائية",
+        `مبدأ: ${newPrecedent.title}`,
+        `إضافة مبدأ قضائي جديد (${newPrecedent.court_name} - ${newPrecedent.category}) برقم طعن ${newPrecedent.appeal_number}`,
+        newPrecedent.id
+      );
+
+      alert("تم حفظ المبدأ القضائي بنجاح!");
+      setShowAddPrecedentModal(false);
+      setPrecedentForm({
+        title: "",
+        court_name: "المحكمة الاتحادية العليا",
+        ruling_year: new Date().getFullYear(),
+        category: "تجاري",
+        circuit_name: "الدائرة التجارية",
+        appeal_number: "",
+        summary_text: "",
+      });
+      setPrecedentPdfFile(null);
+      setPrecedentWordFile(null);
+    } catch (err: any) {
+      alert("حدث خطأ أثناء الحفظ: " + (err?.message || err));
+    } finally {
+      setPrecedentLoading(false);
+    }
+  };
+
+  const deletePrecedent = async (precId: string | number) => {
+    if (!confirm("هل أنت تأكد من حذف هذا المبدأ القضائي من المكتبة؟")) return;
+    const target = precedents.find((p) => p.id === precId);
+    setPrecedents((prev) => prev.filter((p) => p.id !== precId));
+    if (target) {
+      logAuditAction("DELETE", "المبادئ والأحكام القضائية", `مبدأ: ${target.title}`, `حذف المبدأ القضائي (${target.court_name} - ${target.appeal_number}) نهائياً`, target.id);
+    }
+    try {
+      await supabase.from("legal_precedents").delete().eq("id", precId);
+    } catch (e) {
+      console.warn("Supabase delete precedent note:", e);
+    }
+  };
+
+  const filteredPrecedents = useMemo(() => {
+    return precedents.filter((p) => {
+      const matchesCourt = precedentCourtFilter === "الكل" || p.court_name === precedentCourtFilter;
+      const matchesCategory = precedentCategoryFilter === "الكل" || p.category === precedentCategoryFilter;
+      const matchesYear = precedentYearFilter === "الكل" || String(p.ruling_year) === precedentYearFilter;
+      const q = precedentSearch.trim().toLowerCase();
+      const matchesQuery = !q ||
+        p.title.toLowerCase().includes(q) ||
+        p.summary_text.toLowerCase().includes(q) ||
+        p.appeal_number.toLowerCase().includes(q) ||
+        (p.circuit_name && p.circuit_name.toLowerCase().includes(q));
+      return matchesCourt && matchesCategory && matchesYear && matchesQuery;
+    });
+  }, [precedents, precedentCourtFilter, precedentCategoryFilter, precedentYearFilter, precedentSearch]);
   const [agrPreviewId, setAgrPreviewId] = useState<number | null>(null);
   const [deleteAgrConfirm, setDeleteAgrConfirm] = useState<OfficeAgreement | null>(null);
   const emptyAgrForm = () => ({
@@ -2250,7 +2739,7 @@ export default function App() {
   const [q, setQ] = useState("");
   const [caseFilter, setCaseFilter] = useState("الكل");
 
-  // حالات إدارة الموكلين وجهات الاتصال
+  // حالات إدارة الموكلين
   const [clientCategoryFilter, setClientCategoryFilter] = useState<string>("الكل");
   const [clientSearch, setClientSearch] = useState<string>("");
   const [editingClient, setEditingClient] = useState<Client | null>(null);
@@ -2286,7 +2775,8 @@ export default function App() {
       alert(`لا يمكن حذف "${cObj.name}" لوجود ${caseCount} قضية مسجلة باسمه في النظام.`);
       return;
     }
-    if (confirm(`هل أنت تأكد من حذف "${cObj.name}" من سجل الموكلين وجهات الاتصال؟`)) {
+    if (confirm(`هل أنت تأكد من حذف "${cObj.name}" من سجل الموكلين؟`)) {
+      logAuditAction("DELETE", "الموكلين", `الموكل: ${cObj.name}`, `حذف الموكل ${cObj.name} (${cObj.type}) من سجلات المكتب`, cObj.id);
       setClients((prev) => prev.filter((c) => c.id !== clientId));
       setClientToast(`تم حذف "${cObj.name}" بنجاح`);
       setTimeout(() => setClientToast(null), 4000);
@@ -2942,6 +3432,57 @@ export default function App() {
   };
 
   useEffect(() => {
+    // التحقق من المهام المستحقة يومياً لإرسال تنبيه واتساب
+    const checkTasksForWhatsAppReminders = async () => {
+      if (!isLoggedIn) return;
+      const todayDate = todayISO();
+      const lastCheck = localStorage.getItem("firm_last_task_reminder_check");
+      if (lastCheck === todayDate) return;
+      
+      const upcomingTasks = tasks.filter(t => !t.done && daysUntil(t.due) <= 1 && daysUntil(t.due) >= -7);
+      
+      if (upcomingTasks.length > 0) {
+        let allSuccess = true;
+        for (const t of upcomingTasks) {
+          const user = users.find(u => u.name === t.assignee);
+          if (user && user.phone) {
+            const message = `مرحباً ${user.name}،\nتذكير بمهمة: "${t.title}"\nتاريخ الاستحقاق: ${t.due}\nيرجى المتابعة عبر نظام المكتب.`;
+            try {
+              await sendWhatsAppViaEdgeFunction({
+                to: user.phone.replace(/[^0-9]/g, ""),
+                message: message,
+                contact_name: user.name
+              });
+              
+              // محاولة إرسال التنبيه التلقائي عبر البريد الإلكتروني أيضاً إذا تم تكوينه
+              if (user.email && typeof supabase.functions !== "undefined") {
+                 supabase.functions.invoke("send-email", {
+                    body: {
+                       to: user.email,
+                       subject: `تذكير بمهمة مستحقة: ${t.title}`,
+                       html: `<p>مرحباً ${user.name}،</p><p>نذكرك بضرورة إنجاز المهمة التالية:</p><p><strong>${t.title}</strong></p><p>تاريخ الاستحقاق: ${t.due}</p>`
+                    }
+                 }).catch(e => console.warn("Email reminder failed or not configured", e));
+              }
+
+            } catch (err) {
+              console.error("Failed to send WhatsApp task reminder", err);
+              allSuccess = false;
+            }
+          }
+        }
+        if (allSuccess) {
+          localStorage.setItem("firm_last_task_reminder_check", todayDate);
+        }
+      } else {
+        localStorage.setItem("firm_last_task_reminder_check", todayDate);
+      }
+    };
+    
+    checkTasksForWhatsAppReminders();
+  }, [isLoggedIn, tasks, users]);
+
+  useEffect(() => {
     fetchSupabaseWhatsAppMessages();
 
     // الاشتراك في القناة اللحظية Supabase Realtime Channel
@@ -3141,6 +3682,21 @@ export default function App() {
     return currentUser?.roleKey === "admin" || (currentUser as any)?.role === "admin";
   }, [currentUser]);
 
+  const canViewFinancials = useMemo(() => {
+    if (!currentUser) return false;
+    if (isAdmin) return true;
+    if (currentUser.canViewFinances) return true;
+    if (hasTabPermission(currentUser, "invoices")) return true;
+    const perms = currentUser.permissions as any;
+    if (perms && typeof perms === "object") {
+      if (perms.viewInvoices || perms.manageInvoices || perms.finance || perms.invoices) return true;
+    }
+    if (Array.isArray(perms)) {
+      if (perms.includes("invoices") || perms.includes("finance") || perms.includes("viewInvoices") || perms.includes("manageInvoices")) return true;
+    }
+    return false;
+  }, [currentUser, isAdmin]);
+
   const openApproveUserModal = (userId: number) => {
     if (!checkPerm("manageUsers", "الموافقة على المستخدمين")) return;
     const target = users.find((u) => u.id === userId);
@@ -3256,6 +3812,7 @@ export default function App() {
     }
 
     // Immediately remove from active state so row disappears
+    logAuditAction("DELETE", "المستخدمون والصلاحيات", `حساب: ${target.name}`, `حذف حساب المستخدم ${target.name} (${target.email}) نهائياً من نظام المكتب`, target.id);
     setUsers((prev) => prev.filter((u) => u.id !== userId));
 
     const targetUserId = target.supabaseId || target.id;
@@ -3521,7 +4078,31 @@ export default function App() {
   const saveCase = () => {
     if (!checkPerm("manageCases", "إضافة قضية")) return;
     if (!form.number || !form.clientId) return;
-    setCases([...cases, { id: nextId(cases), number: form.number, clientId: +form.clientId, opponent: form.opponent || "—", type: form.type || CASE_TYPES[0], court: form.court || COURTS[0], judge: form.judge || "", status: form.status || "قيد النظر", subject: form.subject || "", openDate: form.openDate || todayISO(), fee: +form.fee || 0 }]);
+    
+    const newCaseId = nextId(cases);
+    const openDate = form.openDate || todayISO();
+    
+    setCases([...cases, { id: newCaseId, number: form.number, clientId: +form.clientId, opponent: form.opponent || "—", type: form.type || CASE_TYPES[0], court: form.court || COURTS[0], judge: form.judge || "", status: form.status || "قيد النظر", subject: form.subject || "", openDate: openDate, fee: +form.fee || 0 }]);
+    
+    if (form.taskTemplate) {
+      const template = TASK_TEMPLATES.find(t => t.id === form.taskTemplate);
+      if (template) {
+        setTasks((prev) => {
+          let currentId = nextId(prev);
+          const newTasks = template.tasks.map(t => ({
+            id: currentId++,
+            title: t.title,
+            caseId: newCaseId,
+            assignee: currentUser.name,
+            due: addDaysFrom(openDate, t.daysOffset),
+            priority: t.priority,
+            done: false
+          }));
+          return [...prev, ...newTasks];
+        });
+      }
+    }
+    
     setModal(null);
   };
 
@@ -3551,6 +4132,161 @@ export default function App() {
     if (!form.clientId || !form.amount) return;
     setInvoices([...invoices, { id: nextId(invoices), number: `INV-2026-${String(60 + nextId(invoices)).padStart(3, "0")}`, clientId: +form.clientId, caseId: form.caseId ? +form.caseId : null, date: todayISO(), due: form.due || addDays(30), amount: +form.amount, status: "مسودة", desc: form.desc || "" }]);
     setModal(null);
+  };
+
+  const saveEmployee = async () => {
+    if (!form.fullName || !form.email) return;
+    const isEdit = Boolean(form.id);
+    const empId = form.id || `emp-${Date.now()}`;
+    const newEmp: Employee = {
+      id: empId,
+      fullName: form.fullName,
+      jobTitle: form.jobTitle || "مستشار قانوني",
+      email: form.email,
+      phone: form.phone || "",
+      passportNumber: form.passportNumber || "",
+      emiratesId: form.emiratesId || "",
+      idExpiryDate: form.idExpiryDate || "",
+      licenseNumber: form.licenseNumber || "",
+      basicSalary: Number(form.basicSalary) || 0,
+      housingAllowance: Number(form.housingAllowance) || 0,
+      transportAllowance: Number(form.transportAllowance) || 0,
+      joinDate: form.joinDate || todayISO(),
+      status: form.status || "ACTIVE",
+      createdAt: form.createdAt || todayISO()
+    };
+
+    if (isEdit) {
+      setEmployees(employees.map(e => e.id === empId ? newEmp : e));
+    } else {
+      setEmployees([...employees, newEmp]);
+    }
+
+    try {
+      await supabase.from("employees").upsert([{
+        id: empId.startsWith("emp-") ? undefined : empId,
+        full_name: newEmp.fullName,
+        job_title: newEmp.jobTitle,
+        email: newEmp.email,
+        phone: newEmp.phone,
+        passport_number: newEmp.passportNumber,
+        emirates_id: newEmp.emiratesId,
+        id_expiry_date: newEmp.idExpiryDate || null,
+        license_number: newEmp.licenseNumber || null,
+        basic_salary: newEmp.basicSalary,
+        housing_allowance: newEmp.housingAllowance,
+        transport_allowance: newEmp.transportAllowance,
+        join_date: newEmp.joinDate,
+        status: newEmp.status
+      }]);
+    } catch (e) {
+      console.log("Supabase employee save note:", e);
+    }
+
+    setModal(null);
+  };
+
+  const deleteEmployee = async (empId: string) => {
+    if (!confirm("هل أنت تأكد من حذف بيانات هذا الموظف؟")) return;
+    const targetEmp = employees.find((e) => e.id === empId);
+    logAuditAction("DELETE", "الكادر والرواتب HR", `الموظف: ${targetEmp?.name || empId}`, `حذف سجّل الموظف ${targetEmp?.name || empId} (${targetEmp?.jobTitle || ""}) من كادر العمل`, empId);
+    setEmployees(employees.filter(e => e.id !== empId));
+    try {
+      await supabase.from("employees").delete().eq("id", empId);
+    } catch (e) {
+      console.log("Supabase delete employee note:", e);
+    }
+  };
+
+  const saveLeaveRequest = async () => {
+    if (!form.employeeId || !form.startDate || !form.endDate) return;
+    const emp = employees.find(e => e.id === form.employeeId);
+    const start = new Date(form.startDate);
+    const end = new Date(form.endDate);
+    const diffDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)) + 1);
+
+    const newLeave: LeaveRequest = {
+      id: `leave-${Date.now()}`,
+      employeeId: form.employeeId,
+      employeeName: emp?.fullName || "موظف",
+      leaveType: form.leaveType || "ANNUAL",
+      startDate: form.startDate,
+      endDate: form.endDate,
+      totalDays: diffDays,
+      reason: form.reason || "",
+      status: "PENDING",
+      createdAt: todayISO()
+    };
+
+    setLeaveRequests([newLeave, ...leaveRequests]);
+
+    try {
+      await supabase.from("leave_requests").insert([{
+        employee_id: newLeave.employeeId.startsWith("emp-") ? null : newLeave.employeeId,
+        leave_type: newLeave.leaveType,
+        start_date: newLeave.startDate,
+        end_date: newLeave.endDate,
+        total_days: newLeave.totalDays,
+        reason: newLeave.reason,
+        status: "PENDING"
+      }]);
+    } catch (e) {
+      console.log("Supabase save leave note:", e);
+    }
+
+    setModal(null);
+  };
+
+  const updateLeaveStatus = async (leaveId: string, newStatus: "APPROVED" | "REJECTED") => {
+    setLeaveRequests(leaveRequests.map(l => l.id === leaveId ? { ...l, status: newStatus, approvedBy: currentUser.name } : l));
+    try {
+      await supabase.from("leave_requests").update({ status: newStatus }).eq("id", leaveId);
+    } catch (e) {
+      console.log("Supabase update leave status note:", e);
+    }
+  };
+
+  const saveEmployeeExpense = async () => {
+    if (!form.employeeId || !form.amount) return;
+    const emp = employees.find(e => e.id === form.employeeId);
+
+    const newExp: EmployeeExpense = {
+      id: `exp-${Date.now()}`,
+      employeeId: form.employeeId,
+      employeeName: emp?.fullName || "موظف",
+      caseId: form.caseId ? Number(form.caseId) : null,
+      amount: Number(form.amount) || 0,
+      category: form.category || "COURT_FEES",
+      receiptUrl: form.receiptUrl || "",
+      status: "PENDING",
+      createdAt: todayISO()
+    };
+
+    setEmployeeExpenses([newExp, ...employeeExpenses]);
+
+    try {
+      await supabase.from("employee_expenses").insert([{
+        employee_id: newExp.employeeId.startsWith("emp-") ? null : newExp.employeeId,
+        case_id: newExp.caseId || null,
+        amount: newExp.amount,
+        category: newExp.category,
+        receipt_url: newExp.receiptUrl,
+        status: "PENDING"
+      }]);
+    } catch (e) {
+      console.log("Supabase save expense note:", e);
+    }
+
+    setModal(null);
+  };
+
+  const updateExpenseStatus = async (expId: string, newStatus: "PAID" | "REJECTED") => {
+    setEmployeeExpenses(employeeExpenses.map(x => x.id === expId ? { ...x, status: newStatus } : x));
+    try {
+      await supabase.from("employee_expenses").update({ status: newStatus }).eq("id", expId);
+    } catch (e) {
+      console.log("Supabase update expense status note:", e);
+    }
   };
 
   // ---------- حسابات اتفاقيات الأتعاب والدفعات ----------
@@ -3963,7 +4699,7 @@ export default function App() {
   const NAV = [
     { id: "dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
     { id: "cases", label: "القضايا", icon: Briefcase },
-    { id: "clients", label: "الموكلين وجهات أخرى", icon: Users },
+    { id: "clients", label: "الموكلين", icon: Users },
     { id: "hearings", label: "الجلسات والرول", icon: CalendarDays },
     { id: "inapp_email", label: "البريد الإلكتروني المدمج", icon: Mail },
     { id: "whatsapp_office", label: "واتساب المكتب المدمج", icon: MessageSquare },
@@ -3974,14 +4710,20 @@ export default function App() {
     { id: "docs", label: "المستندات", icon: FolderOpen },
     { id: "poa", label: "الوكالات", icon: FileSignature },
     { id: "kyc", label: "اعرف عميلك KYC", icon: ShieldCheck },
+    { id: "employees", label: "الموظفون والكادر (HR)", icon: UserCheck },
+    { id: "precedents", label: "المبادئ والأحكام القضائية", icon: BookOpen },
+    { id: "audit_log", label: "سجل التدقيق والأنشطة", icon: History },
     { id: "users", label: "المستخدمون والصلاحيات", icon: Lock },
   ];
 
   // مراجعات KYC المستحقة أو القريبة (خلال 30 يومًا)
   const kycDue = kyc.filter((k) => daysUntil(nextReviewDate(k.lastReview, k.risk)) <= 30).length;
+  
+  // المهام المستحقة اليوم أو المتأخرة
+  const overdueTasks = tasks.filter(t => !t.done && daysUntil(t.due) <= 0).length;
 
   const upcoming = hearings.filter((h) => !h.done && daysUntil(h.date) >= 0).sort((a, b) => a.date.localeCompare(b.date));
-  const notifCount = stats.expiringPoa + invoices.filter((i) => i.status === "متأخرة").length + upcoming.filter((h) => daysUntil(h.date) <= 2).length + kycDue;
+  const notifCount = stats.expiringPoa + invoices.filter((i) => i.status === "متأخرة").length + upcoming.filter((h) => daysUntil(h.date) <= 2).length + kycDue + overdueTasks;
 
   const filteredCases = cases.filter((c) =>
     (caseFilter === "الكل" || c.status === caseFilter) &&
@@ -4113,6 +4855,12 @@ export default function App() {
                 <Icon size={18} /><span>{label}</span>
                 {id === "poa" && stats.expiringPoa > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{stats.expiringPoa}</span>}
                 {id === "kyc" && kycDue > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{kycDue}</span>}
+                {id === "tasks" && overdueTasks > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{overdueTasks}</span>}
+                {id === "employees" && (leaveRequests.filter(l => l.status === "PENDING").length + employeeExpenses.filter(e => e.status === "PENDING").length) > 0 && (
+                  <span className="mr-auto rounded-full bg-amber-500 px-2 text-xs font-bold text-slate-950">
+                    {leaveRequests.filter(l => l.status === "PENDING").length + employeeExpenses.filter(e => e.status === "PENDING").length}
+                  </span>
+                )}
                 {id === "users" && pendingUsers.length > 0 && isAdmin ? (
                   <span className="mr-auto rounded-full bg-[#e5c388] text-slate-950 px-2 py-0.5 text-[11px] font-bold animate-pulse">
                     {pendingUsers.length} معلق
@@ -4279,13 +5027,13 @@ export default function App() {
                     )}
 
                     {/* بطاقات المؤشرات */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                    <div className={`grid grid-cols-1 sm:grid-cols-2 ${canViewFinancials ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-3 sm:gap-4`}>
                   {[
                     { label: "قضايا نشطة", value: stats.active, icon: Briefcase, tone: "bg-indigo-100 text-indigo-600" },
                     { label: "جلسات هذا الأسبوع", value: stats.weekHearings, icon: Gavel, tone: "bg-amber-100 text-amber-600" },
-                    { label: "مبالغ مستحقة (شامل الضريبة 5%)", value: (isAdmin || currentUser?.canViewFinances || userPerms?.viewInvoices || userPerms?.manageInvoices) ? fmtAED(stats.dueAmount) : "•••••• (غير مصرح)", icon: TrendingUp, tone: "bg-emerald-100 text-emerald-600" },
+                    canViewFinancials ? { label: "مبالغ مستحقة (شامل الضريبة 5%)", value: fmtAED(stats.dueAmount), icon: TrendingUp, tone: "bg-emerald-100 text-emerald-600" } : null,
                     { label: "وكالات تنتهي خلال 60 يومًا", value: stats.expiringPoa, icon: AlertTriangle, tone: "bg-red-100 text-red-600" },
-                  ].map((k) => (
+                  ].filter(Boolean).map((k: any) => (
                     <div key={k.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
                       <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${k.tone}`}><k.icon size={20} /></div>
                       <p className="text-xl font-bold">{k.value}</p>
@@ -4294,7 +5042,7 @@ export default function App() {
                   ))}
                 </div>
 
-                <div className="grid gap-4 lg:grid-cols-2">
+                <div className={`grid gap-4 ${canViewFinancials ? "lg:grid-cols-2" : "grid-cols-1"}`}>
                   {/* توزيع القضايا */}
                   <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                     <h3 className="mb-4 font-bold text-slate-900">القضايا حسب النوع</h3>
@@ -4310,21 +5058,23 @@ export default function App() {
                       </ResponsiveContainer>
                     </div>
                   </div>
-                  {/* حالة الفواتير */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="mb-4 font-bold text-slate-900">حالة التحصيل المالي (د.إ)</h3>
-                    <div className="h-56" dir="ltr">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie data={invoiceSummary} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={3}>
-                            {invoiceSummary.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
-                          </Pie>
-                          <Tooltip formatter={(v: any) => fmtAED(Number(v))} />
-                          <Legend />
-                        </PieChart>
-                      </ResponsiveContainer>
+                  {/* حالة الفواتير - تظهر فقط للمصرح لهم */}
+                  {canViewFinancials && (
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                      <h3 className="mb-4 font-bold text-slate-900">حالة التحصيل المالي (د.إ)</h3>
+                      <div className="h-56" dir="ltr">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie data={invoiceSummary} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={3}>
+                              {invoiceSummary.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
+                            </Pie>
+                            <Tooltip formatter={(v: any) => fmtAED(Number(v))} />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-2">
@@ -4451,7 +5201,11 @@ export default function App() {
                       <p className="mt-1 text-sm text-slate-500">{selectedCase.subject}</p>
                     </div>
                     {userPerms.manageCases ? (
-                      <select value={selectedCase.status} onChange={(e) => setCases(cases.map((c) => c.id === selectedCase.id ? { ...c, status: e.target.value } : c))} className={`${inputCls} w-auto`}>
+                      <select value={selectedCase.status} onChange={(e) => {
+                        const newStatus = e.target.value;
+                        logAuditAction("STATUS_CHANGE", "القضايا", `قضية رقم ${selectedCase.number}`, `تعديل حالة القضية رقم ${selectedCase.number} من (${selectedCase.status}) إلى (${newStatus})`, selectedCase.id);
+                        setCases(cases.map((c) => c.id === selectedCase.id ? { ...c, status: newStatus } : c));
+                      }} className={`${inputCls} w-auto`}>
                         {CASE_STATUS.map((s) => <option key={s}>{s}</option>)}
                       </select>
                     ) : (
@@ -4465,8 +5219,8 @@ export default function App() {
                       ["المحكمة", selectedCase.court],
                       ["الدائرة/القاضي", selectedCase.judge || "—"],
                       ["تاريخ القيد", fmtDate(selectedCase.openDate)],
-                      ["الأتعاب المتفق عليها", userPerms.viewInvoices ? fmtAED(selectedCase.fee) : "غير مصرح للمستخدم"],
-                    ].map(([k, v]) => (
+                      canViewFinancials ? ["الأتعاب المتفق عليها", fmtAED(selectedCase.fee)] : null,
+                    ].filter(Boolean).map(([k, v]: any) => (
                       <div key={k} className="rounded-xl bg-stone-50 p-3">
                         <p className="text-xs text-slate-500">{k}</p>
                         <p className="mt-0.5 font-semibold">{v}</p>
@@ -4477,7 +5231,7 @@ export default function App() {
               </>
             )}
 
-            {/* ================= الموكلون وجهات الاتصال ================= */}
+            {/* ================= الموكلين ================= */}
             {tab === "clients" && (
               <div className="space-y-6">
                 {/* تنبيه الإشعارات (Toast) */}
@@ -4496,7 +5250,7 @@ export default function App() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                      <Users className="text-amber-600" /> إدارة الموكلين وجهات الاتصال
+                      <Users className="text-amber-600" /> إدارة الموكلين
                     </h2>
                     <p className="text-xs text-slate-500">سجل الأفراد والشركات والجهات الحكومية المتعاملة مع المكتب وتصنيفها</p>
                   </div>
@@ -4597,7 +5351,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* قائمة الكروت للمتعاملين وجهات الاتصال */}
+                {/* قائمة الكروت للمتعاملين */}
                 {(() => {
                   const filteredList = clients.filter((c) => {
                     const matchesCategory = clientCategoryFilter === "الكل" || c.type === clientCategoryFilter;
@@ -5905,7 +6659,7 @@ export default function App() {
                   </button>
                 </div>
 
-                {!userPerms.viewInvoices ? (
+                {!canViewFinancials ? (
                   <div className="p-8 bg-white rounded-2xl border border-slate-200 text-center space-y-3">
                     <ShieldAlert className="w-12 h-12 text-amber-500 mx-auto" />
                     <h3 className="font-bold text-slate-800">صلاحيات محددة للمستخدم</h3>
@@ -6624,7 +7378,7 @@ export default function App() {
 
         <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-[11px] text-emerald-900 space-y-1.5">
           <p className="font-bold flex items-center gap-1.5"><CheckCircle2 size={14} /> ماذا يحدث تلقائياً عند الحفظ؟</p>
-          <p>1️⃣ الموكل الجديد يُضاف مباشرة إلى تبويب "الموكلون وجهات الاتصال".</p>
+          <p>1️⃣ الموكل الجديد يُضاف مباشرة إلى تبويب "الموكلين".</p>
           <p>2️⃣ تُنشأ اتفاقية أتعاب برقم AGR تلقائي في "اتفاقيات الأتعاب".</p>
           <p>3️⃣ الدفعات تنزل كجدول أقساط، والمسددة عند التوقيع يُنشأ لها سند قبض في "سندات القبض والدفعات".</p>
           <p>4️⃣ تُحفظ نسخة الاتفاقية بالأرشيف للطباعة في أي وقت.</p>
@@ -7057,6 +7811,428 @@ export default function App() {
                       </div>
                     )}
                   </>
+                )}
+              </div>
+            )}
+
+            {/* ================= سجل التدقيق والأنشطة (Audit Log) ================= */}
+            {tab === "audit_log" && (
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/60">
+                        <History size={24} />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                          سجل التدقيق وتتبع الأنشطة (Audit Log)
+                        </h2>
+                        <p className="text-xs text-slate-500 mt-1">
+                          توثيق رقمي فوري لجميع عمليات الحذف، التعديل الحساس، وتغييرات الصلاحيات لضمان الرقابة والحوكمة
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-slate-900 text-amber-400 font-mono text-xs px-3 py-1.5 rounded-xl">
+                      {filteredAuditLogs.length} نشاط مسجّل
+                    </Badge>
+                  </div>
+                </div>
+
+                {!canViewAuditLog ? (
+                  <div className="rounded-2xl border border-red-200 bg-red-50/50 p-12 text-center">
+                    <ShieldAlert size={48} className="mx-auto text-red-500 mb-3" />
+                    <h3 className="text-lg font-bold text-slate-900">وصول محظور</h3>
+                    <p className="text-sm text-slate-600 max-w-md mx-auto mt-1">
+                      عذراً، استعراض سجل التدقيق والأنشطة مقتصر فقط على مدير النظام والمصرح لهم بإدارة الحوكمة والصلاحيات.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {/* بطاقات الإحصائيات السريعة */}
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <p className="text-xs font-medium text-slate-500">إجمالي الأنشطة الموثقة</p>
+                        <p className="mt-2 text-2xl font-black text-slate-900">{auditLogs.length}</p>
+                        <p className="mt-1 text-[11px] text-slate-400">سجل غير قابل للتعديل</p>
+                      </div>
+                      <div className="rounded-2xl border border-red-100 bg-red-50/40 p-5 shadow-sm">
+                        <p className="text-xs font-medium text-red-700">عمليات الحذف الحساسة</p>
+                        <p className="mt-2 text-2xl font-black text-red-600">
+                          {auditLogs.filter((a) => a.actionType === "DELETE").length}
+                        </p>
+                        <p className="mt-1 text-[11px] text-red-500">حذف قضايا، موكلين، أو حسابات</p>
+                      </div>
+                      <div className="rounded-2xl border border-purple-100 bg-purple-50/40 p-5 shadow-sm">
+                        <p className="text-xs font-medium text-purple-700">تغيير الصلاحيات والحسابات</p>
+                        <p className="mt-2 text-2xl font-black text-purple-600">
+                          {auditLogs.filter((a) => a.actionType === "PERMISSION_CHANGE").length}
+                        </p>
+                        <p className="mt-1 text-[11px] text-purple-500">تحديث أذونات الوصول للوحدات</p>
+                      </div>
+                      <div className="rounded-2xl border border-blue-100 bg-blue-50/40 p-5 shadow-sm">
+                        <p className="text-xs font-medium text-blue-700">تغييرات الحالة والتعديلات</p>
+                        <p className="mt-2 text-2xl font-black text-blue-600">
+                          {auditLogs.filter((a) => a.actionType === "STATUS_CHANGE" || a.actionType === "UPDATE").length}
+                        </p>
+                        <p className="mt-1 text-[11px] text-blue-500">تحديث حالات القضايا والعقود</p>
+                      </div>
+                    </div>
+
+                    {/* أشرطة التصفية والبحث */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex flex-1 items-center gap-2 min-w-[280px]">
+                          <div className="relative flex-1">
+                            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                            <input
+                              type="text"
+                              value={auditSearchTerm}
+                              onChange={(e) => setAuditSearchTerm(e.target.value)}
+                              placeholder="البحث باسم الموظف، العنصر، أو تفاصيل النشاط..."
+                              className="w-full rounded-xl border border-slate-200 py-2 pr-9 pl-4 text-sm focus:border-amber-500 focus:outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          {/* فلتر نوع العملية */}
+                          <select
+                            value={auditActionFilter}
+                            onChange={(e) => setAuditActionFilter(e.target.value)}
+                            className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium focus:border-amber-500 focus:outline-none bg-stone-50"
+                          >
+                            <option value="الكل">كل أنواع العمليات</option>
+                            <option value="DELETE">حذف (DELETE)</option>
+                            <option value="PERMISSION_CHANGE">تغيير صلاحيات (PERMISSION_CHANGE)</option>
+                            <option value="STATUS_CHANGE">تغيير حالة (STATUS_CHANGE)</option>
+                            <option value="UPDATE">تعديل (UPDATE)</option>
+                            <option value="CREATE">إنشاء (CREATE)</option>
+                          </select>
+
+                          {/* فلتر القسم / وحدة النظام */}
+                          <select
+                            value={auditModuleFilter}
+                            onChange={(e) => setAuditModuleFilter(e.target.value)}
+                            className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium focus:border-amber-500 focus:outline-none bg-stone-50"
+                          >
+                            <option value="الكل">جميع الأقسام</option>
+                            <option value="القضايا">القضايا</option>
+                            <option value="الموكلين">الموكلين</option>
+                            <option value="المستخدمون والصلاحيات">المستخدمون والصلاحيات</option>
+                            <option value="الفواتير والضريبة">الفواتير والضريبة</option>
+                            <option value="الكادر والرواتب HR">الكادر والرواتب HR</option>
+                            <option value="المستندات والوكالات">المستندات والوكالات</option>
+                          </select>
+
+                          <button
+                            onClick={() => {
+                              const headers = "ID,Timestamp,User,Email,Role,Action,Module,TargetTitle,Details,IP\n";
+                              const rows = filteredAuditLogs
+                                .map(
+                                  (l) =>
+                                    `"${l.id}","${l.timestamp}","${l.userName}","${l.userEmail}","${l.userRole}","${l.actionType}","${l.targetModule}","${l.targetTitle.replace(/"/g, '""')}","${l.details.replace(/"/g, '""')}","${l.ipAddress || ""}"`
+                                )
+                                .join("\n");
+                              const blob = new Blob(["\uFEFF" + headers + rows], { type: "text/csv;charset=utf-8;" });
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement("a");
+                              a.href = url;
+                              a.download = `audit_log_${todayISO()}.csv`;
+                              a.click();
+                            }}
+                            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-stone-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
+                          >
+                            <Download size={14} /> تصدير السجل
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* جدول السجلات */}
+                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-right text-xs">
+                          <thead className="border-b border-slate-200 bg-slate-900 text-amber-400 font-bold">
+                            <tr>
+                              <th className="px-4 py-3.5">الوقت والتاريخ</th>
+                              <th className="px-4 py-3.5">الموظف / القائم بالعملية</th>
+                              <th className="px-4 py-3.5">نوع العملية</th>
+                              <th className="px-4 py-3.5">القسم / وحدة النظام</th>
+                              <th className="px-4 py-3.5">العنصر المستهدف</th>
+                              <th className="px-4 py-3.5">تفاصيل النشاط والتغيير</th>
+                              <th className="px-4 py-3.5 text-center">عنوان IP</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100 text-slate-700">
+                            {filteredAuditLogs.map((log) => {
+                              const actionBadge = {
+                                DELETE: "bg-red-100 text-red-700 border-red-200",
+                                PERMISSION_CHANGE: "bg-purple-100 text-purple-700 border-purple-200",
+                                STATUS_CHANGE: "bg-blue-100 text-blue-700 border-blue-200",
+                                UPDATE: "bg-amber-100 text-amber-800 border-amber-200",
+                                CREATE: "bg-emerald-100 text-emerald-700 border-emerald-200"
+                              }[log.actionType] || "bg-slate-100 text-slate-700";
+
+                              const actionLabel = {
+                                DELETE: "حذف (DELETE)",
+                                PERMISSION_CHANGE: "تغيير صلاحيات",
+                                STATUS_CHANGE: "تغيير حالة",
+                                UPDATE: "تعديل (UPDATE)",
+                                CREATE: "إنشاء (CREATE)"
+                              }[log.actionType] || log.actionType;
+
+                              const d = new Date(log.timestamp);
+                              const formattedDate = isNaN(d.getTime())
+                                ? log.timestamp
+                                : `${d.toLocaleDateString("ar-AE")} ${d.toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" })}`;
+
+                              return (
+                                <tr key={log.id} className="hover:bg-slate-50/80 transition">
+                                  <td className="px-4 py-3 font-mono text-[11px] text-slate-500 whitespace-nowrap dir-ltr text-right">
+                                    {formattedDate}
+                                  </td>
+                                  <td className="px-4 py-3 whitespace-nowrap">
+                                    <div className="font-bold text-slate-900">{log.userName}</div>
+                                    <div className="text-[10px] text-slate-400">{log.userRole}</div>
+                                  </td>
+                                  <td className="px-4 py-3 whitespace-nowrap">
+                                    <span className={`inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold border ${actionBadge}`}>
+                                      {actionLabel}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3 whitespace-nowrap font-medium text-slate-800">
+                                    <span className="bg-slate-100 px-2 py-1 rounded-md text-[11px] border border-slate-200/60">
+                                      {log.targetModule}
+                                    </span>
+                                  </td>
+                                  <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">
+                                    {log.targetTitle}
+                                  </td>
+                                  <td className="px-4 py-3 text-slate-600 max-w-xs leading-relaxed">
+                                    {log.details}
+                                  </td>
+                                  <td className="px-4 py-3 text-center whitespace-nowrap">
+                                    <span className="font-mono text-[10px] bg-stone-100 text-slate-500 px-2 py-0.5 rounded border border-slate-200">
+                                      {log.ipAddress || "192.168.1.10"}
+                                    </span>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                        {filteredAuditLogs.length === 0 && (
+                          <div className="py-12 text-center text-slate-400">
+                            <History size={36} className="mx-auto mb-2 text-slate-300" />
+                            <p className="text-sm">لا توجد أنشطة مسجلة تفي بمعايير البحث الحالية</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ================= المبادئ والأحكام القضائية ================= */}
+            {tab === "precedents" && (
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/60">
+                        <BookOpen size={24} />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+                          مكتبة المبادئ والقواعد القضائية
+                        </h2>
+                        <p className="text-xs text-slate-500 mt-1">
+                          أرشيف ومرجع المبادئ والسوابق القضائية الصادرة عن محاكم التمييز والنقض والمحكمة الاتحادية العليا
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowAddPrecedentModal(true)}
+                      className="flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-amber-700 transition shadow-sm"
+                    >
+                      <Plus size={16} /> إضافة مبدأ قضائي جديد
+                    </button>
+                  </div>
+                </div>
+
+                {/* شريط البحث والتصفية */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-1 items-center gap-2 min-w-[280px]">
+                      <div className="relative flex-1">
+                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                          type="text"
+                          value={precedentSearch}
+                          onChange={(e) => setPrecedentSearch(e.target.value)}
+                          placeholder="البحث بالكلمة المفتاحية، نص القاعدة، رقم الطعن..."
+                          className="w-full rounded-xl border border-slate-200 py-2.5 pr-9 pl-4 text-sm focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      {/* فلتر المحكمة */}
+                      <select
+                        value={precedentCourtFilter}
+                        onChange={(e) => setPrecedentCourtFilter(e.target.value)}
+                        className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium focus:border-amber-500 focus:outline-none bg-stone-50"
+                      >
+                        <option value="الكل">جميع المحاكم</option>
+                        <option value="المحكمة الاتحادية العليا">المحكمة الاتحادية العليا</option>
+                        <option value="محكمة تمييز دبي">محكمة تمييز دبي</option>
+                        <option value="محكمة نقض أبوظبي">محكمة نقض أبوظبي</option>
+                        <option value="محكمة تمييز رأس الخيمة">محكمة تمييز رأس الخيمة</option>
+                      </select>
+
+                      {/* فلتر التصنيف */}
+                      <select
+                        value={precedentCategoryFilter}
+                        onChange={(e) => setPrecedentCategoryFilter(e.target.value)}
+                        className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium focus:border-amber-500 focus:outline-none bg-stone-50"
+                      >
+                        <option value="الكل">جميع التصنيفات</option>
+                        <option value="تجاري">تجاري</option>
+                        <option value="مدني">مدني</option>
+                        <option value="عقاري">عقاري</option>
+                        <option value="عمالي">عمالي</option>
+                        <option value="جزائي">جزائي</option>
+                        <option value="أحوال شخصية">أحوال شخصية</option>
+                      </select>
+
+                      {/* فلتر السنة */}
+                      <select
+                        value={precedentYearFilter}
+                        onChange={(e) => setPrecedentYearFilter(e.target.value)}
+                        className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium focus:border-amber-500 focus:outline-none bg-stone-50"
+                      >
+                        <option value="الكل">جميع السنوات</option>
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                        <option value="2022">2022</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* شبكة المبادئ القضائية */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  {filteredPrecedents.map((prec) => (
+                    <div
+                      key={prec.id}
+                      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-800 border border-amber-200/60">
+                            <Landmark size={13} /> {prec.court_name}
+                          </span>
+                          <div className="flex items-center gap-1.5">
+                            <Badge className="bg-slate-100 text-slate-700 font-bold text-[11px]">
+                              {prec.category}
+                            </Badge>
+                            <Badge className="bg-amber-100 text-amber-900 font-mono text-[11px]">
+                              {prec.ruling_year}
+                            </Badge>
+                          </div>
+                        </div>
+
+                        <h3 className="text-base font-bold text-slate-900 leading-snug mb-2">
+                          {prec.title}
+                        </h3>
+
+                        <div className="flex items-center gap-2 text-xs font-mono text-slate-500 mb-3 bg-stone-50 px-3 py-1.5 rounded-lg border border-slate-100">
+                          <Gavel size={14} className="text-amber-600" />
+                          <span>{prec.appeal_number}</span>
+                          {prec.circuit_name && (
+                            <span className="mr-auto text-slate-400 font-sans">({prec.circuit_name})</span>
+                          )}
+                        </div>
+
+                        <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-3.5 text-xs text-slate-700 leading-relaxed mb-4 font-sans">
+                          <p className="font-semibold text-slate-900 mb-1 flex items-center gap-1">
+                            <Scale size={13} className="text-amber-700" /> نص القاعدة القانونية / المبدأ:
+                          </p>
+                          {prec.summary_text}
+                        </div>
+                      </div>
+
+                      <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(`${prec.title}\nالمحكمة: ${prec.court_name}\nرقم الطعن: ${prec.appeal_number}\nالمبدأ: ${prec.summary_text}`);
+                              alert("تم نسخ المبدأ والقاعدة القانونية للحافظة بنجاح!");
+                            }}
+                            className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700 hover:bg-slate-50 transition font-medium"
+                            title="نسخ المبدأ لاستخدامه في المذكرات"
+                          >
+                            <Copy size={13} /> نسخ
+                          </button>
+
+                          {prec.pdf_file_url && (
+                            <a
+                              href={prec.pdf_file_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-red-700 hover:bg-red-100 transition font-bold text-[11px]"
+                            >
+                              <FileText size={13} /> PDF
+                            </a>
+                          )}
+
+                          {prec.word_file_url && (
+                            <a
+                              href={prec.word_file_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-blue-700 hover:bg-blue-100 transition font-bold text-[11px]"
+                            >
+                              <FileSpreadsheet size={13} /> Word
+                            </a>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setSelectedPrecedent(prec)}
+                            className="text-amber-700 hover:underline font-bold text-xs"
+                          >
+                            التفاصيل الكاملة
+                          </button>
+                          {userPerms.manageUsers && (
+                            <button
+                              onClick={() => deletePrecedent(prec.id)}
+                              className="p-1.5 text-slate-400 hover:text-red-600 rounded-lg"
+                              title="حذف المبدأ"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {filteredPrecedents.length === 0 && (
+                  <div className="rounded-2xl border border-slate-200 bg-white py-12 text-center text-slate-400">
+                    <BookOpen size={40} className="mx-auto mb-2 text-slate-300" />
+                    <p className="text-sm font-semibold">لا توجد مبادئ قضائية مطابقة للبحث والتصفية</p>
+                  </div>
                 )}
               </div>
             )}
@@ -7730,6 +8906,426 @@ export default function App() {
                 })()}
               </div>
             )}
+
+            {/* ================= الموظفون والكادر (HR) ================= */}
+            {tab === "employees" && (
+              <div className="space-y-6">
+                {/* Header & Main Quick Actions */}
+                <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2.5">
+                      <UserCheck className="text-amber-600 w-7 h-7" />
+                      إدارة الموظفين والكادر والتنمية البشرية (HR)
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-1">
+                      سجل الموظفين والرواتب، متابعة طلبات الإجازات، ومراجعة مطالبات المصروفات والتعويضات
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => { setForm({}); setModal("employee"); }}
+                      className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition shadow-sm"
+                    >
+                      <UserPlus size={16} /> إضافة موظف جديد
+                    </button>
+                    <button
+                      onClick={() => { setForm({ startDate: todayISO(), endDate: todayISO() }); setModal("leave-request"); }}
+                      className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold text-slate-950 hover:bg-amber-400 transition shadow-sm"
+                    >
+                      <CalendarDays size={16} /> طلب إجازة
+                    </button>
+                    <button
+                      onClick={() => { setForm({}); setModal("employee-expense"); }}
+                      className="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition shadow-2xs"
+                    >
+                      <DollarSign size={16} className="text-emerald-600" /> مطالبة مصروفات
+                    </button>
+                  </div>
+                </div>
+
+                {/* Stat Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-slate-500">إجمالي الكادر الوظيفي</p>
+                      <p className="text-2xl font-bold text-slate-900 mt-1">{employees.length} موظف</p>
+                      <p className="text-[11px] text-emerald-600 font-medium mt-0.5">
+                        {employees.filter(e => e.status === "ACTIVE").length} على رأس العمل
+                      </p>
+                    </div>
+                    <div className="h-11 w-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                      <Users size={22} />
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-slate-500">إجمالي مسير الرواتب الشهري</p>
+                      <p className="text-2xl font-bold text-slate-900 mt-1">
+                        {(employees.reduce((sum, e) => sum + e.basicSalary + e.housingAllowance + e.transportAllowance, 0)).toLocaleString()} د.إ
+                      </p>
+                      <p className="text-[11px] text-slate-400 mt-0.5">شامل الأجور والبدلات</p>
+                    </div>
+                    <div className="h-11 w-11 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold">
+                      <CreditCard size={22} />
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-slate-500">طلبات الإجازات المعلقة</p>
+                      <p className="text-2xl font-bold text-slate-900 mt-1">
+                        {leaveRequests.filter(l => l.status === "PENDING").length} طلبات
+                      </p>
+                      <p className="text-[11px] text-amber-600 mt-0.5 font-medium">تتطلب اعتماد المباشر</p>
+                    </div>
+                    <div className="h-11 w-11 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center font-bold">
+                      <Clock size={22} />
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-slate-500">مطالبات المصروفات المعلقة</p>
+                      <p className="text-2xl font-bold text-slate-900 mt-1">
+                        {employeeExpenses.filter(e => e.status === "PENDING").reduce((s, x) => s + x.amount, 0).toLocaleString()} د.إ
+                      </p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        {employeeExpenses.filter(e => e.status === "PENDING").length} مطالبات بانتظار الصرف
+                      </p>
+                    </div>
+                    <div className="h-11 w-11 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+                      <Receipt size={22} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sub-tabs Navigation */}
+                <div className="flex border-b border-slate-200 gap-2">
+                  <button
+                    onClick={() => setHrSubTab("directory")}
+                    className={`px-4 py-3 text-xs font-bold border-b-2 transition flex items-center gap-2 ${
+                      hrSubTab === "directory" ? "border-amber-600 text-amber-700 bg-amber-50/50 rounded-t-xl" : "border-transparent text-slate-500 hover:text-slate-800"
+                    }`}
+                  >
+                    <UserCheck size={16} /> دليل الموظفين والرواتب ({employees.length})
+                  </button>
+
+                  <button
+                    onClick={() => setHrSubTab("leaves")}
+                    className={`px-4 py-3 text-xs font-bold border-b-2 transition flex items-center gap-2 ${
+                      hrSubTab === "leaves" ? "border-amber-600 text-amber-700 bg-amber-50/50 rounded-t-xl" : "border-transparent text-slate-500 hover:text-slate-800"
+                    }`}
+                  >
+                    <CalendarDays size={16} /> طلبات الإجازات
+                    {leaveRequests.filter(l => l.status === "PENDING").length > 0 && (
+                      <span className="bg-amber-500 text-slate-950 font-bold px-2 py-0.5 rounded-full text-[10px]">
+                        {leaveRequests.filter(l => l.status === "PENDING").length}
+                      </span>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => setHrSubTab("expenses")}
+                    className={`px-4 py-3 text-xs font-bold border-b-2 transition flex items-center gap-2 ${
+                      hrSubTab === "expenses" ? "border-amber-600 text-amber-700 bg-amber-50/50 rounded-t-xl" : "border-transparent text-slate-500 hover:text-slate-800"
+                    }`}
+                  >
+                    <Receipt size={16} /> مصروفات وتعويضات الكادر
+                    {employeeExpenses.filter(e => e.status === "PENDING").length > 0 && (
+                      <span className="bg-purple-600 text-white font-bold px-2 py-0.5 rounded-full text-[10px]">
+                        {employeeExpenses.filter(e => e.status === "PENDING").length}
+                      </span>
+                    )}
+                  </button>
+                </div>
+
+                {/* SUB TAB 1: DIRECTORY & PAYROLL */}
+                {hrSubTab === "directory" && (
+                  <div className="space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3 rounded-xl border border-slate-200">
+                      <div className="relative flex-1 min-w-[240px]">
+                        <Search size={16} className="absolute right-3 top-2.5 text-slate-400" />
+                        <input
+                          type="text"
+                          value={employeeSearchQuery}
+                          onChange={(e) => setEmployeeSearchQuery(e.target.value)}
+                          placeholder="البحث باسم الموظف، المسمى، الهوية، أو قيد المحامي..."
+                          className="w-full pl-3 pr-9 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-amber-500 bg-slate-50"
+                        />
+                      </div>
+                      <span className="text-xs text-slate-500 font-medium">
+                        إجمالي مسير الشهر: <span className="font-bold text-slate-900">{(employees.reduce((s, e) => s + e.basicSalary + e.housingAllowance + e.transportAllowance, 0)).toLocaleString()} د.إ</span>
+                      </span>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
+                      <table className="w-full text-right text-xs">
+                        <thead className="bg-slate-900 text-white font-bold">
+                          <tr>
+                            <th className="p-3.5 rounded-r-xl">الموظف والمسمى الوظيفي</th>
+                            <th className="p-3.5">التواصل والبريد</th>
+                            <th className="p-3.5">رقم الهوية والجواز</th>
+                            <th className="p-3.5">رقم قيد المحامي</th>
+                            <th className="p-3.5">تفاصيل الراتب والبدلات</th>
+                            <th className="p-3.5 text-center">الحالة</th>
+                            <th className="p-3.5 text-center rounded-l-xl">الإجراءات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {employees
+                            .filter(e => !employeeSearchQuery || e.fullName.includes(employeeSearchQuery) || e.jobTitle.includes(employeeSearchQuery) || e.emiratesId.includes(employeeSearchQuery))
+                            .map((emp) => {
+                              const totalSalary = emp.basicSalary + emp.housingAllowance + emp.transportAllowance;
+                              const daysToIdExpiry = emp.idExpiryDate ? daysUntil(emp.idExpiryDate) : 999;
+                              return (
+                                <tr key={emp.id} className="hover:bg-amber-50/20 transition">
+                                  <td className="p-3.5 font-bold text-slate-900">
+                                    <div className="flex items-center gap-2.5">
+                                      <div className="w-9 h-9 rounded-xl bg-slate-800 text-amber-400 flex items-center justify-center font-bold text-sm shrink-0">
+                                        {emp.fullName.slice(0, 2)}
+                                      </div>
+                                      <div>
+                                        <p className="font-bold text-slate-900">{emp.fullName}</p>
+                                        <p className="text-[11px] text-amber-700 font-medium">{emp.jobTitle}</p>
+                                      </div>
+                                    </div>
+                                  </td>
+
+                                  <td className="p-3.5 text-slate-600">
+                                    <p className="flex items-center gap-1 font-mono text-[11px]"><Mail size={12} className="text-slate-400" /> {emp.email}</p>
+                                    <p className="flex items-center gap-1 font-mono text-[11px] mt-0.5"><Phone size={12} className="text-slate-400" /> {emp.phone}</p>
+                                  </td>
+
+                                  <td className="p-3.5 text-slate-700">
+                                    <p className="font-mono text-[11px]"><span className="text-slate-400">هوية:</span> {emp.emiratesId || "—"}</p>
+                                    <p className="font-mono text-[11px] mt-0.5"><span className="text-slate-400">جواز:</span> {emp.passportNumber || "—"}</p>
+                                    {emp.idExpiryDate && (
+                                      <div className="mt-1">
+                                        {daysToIdExpiry <= 60 ? (
+                                          <span className="text-[10px] bg-red-100 text-red-700 font-bold px-1.5 py-0.5 rounded border border-red-200 inline-flex items-center gap-1">
+                                            <AlertTriangle size={10} /> ينتهي خلال {daysToIdExpiry} يوم
+                                          </span>
+                                        ) : (
+                                          <span className="text-[10px] text-slate-400">تنتهي: {fmtDate(emp.idExpiryDate)}</span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </td>
+
+                                  <td className="p-3.5">
+                                    {emp.licenseNumber ? (
+                                      <span className="font-mono text-[11px] bg-slate-100 text-slate-800 font-bold px-2 py-1 rounded-md border border-slate-200 inline-block">
+                                        {emp.licenseNumber}
+                                      </span>
+                                    ) : (
+                                      <span className="text-slate-400 text-[11px]">كادر إداري / كاتب</span>
+                                    )}
+                                  </td>
+
+                                  <td className="p-3.5">
+                                    <p className="font-bold text-slate-900">{totalSalary.toLocaleString()} د.إ / شهرياً</p>
+                                    <p className="text-[10px] text-slate-400">
+                                      أساسي: {emp.basicSalary.toLocaleString()} | سكن: {emp.housingAllowance.toLocaleString()} | مواصلات: {emp.transportAllowance.toLocaleString()}
+                                    </p>
+                                  </td>
+
+                                  <td className="p-3.5 text-center">
+                                    {emp.status === "ACTIVE" && (
+                                      <span className="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-1 rounded-full border border-emerald-200">
+                                        على رأس العمل
+                                      </span>
+                                    )}
+                                    {emp.status === "ON_LEAVE" && (
+                                      <span className="bg-amber-100 text-amber-800 text-[11px] font-bold px-2.5 py-1 rounded-full border border-amber-200">
+                                        في إجازة
+                                      </span>
+                                    )}
+                                    {emp.status === "TERMINATED" && (
+                                      <span className="bg-slate-100 text-slate-500 text-[11px] font-bold px-2.5 py-1 rounded-full border border-slate-200">
+                                        منهي الخدمة
+                                      </span>
+                                    )}
+                                  </td>
+
+                                  <td className="p-3.5 text-center">
+                                    <div className="flex items-center justify-center gap-1">
+                                      <button
+                                        onClick={() => { setForm({ ...emp }); setModal("employee"); }}
+                                        className="p-1.5 text-slate-600 hover:text-amber-700 hover:bg-amber-50 rounded-lg"
+                                        title="تعديل الموظف"
+                                      >
+                                        <Edit2 size={15} />
+                                      </button>
+                                      <button
+                                        onClick={() => deleteEmployee(emp.id)}
+                                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                                        title="حذف الموظف"
+                                      >
+                                        <Trash2 size={15} />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* SUB TAB 2: LEAVE REQUESTS */}
+                {hrSubTab === "leaves" && (
+                  <div className="space-y-4">
+                    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
+                      <table className="w-full text-right text-xs">
+                        <thead className="bg-slate-900 text-white font-bold">
+                          <tr>
+                            <th className="p-3.5 rounded-r-xl">الموظف</th>
+                            <th className="p-3.5">نوع الإجازة</th>
+                            <th className="p-3.5">الفترة المحددة</th>
+                            <th className="p-3.5">إجمالي الأيام</th>
+                            <th className="p-3.5">السبب / الملاحظات</th>
+                            <th className="p-3.5 text-center">الحالة</th>
+                            <th className="p-3.5 text-center rounded-l-xl">اعتماد الإدارة</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {leaveRequests.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="p-8 text-center text-slate-400">لا توجد طلبات إجازات مسجلة حالياً</td>
+                            </tr>
+                          ) : (
+                            leaveRequests.map((leave) => (
+                              <tr key={leave.id} className="hover:bg-slate-50">
+                                <td className="p-3.5 font-bold text-slate-900">{leave.employeeName}</td>
+                                <td className="p-3.5">
+                                  {leave.leaveType === "ANNUAL" && <span className="bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded text-[11px]">سنوية اعتيادية</span>}
+                                  {leave.leaveType === "SICK" && <span className="bg-red-100 text-red-800 font-bold px-2 py-0.5 rounded text-[11px]">مرضية</span>}
+                                  {leave.leaveType === "EMERGENCY" && <span className="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded text-[11px]">طارئة</span>}
+                                  {leave.leaveType === "UNPAID" && <span className="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded text-[11px]">بدون أجر</span>}
+                                </td>
+                                <td className="p-3.5 font-mono text-slate-700">
+                                  من {fmtDate(leave.startDate)} إلى {fmtDate(leave.endDate)}
+                                </td>
+                                <td className="p-3.5 font-bold text-slate-900">{leave.totalDays} أيام</td>
+                                <td className="p-3.5 text-slate-600 max-w-xs truncate" title={leave.reason}>{leave.reason || "—"}</td>
+                                <td className="p-3.5 text-center">
+                                  {leave.status === "PENDING" && <span className="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold text-[11px]">قيد الانتظار</span>}
+                                  {leave.status === "APPROVED" && <span className="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold text-[11px]">مقبولة ومُعتمدة</span>}
+                                  {leave.status === "REJECTED" && <span className="bg-red-100 text-red-800 px-2.5 py-1 rounded-full font-bold text-[11px]">مرفوضة</span>}
+                                </td>
+                                <td className="p-3.5 text-center">
+                                  {leave.status === "PENDING" ? (
+                                    <div className="flex items-center justify-center gap-1.5">
+                                      <button
+                                        onClick={() => updateLeaveStatus(leave.id, "APPROVED")}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-2xs"
+                                      >
+                                        <Check size={13} /> قبول
+                                      </button>
+                                      <button
+                                        onClick={() => updateLeaveStatus(leave.id, "REJECTED")}
+                                        className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1"
+                                      >
+                                        <X size={13} /> رفض
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <span className="text-[11px] text-slate-400 font-mono">
+                                      {leave.approvedBy ? `بواسطة: ${leave.approvedBy}` : "مكتملة"}
+                                    </span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* SUB TAB 3: EMPLOYEE EXPENSES */}
+                {hrSubTab === "expenses" && (
+                  <div className="space-y-4">
+                    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
+                      <table className="w-full text-right text-xs">
+                        <thead className="bg-slate-900 text-white font-bold">
+                          <tr>
+                            <th className="p-3.5 rounded-r-xl">الموظف</th>
+                            <th className="p-3.5">بند المصروف</th>
+                            <th className="p-3.5">المبلغ المطالب</th>
+                            <th className="p-3.5">القضية المرتبطة</th>
+                            <th className="p-3.5 text-center">الحالة</th>
+                            <th className="p-3.5 text-center rounded-l-xl">اعتماد الصرف</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {employeeExpenses.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} className="p-8 text-center text-slate-400">لا توجد مطالبات مصروفات حالياً</td>
+                            </tr>
+                          ) : (
+                            employeeExpenses.map((exp) => {
+                              const caseItem = cases.find(c => c.id === exp.caseId);
+                              return (
+                                <tr key={exp.id} className="hover:bg-slate-50">
+                                  <td className="p-3.5 font-bold text-slate-900">{exp.employeeName}</td>
+                                  <td className="p-3.5 font-medium">
+                                    {exp.category === "COURT_FEES" && <span className="bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded text-[11px]">رسوم محاكم وخدمات</span>}
+                                    {exp.category === "TRANSPORT" && <span className="bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded text-[11px]">تنقلات ومواصفات</span>}
+                                    {exp.category === "SUPPLIES" && <span className="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded text-[11px]">أدوات ومستلزمات مكتب</span>}
+                                    {exp.category === "OTHER" && <span className="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded text-[11px]">مصروفات أخرى</span>}
+                                  </td>
+                                  <td className="p-3.5 font-bold text-slate-900 text-sm">{exp.amount.toLocaleString()} د.إ</td>
+                                  <td className="p-3.5 text-slate-600">
+                                    {caseItem ? (
+                                      <span className="font-mono text-[11px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-bold">
+                                        قضية #{caseItem.number}
+                                      </span>
+                                    ) : (
+                                      <span className="text-slate-400 text-[11px]">مصروف إداري عام</span>
+                                    )}
+                                  </td>
+                                  <td className="p-3.5 text-center">
+                                    {exp.status === "PENDING" && <span className="bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-bold text-[11px]">قيد المراجعة</span>}
+                                    {exp.status === "PAID" && <span className="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold text-[11px]">مدفوع / تم التعويض</span>}
+                                    {exp.status === "REJECTED" && <span className="bg-red-100 text-red-800 px-2.5 py-1 rounded-full font-bold text-[11px]">مرفوض</span>}
+                                  </td>
+                                  <td className="p-3.5 text-center">
+                                    {exp.status === "PENDING" ? (
+                                      <div className="flex items-center justify-center gap-1.5">
+                                        <button
+                                          onClick={() => updateExpenseStatus(exp.id, "PAID")}
+                                          className="bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-2xs"
+                                        >
+                                          <Check size={13} /> اعتماد وصرف
+                                        </button>
+                                        <button
+                                          onClick={() => updateExpenseStatus(exp.id, "REJECTED")}
+                                          className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 px-2.5 py-1 rounded-lg font-bold text-[11px] flex items-center gap-1"
+                                        >
+                                          <X size={13} /> رفض
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <span className="text-[11px] text-slate-400 font-mono">مكتمل</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
 
@@ -7767,6 +9363,14 @@ export default function App() {
             </div>
             <Field label="موضوع الدعوى والطلبات">
               <textarea onChange={f("subject")} rows={2} placeholder="ملخص وقائع الدعوى..." className={inputCls} />
+            </Field>
+            <Field label="قالب المهام التلقائية (اختياري)">
+              <select onChange={f("taskTemplate")} className={inputCls}>
+                <option value="">لا يوجد (عدم إضافة مهام تلقائية)</option>
+                {TASK_TEMPLATES.map((t) => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
             </Field>
             <Field label="الأتعاب المتفق عليها (د.إ)">
               <input type="number" onChange={f("fee")} placeholder="0.00" className={inputCls} />
@@ -8823,6 +10427,167 @@ export default function App() {
         </Modal>
       )}
 
+      {/* ================= نوافذ إدارة الموظفين والكادر (HR) ================= */}
+      {modal === "employee" && (
+        <Modal title={form.id ? "تعديل بيانات الموظف" : "إضافة موظف / مستشار جديد"} onClose={() => setModal(null)} wide>
+          <div className="space-y-4 text-sm">
+            <Field label="الاسم الكامل">
+              <input onChange={f("fullName")} defaultValue={form.fullName || ""} placeholder="مثال: د. عبد الله بن حمد آل علي" className={inputCls} />
+            </Field>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="المسمى الوظيفي">
+                <input onChange={f("jobTitle")} defaultValue={form.jobTitle || ""} placeholder="مثال: مستشار قانوني أول / محامي مدني" className={inputCls} />
+              </Field>
+              <Field label="حالة الموظف">
+                <select onChange={f("status")} defaultValue={form.status || "ACTIVE"} className={inputCls}>
+                  <option value="ACTIVE">على رأس العمل (Active)</option>
+                  <option value="ON_LEAVE">في إجازة (On Leave)</option>
+                  <option value="TERMINATED">منهي الخدمة (Terminated)</option>
+                </select>
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="البريد الإلكتروني الرسمي">
+                <input type="email" onChange={f("email")} defaultValue={form.email || ""} placeholder="employee@law.ae" className={inputCls} />
+              </Field>
+              <Field label="رقم الهاتف">
+                <input onChange={f("phone")} defaultValue={form.phone || ""} placeholder="050-XXXXXXX" className={inputCls} />
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Field label="رقم الهوية الإماراتية">
+                <input onChange={f("emiratesId")} defaultValue={form.emiratesId || ""} placeholder="784-XXXX-XXXXXXX-X" className={inputCls} />
+              </Field>
+              <Field label="رقم جواز السفر">
+                <input onChange={f("passportNumber")} defaultValue={form.passportNumber || ""} placeholder="A12345678" className={inputCls} />
+              </Field>
+              <Field label="تاريخ انتهاء الهوية/الإقامة">
+                <input type="date" onChange={f("idExpiryDate")} defaultValue={form.idExpiryDate || ""} className={inputCls} />
+              </Field>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="رقم قيد المحامي (إن وجد)">
+                <input onChange={f("licenseNumber")} defaultValue={form.licenseNumber || ""} placeholder="مثال: ADV-UAE-9982" className={inputCls} />
+              </Field>
+              <Field label="تاريخ المباشرة / الانضمام">
+                <input type="date" onChange={f("joinDate")} defaultValue={form.joinDate || todayISO()} className={inputCls} />
+              </Field>
+            </div>
+
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <p className="text-xs font-bold text-slate-900">تفاصيل هيكل الراتب والبدلات (د.إ):</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <Field label="الراتب الأساسي">
+                  <input type="number" onChange={f("basicSalary")} defaultValue={form.basicSalary || 0} className={inputCls} />
+                </Field>
+                <Field label="بدل السكن">
+                  <input type="number" onChange={f("housingAllowance")} defaultValue={form.housingAllowance || 0} className={inputCls} />
+                </Field>
+                <Field label="بدل المواصلات">
+                  <input type="number" onChange={f("transportAllowance")} defaultValue={form.transportAllowance || 0} className={inputCls} />
+                </Field>
+              </div>
+            </div>
+
+            <button onClick={saveEmployee} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-800 transition">
+              حفظ بيانات الموظف
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {modal === "leave-request" && (
+        <Modal title="تقديم طلب إجازة كادر" onClose={() => setModal(null)}>
+          <div className="space-y-4 text-sm">
+            <Field label="الموظف صاحب الطلب">
+              <select onChange={f("employeeId")} defaultValue={form.employeeId || ""} className={inputCls}>
+                <option value="">اختر الموظف...</option>
+                {employees.map((e) => (
+                  <option key={e.id} value={e.id}>{e.fullName} ({e.jobTitle})</option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="نوع الإجازة">
+              <select onChange={f("leaveType")} defaultValue={form.leaveType || "ANNUAL"} className={inputCls}>
+                <option value="ANNUAL">إجازة سنوية اعتيادية</option>
+                <option value="SICK">إجازة مرضية</option>
+                <option value="EMERGENCY">إجازة طارئة</option>
+                <option value="UNPAID">إجازة بدون أجر</option>
+              </select>
+            </Field>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="تاريخ البداية">
+                <input type="date" onChange={f("startDate")} defaultValue={form.startDate || todayISO()} className={inputCls} />
+              </Field>
+              <Field label="تاريخ النهاية">
+                <input type="date" onChange={f("endDate")} defaultValue={form.endDate || todayISO()} className={inputCls} />
+              </Field>
+            </div>
+
+            <Field label="السبب / تفاصيل الإجازة">
+              <textarea onChange={f("reason")} rows={3} placeholder="اكتب سبب طلب الإجازة هنا..." className={inputCls} />
+            </Field>
+
+            <button onClick={saveLeaveRequest} className="w-full rounded-xl bg-amber-500 py-3 font-bold text-slate-950 hover:bg-amber-400 transition">
+              ارسال طلب الإجازة
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {modal === "employee-expense" && (
+        <Modal title="تقديم مطالبة مصروفات وتعويض" onClose={() => setModal(null)}>
+          <div className="space-y-4 text-sm">
+            <Field label="الموظف المتقدم بالمطالبة">
+              <select onChange={f("employeeId")} defaultValue={form.employeeId || ""} className={inputCls}>
+                <option value="">اختر الموظف...</option>
+                {employees.map((e) => (
+                  <option key={e.id} value={e.id}>{e.fullName} ({e.jobTitle})</option>
+                ))}
+              </select>
+            </Field>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="بند / نوع المصروف">
+                <select onChange={f("category")} defaultValue={form.category || "COURT_FEES"} className={inputCls}>
+                  <option value="COURT_FEES">رسوم محاكم وخدمات قضائية</option>
+                  <option value="TRANSPORT">تنقلات ومواصلات قضائية</option>
+                  <option value="SUPPLIES">مستلزمات وأدوات مكتبية</option>
+                  <option value="OTHER">مصروفات أخرى</option>
+                </select>
+              </Field>
+
+              <Field label="المبلغ المطلوب (د.إ)">
+                <input type="number" onChange={f("amount")} placeholder="0.00" className={inputCls} />
+              </Field>
+            </div>
+
+            <Field label="القضية المرتبطة (اختياري)">
+              <select onChange={f("caseId")} defaultValue={form.caseId || ""} className={inputCls}>
+                <option value="">مصروف إداري عام للمكتب</option>
+                {cases.map((c) => (
+                  <option key={c.id} value={c.id}>قضية #{c.number} - {c.title}</option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="رابط أو ملاحظات الفاتورة/الإيصال">
+              <input onChange={f("receiptUrl")} placeholder="رابط المستند أو رقم الإيصال..." className={inputCls} />
+            </Field>
+
+            <button onClick={saveEmployeeExpense} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-800 transition">
+              تقديم مطالبة المصروفات
+            </button>
+          </div>
+        </Modal>
+      )}
+
 {agrPreviewId !== null && (() => {
   const oa = officeAgreements.find((a) => a.id === agrPreviewId);
   if (!oa) return null;
@@ -9189,7 +10954,7 @@ export default function App() {
                             <th className="p-2 border">الموكل</th>
                             <th className="p-2 border">المحكمة</th>
                             <th className="p-2 border">الحالة</th>
-                            <th className="p-2 border">الأتعاب</th>
+                            {canViewFinancials && <th className="p-2 border">الأتعاب</th>}
                           </tr>
                         </thead>
                         <tbody>
@@ -9199,7 +10964,7 @@ export default function App() {
                               <td className="p-2 border">{clientName(c.clientId)}</td>
                               <td className="p-2 border">{c.court}</td>
                               <td className="p-2 border">{c.status}</td>
-                              <td className="p-2 border">{fmtAED(c.fee)}</td>
+                              {canViewFinancials && <td className="p-2 border">{fmtAED(c.fee)}</td>}
                             </tr>
                           ))}
                         </tbody>
@@ -9410,6 +11175,226 @@ export default function App() {
             >
               تأكيد القبول وفك حظر الحساب (Approve & Activate)
             </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* ═══ مودال إضافة مبدأ قضائي جديد ═══ */}
+      {showAddPrecedentModal && (
+        <Modal title="إضافة مبدأ قضائي جديد" onClose={() => setShowAddPrecedentModal(false)} wide>
+          <form onSubmit={handlePrecedentSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">عنوان المبدأ القضائي / القاعدة:</label>
+              <input
+                type="text"
+                required
+                placeholder="مثال: بطلان الشرط المانع من التعويض في عقود المقاولات عند الخطأ الجسيم"
+                value={precedentForm.title}
+                onChange={(e) => setPrecedentForm({ ...precedentForm, title: e.target.value })}
+                className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-amber-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">المحكمة المصدرة:</label>
+                <select
+                  value={precedentForm.court_name}
+                  onChange={(e) => setPrecedentForm({ ...precedentForm, court_name: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-amber-500 focus:outline-none bg-white"
+                >
+                  <option value="المحكمة الاتحادية العليا">المحكمة الاتحادية العليا</option>
+                  <option value="محكمة تمييز دبي">محكمة تمييز دبي</option>
+                  <option value="محكمة نقض أبوظبي">محكمة نقض أبوظبي</option>
+                  <option value="محكمة تمييز رأس الخيمة">محكمة تمييز رأس الخيمة</option>
+                  <option value="محاكم عجمان الاستئنافية">محاكم عجمان الاستئنافية</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">سنة الحكم / الصدور:</label>
+                <input
+                  type="number"
+                  required
+                  min={1971}
+                  max={2030}
+                  value={precedentForm.ruling_year}
+                  onChange={(e) => setPrecedentForm({ ...precedentForm, ruling_year: parseInt(e.target.value) || new Date().getFullYear() })}
+                  className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-amber-500 focus:outline-none font-mono"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">التصنيف:</label>
+                <select
+                  value={precedentForm.category}
+                  onChange={(e) => setPrecedentForm({ ...precedentForm, category: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-amber-500 focus:outline-none bg-white"
+                >
+                  <option value="تجاري">تجاري</option>
+                  <option value="مدني">مدني</option>
+                  <option value="عقاري">عقاري</option>
+                  <option value="عمالي">عمالي</option>
+                  <option value="جزائي">جزائي</option>
+                  <option value="أحوال شخصية">أحوال شخصية</option>
+                  <option value="إداري">إداري</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">اسم الدائرة القضائية:</label>
+                <input
+                  type="text"
+                  placeholder="مثال: الدائرة التجارية والمدنية"
+                  value={precedentForm.circuit_name}
+                  onChange={(e) => setPrecedentForm({ ...precedentForm, circuit_name: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-amber-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">رقم الطعن / الدعوى:</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="مثال: طعن 120 لسنة 2024 تجاري"
+                  value={precedentForm.appeal_number}
+                  onChange={(e) => setPrecedentForm({ ...precedentForm, appeal_number: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-amber-500 focus:outline-none font-mono"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">نص المبدأ / القاعدة القانونية:</label>
+              <textarea
+                rows={4}
+                required
+                placeholder="اكتب نص المبدأ القانوني أو ملخص القاعدة الصادرة من الحكم القضائي..."
+                value={precedentForm.summary_text}
+                onChange={(e) => setPrecedentForm({ ...precedentForm, summary_text: e.target.value })}
+                className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:border-amber-500 focus:outline-none leading-relaxed"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200/80">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                  <FileText size={14} className="text-red-600" /> تحميل ملف PDF:
+                </label>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => setPrecedentPdfFile(e.target.files?.[0] || null)}
+                  className="w-full text-xs text-slate-500 file:mr-0 file:ml-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100 cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
+                  <FileSpreadsheet size={14} className="text-blue-600" /> تحميل ملف Word (.doc, .docx):
+                </label>
+                <input
+                  type="file"
+                  accept=".doc,.docx"
+                  onChange={(e) => setPrecedentWordFile(e.target.files?.[0] || null)}
+                  className="w-full text-xs text-slate-500 file:mr-0 file:ml-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowAddPrecedentModal(false)}
+                className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50"
+              >
+                إلغاء
+              </button>
+              <button
+                type="submit"
+                disabled={precedentLoading}
+                className="rounded-xl bg-amber-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-amber-700 disabled:opacity-50 transition shadow-sm"
+              >
+                {precedentLoading ? "جاري الحفظ والرفع لـ Supabase..." : "حفظ المبدأ القضائي"}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+
+      {/* ═══ مودال عرض تفاصيل المبدأ القضائي ═══ */}
+      {selectedPrecedent && (
+        <Modal title="تفاصيل المبدأ القضائي" onClose={() => setSelectedPrecedent(null)} wide>
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                <Landmark size={14} /> {selectedPrecedent.court_name}
+              </span>
+              <div className="flex items-center gap-2">
+                <Badge className="bg-slate-100 text-slate-800 font-bold">
+                  {selectedPrecedent.category}
+                </Badge>
+                <Badge className="bg-amber-100 text-amber-900 font-mono">
+                  سنة {selectedPrecedent.ruling_year}
+                </Badge>
+              </div>
+            </div>
+
+            <h2 className="text-lg font-bold text-slate-900 leading-snug">
+              {selectedPrecedent.title}
+            </h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono text-slate-600 bg-stone-50 p-3 rounded-xl border border-slate-200">
+              <div><strong className="text-slate-800 font-sans">رقم الطعن/الدعوى:</strong> {selectedPrecedent.appeal_number}</div>
+              {selectedPrecedent.circuit_name && (
+                <div><strong className="text-slate-800 font-sans">الدائرة:</strong> {selectedPrecedent.circuit_name}</div>
+              )}
+            </div>
+
+            <div className="bg-amber-50/50 rounded-2xl p-4 border border-amber-200/60 text-sm text-slate-800 leading-relaxed font-sans">
+              <h4 className="font-bold text-amber-900 mb-2 flex items-center gap-1">
+                <Scale size={16} /> المبدأ والقاعدة القانونية الصادرة:
+              </h4>
+              <p className="whitespace-pre-wrap">{selectedPrecedent.summary_text}</p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(`${selectedPrecedent.title}\nالمحكمة: ${selectedPrecedent.court_name}\nرقم الطعن: ${selectedPrecedent.appeal_number}\nالمبدأ: ${selectedPrecedent.summary_text}`);
+                  alert("تم نسخ المبدأ والقاعدة القانونية بنجاح!");
+                }}
+                className="flex items-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white hover:bg-amber-700 transition"
+              >
+                <Copy size={14} /> نسخ المبدأ للاستخدام المباشر
+              </button>
+
+              <div className="flex items-center gap-2">
+                {selectedPrecedent.pdf_file_url && (
+                  <a
+                    href={selectedPrecedent.pdf_file_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1 rounded-xl bg-red-600 px-3 py-2 text-xs font-bold text-white hover:bg-red-700 transition"
+                  >
+                    <FileText size={14} /> تحميل PDF
+                  </a>
+                )}
+                {selectedPrecedent.word_file_url && (
+                  <a
+                    href={selectedPrecedent.word_file_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-2 text-xs font-bold text-white hover:bg-blue-700 transition"
+                  >
+                    <FileSpreadsheet size={14} /> تحميل Word
+                  </a>
+                )}
+              </div>
+            </div>
           </div>
         </Modal>
       )}
