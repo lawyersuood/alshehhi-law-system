@@ -175,6 +175,7 @@ export interface Client {
   email: string;
   emirate: string;
   address: string;
+  taxNo?: string;
   feeAgreements?: FeeAgreement[];
 }
 
@@ -801,7 +802,94 @@ export const seedFeeAgreements: FeeAgreement[] = [];
 
 export const seedPayments: PaymentReceipt[] = [];
 
-const seedClients: Client[] = [];
+const seedClients: Client[] = [
+  { id: 101, name: "فوزية احمد عتيق علي المهيري", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 102, name: "خط السماء لصناعة عوادم السيارات- مؤسسة فردية", type: "شركة", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 103, name: "دار سمرا للكمبيوتر ذ.م.م Dar Samra Computer L.L.C", type: "شركة", idNo: "100331456200003", phone: "", email: "", emirate: "AE", address: "الإمارات", taxNo: "100331456200003" },
+  { id: 104, name: "بريدج لخدمات الترجمة القانونية", type: "شركة", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 105, name: "PAKIZA PROPERTIES L.L.C باكيزا للعقارات ش.ذ.م.م", type: "شركة", idNo: "105100974200003", phone: "", email: "", emirate: "دبي", address: "دبي", taxNo: "105100974200003" },
+  { id: 106, name: "JOAN DAYAN CASTILLO", type: "فرد", idNo: "", phone: "", email: "", emirate: "PH", address: "الفلبين" },
+  { id: 107, name: "ابو بكر عبدالعزيز طلحة", type: "فرد", idNo: "", phone: "", email: "", emirate: "SD", address: "السودان" },
+  { id: 108, name: "Anthropic, PBC", type: "شركة", idNo: "", phone: "", email: "", emirate: "دولي", address: "دولي" },
+  { id: 109, name: "محمد سلطان الشامسي", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 110, name: "احمد مختار عيد محمد", type: "فرد", idNo: "", phone: "", email: "", emirate: "EG", address: "مصر" },
+  { id: 111, name: "aly mohsmed aly mohamed rehan", type: "فرد", idNo: "", phone: "", email: "", emirate: "EG", address: "مصر" },
+  { id: 112, name: "بنك المارية المحلي", type: "شركة", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 113, name: "بوابة الابتكار للحلول التكنولوجية", type: "شركة", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 114, name: "شما جمال عبدالله سالم السويدي shamma jamal abdalla salim alsuwaidi", type: "فرد", idNo: "", phone: "", email: "shammaalsuwaidi5555@outlook.com", emirate: "AE", address: "الإمارات" },
+  { id: 115, name: "هونج كونج لتجارة أدوات التجميل ش.ذ.م.م HONG KONG COSMETICS TRADING L.L.C", type: "شركة", idNo: "104912672300003", phone: "", email: "hkcosmetics.pro@gmail.com", emirate: "AE", address: "الإمارات", taxNo: "104912672300003" },
+  { id: 116, name: "الاوائل لصناعة البلاستك ذ.م.م Al-Awail Plastic Manufacturing LLC", type: "شركة", idNo: "", phone: "", email: "Alawaelplasticindustry@gmail.com", emirate: "AE", address: "الإمارات" },
+  { id: 117, name: "محمد صدام محمد نواز Muhammad Saddam Muhammad Nawaz", type: "فرد", idNo: "", phone: "0501043543", email: "sadamnawaz23006@gmail.com", emirate: "AE", address: "الإمارات" },
+  { id: 118, name: "Day to day", type: "شركة", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 119, name: "دار القضاء الشارقة-Sharjah Court House", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "الشارقة" },
+  { id: 120, name: "مهند صالح- Muhannad Saleh", type: "فرد", idNo: "", phone: "", email: "Mohaneds45@hotmail.com", emirate: "GB", address: "المملكة المتحدة" },
+  { id: 121, name: "الأستاذ المحامي / هيثم احمد سيف العامري-Lawyer/Professor Haitham Ahmed Saif Al-Amri", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 122, name: "الصافي لتنقية مياه الشرب-Al Safi for drinking water purification", type: "شركة", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 123, name: "الهيئة العامة للمعاشات-General Authority for Pensions", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 124, name: "الشوؤن القانونية في دبي-Legal Affairs in Dubai", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" },
+  { id: 125, name: "الهيئة الاتحادية للضرائب-Federal Tax Authority", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 126, name: "FEDERAL TAX AUTHORITY", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 127, name: "ارامكس- Aramex", type: "شركة", idNo: "100212963100003", phone: "", email: "", emirate: "AE", address: "الإمارات", taxNo: "100212963100003" },
+  { id: 128, name: "name.com", type: "شركة", idNo: "", phone: "", email: "", emirate: "دولي", address: "دولي" },
+  { id: 129, name: "GOOGEL", type: "شركة", idNo: "", phone: "", email: "", emirate: "دولي", address: "دولي" },
+  { id: 130, name: "وزارة الموارد البشرية والتوطين-Ministry of Human Resources and Emiratization", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 131, name: "احمد طلال اليمن- Ahmed Talal Yemen", type: "فرد", idNo: "", phone: "", email: "", emirate: "LB", address: "لبنان" },
+  { id: 132, name: "دائرة التنمية الاقتصادية بشارقة-Sharjah Department of Economic Development", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "الشارقة" },
+  { id: 133, name: "بخيته صالح راشد راشد المنصوري-Bakhita Saleh Rashid Rashid Al Mansouri", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 134, name: "Usk zinc industries", type: "شركة", idNo: "", phone: "", email: "mohammadumer.khalid@hotmail.com", emirate: "AE", address: "الإمارات" },
+  { id: 135, name: "Elin foodstuff treding", type: "شركة", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 136, name: "PNP GLOBAL SUPPLY COMPANY LIMITED", type: "شركة", idNo: "", phone: "+84911330257", email: "michael.hua@pnpglobalsupply.com", emirate: "VN", address: "فيتنام" },
+  { id: 137, name: "دائرة التنمية الاقتصادية الشارقة-Sharjah Department of Economic Development", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "الشارقة" },
+  { id: 138, name: "Sharjah Electricity & Water Authority", type: "جهة حكومية", idNo: "100394961500003", phone: "", email: "", emirate: "الشارقة", address: "الشارقة", taxNo: "100394961500003" },
+  { id: 139, name: "محمد عمر بن خالد خالد بشير-Muhammad Omar bin Khalid Khalid Bashir", type: "فرد", idNo: "", phone: "", email: "", emirate: "PK", address: "باكستان" },
+  { id: 140, name: "نسرين انطونيوس ظاهر-Nasreen Antonios Daher", type: "فرد", idNo: "", phone: "", email: "", emirate: "SY", address: "سوريا" },
+  { id: 141, name: "خليفة محمد احمد بيبي الشحي Khalifa Mohammed Ahmed Bibi Al Shehhi", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 142, name: "بدر سعيد راشد سعيد الحبسي-Badr Saeed Rashid Saeed Al Habsi", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "رأس الخيمة" },
+  { id: 143, name: "Wafeq FZ LLC (Main)", type: "شركة", idNo: "100584752800003", phone: "", email: "", emirate: "AE", address: "الإمارات", taxNo: "100584752800003" },
+  { id: 144, name: "METHAQ TAKAFUL INSURANCE COMPANY", type: "شركة", idNo: "100000232700003", phone: "", email: "", emirate: "AE", address: "الإمارات", taxNo: "100000232700003" },
+  { id: 145, name: "MINISTRY OF JUSTICE", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 146, name: "du", type: "شركة", idNo: "100001397700003", phone: "", email: "", emirate: "AE", address: "الإمارات", taxNo: "100001397700003" },
+  { id: 147, name: "محمد احمد عبيد بن جرش الفلاسي-Mohammed Ahmed Obeid between Jarash Al-Fals", type: "فرد", idNo: "", phone: "", email: "M.falasi87@gmail.com", emirate: "AE", address: "الإمارات" },
+  { id: 148, name: "ناعومي كمال الدين ظريف-Naomi Kamal El-Din Zarif", type: "فرد", idNo: "", phone: "", email: "", emirate: "دولي", address: "دولي" },
+  { id: 149, name: "عزة راشد سعيد ساعد الشميلي-Azza Rashid Saeed Saad Al-Shumaili", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 150, name: "محمد صالح-Muhammad Saleh", type: "فرد", idNo: "", phone: "", email: "", emirate: "دولي", address: "دولي" },
+  { id: 151, name: "مريم محمد راشد-Maryam Mohammed Rashid", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 152, name: "نور عماد الدين إبراهيم-Nour Emad El-Din Ibrahim", type: "فرد", idNo: "", phone: "", email: "", emirate: "دولي", address: "دولي" },
+  { id: 153, name: "USK METALS L L C", type: "شركة", idNo: "", phone: "", email: "", emirate: "دولي", address: "دولي" },
+  { id: 154, name: "زينب بنت عبدالله بن غلوم البلوشية-Zainab bint Abdullah bin Ghloum Al Balushi", type: "فرد", idNo: "", phone: "", email: "", emirate: "دولي", address: "دولي" },
+  { id: 155, name: "خالد خليفة عبيد الغول-Khaled Khalifa Obaid Al-Ghul", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 156, name: "عمر مصطفى عيد محمد-Omar Mustafa Eid Muhammad", type: "فرد", idNo: "", phone: "", email: "", emirate: "دولي", address: "دولي" },
+  { id: 157, name: "عبدالله محمد عبدالله المازمي-Abdullah Mohammed Abdullah Al Mazmi", type: "فرد", idNo: "", phone: "", email: "", emirate: "دولي", address: "دولي" },
+  { id: 158, name: "أمير حسين جواد اقاباباني-Amir Hussein Jawad Aghababani", type: "فرد", idNo: "", phone: "", email: "", emirate: "IR", address: "إيران" },
+  { id: 159, name: "عذاري سعيد محمد الظنحاني Adhari Saeed Mohammed Al Dhanhani", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 160, name: "يعقوب حسن أحمد البنا-Yaqub Hassan Ahmed Al-Banna", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 161, name: "علا تحسين عبدالرؤف الفارس-Alaa Tahseen Abdul Raouf Al-Fares", type: "فرد", idNo: "", phone: "", email: "", emirate: "DM", address: "دومينيكا" },
+  { id: 162, name: "نادية يونس عثمان- Nadia Younes Othman", type: "فرد", idNo: "", phone: "", email: "", emirate: "دولي", address: "دولي" },
+  { id: 163, name: "احمد راشد الشميلي- Ahmed Rashid Al-Shumaili", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 164, name: "امينة آل بيات Amina Al-Bayat", type: "فرد", idNo: "", phone: "", email: "", emirate: "دولي", address: "دولي" },
+  { id: 165, name: "عمر مصطفى عيد محمد (تابي ) Omar Mustafa Eid Muhammad (Tabi)", type: "فرد", idNo: "", phone: "", email: "", emirate: "دولي", address: "دولي" },
+  { id: 166, name: "خالد بشير أوان محمد بشير اختر Khaled Bashir Awan Mohammed Bashir Akhtar", type: "فرد", idNo: "", phone: "", email: "", emirate: "PK", address: "باكستان" },
+  { id: 167, name: "إبراهيم محسن قاسم عبدالله Ibrahim Mohsen Qasim Abdullah", type: "فرد", idNo: "", phone: "", email: "", emirate: "دولي", address: "دولي" },
+  { id: 168, name: "شركة دو  Du company", type: "شركة", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 169, name: "sewa", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "الشارقة" },
+  { id: 170, name: "فاروق احمد غلام اكبر-Farooq Ahmed Ghulam Akbar", type: "فرد", idNo: "", phone: "", email: "", emirate: "PK", address: "باكستان" },
+  { id: 171, name: "ياروسلافا زولينا Yaroslava Zolina", type: "فرد", idNo: "", phone: "", email: "", emirate: "UA", address: "أوكرانيا" },
+  { id: 172, name: "راشد خميس فايز خميس مبارك-Rashid Khamis Fayez Khamis Mubarak", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 173, name: "محمد عبدالقادر سليمان حامد Mohammed Abdul Qader Suleiman Hamed", type: "فرد", idNo: "", phone: "", email: "", emirate: "JO", address: "الأردن" },
+  { id: 174, name: "صلاح حسين حسن تهلك Salah Hussein Hassan perished", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 175, name: "خميس سعيد سااعد الحبسي Khamis Saeed Saad Al Habsi", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 176, name: "كمال سالم راشد اليماحي Kamal Salem Rashid Al-Yamahi", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 177, name: "محمد خليفة عبدالله جاسم Mohammed Khalifa Abdullah Jassim", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 178, name: "كمال موسي حبيب حسن اليوسف Kamal Moussa Habib Hassan Al-Youssef", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 179, name: "محمود محمد غلاونجي Mahmoud Muhammad Ghalaounji", type: "فرد", idNo: "", phone: "", email: "", emirate: "EG", address: "مصر" },
+  { id: 180, name: "شيماء سعيد راشد ساعد الحبسي-Shaima Saeed Rashid Saad Al Habsi", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 181, name: "سامي محروس عبدالغني مشعل-Sami Mahrous Abdelghani Mashal", type: "فرد", idNo: "", phone: "", email: "", emirate: "EG", address: "مصر" },
+  { id: 182, name: "رافي اكوب قره بتيان-Rafi Akop Karabetian", type: "فرد", idNo: "", phone: "", email: "", emirate: "LB", address: "لبنان" },
+  { id: 183, name: "وزارة العدل- Ministry of Justice", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 184, name: "مؤسسة رواد-Pioneers Foundation", type: "شركة", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 185, name: "عبدالله الرستماني للعقارات-Abdullah Al Rostamani Real Estate", type: "شركة", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 186, name: "إبراهيم علي عباس بيشوه البلوشي-Ibrahim Ali Abbas Bishouh Al-Balushi", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" }
+];
 
 const seedCases: CaseItem[] = [];
 
@@ -851,60 +939,7 @@ const seedEmployeeExpenses: EmployeeExpense[] = [];
 
 const seedCourtContacts: CourtContact[] = [];
 
-const seedAuditLogs: AuditLogEntry[] = [
-  {
-    id: "audit-101",
-    timestamp: "2026-08-10T10:12:00.000Z",
-    userName: "سعود أحمد الشحي",
-    userEmail: "info@lawyersuood.com",
-    userRole: "مدير النظام / الشريك الرئيسي",
-    actionType: "PERMISSION_CHANGE",
-    targetModule: "المستخدمون والصلاحيات",
-    targetId: "usr-102",
-    targetTitle: "المستخدم: المستشار أحمد علي",
-    details: "تحديث مصفوفة الصلاحيات وإتاحة الوصول لقسم إدارة الكادر والرواتب HR",
-    ipAddress: "192.168.1.10"
-  },
-  {
-    id: "audit-102",
-    timestamp: "2026-08-10T09:45:15.000Z",
-    userName: "أحمد عبد الله العلي",
-    userEmail: "ahmed.ali@law.ae",
-    userRole: "مستشار قانوني أول",
-    actionType: "STATUS_CHANGE",
-    targetModule: "القضايا",
-    targetId: "case-102",
-    targetTitle: "قضية رقم 2026/884 تجاري",
-    details: "تعديل حالة القضية من (متداولة) إلى (محجوزة للحكم)",
-    ipAddress: "192.168.1.15"
-  },
-  {
-    id: "audit-103",
-    timestamp: "2026-08-09T16:20:00.000Z",
-    userName: "فاطمة محمد الملا",
-    userEmail: "fatima.m@law.ae",
-    userRole: "محاسب المكتب والمالية",
-    actionType: "DELETE",
-    targetModule: "الفواتير والضريبة",
-    targetId: "inv-2026-009",
-    targetTitle: "فاتورة ضريبية #INV-2026-009",
-    details: "حذف فاتورة ملغاة بقيمة 12,500 درهم إماراتي شاملة الضريبة بناءً على تسوية الموكل",
-    ipAddress: "192.168.1.22"
-  },
-  {
-    id: "audit-104",
-    timestamp: "2026-08-08T11:05:30.000Z",
-    userName: "مريم سالم الكعبي",
-    userEmail: "maryam.k@law.ae",
-    userRole: "مسؤول سكرتارية وتنسيق",
-    actionType: "UPDATE",
-    targetModule: "المستندات والوكالات",
-    targetId: "poa-55",
-    targetTitle: "وكالة رقم 2024/9912",
-    details: "تعديل تاريخ انتهاء الوكالة وتحديث رقم القيد المعتمد بمحاكم دبي",
-    ipAddress: "192.168.1.30"
-  }
-];
+const seedAuditLogs: AuditLogEntry[] = [];
 
 export interface LegalPrecedent {
   id: string | number;
@@ -920,53 +955,7 @@ export interface LegalPrecedent {
   created_at?: string;
 }
 
-const seedLegalPrecedents: LegalPrecedent[] = [
-  {
-    id: "prec-1",
-    title: "بطلان الشرط المانع من التعويض في عقود المقاولات عند الخطأ الجسيم",
-    court_name: "المحكمة الاتحادية العليا",
-    ruling_year: 2024,
-    category: "تجاري",
-    circuit_name: "الدائرة التجارية والمدنية",
-    appeal_number: "طعن رقم 412 لسنة 2024 تجاري",
-    summary_text: "لا يجوز الاتفاق على الاعفاء من المسؤولية عن الفعل الضار أو الخطأ الجسيم في عقود المقاولات والتوريد، ويقع باطلاً كل شرط يقضي بغير ذلك عملاً بأحكام المادتين 296 و878 من قانون المعاملات المدنية الاتحادي.",
-    pdf_file_url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-    created_at: "2026-01-15T10:00:00.000Z"
-  },
-  {
-    id: "prec-2",
-    title: "عدم جواز إنهاء عقد العمل غير المحدود المدة تعسفياً بدون إخطار أو سبب مشروع",
-    court_name: "محكمة تمييز دبي",
-    ruling_year: 2023,
-    category: "عمالي",
-    circuit_name: "دائرة العمال والتأمين",
-    appeal_number: "طعن رقم 189 لسنة 2023 عمالي",
-    summary_text: "إنهاء خدمة العامل بسبب المطالبة بحقوقه العمالية أو تقديم شكوى لوزارة الموارد البشرية والتوطين يعتبر إنهاءً تعسفياً موجباً للتعويض المستقل عما يوازي أجر ثلاثة أشهر كحد أقصى وفق قانون تنظيم علاقات العمل الصادر بالمرسوم بقانون اتحادي رقم 33 لسنة 2021.",
-    created_at: "2026-02-10T11:30:00.000Z"
-  },
-  {
-    id: "prec-3",
-    title: "سقوط الحق في الفسخ في العقود العقارية عند فوات مهلة إخطار الوفاء بالتزامات التطوير",
-    court_name: "محكمة نقض أبوظبي",
-    ruling_year: 2024,
-    category: "عقاري",
-    circuit_name: "دائرة البيوع والعقار",
-    appeal_number: "طعن رقم 775 لسنة 2024 عقاري",
-    summary_text: "تخلف المشتري عن سداد الأقساط المتبقية لا يمنح المطور عقارياً حق الفسخ التلقائي دون توجيه إعذار رسمي محدد بالمدة عبر الجهة التنظيمية المختصة (دائرة الأراضي والبلديات) ومنح المهلة القانونية المقررة.",
-    created_at: "2026-03-05T09:15:00.000Z"
-  },
-  {
-    id: "prec-4",
-    title: "مسؤولية الشريك المدير في الشركة ذات المسؤولية المحدودة عن التصرفات الضارة بمال الشركة",
-    court_name: "محكمة تمييز رأس الخيمة",
-    ruling_year: 2022,
-    category: "تجاري",
-    circuit_name: "الدائرة التجارية الاستئنافية",
-    appeal_number: "طعن رقم 98 لسنة 2022 تجاري",
-    summary_text: "مسؤولية المدير أو الشريك المدير في الشركة ذات المسؤولية المحدودة مسؤولية شخصية ومباشرة عن أعمال الغش وإساءة استعمال السلطة أو مخالفتها لأحكام قانون الشركات التجارية ولا تحول دونها تبرئة ذمته من الجمعية العمومية.",
-    created_at: "2026-04-12T14:20:00.000Z"
-  }
-];
+const seedLegalPrecedents: LegalPrecedent[] = [];
 
 const DOC_TEMPLATES: DocTemplate[] = [
   {
@@ -2290,6 +2279,57 @@ export default function App() {
   const [selectedPrecedent, setSelectedPrecedent] = useState<LegalPrecedent | null>(null);
 
   useEffect(() => { saveStorage("firm_legal_precedents", precedents); }, [precedents]);
+
+  // تنظيف تلقائي فوري لأي بيانات تجريبية سابقة قديمة مخزنة في متصفح المستخدم
+  useEffect(() => {
+    try {
+      const PURGE_KEY = "firm_purged_all_demo_data_v2";
+      if (!localStorage.getItem(PURGE_KEY)) {
+        const keysToRemove = [
+          "firm_employees",
+          "firm_legal_precedents",
+          "firm_docs",
+          "firm_poas",
+          "firm_kyc",
+          "firm_cases",
+          "firm_hearings",
+          "firm_tasks",
+          "firm_invoices",
+          "firm_audit_logs",
+          "firm_leave_requests",
+          "firm_employee_expenses",
+          "firm_fee_agreements",
+          "firm_payments"
+        ];
+        keysToRemove.forEach((k) => localStorage.removeItem(k));
+        localStorage.setItem(PURGE_KEY, "true");
+
+        setEmployees([]);
+        setPrecedents([]);
+        setDocs([]);
+        setPoas([]);
+        setKyc([]);
+        setCases([]);
+        setHearings([]);
+        setTasks([]);
+        setInvoices([]);
+        setAuditLogs([]);
+        setLeaveRequests([]);
+        setEmployeeExpenses([]);
+        setFeeAgreements([]);
+        setPayments([]);
+      }
+    } catch (e) {
+      console.warn("Auto purge error:", e);
+    }
+  }, []);
+
+  // حماية قائمة الموكلين المحمية وضمان وجودها دائماً ما لم يقم المدير بحذف عنصر منها
+  useEffect(() => {
+    if (!clients || clients.length === 0) {
+      setClients(seedClients);
+    }
+  }, []);
 
   // Fetch precedents from Supabase table if available
   useEffect(() => {
