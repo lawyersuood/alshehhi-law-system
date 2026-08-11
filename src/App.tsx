@@ -1,5 +1,8 @@
 import React, { useState, useMemo, useEffect } from "react";
 import Logo from "./components/Logo";
+import BookingConsultationView from "./components/BookingConsultationView";
+import PublicConsultationPage, { BookingRecord } from "./components/PublicConsultationPage";
+import AdminConsultationsView from "./components/AdminConsultationsView";
 import { supabase, sendWhatsAppViaEdgeFunction } from "./supabaseClient";
 import {
   Scale, LayoutDashboard, Briefcase, Users, CalendarDays, ListChecks,
@@ -9,7 +12,7 @@ import {
   Check, Minus, Info, UserPlus, ShieldAlert, Edit2, User, RefreshCw,
   Send, MessageSquare, Share2, ExternalLink, FileText, CheckCheck, SendHorizontal, Filter,
   Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download, Database, Code, LogOut,
-  Inbox, Paperclip, RotateCw, QrCode, Settings, History, BookOpen, UploadCloud
+  Inbox, Paperclip, RotateCw, QrCode, Settings, History, BookOpen, UploadCloud, Video
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -940,6 +943,70 @@ const seedEmployeeExpenses: EmployeeExpense[] = [];
 const seedCourtContacts: CourtContact[] = [];
 
 const seedAuditLogs: AuditLogEntry[] = [];
+
+const seedConsultationBookings: BookingRecord[] = [
+  {
+    id: "b-101",
+    reference: "SHH-MEET-883921",
+    clientName: "خليفة سالم الهاملي",
+    whatsapp: "+971501234567",
+    email: "khalifa.alhamli@example.ae",
+    issueSummary: "نزاع حول إنهاء عقد تطوير عقاري بدبي وسحب المشروع مع طلب استرداد دفعة مقدمة قدرها 850 ألف درهم.",
+    duration: 60,
+    date: new Date().toISOString().split("T")[0],
+    timeSlot: "03:30 PM",
+    amountPaid: 945,
+    meetUrl: "https://meet.google.com/suood-law-khalifa-883",
+    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+    status: "pending_assignment",
+    attachmentName: "العقد_والإشعارات.pdf",
+    aiSummary: {
+      qualification: "نزاع عقاري وتطوير تجاري (مركز فض المنازعات الإيجارية ودائرة الأراضي بدبي)",
+      facts: [
+        "سداد الموكل دفعة مقدمة قدرها 850 ألف درهم لمطور عقاري دون البدء في أعمال البناء.",
+        "تسلم الموكل إشعاراً بسحب المشروع أو تأجيله دون تقديم ضمانات بنكية أو حلول بديلة.",
+        "الرغبة في فسخ العقد وتأكيد الحق في استرداد كافة المبالغ مع الفوائد والتعويض."
+      ],
+      jurisdiction: "مركز فض المنازعات الإيجارية بدبي / دائرة الأراضي والأملاك",
+      keyQuestions: [
+        "هل العقد مسجل رسمياً في نظام المطورين العقاريين وحساب الضمان (Escrow Account)؟",
+        "هل صدر إشعار رسمي بالفسخ أو التوقف من دائرة الأراضي والأملاك؟",
+        "ما هي المواعيد المحددة للتسليم والمستندات المالية المسلمة للمطور؟"
+      ]
+    }
+  },
+  {
+    id: "b-102",
+    reference: "SHH-MEET-449102",
+    clientName: "فاطمة محمد المزروعي",
+    whatsapp: "+971559876543",
+    email: "fatima.almazrouei@gmail.com",
+    issueSummary: "استفسار عمالي حول إلغاء تأشيرة العمل وتصفية المستحقات المالية بعد خدمة 6 سنوات براتب أساسي 25 ألف درهم.",
+    duration: 30,
+    date: new Date().toISOString().split("T")[0],
+    timeSlot: "05:00 PM",
+    amountPaid: 525,
+    meetUrl: "https://meet.google.com/suood-law-fatima-449",
+    createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
+    status: "assigned",
+    assignedLawyerId: 1,
+    assignedLawyerName: "المحامي سعود أحمد الشحي",
+    aiSummary: {
+      qualification: "منازعة عمالية (قانون تنظيم علاقات العمل الاتحادي رقم 33 لسنة 2021)",
+      facts: [
+        "عملت الموكلة لمدة 6 سنوات لدى الشركة براتب أساسي 25,000 درهم وشامل 38,000 درهم.",
+        "تم إنهاء الخدمات دون منح مهلة الإنذار كاملة مع امتناع الشركة عن تسليم مكافأة نهاية الخدمة.",
+        "حاجة الموكلة لحساب مكافأة نهاية الخدمة وحرمان الإنذار وقيد الشكوى لدى وزارة العمل."
+      ],
+      jurisdiction: "المحكمة العمالية الابتدائية / وزارة الموارد البشرية والتوطين (موهري)",
+      keyQuestions: [
+        "هل تم تقديم الشكوى العمالية رسمياً عبر تطبيق وزارة العمل (MOHRE)؟",
+        "هل وقعت الموكلة على أي براءة ذمة أو استلام للبدلات؟",
+        "ما هي رصيد الإجازات السنوية غير المستفاد منها؟"
+      ]
+    }
+  }
+];
 
 export interface LegalPrecedent {
   id: string | number;
@@ -2146,6 +2213,23 @@ function saveStorage<T>(key: string, value: T): void {
 
 // ============================================================
 export default function App() {
+  const [currentRoute, setCurrentRoute] = useState<"admin" | "public_consultation">(() => {
+    if (typeof window !== "undefined") {
+      if (window.location.pathname === "/consultation" || window.location.search.includes("page=consultation")) {
+        return "public_consultation";
+      }
+    }
+    return "admin";
+  });
+
+  const [consultationBookings, setConsultationBookings] = useState<BookingRecord[]>(() =>
+    loadStorage("firm_consultation_bookings", seedConsultationBookings)
+  );
+
+  useEffect(() => {
+    saveStorage("firm_consultation_bookings", consultationBookings);
+  }, [consultationBookings]);
+
   const [tab, setTab] = useState("dashboard");
   const [users, setUsers] = useState<UserItem[]>(() => {
     const loaded = loadStorage<UserItem[]>("firm_users", seedUsers);
@@ -4739,6 +4823,7 @@ export default function App() {
   const NAV = [
     { id: "dashboard", label: "لوحة التحكم", icon: LayoutDashboard },
     { id: "cases", label: "القضايا", icon: Briefcase },
+    { id: "booking_consultation", label: "حجز استشارة مرئية", icon: Video },
     { id: "clients", label: "الموكلين", icon: Users },
     { id: "hearings", label: "الجلسات والرول", icon: CalendarDays },
     { id: "inapp_email", label: "البريد الإلكتروني المدمج", icon: Mail },
@@ -4771,6 +4856,23 @@ export default function App() {
   );
 
   const selectedCase = cases.find((c) => c.id === caseView);
+
+  if (currentRoute === "public_consultation") {
+    return (
+      <PublicConsultationPage
+        onNewBooking={(newBooking) => {
+          setConsultationBookings((prev) => [newBooking, ...prev]);
+          logAuditAction(
+            "CREATE",
+            "استشارات مرئية",
+            `حجز جديد #${newBooking.reference}`,
+            `تم حجز استشارة مرئية أونلاين من الموكل: ${newBooking.clientName}`
+          );
+        }}
+        onNavigateToAdmin={() => setCurrentRoute("admin")}
+      />
+    );
+  }
 
   if (!isLoggedIn) {
     return (
@@ -4901,6 +5003,11 @@ export default function App() {
                     {leaveRequests.filter(l => l.status === "PENDING").length + employeeExpenses.filter(e => e.status === "PENDING").length}
                   </span>
                 )}
+                {id === "booking_consultation" && consultationBookings.filter(b => b.status === "pending_assignment").length > 0 && (
+                  <span className="mr-auto rounded-full bg-amber-400 text-slate-950 px-2 text-xs font-black animate-pulse">
+                    {consultationBookings.filter(b => b.status === "pending_assignment").length} جديد
+                  </span>
+                )}
                 {id === "users" && pendingUsers.length > 0 && isAdmin ? (
                   <span className="mr-auto rounded-full bg-[#e5c388] text-slate-950 px-2 py-0.5 text-[11px] font-bold animate-pulse">
                     {pendingUsers.length} معلق
@@ -4910,6 +5017,17 @@ export default function App() {
                 ) : null}
               </button>
             ))}
+
+            <button
+              onClick={() => setCurrentRoute("public_consultation")}
+              className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-xs font-bold text-teal-100 bg-[#0c403d] border border-teal-600/40 hover:bg-[#0e4845] transition mt-2"
+            >
+              <div className="flex items-center gap-2">
+                <Globe size={16} className="text-[#e5c388]" />
+                <span>صفحة العوام للحجز (/consultation)</span>
+              </div>
+              <ChevronLeft size={14} className="text-[#e5c388]" />
+            </button>
 
             {/* الإعدادات الفنية حصرية للمدير الأعلى (المحامي سعود) */}
             {isSuperAdmin && (
@@ -9365,6 +9483,43 @@ export default function App() {
                   </div>
                 )}
               </div>
+            )}
+
+            {/* ================= حجز استشارة مرئية والتعيين ================= */}
+            {tab === "booking_consultation" && (
+              <AdminConsultationsView
+                bookings={consultationBookings}
+                employees={users.map((u) => ({
+                  id: u.id,
+                  name: u.name,
+                  jobTitle: u.jobTitle || u.roleTitle || "محامي ومستشار"
+                }))}
+                onAssignLawyer={(bookingId, lawyerId, lawyerName) => {
+                  setConsultationBookings((prev) =>
+                    prev.map((b) =>
+                      b.id === bookingId
+                        ? {
+                            ...b,
+                            status: "assigned",
+                            assignedLawyerId: lawyerId,
+                            assignedLawyerName: lawyerName
+                          }
+                        : b
+                    )
+                  );
+                  logAuditAction(
+                    "UPDATE",
+                    "استشارات مرئية",
+                    `تعيين محامٍ للطلب #${bookingId}`,
+                    `تم تحويل الاستشارة ورابط Google Meet إلى المحامي: ${lawyerName}`
+                  );
+                }}
+                onUpdateStatus={(bookingId, status) => {
+                  setConsultationBookings((prev) =>
+                    prev.map((b) => (b.id === bookingId ? { ...b, status } : b))
+                  );
+                }}
+              />
             )}
           </>
         )}
