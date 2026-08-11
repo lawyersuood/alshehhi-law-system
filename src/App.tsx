@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import Logo from "./components/Logo";
 import BookingConsultationView from "./components/BookingConsultationView";
-import PublicConsultationPage, { BookingRecord } from "./components/PublicConsultationPage";
+import PublicConsultationPage, { BookingRecord, ConsultationSettings } from "./components/PublicConsultationPage";
 import AdminConsultationsView from "./components/AdminConsultationsView";
 import { supabase, sendWhatsAppViaEdgeFunction } from "./supabaseClient";
 import {
@@ -2229,6 +2229,24 @@ export default function App() {
   useEffect(() => {
     saveStorage("firm_consultation_bookings", consultationBookings);
   }, [consultationBookings]);
+
+  const defaultConsultationSettings: ConsultationSettings = {
+    price30: 525,
+    price60: 945,
+    availableSlots: [
+      "09:00 AM", "10:30 AM", "12:00 PM", "02:00 PM",
+      "03:30 PM", "05:00 PM", "06:30 PM", "08:00 PM"
+    ],
+    blockedDates: []
+  };
+
+  const [consultationSettings, setConsultationSettings] = useState<ConsultationSettings>(() =>
+    loadStorage("firm_consultation_settings", defaultConsultationSettings)
+  );
+
+  useEffect(() => {
+    saveStorage("firm_consultation_settings", consultationSettings);
+  }, [consultationSettings]);
 
   const [tab, setTab] = useState("dashboard");
   const [users, setUsers] = useState<UserItem[]>(() => {
@@ -4860,6 +4878,7 @@ export default function App() {
   if (currentRoute === "public_consultation") {
     return (
       <PublicConsultationPage
+        settings={consultationSettings}
         onNewBooking={(newBooking) => {
           setConsultationBookings((prev) => [newBooking, ...prev]);
           logAuditAction(
@@ -4869,7 +4888,6 @@ export default function App() {
             `تم حجز استشارة مرئية أونلاين من الموكل: ${newBooking.clientName}`
           );
         }}
-        onNavigateToAdmin={() => setCurrentRoute("admin")}
       />
     );
   }
@@ -9519,6 +9537,17 @@ export default function App() {
                     prev.map((b) => (b.id === bookingId ? { ...b, status } : b))
                   );
                 }}
+                settings={consultationSettings}
+                onUpdateSettings={(newSettings) => {
+                  setConsultationSettings(newSettings);
+                  logAuditAction(
+                    "UPDATE",
+                    "استشارات مرئية",
+                    "تحديث إعدادات الأسعار والمواعيد",
+                    `تم تعديل أسعار المواعيد أونلاين (30د: ${newSettings.price30}درهم، 60د: ${newSettings.price60}درهم)`
+                  );
+                }}
+                onOpenPublicPage={() => setCurrentRoute("public_consultation")}
               />
             )}
           </>
