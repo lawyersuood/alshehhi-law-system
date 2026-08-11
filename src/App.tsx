@@ -944,69 +944,7 @@ const seedCourtContacts: CourtContact[] = [];
 
 const seedAuditLogs: AuditLogEntry[] = [];
 
-const seedConsultationBookings: BookingRecord[] = [
-  {
-    id: "b-101",
-    reference: "SHH-MEET-883921",
-    clientName: "خليفة سالم الهاملي",
-    whatsapp: "+971501234567",
-    email: "khalifa.alhamli@example.ae",
-    issueSummary: "نزاع حول إنهاء عقد تطوير عقاري بدبي وسحب المشروع مع طلب استرداد دفعة مقدمة قدرها 850 ألف درهم.",
-    duration: 60,
-    date: new Date().toISOString().split("T")[0],
-    timeSlot: "03:30 PM",
-    amountPaid: 945,
-    meetUrl: "https://meet.google.com/suood-law-khalifa-883",
-    createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
-    status: "pending_assignment",
-    attachmentName: "العقد_والإشعارات.pdf",
-    aiSummary: {
-      qualification: "نزاع عقاري وتطوير تجاري (مركز فض المنازعات الإيجارية ودائرة الأراضي بدبي)",
-      facts: [
-        "سداد الموكل دفعة مقدمة قدرها 850 ألف درهم لمطور عقاري دون البدء في أعمال البناء.",
-        "تسلم الموكل إشعاراً بسحب المشروع أو تأجيله دون تقديم ضمانات بنكية أو حلول بديلة.",
-        "الرغبة في فسخ العقد وتأكيد الحق في استرداد كافة المبالغ مع الفوائد والتعويض."
-      ],
-      jurisdiction: "مركز فض المنازعات الإيجارية بدبي / دائرة الأراضي والأملاك",
-      keyQuestions: [
-        "هل العقد مسجل رسمياً في نظام المطورين العقاريين وحساب الضمان (Escrow Account)؟",
-        "هل صدر إشعار رسمي بالفسخ أو التوقف من دائرة الأراضي والأملاك؟",
-        "ما هي المواعيد المحددة للتسليم والمستندات المالية المسلمة للمطور؟"
-      ]
-    }
-  },
-  {
-    id: "b-102",
-    reference: "SHH-MEET-449102",
-    clientName: "فاطمة محمد المزروعي",
-    whatsapp: "+971559876543",
-    email: "fatima.almazrouei@gmail.com",
-    issueSummary: "استفسار عمالي حول إلغاء تأشيرة العمل وتصفية المستحقات المالية بعد خدمة 6 سنوات براتب أساسي 25 ألف درهم.",
-    duration: 30,
-    date: new Date().toISOString().split("T")[0],
-    timeSlot: "05:00 PM",
-    amountPaid: 525,
-    meetUrl: "https://meet.google.com/suood-law-fatima-449",
-    createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
-    status: "assigned",
-    assignedLawyerId: 1,
-    assignedLawyerName: "المحامي سعود أحمد الشحي",
-    aiSummary: {
-      qualification: "منازعة عمالية (قانون تنظيم علاقات العمل الاتحادي رقم 33 لسنة 2021)",
-      facts: [
-        "عملت الموكلة لمدة 6 سنوات لدى الشركة براتب أساسي 25,000 درهم وشامل 38,000 درهم.",
-        "تم إنهاء الخدمات دون منح مهلة الإنذار كاملة مع امتناع الشركة عن تسليم مكافأة نهاية الخدمة.",
-        "حاجة الموكلة لحساب مكافأة نهاية الخدمة وحرمان الإنذار وقيد الشكوى لدى وزارة العمل."
-      ],
-      jurisdiction: "المحكمة العمالية الابتدائية / وزارة الموارد البشرية والتوطين (موهري)",
-      keyQuestions: [
-        "هل تم تقديم الشكوى العمالية رسمياً عبر تطبيق وزارة العمل (MOHRE)؟",
-        "هل وقعت الموكلة على أي براءة ذمة أو استلام للبدلات؟",
-        "ما هي رصيد الإجازات السنوية غير المستفاد منها؟"
-      ]
-    }
-  }
-];
+const seedConsultationBookings: BookingRecord[] = [];
 
 export interface LegalPrecedent {
   id: string | number;
@@ -2222,9 +2160,10 @@ export default function App() {
     return "admin";
   });
 
-  const [consultationBookings, setConsultationBookings] = useState<BookingRecord[]>(() =>
-    loadStorage("firm_consultation_bookings", seedConsultationBookings)
-  );
+  const [consultationBookings, setConsultationBookings] = useState<BookingRecord[]>(() => {
+    const loaded = loadStorage<BookingRecord[]>("firm_consultation_bookings", seedConsultationBookings);
+    return (loaded || []).filter((b) => b.id !== "b-101" && b.id !== "b-102");
+  });
 
   useEffect(() => {
     saveStorage("firm_consultation_bookings", consultationBookings);
@@ -2426,12 +2365,7 @@ export default function App() {
     }
   }, []);
 
-  // حماية قائمة الموكلين المحمية وضمان وجودها دائماً ما لم يقم المدير بحذف عنصر منها
-  useEffect(() => {
-    if (!clients || clients.length === 0) {
-      setClients(seedClients);
-    }
-  }, []);
+  // حفظ قائمة الموكلين وإدارة التعديلات والتحديثات من الذاكرة المحلية (localStorage)
 
   // Fetch precedents from Supabase table if available
   useEffect(() => {
