@@ -12,13 +12,15 @@ import {
   Check, Minus, Info, UserPlus, ShieldAlert, Edit2, User, RefreshCw,
   Send, MessageSquare, Share2, ExternalLink, FileText, CheckCheck, SendHorizontal, Filter,
   Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download, Database, Code, LogOut,
-  Inbox, Paperclip, RotateCw, QrCode, Settings, History, BookOpen, UploadCloud, Video
+  Inbox, Paperclip, RotateCw, QrCode, Settings, History, BookOpen, UploadCloud, Video,
+  Sparkles, Bot, Zap, PlusCircle, Layers
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart, Pie, Cell, Legend
 } from "recharts";
 import html2pdf from "html2pdf.js";
+import * as XLSX from "xlsx";
 
 /* ============================================================
    نظام إدارة مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية
@@ -154,6 +156,7 @@ export interface FeeAgreementInstallment {
   dueDate: string;
   amount: number;
   status?: "مستحق" | "مدفوع" | "متأخر";
+  paidOnSigning?: boolean;
 }
 
 export interface FeeAgreement {
@@ -276,6 +279,16 @@ export interface KycItem {
   status: string;
   lastReview: string;
   notes: string;
+}
+
+export interface KycWatchlistItem {
+  id: number;
+  fullName: string;
+  idNo?: string;
+  type: string;
+  reason: string;
+  nationality?: string;
+  addedDate: string;
 }
 
 export interface NotificationLog {
@@ -915,6 +928,36 @@ const FUND_SOURCES = ["راتب / دخل وظيفي", "نشاط تجاري", "ع
 
 const seedKyc: KycItem[] = [];
 
+const seedKycWatchlist: KycWatchlistItem[] = [
+  {
+    id: 1,
+    fullName: "جون سميث ريتشارد",
+    idNo: "PASSPORT-UK-987123",
+    type: "شخص منكشف سياسياً (PEP)",
+    reason: "مسؤول حكومي سابق عالي المخاطر - إفصاح مالي إجباري",
+    nationality: "المملكة المتحدة",
+    addedDate: "2025-01-15"
+  },
+  {
+    id: 2,
+    fullName: "مؤسسة الأفق الدولية المحظورة",
+    idNo: "CR-992011",
+    type: "قائمة حظر عقوبات دولية / محلية",
+    reason: "إدراج في قوائم الحظر والتحفظ على الأموال - قرار مكافحة غسل الأموال",
+    nationality: "أخرى",
+    addedDate: "2025-03-10"
+  },
+  {
+    id: 3,
+    fullName: "طارق عبد الله المنصوري",
+    idNo: "784-1982-991823-1",
+    type: "محظور التعامل تجارياً / إدارياً",
+    reason: "صدور أحكام منع تعامل نهائية واشتباه مخالفة الامتثال",
+    nationality: "الإمارات",
+    addedDate: "2025-06-20"
+  }
+];
+
 const seedNotifications: NotificationLog[] = [];
 
 const OFFICE_TRN = "100492837400003";
@@ -1082,6 +1125,39 @@ const nextReviewDate = (lastReview: string, risk: string) => {
 const fmtAED = (n: number) => new Intl.NumberFormat("ar-AE", { style: "currency", currency: "AED", maximumFractionDigits: 0 }).format(n);
 const fmtDate = (d: string) => d ? new Date(d + "T00:00:00").toLocaleDateString("ar-AE", { year: "numeric", month: "long", day: "numeric" }) : "—";
 const daysUntil = (d: string) => Math.ceil((new Date(d).getTime() - new Date(todayISO()).getTime()) / 86400000);
+
+const normalizeArabicName = (str: string) => {
+  if (!str) return "";
+  return str
+    .toLowerCase()
+    .replace(/[أإآءئؤ]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/[\u064B-\u0652]/g, "")
+    .replace(/[^a-z0-9\u0600-\u06FF]/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+};
+
+const findMatchingClientByName = (clientsList: Client[], searchName: string): Client | undefined => {
+  if (!searchName || !searchName.trim()) return undefined;
+  const targetNorm = normalizeArabicName(searchName);
+  if (!targetNorm) return undefined;
+
+  let found = clientsList.find((c) => {
+    const cNorm = normalizeArabicName(c.name);
+    return cNorm === targetNorm || cNorm.includes(targetNorm) || targetNorm.includes(cNorm);
+  });
+  if (found) return found;
+
+  const words = targetNorm.split(" ").filter((w) => w.length > 1);
+  if (words.length >= 2) {
+    const mainTwo = words.slice(0, 2).join(" ");
+    found = clientsList.find((c) => normalizeArabicName(c.name).includes(mainTwo));
+    if (found) return found;
+  }
+
+  return undefined;
+};
 
 const statusColor = (s: string) => ({
   "قيد النظر": "bg-sky-100 text-sky-700",
@@ -2223,6 +2299,7 @@ export default function App() {
   const [docs, setDocs] = useState<DocItem[]>(() => loadStorage("firm_docs", seedDocs));
   const [poas, setPoas] = useState<PoaItem[]>(() => loadStorage("firm_poas", seedPoas));
   const [kyc, setKyc] = useState<KycItem[]>(() => loadStorage("firm_kyc", seedKyc));
+  const [kycWatchlist, setKycWatchlist] = useState<KycWatchlistItem[]>(() => loadStorage("firm_kyc_watchlist", seedKycWatchlist));
   const [notifications, setNotifications] = useState<NotificationLog[]>(seedNotifications);
   const [timeLogs, setTimeLogs] = useState<TimeLog[]>(seedTimeLogs);
   const [caseExpenses, setCaseExpenses] = useState<CaseExpense[]>(seedCaseExpenses);
@@ -2241,9 +2318,65 @@ export default function App() {
   useEffect(() => { saveStorage("firm_office_agreements", officeAgreements); }, [officeAgreements]);
   useEffect(() => { saveStorage("firm_invoices", invoices); }, [invoices]);
   useEffect(() => { saveStorage("firm_docs", docs); }, [docs]);
+
+  // دالة تلقائية لدمج وتنظيف الموكلين المكررين
+  useEffect(() => {
+    const seenMap = new Map<string, number>();
+    const remap = new Map<number, number>();
+    const dupes = new Set<number>();
+
+    clients.forEach((c) => {
+      const norm = normalizeArabicName(c.name);
+      const mainPart = norm.split("-")[0].trim();
+      const words = mainPart.split(" ").filter((w) => w.length > 1);
+      const key = words.length >= 2 ? words.slice(0, 2).join(" ") : mainPart;
+
+      if (key && seenMap.has(key)) {
+        const primaryId = seenMap.get(key)!;
+        dupes.add(c.id);
+        remap.set(c.id, primaryId);
+      } else if (key) {
+        seenMap.set(key, c.id);
+      }
+    });
+
+    if (dupes.size > 0) {
+      setPoas((prev) => prev.map((p) => remap.has(p.clientId) ? { ...p, clientId: remap.get(p.clientId)! } : p));
+      setCases((prev) => prev.map((cs) => remap.has(cs.clientId) ? { ...cs, clientId: remap.get(cs.clientId)! } : cs));
+      setInvoices((prev) => prev.map((inv) => remap.has(inv.clientId) ? { ...inv, clientId: remap.get(inv.clientId)! } : inv));
+      setFeeAgreements((prev) => prev.map((fa) => remap.has(fa.clientId) ? { ...fa, clientId: remap.get(fa.clientId)! } : fa));
+      setClients((prev) => prev.filter((c) => !dupes.has(c.id)));
+    }
+  }, []);
   useEffect(() => { saveStorage("firm_poas", poas); }, [poas]);
   useEffect(() => { saveStorage("firm_kyc", kyc); }, [kyc]);
+  useEffect(() => { saveStorage("firm_kyc_watchlist", kycWatchlist); }, [kycWatchlist]);
   useEffect(() => { saveStorage("firm_court_contacts", courtContacts); }, [courtContacts]);
+
+  // ---------- حالات ميزات الاستيراد الذكي واستخراج البيانات ----------
+  const [showCasesExcelModal, setShowCasesExcelModal] = useState(false);
+  const [excelCasesParsed, setExcelCasesParsed] = useState<any[]>([]);
+  const [casesExcelLoading, setCasesExcelLoading] = useState(false);
+
+  const [showPoaAiUploadModal, setShowPoaAiUploadModal] = useState(false);
+  const [poaAiLoading, setPoaAiLoading] = useState(false);
+  const [poaAiExtracted, setPoaAiExtracted] = useState<any | null>(null);
+  const [selectedPoaClientId, setSelectedPoaClientId] = useState<number | "new">("new");
+
+  const [showAgreementAiUploadModal, setShowAgreementAiUploadModal] = useState(false);
+  const [agreementAiLoading, setAgreementAiLoading] = useState(false);
+  const [agreementAiExtracted, setAgreementAiExtracted] = useState<any | null>(null);
+  const [selectedAgrClientId, setSelectedAgrClientId] = useState<number | "new">("new");
+
+  const [showInvoiceImportModal, setShowInvoiceImportModal] = useState(false);
+  const [invoiceImportTab, setInvoiceImportTab] = useState<"excel" | "pdf_ai">("excel");
+  const [invoiceAiLoading, setInvoiceAiLoading] = useState(false);
+  const [invoiceAiExtracted, setInvoiceAiExtracted] = useState<any | null>(null);
+  const [excelInvoicesParsed, setExcelInvoicesParsed] = useState<any[]>([]);
+
+  const [showKycWatchlistUploadModal, setShowKycWatchlistUploadModal] = useState(false);
+  const [kycWatchlistParsed, setKycWatchlistParsed] = useState<KycWatchlistItem[]>([]);
+  const [kycSanctionAlert, setKycSanctionAlert] = useState<{ clientName: string; idNo?: string; watchlistItem: KycWatchlistItem } | null>(null);
 
   const [employees, setEmployees] = useState<Employee[]>(() => loadStorage("firm_employees", seedEmployees));
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(() => loadStorage("firm_leave_requests", seedLeaveRequests));
@@ -2772,7 +2905,574 @@ export default function App() {
   // Sub-tabs configuration
   const [invoiceSubTab, setInvoiceSubTab] = useState<"invoices" | "agreements" | "payments" | "time" | "trust" | "expenses">("payments");
   const [docSubTab, setDocSubTab] = useState<"archive" | "generator" | "letterhead">("archive");
-  const [kycSubTab, setKycSubTab] = useState<"kyc" | "str">("kyc");
+  const [kycSubTab, setKycSubTab] = useState<"kyc" | "watchlist" | "str">("kyc");
+
+  // ---------- 1. تدقيق ومقارنة أسماء الموكلين مع قائمة الأشخاص المحظورين والمنكشفين (KYC Watchlist Auto-Audit) ----------
+  const checkAndAuditClientKyc = (clientName: string, idNo?: string) => {
+    if (!clientName || clientName.trim().length < 2) return null;
+    const cName = clientName.trim().toLowerCase();
+    const cId = idNo ? idNo.trim().toLowerCase() : "";
+
+    const match = kycWatchlist.find((w) => {
+      const wName = w.fullName.trim().toLowerCase();
+      const wId = w.idNo ? w.idNo.trim().toLowerCase() : "";
+      const nameMatch = cName.includes(wName) || wName.includes(cName);
+      const idMatch = cId.length > 3 && wId.length > 3 && cId === wId;
+      return nameMatch || idMatch;
+    });
+
+    if (match) {
+      setKycSanctionAlert({
+        clientName,
+        idNo,
+        watchlistItem: match
+      });
+    }
+    return match;
+  };
+
+  // ---------- 2. معالجة وتفريغ ملف Excel القضايا السابقة ----------
+  const handleParseCasesExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCasesExcelLoading(true);
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const buffer = evt.target?.result;
+        const wb = XLSX.read(buffer, { type: "array" });
+        const wsName = wb.SheetNames[0];
+        const ws = wb.Sheets[wsName];
+        const rows: any[] = XLSX.utils.sheet_to_json(ws);
+
+        if (!rows || rows.length === 0) {
+          alert("الملف المرفق فارغ أو لا يحتوي على صفوف بيانات صالحة!");
+          setCasesExcelLoading(false);
+          return;
+        }
+
+        const parsed = rows.map((r, idx) => {
+          const caseNumber = String(r["رقم القضية"] || r["رقم/كود القضية"] || r["رقم القضيه"] || r["Case Number"] || r["number"] || `CAS-2026-${100 + idx}`).trim();
+          const cName = String(r["اسم الموكل"] || r["الموكل"] || r["Client Name"] || r["client"] || "موكل غير محدد").trim();
+          const opponent = String(r["اسم الخصم"] || r["الخصم"] || r["Opponent"] || r["opponent"] || "غير محدد").trim();
+          const type = String(r["نوع القضية"] || r["النوع"] || r["Type"] || r["type"] || "تجاري").trim();
+          const court = String(r["المحكمة"] || r["الجهة القضائية"] || r["Court"] || r["court"] || "محاكم دبي").trim();
+          const subject = String(r["موضوع القضية"] || r["الموضوع"] || r["العنوان"] || r["subject"] || "دعوى قضائية").trim();
+          const openDate = String(r["تاريخ القيد"] || r["تاريخ الفتح"] || r["openDate"] || todayISO()).trim();
+          const fee = Number(r["الأتعاب"] || r["الرسوم"] || r["fee"] || 10000);
+
+          const existingClient = clients.find((c) => c.name.trim().toLowerCase() === cName.toLowerCase());
+
+          return {
+            id: idx + 1,
+            caseNumber,
+            clientName: cName,
+            opponent,
+            type,
+            court,
+            subject,
+            openDate,
+            fee,
+            matchedClientId: existingClient ? existingClient.id : null,
+            isNewClient: !existingClient
+          };
+        });
+
+        setExcelCasesParsed(parsed);
+      } catch (err: any) {
+        alert("حدث خطأ أثناء قراءة ملف Excel: " + (err.message || "تنسيق غير مدعوم"));
+      } finally {
+        setCasesExcelLoading(false);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  // ---------- 3. تأكيد واستيراد القضايا لسيستم النظام ----------
+  const handleConfirmImportCases = () => {
+    if (excelCasesParsed.length === 0) return;
+
+    let updatedClients = [...clients];
+    const newCasesList: CaseItem[] = [];
+
+    excelCasesParsed.forEach((item) => {
+      let finalClientId = item.matchedClientId;
+
+      if (!finalClientId) {
+        // إنشاء موكل جديد تلقائياً
+        const newCId = nextId(updatedClients);
+        const newClientObj: Client = {
+          id: newCId,
+          name: item.clientName,
+          type: "شركة",
+          idNo: "",
+          emirate: "دبي",
+          phone: "",
+          email: "",
+          address: ""
+        };
+
+        // فحص قائمة الحظر للموكل المستورد
+        const matchSanction = checkAndAuditClientKyc(item.clientName);
+        if (matchSanction) {
+          setKyc((prev) => [
+            ...prev,
+            {
+              id: nextId(prev),
+              clientId: newCId,
+              nationality: "غير محدد",
+              idType: "هوية/جواز",
+              idExpiry: addDays(365),
+              ubo: item.clientName,
+              sourceOfFunds: "نشاط تجاري",
+              pep: true,
+              sanctions: "تطابق محتمل (محظور)",
+              risk: "مرتفع",
+              status: "قيد المراجعة",
+              lastReview: todayISO(),
+              notes: `تنبيه حظر استيراد Excel: مسجل في قائمة المحظورين (سبب: ${matchSanction.reason})`
+            }
+          ]);
+        }
+
+        updatedClients.push(newClientObj);
+        finalClientId = newCId;
+      }
+
+      const newCaseObj: CaseItem = {
+        id: nextId(cases) + newCasesList.length,
+        number: item.caseNumber,
+        clientId: finalClientId,
+        opponent: item.opponent,
+        type: item.type,
+        court: item.court,
+        judge: "القاضي المختص",
+        status: "قيد النظر",
+        subject: item.subject,
+        openDate: item.openDate,
+        fee: item.fee
+      };
+
+      newCasesList.push(newCaseObj);
+    });
+
+    setClients(updatedClients);
+    setCases((prev) => [...prev, ...newCasesList]);
+    logAuditAction("CREATE", "القضايا", "استيراد شامل Excel", `تم استيراد ${newCasesList.length} قضية من ملف Excel بنجاح وتحديث الموكلين`, 0);
+    alert(`تم استيراد ${newCasesList.length} قضية بنجاح وربطها بالموكلين!`);
+    setShowCasesExcelModal(false);
+    setExcelCasesParsed([]);
+  };
+
+  // ---------- 4. تنزيل قالب Excel استرشادي للقضايا ----------
+  const downloadCasesExcelTemplate = () => {
+    const sampleData = [
+      {
+        "رقم القضية": "CAS-2026-801",
+        "اسم الموكل": "شركة الخليج للتوريدات اللوجستية",
+        "اسم الخصم": "مؤسسة النجم الذهبي للمقاولات",
+        "نوع القضية": "تجاري",
+        "المحكمة": "محاكم دبي",
+        "موضوع القضية": "دعوى مطالبة بمبلغ توريد 150,000 درهم عن عقد توريد أجهزة",
+        "تاريخ القيد": todayISO(),
+        "الأتعاب": 25000
+      },
+      {
+        "رقم القضية": "CAS-2026-802",
+        "اسم الموكل": "سالم محمد الكعبي",
+        "اسم الخصم": "شركة الأفق للاستثمار",
+        "نوع القضية": "عقاري",
+        "المحكمة": "دائرة القضاء - أبوظبي",
+        "موضوع القضية": "نزاع استرداد مسددات وحدة عقارية تحت الإنشاء",
+        "تاريخ القيد": todayISO(),
+        "الأتعاب": 30000
+      }
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(sampleData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "قضايا_سابقة");
+    XLSX.writeFile(wb, "قالب_استيراد_القضايا_السابقة.xlsx");
+  };
+
+  // ---------- 5. استخراج المستندات القانونية بالذكاء الاصطناعي (POAs, Agreements, Invoices) ----------
+  const handleProcessDocAiExtract = async (docType: "poa" | "agreement" | "invoice", file: File) => {
+    if (!file) return;
+
+    if (docType === "poa") setPoaAiLoading(true);
+    if (docType === "agreement") setAgreementAiLoading(true);
+    if (docType === "invoice") setInvoiceAiLoading(true);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64Str = e.target?.result as string;
+
+        const response = await fetch("/api/extract-doc", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            docType,
+            fileBase64: base64Str,
+            mimeType: file.type || "application/pdf",
+            fileName: file.name
+          })
+        });
+
+        const data = await response.json();
+        if (data.success && data.extracted) {
+          if (docType === "poa") {
+            setPoaAiExtracted(data.extracted);
+            const matchedC = findMatchingClientByName(clients, data.extracted.clientName || "");
+            setSelectedPoaClientId(matchedC ? matchedC.id : "new");
+          } else if (docType === "agreement") {
+            setAgreementAiExtracted(data.extracted);
+            const matchedC = findMatchingClientByName(clients, data.extracted.clientName || "");
+            setSelectedAgrClientId(matchedC ? matchedC.id : "new");
+          } else if (docType === "invoice") {
+            setInvoiceAiExtracted(data.extracted);
+          }
+        } else {
+          alert("تعذر استخراج البيانات من المستند: " + (data.error || "خطأ غير معروف"));
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      alert("حدث خطأ أثناء معالجة المستند بالذكاء الاصطناعي: " + err.message);
+    } finally {
+      if (docType === "poa") setPoaAiLoading(false);
+      if (docType === "agreement") setAgreementAiLoading(false);
+      if (docType === "invoice") setInvoiceAiLoading(false);
+    }
+  };
+
+  // ---------- 6. تأكيد وحفظ الوكالة المستخرجة بالذكاء الاصطناعي ----------
+  const handleSaveExtractedPoa = () => {
+    if (!poaAiExtracted) return;
+
+    let clientId: number;
+    const extractedName = (poaAiExtracted.clientName || "موكل وكالة جديد").trim();
+    const existingC = findMatchingClientByName(clients, extractedName);
+
+    if (selectedPoaClientId !== "new" && typeof selectedPoaClientId === "number") {
+      clientId = selectedPoaClientId;
+    } else if (existingC) {
+      clientId = existingC.id;
+    } else {
+      checkAndAuditClientKyc(extractedName);
+      const newC: Client = {
+        id: nextId(clients),
+        name: extractedName,
+        type: "فرد",
+        idNo: "",
+        emirate: "دبي",
+        phone: "",
+        email: "",
+        address: ""
+      };
+      setClients((prev) => [...prev, newC]);
+      clientId = newC.id;
+    }
+
+    const newPoaItem: PoaItem = {
+      id: nextId(poas),
+      clientId,
+      number: poaAiExtracted.poaNumber || `POA-2026-${Math.floor(100 + Math.random() * 900)}`,
+      issuer: poaAiExtracted.issuer || "الكاتب العدل",
+      issue: poaAiExtracted.issueDate || todayISO(),
+      expiry: poaAiExtracted.expiryDate || addDays(730),
+      scope: poaAiExtracted.scope || "صلاحية مرافعة وتوكيل عام أمام جميع المحاكم"
+    };
+
+    setPoas((prev) => [newPoaItem, ...prev]);
+    logAuditAction("CREATE", "الوكالات", `وكالة رقم ${newPoaItem.number}`, "إضافة وكالة قانونية عبر الذكاء الاصطناعي", newPoaItem.id);
+    alert("تم حفظ الوكالة القانونية وربطها بالموكل بنجاح!");
+    setShowPoaAiUploadModal(false);
+    setPoaAiExtracted(null);
+  };
+
+  // ---------- 7. تأكيد وحفظ الاتفاقية المستخرجة بالذكاء الاصطناعي ----------
+  const handleSaveExtractedAgreement = () => {
+    if (!agreementAiExtracted) return;
+
+    let clientId: number;
+    const extractedName = (agreementAiExtracted.clientName || "موكل اتفاقية جديد").trim();
+    const existingC = findMatchingClientByName(clients, extractedName);
+
+    if (selectedAgrClientId !== "new" && typeof selectedAgrClientId === "number") {
+      clientId = selectedAgrClientId;
+    } else if (existingC) {
+      clientId = existingC.id;
+    } else {
+      checkAndAuditClientKyc(extractedName);
+      const newC: Client = {
+        id: nextId(clients),
+        name: extractedName,
+        type: "شركة",
+        idNo: "",
+        emirate: "دبي",
+        phone: "",
+        email: "",
+        address: ""
+      };
+      setClients((prev) => [...prev, newC]);
+      clientId = newC.id;
+    }
+
+    const newFeeAgr: FeeAgreement = {
+      id: nextId(feeAgreements),
+      agreementNumber: agreementAiExtracted.agreementNumber || `AGR-2026-${Math.floor(100 + Math.random() * 900)}`,
+      clientId,
+      title: "اتفاقية أتعاب قانونية مستخرجة آلياً",
+      totalAmount: Number(agreementAiExtracted.totalAmount || 25000),
+      date: agreementAiExtracted.date || todayISO(),
+      status: "نشطة",
+      notes: agreementAiExtracted.installmentsNotes || agreementAiExtracted.notes || "اتفاقية أتعاب سابقة مستخرجة آلياً"
+    };
+
+    setFeeAgreements((prev) => [newFeeAgr, ...prev]);
+    logAuditAction("CREATE", "اتفاقيات الأتعاب", `اتفاقية رقم ${newFeeAgr.agreementNumber}`, "إدراج اتفاقية أتعاب عبر الذكاء الاصطناعي", newFeeAgr.id);
+    alert("تم حفظ اتفاقية الأتعاب وربطها بالموكل بنجاح!");
+    setShowAgreementAiUploadModal(false);
+    setAgreementAiExtracted(null);
+  };
+
+  // ---------- 8. معالجة وتفريغ ملف Excel الفواتير ----------
+  const handleParseInvoicesExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const buffer = evt.target?.result;
+        const wb = XLSX.read(buffer, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows: any[] = XLSX.utils.sheet_to_json(ws);
+
+        if (!rows || rows.length === 0) {
+          alert("الملف فارغ أو لا يحتوي على فواتير صالحة!");
+          return;
+        }
+
+        const parsed = rows.map((r, idx) => {
+          const invNum = String(r["رقم الفاتورة"] || r["Invoice Number"] || `INV-2026-${200 + idx}`);
+          const cName = String(r["اسم الموكل"] || r["الموكل"] || r["Client"] || "موكل فاتورة");
+          const amt = Number(r["المبلغ"] || r["المبلغ الأساسي"] || r["Amount"] || 5000);
+          const date = String(r["تاريخ الفاتورة"] || r["التاريخ"] || todayISO());
+          const due = String(r["تاريخ الاستحقاق"] || r["الاستحقاق"] || addDays(30));
+          const desc = String(r["الوصف"] || r["الخدمة"] || r["Description"] || "أتعاب واستشارات قانونية");
+
+          return { number: invNum, clientName: cName, amount: amt, date, due, desc };
+        });
+
+        setExcelInvoicesParsed(parsed);
+      } catch (err: any) {
+        alert("حدث خطأ في قراءة ملف الفواتير: " + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  // ---------- 9. تأكيد استيراد الفواتير (Excel أو AI) ----------
+  const handleConfirmImportInvoices = () => {
+    let updatedClients = [...clients];
+    const newInvoicesList: Invoice[] = [];
+
+    if (invoiceImportTab === "excel") {
+      excelInvoicesParsed.forEach((item) => {
+        let matchedC = updatedClients.find((c) => c.name.toLowerCase().trim() === item.clientName.toLowerCase().trim());
+        let cId: number;
+        if (!matchedC) {
+          cId = nextId(updatedClients);
+          checkAndAuditClientKyc(item.clientName);
+          updatedClients.push({
+            id: cId,
+            name: item.clientName,
+            type: "شركة",
+            idNo: "",
+            emirate: "دبي",
+            phone: "",
+            email: "",
+            address: ""
+          });
+        } else {
+          cId = matchedC.id;
+        }
+
+        newInvoicesList.push({
+          id: nextId(invoices) + newInvoicesList.length,
+          number: item.number,
+          clientId: cId,
+          caseId: null,
+          date: item.date,
+          due: item.due,
+          amount: item.amount,
+          status: "غير مدفوعة",
+          desc: item.desc
+        });
+      });
+    } else if (invoiceImportTab === "pdf_ai" && invoiceAiExtracted) {
+      const cName = invoiceAiExtracted.clientName || "موكل فاتورة AI";
+      let matchedC = updatedClients.find((c) => c.name.toLowerCase().trim() === cName.toLowerCase().trim());
+      let cId: number;
+      if (!matchedC) {
+        cId = nextId(updatedClients);
+        checkAndAuditClientKyc(cName);
+        updatedClients.push({
+          id: cId,
+          name: cName,
+          type: "شركة",
+          idNo: "",
+          emirate: "دبي",
+          phone: "",
+          email: "",
+          address: ""
+        });
+      } else {
+        cId = matchedC.id;
+      }
+
+      newInvoicesList.push({
+        id: nextId(invoices),
+        number: invoiceAiExtracted.invoiceNumber || `INV-2026-${Math.floor(100 + Math.random() * 900)}`,
+        clientId: cId,
+        caseId: null,
+        date: invoiceAiExtracted.date || todayISO(),
+        due: invoiceAiExtracted.due || addDays(15),
+        amount: Number(invoiceAiExtracted.amount || invoiceAiExtracted.totalAmount || 10000),
+        status: "غير مدفوعة",
+        desc: invoiceAiExtracted.description || "فاتورة خدمات قانونية أصلية مستخرجة آلياً"
+      });
+    }
+
+    setClients(updatedClients);
+    setInvoices((prev) => [...prev, ...newInvoicesList]);
+    alert(`تم استيراد وإدراج ${newInvoicesList.length} فاتورة بنجاح!`);
+    setShowInvoiceImportModal(false);
+    setExcelInvoicesParsed([]);
+    setInvoiceAiExtracted(null);
+  };
+
+  // ---------- 10. معالجة وتفريغ Excel قائمة الأشخاص المحظورين والمنكشفين (KYC Watchlist Excel) ----------
+  const handleParseKycWatchlistExcel = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const buffer = evt.target?.result;
+        const wb = XLSX.read(buffer, { type: "array" });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows: any[] = XLSX.utils.sheet_to_json(ws);
+
+        if (!rows || rows.length === 0) {
+          alert("الملف لا يحتوي على أسماء محظورين صالحة!");
+          return;
+        }
+
+        const parsed: KycWatchlistItem[] = rows.map((r, idx) => {
+          return {
+            id: idx + 1,
+            fullName: String(r["الاسم الكامل"] || r["اسم الشخص/الجهة"] || r["Full Name"] || r["Name"] || "اسم غير محدد").trim(),
+            idNo: String(r["رقم الهوية"] || r["رقم الجواز"] || r["ID Number"] || r["Passport"] || "").trim(),
+            type: String(r["تصنيف الحظر"] || r["نوع الحظر"] || r["Type"] || "شخص منكشف سياسياً (PEP)").trim(),
+            reason: String(r["سبب الحظر"] || r["السبب"] || r["Reason"] || "إدراج في قوائم الامتثال ومكافحة غسل الأموال").trim(),
+            nationality: String(r["الجنسية"] || r["Nationality"] || "أخرى").trim(),
+            addedDate: todayISO()
+          };
+        });
+
+        setKycWatchlistParsed(parsed);
+      } catch (err: any) {
+        alert("خطأ في قراءة ملف قوائم الحظر: " + err.message);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  // ---------- 11. تأكيد استيراد وتدقيق قائمة المحظورين ----------
+  const handleConfirmImportKycWatchlist = () => {
+    if (kycWatchlistParsed.length === 0) return;
+
+    const newWatchlistItems = kycWatchlistParsed.map((item, idx) => ({
+      ...item,
+      id: nextId(kycWatchlist) + idx
+    }));
+
+    const updatedWatchlist = [...kycWatchlist, ...newWatchlistItems];
+    setKycWatchlist(updatedWatchlist);
+
+    // تدقيق فوري ومباشر مع أسماء الموكلين المسجلين بالنظام حالياً
+    let matchedCount = 0;
+    clients.forEach((c) => {
+      const isBlocked = newWatchlistItems.some((w) => {
+        const cName = c.name.toLowerCase().trim();
+        const wName = w.fullName.toLowerCase().trim();
+        return cName.includes(wName) || wName.includes(cName);
+      });
+
+      if (isBlocked) {
+        matchedCount++;
+        setKyc((prev) => {
+          const exists = prev.find((k) => k.clientId === c.id);
+          if (exists) {
+            return prev.map((k) => (k.clientId === c.id ? { ...k, pep: true, sanctions: "تطابق محتمل (محظور)", risk: "مرتفع", notes: "🚨 تطابق تلقائي مع القائمة السوداء المستوردة حديثاً!" } : k));
+          } else {
+            return [
+              ...prev,
+              {
+                id: nextId(prev),
+                clientId: c.id,
+                nationality: c.emirate,
+                idType: "هوية إماراتية",
+                idExpiry: addDays(365),
+                ubo: c.name,
+                sourceOfFunds: "نشاط تجاري",
+                pep: true,
+                sanctions: "تطابق محتمل (محظور)",
+                risk: "مرتفع",
+                status: "قيد المراجعة",
+                lastReview: todayISO(),
+                notes: "🚨 تطابق تلقائي عند رفع قائمة الحظر الجديدة!"
+              }
+            ];
+          }
+        });
+      }
+    });
+
+    alert(`تم استيراد ${newWatchlistItems.length} اسم لقائمة المحظورين والمنكشفين بنجاح! ${matchedCount > 0 ? `🚨 تم العثور على (${matchedCount}) موكل حالي متطابق مع القائمة!` : "لم يتطابق أي موكل حالي."}`);
+    setShowKycWatchlistUploadModal(false);
+    setKycWatchlistParsed([]);
+  };
+
+  // ---------- 12. تنزيل قالب Excel لقوائم الحظر ----------
+  const downloadKycWatchlistTemplate = () => {
+    const sampleData = [
+      {
+        "الاسم الكامل": "دانييل روبيرتو أندرسون",
+        "رقم الهوية": "PASSPORT-US-887192",
+        "تصنيف الحظر": "شخص منكشف سياسياً (PEP)",
+        "سبب الحظر": "إفصاح سياسي عالي المخاطر - تجميد أصول تحرزي",
+        "الجنسية": "الولايات المتحدة"
+      },
+      {
+        "الاسم الكامل": "شركة الشرق الأوسط للمشتقات القابضة",
+        "رقم الهوية": "CR-772810",
+        "تصنيف الحظر": "قائمة حظر عقوبات دولية / محلية",
+        "سبب الحظر": "قرار حظر تعامل تجاري ومالي صادرة من وحدة المعلومات المالية FIU",
+        "الجنسية": "أخرى"
+      }
+    ];
+
+    const ws = XLSX.utils.json_to_sheet(sampleData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "قائمة_المحظورين");
+    XLSX.writeFile(wb, "قالب_استيراد_الأشخاص_المحظورين_KYC.xlsx");
+  };
 
   const [letterhead, setLetterhead] = useState(loadLetterhead);
 
@@ -2841,26 +3541,292 @@ export default function App() {
     setTimeout(() => setClientToast(null), 4000);
   };
 
-  // حذف موكل / جهة اتصال مع التحقق من وجود قضايا مرتبطة
+  // حذف موكل / جهة اتصال يدويًا مع التأكيد ودعم الموكلين المرتبطين بقضايا
   const deleteClient = (clientId: number) => {
     if (!checkPerm("manageClients", "حذف الموكل")) return;
     const cObj = clients.find((c) => c.id === clientId);
     if (!cObj) return;
-    const caseCount = cases.filter((x) => x.clientId === clientId).length;
-    if (caseCount > 0) {
-      alert(`لا يمكن حذف "${cObj.name}" لوجود ${caseCount} قضية مسجلة باسمه في النظام.`);
-      return;
+    const linkedCases = cases.filter((x) => x.clientId === clientId);
+
+    let confirmMsg = `هل أنت متأكد من حذف الموكل "${cObj.name}" نهائياً من سجلات المكتب؟`;
+    if (linkedCases.length > 0) {
+      confirmMsg = `تنبيه: الموكل "${cObj.name}" مرتبط بـ ${linkedCases.length} قضية مسجلة بالنظام.\n\nهل ترغب في الحذف النهائي للموكل مع فك ارتباطه من تلك القضايا؟`;
     }
-    if (confirm(`هل أنت تأكد من حذف "${cObj.name}" من سجل الموكلين؟`)) {
-      logAuditAction("DELETE", "الموكلين", `الموكل: ${cObj.name}`, `حذف الموكل ${cObj.name} (${cObj.type}) من سجلات المكتب`, cObj.id);
+
+    if (confirm(confirmMsg)) {
+      logAuditAction("DELETE", "الموكلين", `الموكل: ${cObj.name}`, `حذف الموكل ${cObj.name} (${cObj.type}) يدويًا من سجلات المكتب`, cObj.id);
       setClients((prev) => prev.filter((c) => c.id !== clientId));
-      setClientToast(`تم حذف "${cObj.name}" بنجاح`);
+      if (editingClient?.id === clientId) {
+        setEditingClient(null);
+      }
+      setClientToast(`تم حذف الموكل "${cObj.name}" بنجاح`);
       setTimeout(() => setClientToast(null), 4000);
     }
   };
 
   // حالة مودال Supabase SQL وتحديد المستخدمين المعلقين
   const [showSupabaseModal, setShowSupabaseModal] = useState<boolean>(false);
+
+  // حالات تصدير واستعادة النسخة الاحتياطية (Backup & Restore JSON)
+  const [showBackupModal, setShowBackupModal] = useState<boolean>(false);
+  const [backupActiveTab, setBackupActiveTab] = useState<"export" | "restore">("export");
+  const [restorePreview, setRestorePreview] = useState<any | null>(null);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
+  const [restoreSuccessMsg, setRestoreSuccessMsg] = useState<string | null>(null);
+
+  // حالات المساعد الذكي القانوني لجميع الأقسام (Legal AI Assistant - Gemini 3.6 Flash)
+  const [isAiAssistantEnabled, setIsAiAssistantEnabled] = useState<boolean>(false);
+  const [showAiModal, setShowAiModal] = useState<boolean>(false);
+  const [aiDepartment, setAiDepartment] = useState<string>("عام");
+  const [aiQuery, setAiQuery] = useState<string>("");
+  const [aiResponse, setAiResponse] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState<boolean>(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const [aiMode, setAiMode] = useState<string>("advice");
+
+  // دالة تشغيل المساعد الذكي القانوني لجميع الأقسام
+  const handleAskAiAssistant = async (customQuery?: string, customDept?: string, customMode?: string) => {
+    const q = (customQuery !== undefined ? customQuery : aiQuery).trim();
+    if (!q) return;
+
+    const deptToUse = customDept || aiDepartment || tab || "general";
+    const modeToUse = customMode || aiMode || "advice";
+
+    setAiLoading(true);
+    setAiError(null);
+    setAiResponse(null);
+
+    // تجهيز سياق بيانات النظام المأخوذة من القسم المختار لتزويد النموذج بإجابة دقيقة
+    let contextData: any = null;
+    if (deptToUse === "cases" || deptToUse.includes("القضايا")) {
+      contextData = cases.slice(0, 6).map(c => ({ كود: c.number, موضوع_القضية: c.subject, المحكمة: c.court, النوع: c.type, الحالة: c.status }));
+    } else if (deptToUse === "clients" || deptToUse.includes("الموكلين")) {
+      contextData = clients.slice(0, 6).map(cl => ({ الاسم: cl.name, النوع: cl.type, الإمارات: cl.emirate, هاتف: cl.phone }));
+    } else if (deptToUse === "hearings" || deptToUse.includes("الجلسات")) {
+      contextData = hearings.slice(0, 6).map(h => ({ التاريخ: h.date, المحكمة: h.type, ملاحظات: h.notes }));
+    } else if (deptToUse === "invoices" || deptToUse.includes("الفواتير")) {
+      contextData = invoices.slice(0, 6).map(inv => ({ رقم_الفاتورة: inv.number, المبلغ: inv.amount, الحالة: inv.status }));
+    } else if (deptToUse === "tasks" || deptToUse.includes("المهام")) {
+      contextData = tasks.slice(0, 6).map(t => ({ المهمة: t.title, الأولوية: t.priority, المكلف: t.assignee }));
+    }
+
+    try {
+      const res = await fetch("/api/legal-ai-assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          department: deptToUse,
+          query: q,
+          contextData,
+          mode: modeToUse
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.answer) {
+        setAiResponse(data.answer);
+      } else {
+        setAiError(data.error || "تعذر الحصول على رد من المساعد الذكي.");
+      }
+    } catch (err: any) {
+      setAiError("حدث خطأ في الاتصال بالذكاء الاصطناعي: " + (err.message || err));
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const openAiForCurrentSection = (promptText?: string, modeName?: string) => {
+    const currentDeptMap: Record<string, string> = {
+      dashboard: "عام",
+      cases: "القضايا والدعاوى",
+      clients: "الموكلين وجهات الاتصال",
+      hearings: "الجلسات والمواعيد",
+      tasks: "المهام والتوكيلات",
+      invoices: "الفواتير والمالية",
+      contracts: "العقود والاتفاقيات",
+      docs: "المستندات والأرشيف",
+      employees: "الموظفين والكادر",
+      consultations: "حجوزات الاستشارات",
+      users: "إدارة المستخدمين"
+    };
+
+    const sectionLabel = currentDeptMap[tab] || "عام";
+    setAiDepartment(sectionLabel);
+    setAiResponse(null);
+    setAiError(null);
+    setShowAiModal(true);
+
+    if (promptText) {
+      setAiQuery(promptText);
+      handleAskAiAssistant(promptText, sectionLabel, modeName || "advice");
+    }
+  };
+
+  const handleExportBackup = () => {
+    const exportDate = new Date();
+    const dateStr = exportDate.toISOString().split("T")[0];
+    const timeStr = exportDate.toTimeString().split(" ")[0].replace(/:/g, "-");
+
+    const backupData = {
+      appVersion: "1.0.0",
+      system: "مكتب المحامي سعود أحمد الشحي للمحاماة والاستشارات القانونية",
+      exportTimestamp: exportDate.toISOString(),
+      exportDateFormatted: exportDate.toLocaleString("ar-AE"),
+      exportedBy: {
+        id: currentUser.id,
+        name: currentUser.name,
+        email: currentUser.email,
+        roleTitle: currentUser.roleTitle,
+      },
+      counts: {
+        clients: clients.length,
+        cases: cases.length,
+        hearings: hearings.length,
+        tasks: tasks.length,
+        invoices: invoices.length,
+        docs: docs.length,
+        poas: poas.length,
+        kyc: kyc.length,
+        courtContacts: courtContacts.length,
+        officeAgreements: officeAgreements.length,
+        employees: employees.length,
+        leaveRequests: leaveRequests.length,
+        employeeExpenses: employeeExpenses.length,
+        auditLogs: auditLogs.length,
+        precedents: precedents.length,
+        users: users.length,
+        feeAgreements: feeAgreements.length,
+        payments: payments.length,
+        consultationBookings: consultationBookings.length,
+      },
+      database: {
+        clients,
+        cases,
+        hearings,
+        tasks,
+        invoices,
+        docs,
+        poas,
+        kyc,
+        courtContacts,
+        officeAgreements,
+        employees,
+        leaveRequests,
+        employeeExpenses,
+        auditLogs,
+        precedents,
+        users,
+        feeAgreements,
+        payments,
+        consultationBookings,
+        consultationSettings,
+        waChats,
+      }
+    };
+
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+      JSON.stringify(backupData, null, 2)
+    )}`;
+    const downloadAnchor = document.createElement("a");
+    downloadAnchor.setAttribute("href", jsonString);
+    downloadAnchor.setAttribute("download", `suood_law_backup_${dateStr}_${timeStr}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+
+    logAuditAction(
+      "CREATE",
+      "النسخ الاحتياطي",
+      "تصدير قاعدة البيانات",
+      `تم تصدير نسخة احتياطية كاملة من بيانات النظام بصيغة JSON تحتوي على ${cases.length} قضية و ${clients.length} موكل.`
+    );
+  };
+
+  const handleFileChangeForRestore = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setRestoreError(null);
+    setRestoreSuccessMsg(null);
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const content = event.target?.result as string;
+        const parsed = JSON.parse(content);
+
+        if (!parsed || (!parsed.database && !parsed.data)) {
+          setRestoreError("الملف المحدد لا يحتوي على بنية بيانات صحيحة الخاصة بنظام المكتب.");
+          setRestorePreview(null);
+          return;
+        }
+
+        const db = parsed.database || parsed.data || {};
+        setRestorePreview({
+          raw: parsed,
+          db,
+          exportDateFormatted: parsed.exportDateFormatted || parsed.exportTimestamp || "غير محدد",
+          exportedBy: parsed.exportedBy?.name || "غير محدد",
+          counts: {
+            clients: Array.isArray(db.clients) ? db.clients.length : 0,
+            cases: Array.isArray(db.cases) ? db.cases.length : 0,
+            hearings: Array.isArray(db.hearings) ? db.hearings.length : 0,
+            tasks: Array.isArray(db.tasks) ? db.tasks.length : 0,
+            invoices: Array.isArray(db.invoices) ? db.invoices.length : 0,
+            docs: Array.isArray(db.docs) ? db.docs.length : 0,
+            poas: Array.isArray(db.poas) ? db.poas.length : 0,
+            kyc: Array.isArray(db.kyc) ? db.kyc.length : 0,
+            employees: Array.isArray(db.employees) ? db.employees.length : 0,
+            users: Array.isArray(db.users) ? db.users.length : 0,
+          }
+        });
+      } catch (err: any) {
+        setRestoreError("تعذر قراءة ملف JSON. يرجى التأكد من اختيار ملف بصيغة سليمة.");
+        setRestorePreview(null);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const executeRestore = () => {
+    if (!restorePreview || !restorePreview.db) return;
+    const db = restorePreview.db;
+
+    try {
+      if (Array.isArray(db.clients)) { setClients(db.clients); saveStorage("firm_clients", db.clients); }
+      if (Array.isArray(db.cases)) { setCases(db.cases); saveStorage("firm_cases", db.cases); }
+      if (Array.isArray(db.hearings)) { setHearings(db.hearings); saveStorage("firm_hearings", db.hearings); }
+      if (Array.isArray(db.tasks)) { setTasks(db.tasks); saveStorage("firm_tasks", db.tasks); }
+      if (Array.isArray(db.invoices)) { setInvoices(db.invoices); saveStorage("firm_invoices", db.invoices); }
+      if (Array.isArray(db.docs)) { setDocs(db.docs); saveStorage("firm_docs", db.docs); }
+      if (Array.isArray(db.poas)) { setPoas(db.poas); saveStorage("firm_poas", db.poas); }
+      if (Array.isArray(db.kyc)) { setKyc(db.kyc); saveStorage("firm_kyc", db.kyc); }
+      if (Array.isArray(db.courtContacts)) { setCourtContacts(db.courtContacts); saveStorage("firm_court_contacts", db.courtContacts); }
+      if (Array.isArray(db.officeAgreements)) { setOfficeAgreements(db.officeAgreements); saveStorage("firm_office_agreements", db.officeAgreements); }
+      if (Array.isArray(db.employees)) { setEmployees(db.employees); saveStorage("firm_employees", db.employees); }
+      if (Array.isArray(db.leaveRequests)) { setLeaveRequests(db.leaveRequests); saveStorage("firm_leave_requests", db.leaveRequests); }
+      if (Array.isArray(db.employeeExpenses)) { setEmployeeExpenses(db.employeeExpenses); saveStorage("firm_employee_expenses", db.employeeExpenses); }
+      if (Array.isArray(db.auditLogs)) { setAuditLogs(db.auditLogs); saveStorage("firm_audit_logs", db.auditLogs); }
+      if (Array.isArray(db.precedents)) { setPrecedents(db.precedents); saveStorage("firm_legal_precedents", db.precedents); }
+      if (Array.isArray(db.users)) { setUsers(db.users); saveStorage("firm_users", db.users); }
+      if (Array.isArray(db.feeAgreements)) { setFeeAgreements(db.feeAgreements); saveStorage("firm_fee_agreements", db.feeAgreements); }
+      if (Array.isArray(db.payments)) { setPayments(db.payments); saveStorage("firm_payments", db.payments); }
+      if (Array.isArray(db.consultationBookings)) { setConsultationBookings(db.consultationBookings); saveStorage("firm_consultation_bookings", db.consultationBookings); }
+      if (db.consultationSettings) { setConsultationSettings(db.consultationSettings); saveStorage("firm_consultation_settings", db.consultationSettings); }
+      if (Array.isArray(db.waChats)) { setWaChats(db.waChats); saveStorage("firm_wa_chats", db.waChats); }
+
+      logAuditAction(
+        "UPDATE",
+        "النسخ الاحتياطي",
+        "استعادة قاعدة البيانات",
+        `تمت استعادة نسخة احتياطية من الملف بنجاح وتحديث بيانات النظام (${restorePreview.counts.cases} قضية، ${restorePreview.counts.clients} موكل).`
+      );
+
+      setRestoreSuccessMsg("تمت استعادة كافة بيانات النظام والنسخة الاحتياطية بنجاح! تم تحديث السجلات المخزنة.");
+      setRestorePreview(null);
+    } catch (err: any) {
+      setRestoreError("حدث خطأ أثناء تطبيق استعادة البيانات: " + err.message);
+    }
+  };
 
   // حالات البريد الإلكتروني المدمج (In-App Email & Supabase Sync)
   const [emailFolder, setEmailFolder] = useState<"inbox" | "sent" | "draft" | "trash">("inbox");
@@ -4999,6 +5965,32 @@ export default function App() {
               <ChevronLeft size={14} className="text-[#e5c388]" />
             </button>
 
+            {isAiAssistantEnabled && (
+              <button
+                onClick={() => openAiForCurrentSection()}
+                className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-xs font-black text-amber-200 bg-gradient-to-r from-amber-950/80 via-teal-900 to-[#0c403d] border border-amber-500/40 hover:border-amber-300 transition mt-2 cursor-pointer shadow-sm"
+                title="المساعد الذكي القانوني والتنفيذي لجميع الأقسام (Gemini AI)"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles size={16} className="text-amber-400 animate-pulse shrink-0" />
+                  <span>المساعد الذكي القانوني (AI)</span>
+                </div>
+                <ChevronLeft size={14} className="text-amber-300" />
+              </button>
+            )}
+
+            <button
+              onClick={() => setShowBackupModal(true)}
+              className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-xs font-bold text-emerald-200 bg-[#0c403d] border border-emerald-500/30 hover:bg-[#0e4845] transition mt-2 cursor-pointer"
+              title="تصدير واستعادة نسخة احتياطية محلية لقاعدة بيانات النظام"
+            >
+              <div className="flex items-center gap-2">
+                <Database size={16} className="text-emerald-400" />
+                <span>النسخ الاحتياطي للبيانات (JSON)</span>
+              </div>
+              <Download size={14} className="text-emerald-400" />
+            </button>
+
             {/* الإعدادات الفنية حصرية للمدير الأعلى (المحامي سعود) */}
             {isSuperAdmin && (
               <button
@@ -5060,8 +6052,28 @@ export default function App() {
               )}
             </div>
 
+            {isAiAssistantEnabled && (
+              <button
+                onClick={() => openAiForCurrentSection()}
+                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-600 via-teal-800 to-teal-950 px-3.5 py-2 text-xs font-black text-white hover:opacity-95 transition shadow-sm cursor-pointer border border-amber-400/40"
+                title="المساعد الذكي القانوني لجميع الأقسام (Gemini AI)"
+              >
+                <Sparkles size={16} className="text-amber-300 animate-pulse" />
+                <span>المساعد الذكي</span>
+              </button>
+            )}
+
             <button onClick={() => setClientPortalId(clients[0]?.id || 1)} className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 shadow-sm" title="معاينة بوابة الموكل الإلكترونية">
               <Globe size={15} /> <span className="hidden sm:inline">بوابة الموكل</span>
+            </button>
+
+            <button
+              onClick={() => setShowBackupModal(true)}
+              className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition shadow-2xs"
+              title="تصدير واستعادة نسخة احتياطية لبيانات المكتب"
+            >
+              <Database size={15} className="text-emerald-600" />
+              <span className="hidden sm:inline">النسخ الاحتياطي</span>
             </button>
 
             <button onClick={() => setReport("section")} className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100" title="تقرير قابل للطباعة للقسم الحالي">
@@ -5263,7 +6275,15 @@ export default function App() {
                     <h2 className="text-2xl font-bold">إدارة القضايا</h2>
                     <p className="text-xs text-slate-500">قيد ومتابعة ملفات القضايا أمام المحاكم الإماراتية</p>
                   </div>
-                  <button onClick={() => openModalWithCheck("case", "manageCases")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> قضية جديدة</button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => setShowCasesExcelModal(true)}
+                      className="flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-800 shadow-sm transition"
+                    >
+                      <FileSpreadsheet size={16} /> رفع ملف Excel القضايا السابقة
+                    </button>
+                    <button onClick={() => openModalWithCheck("case", "manageCases")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> قضية جديدة</button>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {["الكل", ...CASE_STATUS].map((s) => (
@@ -5678,16 +6698,24 @@ export default function App() {
                           className={inputCls}
                         />
                       </Field>
-                      <div className="flex gap-3 pt-2">
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
                         <button
                           onClick={saveEditClient}
-                          className="flex-1 rounded-xl bg-slate-900 py-2.5 font-bold text-white hover:bg-slate-800 transition"
+                          className="flex-1 rounded-xl bg-slate-900 py-2.5 font-bold text-white hover:bg-slate-800 transition cursor-pointer"
                         >
                           حفظ التعديلات
                         </button>
                         <button
+                          onClick={() => deleteClient(editingClient.id)}
+                          className="flex items-center gap-1.5 rounded-xl bg-red-50 border border-red-200 px-4 py-2.5 font-bold text-red-700 hover:bg-red-100 transition cursor-pointer"
+                          title="حذف هذا الموكل يدويًا من سجلات المكتب"
+                        >
+                          <Trash2 size={15} />
+                          <span>حذف الموكل</span>
+                        </button>
+                        <button
                           onClick={() => setEditingClient(null)}
-                          className="rounded-xl border border-slate-300 px-4 py-2.5 font-bold text-slate-700 hover:bg-slate-100 transition"
+                          className="rounded-xl border border-slate-300 px-4 py-2.5 font-bold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
                         >
                           إلغاء
                         </button>
@@ -7033,12 +8061,20 @@ export default function App() {
                     )}
                     {invoiceSubTab === "invoices" && (
                       <div className="space-y-6">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
                           <div>
                             <h2 className="text-2xl font-bold">الفواتير وضريبة القيمة المضافة (5%)</h2>
                             <p className="text-xs text-slate-500">مطالبات الأتعاب بتنسيق الهيئة الاتحادية للضرائب FTA (TRN: {FIRM_TRN})</p>
                           </div>
-                          <button onClick={() => openModalWithCheck("invoice", "manageInvoices")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> إصدار فاتورة ضريبية</button>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              onClick={() => setShowInvoiceImportModal(true)}
+                              className="flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-amber-700 shadow-sm transition"
+                            >
+                              <FileSpreadsheet size={16} /> ارفاق واستيراد الفواتير (Excel / PDF)
+                            </button>
+                            <button onClick={() => openModalWithCheck("invoice", "manageInvoices")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> إصدار فاتورة ضريبية</button>
+                          </div>
                         </div>
                         <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
                           <table className="w-full text-sm">
@@ -7314,6 +8350,12 @@ export default function App() {
           وتُنشأ اتفاقية الأتعاب برقم AGR، وتنزل الدفعات تلقائياً إلى سجل الدفعات وسندات القبض.
         </p>
       </div>
+      <button
+        onClick={() => setShowAgreementAiUploadModal(true)}
+        className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-teal-800 to-slate-900 px-4 py-2.5 text-sm font-bold text-white hover:opacity-95 shadow-sm transition cursor-pointer"
+      >
+        <Sparkles size={16} className="text-amber-400 animate-pulse" /> ارفاق اتفاقية قديمة PDF (سحب البيانات آلياً)
+      </button>
     </div>
 
     <div className="grid gap-6 lg:grid-cols-3">
@@ -7727,12 +8769,20 @@ export default function App() {
             {/* ================= الوكالات ================= */}
             {tab === "poa" && (
               <>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h2 className="text-2xl font-bold">إدارة الوكالات القانونية</h2>
                     <p className="text-xs text-slate-500">توكيلات الكاتب العدل وتنبيهات الانتهاء الصادرة من كاتب العدل</p>
                   </div>
-                  <button onClick={() => openModalWithCheck("poa", "manageDocs")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> إضافة وكالة</button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => setShowPoaAiUploadModal(true)}
+                      className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 px-4 py-2.5 text-sm font-bold text-white hover:opacity-95 shadow-sm transition"
+                    >
+                      <Sparkles size={16} className="text-amber-200 animate-pulse" /> ارفاق وكالة PDF (سحب البيانات آلياً)
+                    </button>
+                    <button onClick={() => openModalWithCheck("poa", "manageDocs")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> إضافة وكالة</button>
+                  </div>
                 </div>
                 <div className="space-y-3">
                   {poas.map((p) => {
@@ -7745,8 +8795,10 @@ export default function App() {
                             <p className="text-xs text-slate-500">{p.issuer} | تاريخ الإصدار: {fmtDate(p.issue)}</p>
                           </div>
                           <div className="flex items-center gap-2">
-                            {daysLeft <= 60 ? (
-                              <Badge className="bg-red-100 text-red-700">تنتهي خلال {daysLeft} يومًا</Badge>
+                            {daysLeft < 0 ? (
+                              <Badge className="bg-red-100 text-red-800 font-black border border-red-200 px-3 py-1">منتهية</Badge>
+                            ) : daysLeft <= 60 ? (
+                              <Badge className="bg-amber-100 text-amber-800 font-bold">تنتهي خلال {daysLeft} يومًا</Badge>
                             ) : (
                               <Badge className="bg-emerald-100 text-emerald-700">سارية ({daysLeft} يومًا)</Badge>
                             )}
@@ -7770,20 +8822,93 @@ export default function App() {
             {/* ================= اعرف عميلك KYC وعناية AML ================= */}
             {tab === "kyc" && (
               <div className="space-y-6">
-                <div className="flex border-b border-slate-200">
+                <div className="flex border-b border-slate-200 overflow-x-auto">
                   <button
                     onClick={() => setKycSubTab("kyc")}
-                    className={`px-4 py-3 text-sm font-bold border-b-2 transition flex items-center gap-2 ${kycSubTab === "kyc" ? "border-amber-500 text-amber-700 bg-amber-50/50" : "border-transparent text-slate-500 hover:text-slate-800"}`}
+                    className={`px-4 py-3 text-sm font-bold border-b-2 transition flex items-center gap-2 whitespace-nowrap ${kycSubTab === "kyc" ? "border-amber-500 text-amber-700 bg-amber-50/50" : "border-transparent text-slate-500 hover:text-slate-800"}`}
                   >
                     <ShieldCheck size={18} /> سجلات العناية الواجبة (KYC)
                   </button>
                   <button
+                    onClick={() => setKycSubTab("watchlist")}
+                    className={`px-4 py-3 text-sm font-bold border-b-2 transition flex items-center gap-2 whitespace-nowrap ${kycSubTab === "watchlist" ? "border-amber-500 text-amber-700 bg-amber-50/50" : "border-transparent text-slate-500 hover:text-slate-800"}`}
+                  >
+                    <FileSpreadsheet size={18} /> 🚨 قائمة المحظورين والمنكشفين ({kycWatchlist.length})
+                  </button>
+                  <button
                     onClick={() => setKycSubTab("str")}
-                    className={`px-4 py-3 text-sm font-bold border-b-2 transition flex items-center gap-2 ${kycSubTab === "str" ? "border-amber-500 text-amber-700 bg-amber-50/50" : "border-transparent text-slate-500 hover:text-slate-800"}`}
+                    className={`px-4 py-3 text-sm font-bold border-b-2 transition flex items-center gap-2 whitespace-nowrap ${kycSubTab === "str" ? "border-amber-500 text-amber-700 bg-amber-50/50" : "border-transparent text-slate-500 hover:text-slate-800"}`}
                   >
                     <ShieldAlert size={18} /> 🚨 سجل بلاغات الاشتباه AML / STR ({strReports.length})
                   </button>
                 </div>
+
+                {kycSubTab === "watchlist" && (
+                  <div className="space-y-6">
+                    <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
+                      <div>
+                        <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                          <ShieldAlert className="text-red-600" /> قاعدة بيانات الأشخاص والجهات المحظورة / PEP
+                        </h2>
+                        <p className="text-xs text-slate-500 mt-1">
+                          قائمة التدقيق لقوانين الامتثال ومكافحة غسل الأموال (AML/Sanctions). يتم التدقيق والربط الآلي مع جميع الموكلين الجدد والحاليين.
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setShowKycWatchlistUploadModal(true)}
+                        className="flex items-center gap-2 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-800 shadow-sm transition"
+                      >
+                        <FileSpreadsheet size={16} /> رفع ملف Excel الأشخاص المحظورين والمنكشفين
+                      </button>
+                    </div>
+
+                    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+                      <table className="w-full text-sm">
+                        <thead className="bg-stone-50 text-right text-xs text-slate-500">
+                          <tr>
+                            <th className="px-4 py-3 font-semibold">اسم الشخص / الجهة</th>
+                            <th className="px-4 py-3 font-semibold">الهوية / الجواز</th>
+                            <th className="px-4 py-3 font-semibold">تصنيف الحظر</th>
+                            <th className="px-4 py-3 font-semibold">سبب الحظر والمنع</th>
+                            <th className="px-4 py-3 font-semibold">الجنسية</th>
+                            <th className="px-4 py-3 font-semibold">تاريخ الإدراج</th>
+                            <th className="px-4 py-3 font-semibold text-center">إجراءات</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {kycWatchlist.map((item) => (
+                            <tr key={item.id} className="hover:bg-red-50/40">
+                              <td className="px-4 py-3 font-bold text-slate-900">{item.fullName}</td>
+                              <td className="px-4 py-3 font-mono text-xs text-slate-600">{item.idNo || "—"}</td>
+                              <td className="px-4 py-3">
+                                <Badge className="bg-red-100 text-red-800 border border-red-200">{item.type}</Badge>
+                              </td>
+                              <td className="px-4 py-3 text-xs text-slate-600 max-w-xs">{item.reason}</td>
+                              <td className="px-4 py-3 text-xs text-slate-500">{item.nationality || "أخرى"}</td>
+                              <td className="px-4 py-3 text-xs font-mono text-slate-500">{item.addedDate}</td>
+                              <td className="px-4 py-3 text-center">
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`هل ترغب بمسح "${item.fullName}" من قائمة الحظر؟`)) {
+                                      setKycWatchlist((prev) => prev.filter((w) => w.id !== item.id));
+                                    }
+                                  }}
+                                  className="text-slate-400 hover:text-red-600 p-1"
+                                  title="حذف من القائمة"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      {kycWatchlist.length === 0 && (
+                        <p className="py-10 text-center text-sm text-slate-400">لا توجد أسماء مسجلة حالياً بقائمة الحظر</p>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 {kycSubTab === "str" ? (
                   <div className="space-y-6">
@@ -8379,6 +9504,12 @@ export default function App() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
+                      onClick={() => setShowBackupModal(true)}
+                      className="flex items-center gap-2 rounded-xl bg-emerald-800 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 shadow-sm cursor-pointer"
+                    >
+                      <Database size={16} /> تصدير واستعادة بيانات المكتب (JSON)
+                    </button>
+                    <button
                       onClick={() => {
                         if (!checkPerm("manageUsers", "إضافة مستخدم")) return;
                         setEditingUser(null);
@@ -8390,6 +9521,38 @@ export default function App() {
                       <UserPlus size={16} /> إضافة مستخدم جديد
                     </button>
                   </div>
+                </div>
+
+                {/* بطاقة التحكم بتفعيل أو إلغاء المساعد الذكي (AI Assistant Toggle) */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 font-bold shrink-0">
+                      <Sparkles size={20} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                        المساعد الذكي القانوني (Gemini AI Assistant)
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${isAiAssistantEnabled ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-600"}`}>
+                          {isAiAssistantEnabled ? "مُفَعّل حالياً" : "مُلغَى / مُعطّل حالياً"}
+                        </span>
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        التحكم بإعادة تفعيل أو إلغاء المساعد الذكي والزر العائم والتحليلات الآلية بجميع الأقسام
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setIsAiAssistantEnabled(!isAiAssistantEnabled)}
+                    className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-xs ${
+                      isAiAssistantEnabled
+                        ? "bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
+                        : "bg-emerald-700 text-white hover:bg-emerald-800"
+                    }`}
+                  >
+                    <Sparkles size={15} />
+                    {isAiAssistantEnabled ? "إلغاء وتعطيل المساعد الذكي" : "إعادة تفعيل المساعد الذكي"}
+                  </button>
                 </div>
 
                 {/* قسم طلبات التفعيل المعلقة Supabase User Approval Flow (Admin Only) */}
@@ -11571,6 +12734,778 @@ export default function App() {
                 )}
               </div>
             </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ═══ مودال تصدير واستعادة نسخة احتياطية لبيانات المكتب (Backup & Restore JSON) ═══ */}
+      {showBackupModal && (
+        <Modal title="تصدير واستعادة نسخة احتياطية لبيانات المكتب (JSON)" onClose={() => setShowBackupModal(false)} wide>
+          <div className="space-y-6">
+            {/* تبويبات التصدير والاستعادة */}
+            <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+              <button
+                onClick={() => { setBackupActiveTab("export"); setRestoreError(null); setRestoreSuccessMsg(null); }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  backupActiveTab === "export"
+                    ? "bg-[#0a3d3a] text-white shadow-sm"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                <Download size={16} />
+                <span>تصدير نسخة احتياطية (Export)</span>
+              </button>
+
+              <button
+                onClick={() => { setBackupActiveTab("restore"); setRestoreError(null); setRestoreSuccessMsg(null); }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition cursor-pointer ${
+                  backupActiveTab === "restore"
+                    ? "bg-[#0a3d3a] text-white shadow-sm"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                }`}
+              >
+                <UploadCloud size={16} />
+                <span>استعادة نسخة احتياطية (Restore)</span>
+              </button>
+            </div>
+
+            {/* المحتوى حسب التبويب المختار */}
+            {backupActiveTab === "export" ? (
+              <div className="space-y-5">
+                <div className="p-4 rounded-xl bg-teal-50 border border-teal-200 text-teal-900 text-xs leading-relaxed space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-teal-950 text-sm">
+                    <Database className="text-teal-700" size={18} />
+                    <span>تصدير قواعد وسجلات المكتب بالكامل إلى ملف JSON</span>
+                  </div>
+                  <p>
+                    تتيح لك هذه الميزة تحميل كافة بيانات ومحتويات نظام المكتب (القضايا، الموكلين، الجلسات، المهام، الفواتير، المستندات، الموظفين، والمستندات) في ملف مغلف واحد بصيغة <strong>JSON</strong>.
+                  </p>
+                  <p className="text-teal-800">
+                    يمكنك الاحتفاظ بهذا الملف في مكان آمن على حاسوبك لاستعادته في أي وقت عند الحاجة.
+                  </p>
+                </div>
+
+                {/* ملخص الإحصائيات الحالية المتضمنة بالنسخة */}
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-3">
+                  <h4 className="font-bold text-slate-800 text-xs flex items-center gap-2">
+                    <CheckCircle2 size={16} className="text-emerald-600" />
+                    <span>ملخص السجلات المتاحة للتصدير حالياً:</span>
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                      <span className="text-slate-500 block text-[11px]">💼 القضايا:</span>
+                      <span className="font-black text-slate-900 text-sm">{cases.length} قضية</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                      <span className="text-slate-500 block text-[11px]">👥 الموكلين:</span>
+                      <span className="font-black text-slate-900 text-sm">{clients.length} موكل</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                      <span className="text-slate-500 block text-[11px]">🗓️ الجلسات:</span>
+                      <span className="font-black text-slate-900 text-sm">{hearings.length} جلسة</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                      <span className="text-slate-500 block text-[11px]">📋 المهام:</span>
+                      <span className="font-black text-slate-900 text-sm">{tasks.length} مهمة</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                      <span className="text-slate-500 block text-[11px]">🧾 الفواتير:</span>
+                      <span className="font-black text-slate-900 text-sm">{invoices.length} فاتورة</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                      <span className="text-slate-500 block text-[11px]">📂 المستندات:</span>
+                      <span className="font-black text-slate-900 text-sm">{docs.length} مستند</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                      <span className="text-slate-500 block text-[11px]">👔 الموظفين:</span>
+                      <span className="font-black text-slate-900 text-sm">{employees.length} موظف</span>
+                    </div>
+                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                      <span className="text-slate-500 block text-[11px]">🔒 المستخدمين:</span>
+                      <span className="font-black text-slate-900 text-sm">{users.length} مستخدم</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    onClick={() => setShowBackupModal(false)}
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    onClick={handleExportBackup}
+                    className="px-5 py-2.5 rounded-xl bg-[#0a3d3a] text-white hover:bg-[#115450] text-xs font-black transition flex items-center gap-2 shadow-md cursor-pointer"
+                  >
+                    <Download size={16} className="text-[#e5c388]" />
+                    <span>تنزيل ملف النسخة الاحتياطية (JSON) الآن</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* تبويب استعادة البيانات (Restore) */
+              <div className="space-y-5">
+                <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs leading-relaxed space-y-1.5">
+                  <div className="flex items-center gap-2 font-bold text-amber-950 text-sm">
+                    <AlertTriangle className="text-amber-600 shrink-0" size={18} />
+                    <span>تنبيه هام قبل استعادة النسخة الاحتياطية</span>
+                  </div>
+                  <p>
+                    استعادة النسخة الاحتياطية ستستبدل البيانات الحالية ببيانات الملف المرفق وتحدث كافة سجلات القضايا، الموكلين، والمهام.
+                  </p>
+                </div>
+
+                {/* رسائل التنبيه والنجاح والخطأ */}
+                {restoreError && (
+                  <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-bold flex items-center gap-2">
+                    <AlertCircle size={16} className="text-red-600 shrink-0" />
+                    <span>{restoreError}</span>
+                  </div>
+                )}
+
+                {restoreSuccessMsg && (
+                  <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center gap-2 shadow-xs">
+                    <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+                    <span>{restoreSuccessMsg}</span>
+                  </div>
+                )}
+
+                {/* رافع الملفات JSON */}
+                <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50/50 hover:bg-slate-50 transition cursor-pointer relative">
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleFileChangeForRestore}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <div className="flex flex-col items-center justify-center gap-2 text-slate-600">
+                    <div className="w-12 h-12 rounded-full bg-teal-100/80 text-teal-800 flex items-center justify-center">
+                      <UploadCloud size={24} />
+                    </div>
+                    <p className="font-bold text-xs text-slate-800">
+                      اضغط هنا لاختيار ملف النسخة الاحتياطية (.json) أو اسحبه إلى هنا
+                    </p>
+                    <p className="text-[11px] text-slate-400">يقبل ملفات JSON الناتجة من عملية تصدير النظام فقط</p>
+                  </div>
+                </div>
+
+                {/* معاينة الملف قبل الاستعادة */}
+                {restorePreview && (
+                  <div className="rounded-2xl border border-emerald-300 bg-emerald-50/40 p-4 space-y-3">
+                    <div className="flex items-center justify-between border-b border-emerald-200/80 pb-2">
+                      <h4 className="font-bold text-emerald-950 text-xs flex items-center gap-2">
+                        <CheckCircle2 size={16} className="text-emerald-600" />
+                        <span>معاينة بيانات الملف الجاهز للاستعادة:</span>
+                      </h4>
+                      <span className="text-[11px] text-emerald-800 font-mono">
+                        تاريخ الملف: {restorePreview.exportDateFormatted}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                      <div className="p-2 rounded-lg bg-white border border-emerald-200 text-slate-800">
+                        <span className="text-slate-500 block text-[10px]">💼 القضايا:</span>
+                        <span className="font-bold text-slate-900">{restorePreview.counts.cases}</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-white border border-emerald-200 text-slate-800">
+                        <span className="text-slate-500 block text-[10px]">👥 الموكلين:</span>
+                        <span className="font-bold text-slate-900">{restorePreview.counts.clients}</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-white border border-emerald-200 text-slate-800">
+                        <span className="text-slate-500 block text-[10px]">🗓️ الجلسات:</span>
+                        <span className="font-bold text-slate-900">{restorePreview.counts.hearings}</span>
+                      </div>
+                      <div className="p-2 rounded-lg bg-white border border-emerald-200 text-slate-800">
+                        <span className="text-slate-500 block text-[10px]">📋 المهام:</span>
+                        <span className="font-bold text-slate-900">{restorePreview.counts.tasks}</span>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex justify-end">
+                      <button
+                        onClick={executeRestore}
+                        className="px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs transition flex items-center gap-2 shadow-md cursor-pointer"
+                      >
+                        <RefreshCw size={16} />
+                        <span>تأكيد واستعادة البيانات إلى النظام الآن</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    onClick={() => { setShowBackupModal(false); setRestorePreview(null); }}
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                  >
+                    إغلاق
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* ═══ الزر العائم للمساعد الذكي القانوني والتنفيذي (Gemini AI Floating Button) ═══ */}
+      {isAiAssistantEnabled && (
+        <div className="fixed bottom-6 left-6 z-40">
+          <button
+            onClick={() => openAiForCurrentSection()}
+            className="flex items-center gap-2.5 rounded-full bg-gradient-to-r from-amber-500 via-teal-800 to-[#072a28] px-4 py-3 text-white shadow-2xl border-2 border-amber-400/60 hover:scale-105 transition-all cursor-pointer group"
+            title="المساعد الذكي القانوني لجميع الأقسام (Gemini AI)"
+          >
+            <div className="relative">
+              <Sparkles size={20} className="text-amber-300 animate-pulse" />
+              <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+              </span>
+            </div>
+            <span className="font-black text-xs text-amber-100 hidden sm:inline">المساعد الذكي (AI)</span>
+          </button>
+        </div>
+      )}
+
+      {/* ═══ مودال المساعد الذكي القانوني والتنفيذي لجميع الأقسام (Gemini AI Modal) ═══ */}
+      {showAiModal && (
+        <Modal title="المساعد الذكي القانوني والتنفيذي (Gemini 3.6 Flash)" onClose={() => setShowAiModal(false)} wide>
+          <div className="space-y-5">
+            {/* رأس المودال وشعار القسم المحدد */}
+            <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-950 via-[#072a28] to-slate-900 border border-amber-500/30 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center shrink-0">
+                  <Sparkles size={22} className="text-amber-300 animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm text-amber-200 flex items-center gap-2">
+                    <span>ذكاء اصطناعي مساعد لجميع الأقسام</span>
+                    <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded-full font-mono">Gemini 3.6</span>
+                  </h3>
+                  <p className="text-xs text-teal-200/80 mt-0.5">
+                    القسم المختار حالياً: <strong className="text-white bg-teal-800/80 px-2 py-0.5 rounded-md font-bold">{aiDepartment}</strong>
+                  </p>
+                </div>
+              </div>
+
+              {/* اختيار القسم يدوياً */}
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <span className="text-xs text-teal-200 font-bold shrink-0">تغيير القسم:</span>
+                <select
+                  value={aiDepartment}
+                  onChange={(e) => setAiDepartment(e.target.value)}
+                  className="rounded-xl bg-[#0b3c39] border border-teal-600/50 text-xs font-bold text-amber-200 px-3 py-1.5 focus:outline-none focus:border-amber-400"
+                >
+                  <option value="عام">عام / لوائح واستشارات</option>
+                  <option value="القضايا والدعاوى">💼 القضايا والدعاوى</option>
+                  <option value="الموكلين وجهات الاتصال">👥 الموكلين</option>
+                  <option value="الجلسات والمواعيد">🗓️ الجلسات والمواعيد</option>
+                  <option value="المهام والتوكيلات">📋 المهام والتوكيلات</option>
+                  <option value="الفواتير والمالية">🧾 الفواتير والمالية</option>
+                  <option value="العقود والاتفاقيات">📝 العقود والاتفاقيات</option>
+                  <option value="المستندات والأرشيف">📂 المستندات والأرشيف</option>
+                </select>
+              </div>
+            </div>
+
+            {/* اقتراحات سريعة جاهزة للقسم المختار */}
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                <Zap size={14} className="text-amber-500" />
+                <span>نماذج وأسئلة مقترحة لقسم ({aiDepartment}):</span>
+              </span>
+
+              <div className="flex flex-wrap gap-2 text-xs">
+                {aiDepartment.includes("القضايا") && (
+                  <>
+                    <button onClick={() => { setAiQuery("صياغة مذكرة دفاع متكاملة تتضمن الدفوع الشكلية والموضوعية وطرق الإثبات"); handleAskAiAssistant("صياغة مذكرة دفاع متكاملة تتضمن الدفوع الشكلية والموضوعية وطرق الإثبات", "القضايا والدعاوى", "draft"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">✍️ صياغة مذكرة دفاع</button>
+                    <button onClick={() => { setAiQuery("استخراج واستعراض الثغرات القانونية المقترحة من واقع القضايا الحالية بالنظام"); handleAskAiAssistant("استخراج واستعراض الثغرات القانونية المقترحة من واقع القضايا الحالية بالنظام", "القضايا والدعاوى", "analyze"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">🔍 تحليل الثغرات بالقضية</button>
+                  </>
+                )}
+
+                {aiDepartment.includes("الموكلين") && (
+                  <>
+                    <button onClick={() => { setAiQuery("صياغة خطاب رسمي للموكل بخصوص تحديثات القضية والمستندات المطلوبة"); handleAskAiAssistant("صياغة خطاب رسمي للموكل بخصوص تحديثات القضية والمستندات المطلوبة", "الموكلين وجهات الاتصال", "draft"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">📩 صياغة خطاب رسمي للموكل</button>
+                    <button onClick={() => { setAiQuery("تقديم مقترح خطة تسوية قانونية ودية لحفظ حقوق الموكل والمكتب"); handleAskAiAssistant("تقديم مقترح خطة تسوية قانونية ودية لحفظ حقوق الموكل والمكتب", "الموكلين وجهات الاتصال", "advice"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">🤝 اقتراح خطة تسوية ودية</button>
+                  </>
+                )}
+
+                {aiDepartment.includes("الجلسات") && (
+                  <>
+                    <button onClick={() => { setAiQuery("صياغة طلب تأجيل الجلسة مع بيان أسباب قاطعة ومقبولة للمحكمة"); handleAskAiAssistant("صياغة طلب تأجيل الجلسة مع بيان أسباب قاطعة ومقبولة للمحكمة", "الجلسات والمواعيد", "draft"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">🗓️ طلب تأجيل جلسة</button>
+                    <button onClick={() => { setAiQuery("إعداد مذكرة تعقيبية على قرار المحكمة والأمر الصادر بالجلسة السابقة"); handleAskAiAssistant("إعداد مذكرة تعقيبية على قرار المحكمة والأمر الصادر بالجلسة السابقة", "الجلسات والمواعيد", "draft"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">⚖️ مذكرة تعقيبية للجلسة</button>
+                  </>
+                )}
+
+                {aiDepartment.includes("الفواتير") && (
+                  <>
+                    <button onClick={() => { setAiQuery("صياغة إشعار قانوني بالمطالبة المالية وتسوية الأتعاب المتبقية قبل اللجوء للمحكمة"); handleAskAiAssistant("صياغة إشعار قانوني بالمطالبة المالية وتسوية الأتعاب المتبقية قبل اللجوء للمحكمة", "الفواتير والمالية", "draft"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">💰 إنذار بمطالبة أتعاب</button>
+                    <button onClick={() => { setAiQuery("ما هي إجراءات وشروط استصدار أمر أداء مالي وفق قانون الإجراءات المدنية بـ الإمارات؟"); handleAskAiAssistant("ما هي إجراءات وشروط استصدار أمر أداء مالي وفق قانون الإجراءات المدنية بـ الإمارات؟", "الفواتير والمالية", "advice"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">📜 إجراءات أمر الأداء المالي</button>
+                  </>
+                )}
+
+                {aiDepartment.includes("العقود") && (
+                  <>
+                    <button onClick={() => { setAiQuery("صياغة عقد تقديم خدمات قانونية وأتعاب محاماة وفق التشريعات الإماراتية"); handleAskAiAssistant("صياغة عقد تقديم خدمات قانونية وأتعاب محاماة وفق التشريعات الإماراتية", "العقود والاتفاقيات", "draft"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">📝 صياغة عقد خدمات قانونية</button>
+                    <button onClick={() => { setAiQuery("فحص الشروط والمخاطر المتوقعة في عقود الشراكة أو الإيجار أو العمل"); handleAskAiAssistant("فحص الشروط والمخاطر المتوقعة في عقود الشراكة أو الإيجار أو العمل", "العقود والاتفاقيات", "analyze"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">🔍 تحليل وتقييم مخاطر العقد</button>
+                  </>
+                )}
+
+                <button onClick={() => { setAiQuery("استشارة قانونية في نصوص تشريعات ودوانين دولة الإمارات الاتحادية"); handleAskAiAssistant("استشارة قانونية في نصوص تشريعات ودوانين دولة الإمارات الاتحادية", aiDepartment, "advice"); }} className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-semibold transition cursor-pointer">🇦🇪 استشارة قانونية إماراتية عامة</button>
+              </div>
+            </div>
+
+            {/* مربع كتابة السؤال / الطلب */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-800 block">اكتب سؤالك أو اكتب الصيغة المطلوبة للمساعد الذكي:</label>
+              <div className="relative">
+                <textarea
+                  value={aiQuery}
+                  onChange={(e) => setAiQuery(e.target.value)}
+                  placeholder="مثال: اكتب لي لائحة دعوى تجارية / أو استشارة قانونية بخصوص المهل في الاستئناف..."
+                  rows={3}
+                  className="w-full rounded-2xl border border-slate-300 p-3.5 text-xs text-slate-800 focus:outline-none focus:border-teal-700 leading-relaxed shadow-2xs"
+                />
+                <button
+                  onClick={() => handleAskAiAssistant()}
+                  disabled={aiLoading || !aiQuery.trim()}
+                  className="absolute bottom-3 left-3 px-4 py-2 rounded-xl bg-[#0a3d3a] hover:bg-[#115450] disabled:bg-slate-300 text-white font-bold text-xs transition flex items-center gap-1.5 shadow-md cursor-pointer"
+                >
+                  {aiLoading ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin text-amber-300" />
+                      <span>جاري التوليد...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send size={14} className="text-amber-300" />
+                      <span>إرسال للذكاء الاصطناعي</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* رسائل الخطأ إن وجدت */}
+            {aiError && (
+              <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs font-bold flex items-center gap-2">
+                <AlertCircle size={16} className="text-red-600 shrink-0" />
+                <span>{aiError}</span>
+              </div>
+            )}
+
+            {/* عرض النتيجة والإجابة المستخرجة من الذكاء الاصطناعي */}
+            {aiResponse && (
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <span className="text-xs font-black text-slate-800 flex items-center gap-2">
+                    <CheckCircle2 size={16} className="text-emerald-600" />
+                    <span>النتيجة / الصياغة القانونية المستخرجة:</span>
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(aiResponse);
+                      alert("تم نسخ النص القانوني للحافظة بنجاح!");
+                    }}
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition cursor-pointer"
+                  >
+                    <Copy size={13} />
+                    <span>نسخ النص</span>
+                  </button>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-800 text-xs leading-relaxed font-sans whitespace-pre-wrap max-h-96 overflow-y-auto shadow-inner">
+                  {aiResponse}
+                </div>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* ═══ مودال رفع ملف Excel القضايا السابقة ═══ */}
+      {showCasesExcelModal && (
+        <Modal title="رفع ملف Excel واستيراد القضايا السابقة آلياً" onClose={() => { setShowCasesExcelModal(false); setExcelCasesParsed([]); }}>
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs leading-relaxed space-y-1">
+              <p className="font-bold">💡 التعليمات وآلية الربط:</p>
+              <p>• يمكنك إرفاق جدول Excel يحتوي على القضايا السابقة. وسيتم ربط القضية بالموكل تلقائياً إذا كان الاسم مسجلاً بالنظام، أو إنشاء ملف موكل جديد آلياً.</p>
+              <p>• الأعمدة المقبولة في ملف Excel: [رقم القضية، اسم الموكل، اسم الخصم، نوع القضية، المحكمة، موضوع القضية، تاريخ القيد، الأتعاب].</p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <button
+                onClick={downloadCasesExcelTemplate}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer"
+              >
+                <Download size={15} /> تنزيل قالب Excel القضايا الاسترشادي
+              </button>
+              <label className="flex items-center gap-2 px-4 py-2 bg-emerald-700 text-white rounded-xl text-xs font-bold hover:bg-emerald-800 transition cursor-pointer shadow-sm">
+                <UploadCloud size={16} /> اختيار ملف Excel وإدراجه
+                <input type="file" accept=".xlsx, .xls, .csv" onChange={handleParseCasesExcel} className="hidden" />
+              </label>
+            </div>
+
+            {casesExcelLoading && (
+              <div className="p-6 text-center text-xs text-amber-800 bg-amber-50 rounded-xl font-bold flex items-center justify-center gap-2">
+                <RefreshCw size={16} className="animate-spin text-amber-600" /> جارٍ تحليل وقراءة صفوف جدول Excel...
+              </div>
+            )}
+
+            {excelCasesParsed.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-xs font-bold text-slate-800">معاينة البيانات المستخرجة ({excelCasesParsed.length} قضية):</p>
+                <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-xl">
+                  <table className="w-full text-xs">
+                    <thead className="bg-stone-50 text-right text-slate-600">
+                      <tr>
+                        <th className="p-2.5">رقم القضية</th>
+                        <th className="p-2.5">الموكل</th>
+                        <th className="p-2.5">الخصم</th>
+                        <th className="p-2.5">المحكمة</th>
+                        <th className="p-2.5">النوع</th>
+                        <th className="p-2.5">حالة الموكل</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {excelCasesParsed.map((item, i) => (
+                        <tr key={i} className="hover:bg-amber-50/40">
+                          <td className="p-2.5 font-bold">{item.caseNumber}</td>
+                          <td className="p-2.5">{item.clientName}</td>
+                          <td className="p-2.5 text-slate-500">{item.opponent}</td>
+                          <td className="p-2.5 text-slate-500">{item.court}</td>
+                          <td className="p-2.5">{item.type}</td>
+                          <td className="p-2.5">
+                            {item.isNewClient ? (
+                              <span className="text-[10px] bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded">سيتم إنشاؤه موكل جديد</span>
+                            ) : (
+                              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">مطابق لموكل مسجل</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <button
+                  onClick={handleConfirmImportCases}
+                  className="w-full py-3 bg-slate-900 text-amber-400 font-bold rounded-xl text-xs hover:bg-slate-800 transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Check size={16} /> تأكيد وحفظ كافة القضايا والموكلين بالنظام
+                </button>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* ═══ مودال ارفاق وكالة PDF وسحب بياناتها بالذكاء الاصطناعي ═══ */}
+      {showPoaAiUploadModal && (
+        <Modal title="إرفاق وكالة قانونية PDF واستخراج بياناتها بالذكاء الاصطناعي" onClose={() => { setShowPoaAiUploadModal(false); setPoaAiExtracted(null); }}>
+          <div className="space-y-4">
+            <div className="p-3.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-900 text-xs leading-relaxed">
+              <p className="font-bold flex items-center gap-1.5"><Sparkles size={15} className="text-amber-600" /> معالجة التوكيلات بالذكاء الاصطناعي Gemini AI:</p>
+              <p>قم بإرفاق ملف الوكالة بصيغة PDF أو صورة. سيقوم المساعد الذكي باستخراج اسم الموكل، رقم الوكالة، جهة الإصدار، تاريخ الانتهاء، ونطاق الصلاحيات تلقائياً.</p>
+            </div>
+
+            <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-teal-300 hover:border-teal-500 bg-stone-50 hover:bg-stone-100 rounded-2xl transition cursor-pointer text-center">
+              <UploadCloud size={32} className="text-teal-700 mb-2" />
+              <span className="text-xs font-bold text-slate-800">اضغط هنا لإرفاق ملف الوكالة (PDF / PNG)</span>
+              <span className="text-[11px] text-slate-400 mt-0.5">أقصى حجم مدعوم: 25 ميجابايت</span>
+              <input type="file" accept=".pdf, image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleProcessDocAiExtract("poa", f); }} className="hidden" />
+            </label>
+
+            {poaAiLoading && (
+              <div className="p-6 text-center text-xs text-teal-900 bg-teal-50 rounded-xl font-bold flex items-center justify-center gap-2">
+                <RefreshCw size={18} className="animate-spin text-teal-700" /> جارٍ قراءة وتحليل نص الوكالة بالذكاء الاصطناعي...
+              </div>
+            )}
+
+            {poaAiExtracted && (
+              <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+                <h4 className="font-bold text-xs text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                  <CheckCircle2 size={16} className="text-emerald-600" /> البيانات المستخرجة تلقائياً:
+                </h4>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <Field label="اسم الموكل المستخرج">
+                    <input value={poaAiExtracted.clientName || ""} onChange={(e) => setPoaAiExtracted({ ...poaAiExtracted, clientName: e.target.value })} className={inputCls} />
+                  </Field>
+                  <Field label="ربط بملف الموكل">
+                    <select value={selectedPoaClientId} onChange={(e) => setSelectedPoaClientId(e.target.value === "new" ? "new" : Number(e.target.value))} className={inputCls}>
+                      <option value="new">إضافة كـ (موكل جديد تلقائياً)</option>
+                      {clients.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="رقم الوكالة">
+                    <input value={poaAiExtracted.poaNumber || ""} onChange={(e) => setPoaAiExtracted({ ...poaAiExtracted, poaNumber: e.target.value })} className={inputCls} />
+                  </Field>
+                  <Field label="جهة الإصدار">
+                    <input value={poaAiExtracted.issuer || ""} onChange={(e) => setPoaAiExtracted({ ...poaAiExtracted, issuer: e.target.value })} className={inputCls} />
+                  </Field>
+                  <Field label="تاريخ الإصدار">
+                    <input type="date" value={poaAiExtracted.issueDate || todayISO()} onChange={(e) => setPoaAiExtracted({ ...poaAiExtracted, issueDate: e.target.value })} className={inputCls} />
+                  </Field>
+                  <Field label="تاريخ الانتهاء">
+                    <input type="date" value={poaAiExtracted.expiryDate || addDays(730)} onChange={(e) => setPoaAiExtracted({ ...poaAiExtracted, expiryDate: e.target.value })} className={inputCls} />
+                  </Field>
+                </div>
+
+                <Field label="صلاحيات الوكالة المستخرجة">
+                  <textarea rows={2} value={poaAiExtracted.scope || ""} onChange={(e) => setPoaAiExtracted({ ...poaAiExtracted, scope: e.target.value })} className={inputCls} />
+                </Field>
+
+                <button onClick={handleSaveExtractedPoa} className="w-full py-3 bg-slate-900 text-amber-400 font-bold rounded-xl text-xs hover:bg-slate-800 transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                  <Check size={16} /> اعتماد البيانات وإدراج الوكالة بالنظام
+                </button>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* ═══ مودال ارفاق اتفاقية قديمة PDF وسحب بياناتها بالذكاء الاصطناعي ═══ */}
+      {showAgreementAiUploadModal && (
+        <Modal title="إرفاق اتفاقية أتعاب قديمة PDF واستخراج بياناتها بالذكاء الاصطناعي" onClose={() => { setShowAgreementAiUploadModal(false); setAgreementAiExtracted(null); }}>
+          <div className="space-y-4">
+            <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs leading-relaxed">
+              <p className="font-bold flex items-center gap-1.5"><Sparkles size={15} className="text-amber-600" /> تحليل وقراءة الاتفاقيات القديمة:</p>
+              <p>قم بتمشيط أو إرفاق الاتفاقية بصيغة PDF. سيتم استخراج اسم الموكل، رقم الاتفاقية، إجمالي الأتعاب، وتفاصيل الأقساط وإضافتها آلياً لقاعدة البيانات.</p>
+            </div>
+
+            <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-amber-300 hover:border-amber-500 bg-stone-50 hover:bg-stone-100 rounded-2xl transition cursor-pointer text-center">
+              <UploadCloud size={32} className="text-amber-700 mb-2" />
+              <span className="text-xs font-bold text-slate-800">اضغط هنا لإرفاق ملف الاتفاقية (PDF / PNG)</span>
+              <span className="text-[11px] text-slate-400 mt-0.5">أقصى حجم مدعوم: 25 ميجابايت</span>
+              <input type="file" accept=".pdf, image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleProcessDocAiExtract("agreement", f); }} className="hidden" />
+            </label>
+
+            {agreementAiLoading && (
+              <div className="p-6 text-center text-xs text-amber-900 bg-amber-50 rounded-xl font-bold flex items-center justify-center gap-2">
+                <RefreshCw size={18} className="animate-spin text-amber-600" /> جارٍ استخراج بنود ومبالغ العقد بالذكاء الاصطناعي...
+              </div>
+            )}
+
+            {agreementAiExtracted && (
+              <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+                <h4 className="font-bold text-xs text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                  <CheckCircle2 size={16} className="text-emerald-600" /> تفاصيل الاتفاقية المستخرجة:
+                </h4>
+
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <Field label="اسم الموكل">
+                    <input value={agreementAiExtracted.clientName || ""} onChange={(e) => setAgreementAiExtracted({ ...agreementAiExtracted, clientName: e.target.value })} className={inputCls} />
+                  </Field>
+                  <Field label="ربط الموكل بالنظام">
+                    <select value={selectedAgrClientId} onChange={(e) => setSelectedAgrClientId(e.target.value === "new" ? "new" : Number(e.target.value))} className={inputCls}>
+                      <option value="new">إضافة كـ (موكل جديد تلقائياً)</option>
+                      {clients.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="رقم الاتفاقية">
+                    <input value={agreementAiExtracted.agreementNumber || ""} onChange={(e) => setAgreementAiExtracted({ ...agreementAiExtracted, agreementNumber: e.target.value })} className={inputCls} />
+                  </Field>
+                  <Field label="إجمالي الأتعاب (درهم)">
+                    <input type="number" value={agreementAiExtracted.totalAmount || 0} onChange={(e) => setAgreementAiExtracted({ ...agreementAiExtracted, totalAmount: Number(e.target.value) })} className={inputCls} />
+                  </Field>
+                  <Field label="تاريخ العقد">
+                    <input type="date" value={agreementAiExtracted.date || todayISO()} onChange={(e) => setAgreementAiExtracted({ ...agreementAiExtracted, date: e.target.value })} className={inputCls} />
+                  </Field>
+                </div>
+
+                <Field label="ملاحظات وشروط الأقساط المستخرجة">
+                  <textarea rows={2} value={agreementAiExtracted.installmentsNotes || agreementAiExtracted.notes || ""} onChange={(e) => setAgreementAiExtracted({ ...agreementAiExtracted, installmentsNotes: e.target.value })} className={inputCls} />
+                </Field>
+
+                <button onClick={handleSaveExtractedAgreement} className="w-full py-3 bg-slate-900 text-amber-400 font-bold rounded-xl text-xs hover:bg-slate-800 transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                  <Check size={16} /> اعتماد الاتفاقية وإدراجها بجدول الأتعاب
+                </button>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* ═══ مودال ارفاق واستيراد الفواتير (Excel / PDF AI) ═══ */}
+      {showInvoiceImportModal && (
+        <Modal title="استيراد وإدراج الفواتير آلياً (Excel / PDF)" onClose={() => { setShowInvoiceImportModal(false); setExcelInvoicesParsed([]); setInvoiceAiExtracted(null); }}>
+          <div className="space-y-4">
+            <div className="flex border-b border-slate-200">
+              <button
+                onClick={() => setInvoiceImportTab("excel")}
+                className={`px-4 py-2 text-xs font-bold border-b-2 transition ${invoiceImportTab === "excel" ? "border-amber-500 text-amber-700 bg-amber-50" : "border-transparent text-slate-500"}`}
+              >
+                📊 استيراد مجموعة فواتير عبر Excel
+              </button>
+              <button
+                onClick={() => setInvoiceImportTab("pdf_ai")}
+                className={`px-4 py-2 text-xs font-bold border-b-2 transition ${invoiceImportTab === "pdf_ai" ? "border-amber-500 text-amber-700 bg-amber-50" : "border-transparent text-slate-500"}`}
+              >
+                ✨ استخراج فاتورة من PDF بالذكاء الاصطناعي
+              </button>
+            </div>
+
+            {invoiceImportTab === "excel" ? (
+              <div className="space-y-3">
+                <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-amber-300 hover:border-amber-500 bg-stone-50 rounded-2xl cursor-pointer text-center">
+                  <FileSpreadsheet size={32} className="text-amber-700 mb-2" />
+                  <span className="text-xs font-bold text-slate-800">اختيار ملف Excel يحتوي على الفواتير</span>
+                  <input type="file" accept=".xlsx, .xls, .csv" onChange={handleParseInvoicesExcel} className="hidden" />
+                </label>
+
+                {excelInvoicesParsed.length > 0 && (
+                  <div className="space-y-3">
+                    <p className="text-xs font-bold text-slate-800">الفواتير المستخرجة ({excelInvoicesParsed.length}):</p>
+                    <div className="max-h-52 overflow-y-auto border border-slate-200 rounded-xl">
+                      <table className="w-full text-xs">
+                        <thead className="bg-stone-50 text-right">
+                          <tr>
+                            <th className="p-2">رقم الفاتورة</th>
+                            <th className="p-2">الموكل</th>
+                            <th className="p-2">المبلغ</th>
+                            <th className="p-2">الاستحقاق</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {excelInvoicesParsed.map((inv, idx) => (
+                            <tr key={idx}>
+                              <td className="p-2 font-mono font-bold">{inv.number}</td>
+                              <td className="p-2">{inv.clientName}</td>
+                              <td className="p-2 font-bold">{fmtAED(inv.amount)}</td>
+                              <td className="p-2 font-mono">{inv.due}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <button onClick={handleConfirmImportInvoices} className="w-full py-3 bg-slate-900 text-amber-400 font-bold rounded-xl text-xs hover:bg-slate-800 transition cursor-pointer">
+                      تأكيد استيراد كافة الفواتير
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-teal-300 hover:border-teal-500 bg-stone-50 rounded-2xl cursor-pointer text-center">
+                  <UploadCloud size={32} className="text-teal-700 mb-2" />
+                  <span className="text-xs font-bold text-slate-800">إرفاق الفاتورة المطبوعة (PDF / PNG)</span>
+                  <input type="file" accept=".pdf, image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleProcessDocAiExtract("invoice", f); }} className="hidden" />
+                </label>
+
+                {invoiceAiLoading && (
+                  <div className="p-4 text-center text-xs text-amber-800 bg-amber-50 rounded-xl font-bold flex items-center justify-center gap-2">
+                    <RefreshCw size={16} className="animate-spin text-amber-600" /> جارٍ استخراج أرصدة المبالغ والضريبة...
+                  </div>
+                )}
+
+                {invoiceAiExtracted && (
+                  <div className="space-y-3 bg-stone-50 p-3.5 rounded-xl border border-stone-200 text-xs">
+                    <Field label="الموكل">
+                      <input value={invoiceAiExtracted.clientName || ""} onChange={(e) => setInvoiceAiExtracted({ ...invoiceAiExtracted, clientName: e.target.value })} className={inputCls} />
+                    </Field>
+                    <Field label="رقم الفاتورة">
+                      <input value={invoiceAiExtracted.invoiceNumber || ""} onChange={(e) => setInvoiceAiExtracted({ ...invoiceAiExtracted, invoiceNumber: e.target.value })} className={inputCls} />
+                    </Field>
+                    <Field label="المبلغ">
+                      <input type="number" value={invoiceAiExtracted.amount || 0} onChange={(e) => setInvoiceAiExtracted({ ...invoiceAiExtracted, amount: Number(e.target.value) })} className={inputCls} />
+                    </Field>
+                    <button onClick={handleConfirmImportInvoices} className="w-full py-3 bg-slate-900 text-amber-400 font-bold rounded-xl text-xs hover:bg-slate-800 transition cursor-pointer">
+                      حفظ الفاتورة المستخرجة
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* ═══ مودال رفع ملف Excel الأشخاص المحظورين والمنكشفين ═══ */}
+      {showKycWatchlistUploadModal && (
+        <Modal title="رفع ملف Excel قوائم المحظورين والمنكشفين (Sanctions / PEP)" onClose={() => { setShowKycWatchlistUploadModal(false); setKycWatchlistParsed([]); }}>
+          <div className="space-y-4">
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs leading-relaxed space-y-1">
+              <p className="font-bold flex items-center gap-1.5"><ShieldAlert size={16} className="text-red-600" /> تنبيه مكافحة غسل الأموال وحظر التعامل:</p>
+              <p>رفع وتحديث قاعدة بيانات قوائم الحظر. سيقوم النظام فوراً بفحص كافة الموكلين المسجلين في مكتب المحاماة وتنبيهك فوراً برفض التعامل معهم.</p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <button onClick={downloadKycWatchlistTemplate} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer">
+                <Download size={15} /> تنزيل قالب قوائم الحظر
+              </button>
+              <label className="flex items-center gap-2 px-4 py-2 bg-red-700 text-white rounded-xl text-xs font-bold hover:bg-red-800 transition cursor-pointer shadow-sm">
+                <UploadCloud size={16} /> اختيار ملف Excel لقائمة الحظر
+                <input type="file" accept=".xlsx, .xls, .csv" onChange={handleParseKycWatchlistExcel} className="hidden" />
+              </label>
+            </div>
+
+            {kycWatchlistParsed.length > 0 && (
+              <div className="space-y-3">
+                <p className="text-xs font-bold text-slate-800">الأشخاص والجهات المكتشفة ({kycWatchlistParsed.length}):</p>
+                <div className="max-h-56 overflow-y-auto border border-slate-200 rounded-xl">
+                  <table className="w-full text-xs">
+                    <thead className="bg-stone-50 text-right">
+                      <tr>
+                        <th className="p-2">الاسم</th>
+                        <th className="p-2">تصنيف الحظر</th>
+                        <th className="p-2">السبب</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {kycWatchlistParsed.map((item, i) => (
+                        <tr key={i}>
+                          <td className="p-2 font-bold">{item.fullName}</td>
+                          <td className="p-2"><Badge className="bg-red-100 text-red-800">{item.type}</Badge></td>
+                          <td className="p-2 text-slate-500">{item.reason}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <button onClick={handleConfirmImportKycWatchlist} className="w-full py-3 bg-red-800 text-white font-bold rounded-xl text-xs hover:bg-red-900 transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                  <ShieldCheck size={16} /> اعتماد القائمة وتفعيل التدقيق التلقائي الفوري
+                </button>
+              </div>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {/* ═══ تنبيه حظر الامتثال والمنع من التعامل (KYC Sanction Alert Modal) ═══ */}
+      {kycSanctionAlert && (
+        <Modal title="🚨 تحذير امتثال عاجل: تطابق مع قائمة الأشخاص المحظورين" onClose={() => setKycSanctionAlert(null)}>
+          <div className="space-y-4 p-2">
+            <div className="p-4 rounded-2xl bg-red-50 border-2 border-red-300 text-red-900 space-y-2">
+              <div className="flex items-center gap-2">
+                <ShieldAlert size={24} className="text-red-600 animate-bounce" />
+                <h3 className="font-bold text-base">تم اكتشاف تطابق مع قائمة الأشخاص والجهات المحظورة (AML / Sanctions)</h3>
+              </div>
+              <p className="text-xs leading-relaxed">
+                الاسم المدخل: <b className="text-red-950 font-black">{kycSanctionAlert.clientName}</b> يتطابق مع الاسم المدرج بالنظام تحت تصنيف:
+              </p>
+              <div className="bg-white p-3 rounded-xl border border-red-200 text-xs space-y-1 text-slate-800">
+                <p><b>تصنيف المنع:</b> {kycSanctionAlert.watchlistItem.type}</p>
+                <p><b>سبب المنع والحظر:</b> {kycSanctionAlert.watchlistItem.reason}</p>
+                <p><b>رقم الهوية / الجواز:</b> {kycSanctionAlert.watchlistItem.idNo || "غير محدد"}</p>
+              </div>
+              <p className="text-xs text-red-700 font-bold">
+                ⚠️ ينصح بوقف كافة الإجراءات والرفع الفوري لوحدة المعلومات المالية (FIU) وسجل بلاغات الاشتباه AML / STR.
+              </p>
+            </div>
+
+            <button
+              onClick={() => setKycSanctionAlert(null)}
+              className="w-full py-2.5 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 cursor-pointer"
+            >
+              موافق (فهمت التنبيه)
+            </button>
           </div>
         </Modal>
       )}
