@@ -1,0 +1,2907 @@
+import { KycWatchlistItem } from "../App";
+
+export const uaeTerroristList: KycWatchlistItem[] = [
+  // -------------------------------------------------------------
+  // أوالً - الأفراد المدرجين في قائمة الإرهاب المحلية (1 إلى 171)
+  // -------------------------------------------------------------
+  {
+    id: 1,
+    fullName: "خليفة محمد تركي السبيعي (SUBAEY AL T MOHD KHALIFA)",
+    idNo: "685868",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 2,
+    fullName: "عبد الملك محمد يوسف عبد السلام (ABDELSALAM YOUSEF MOHAMMAD ABDULMALIK)",
+    idNo: "475336",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الأردن",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 3,
+    fullName: "أشرف محمد يوسف عثمان عبد السلام (ALSALAM ABD UTHMAN YUSUF MUHAMMAD ASHRAF)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الأردن",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 4,
+    fullName: "إبراهيم عيسى الحجي محمد الباكر (أبوخليل) (BAKR-AL MUHAMMAD HAJJI ISA 'IBRAHIM)",
+    idNo: "01016646",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 5,
+    fullName: "عبد العزيز بن خليفة العطية (ALATTIYAH KHALIFA BIN ABDULAZIZ)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 6,
+    fullName: "سالم حسن خليفة راشد الكواري (KUWARI-AL RASHID KHALIFA HASAN SALIM)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 7,
+    fullName: "عبد الله غانم محفوظ مسلم الخوار (KHAWAR-AL MUSLIM MAHFUZ GHANIM ABDALLAH)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 8,
+    fullName: "سعد بن سعد محمد الكعبي (BI'KA-AL SHARIAN MUHAMMAD D'SA BIN D'SA)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 9,
+    fullName: "عبد اللطيف بن عبد الله الكواري (KAWARI-AL MUHAMMAD SALIH ABDALLAH BIN LATIF-AL ABD)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 10,
+    fullName: "عبد الرحمن بن عمير النعيمي (AYMI'NU-AL UMAYR 'BIN RAHMAN-AL ABD)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 11,
+    fullName: "عبد الوهاب محمد عبد الرحمن الحميقاني (HUMAYQANI-AL RAHMAN-AL ABD MUHAMMAD WAHHAB-AL ABD)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 12,
+    fullName: "حجاج بن فهد حجاج محمد العجمي (AJMI-AL MUHAMMAD HAJJAJ FAHD BIN HAJJAJ)",
+    idNo: "107706887",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الكويت",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 13,
+    fullName: "يوسف عبد الله القرضاوي (QARADAWI-AL ABDULLAH YUSUF)",
+    idNo: "5113",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر / قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 14,
+    fullName: "علي محمد محمد الصلابي (SALLABI-AL MOHAMMED MOHAMMED ALI)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "ليبيا",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 15,
+    fullName: "عبد الحكيم بلحاج (BELHAJ HAKIM-AL ABD)",
+    idNo: "454365",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "ليبيا",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 16,
+    fullName: "مهدي الحاراتي (HARATI-AL MAHDI)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "ليبيا",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 17,
+    fullName: "إسماعيل محمد محمد الصلابي (SALLABI-AL MOHAMMED MOHAMMED ISMAIL)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "ليبيا",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 18,
+    fullName: "الصادق عبد الرحمن علي الغرياني (QHRIANY-AL ALI ALRAHMAN-ABD SADIQ-AL)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "ليبيا",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 19,
+    fullName: "محمد أحمد شوقي الإسلامبولي (ISLAMBOULI SHAWQI AHMED MOHAMMED)",
+    idNo: "304555",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 20,
+    fullName: "طارق عبد الموجود إبراهيم الزمر (ZUMAR-AL IBRAHIM MAWGOUD-AL ABD TAREK)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 21,
+    fullName: "محمد عبد المقصود محمد عفيفي (AFIFI MOHAMMED MAQSOUD-AL ABD MOHAMMED)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 22,
+    fullName: "محمد الصغير عبد الرحيم محمد (MOHAMMED RAHIM-AL ABD ELSAGHEER MOHAMMAD)",
+    idNo: "08670835A",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 23,
+    fullName: "وجدي عبد الحميد محمد غنيم (GHONIEM MOHAMED HAMIED ABDEL WAGDY)",
+    idNo: "4155047",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 24,
+    fullName: "حسن أحمد حسن محمد الدقي الهوتي (HOUTI-AL DIQQI-AL MOHAMED HASSAN AHMED HASSAN)",
+    idNo: "2116728",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 25,
+    fullName: "حاكم عبيسان الحميدي المطيري (MUTAIRI-AL HAMIDI-AL OBAYSAN HAKIM)",
+    idNo: "3229745",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "السعودية / الكويت",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 26,
+    fullName: "عبد الله محمد بن سليمان المحيسني (MUHAYSINI-AL SULAYMAN BIN MUHAMMAD ABDALLAH)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "السعودية",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 27,
+    fullName: "حامد عبد الله أحمد العلي (ALI-AL AHMAD ABDALLAH HAMID)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الكويت",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 28,
+    fullName: "أيمن أحمد عبد الغني حسنين (HASSANEIN GHANI ABDUL AHMED AYMAN)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 29,
+    fullName: "عاصم عبد الماجد محمد ماضي (MADI MOHAMMED MAGED-ABDEL ASSEM)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 30,
+    fullName: "يحيى عقيل سلمان عقيل (AQEEL SALMAN AQIL YAHYA)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 31,
+    fullName: "محمد حمادة السيد إبراهيم (IBRAHIM SAYED-EL HAMADA MOHAMED)",
+    idNo: "11180132",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 32,
+    fullName: "عبد الرحمن محمد شكري عبد الرحمن (RAHMAN ABDEL SHOKRY MOHAMED RAHMAN ABDEL)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 33,
+    fullName: "حسين محمد رضا إبراهيم يوسف (YOUSSEF IBRAHIM REZA MOHAMED HUSSEIN)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 34,
+    fullName: "أحمد عبد الحافظ محمود عبد الهدى (ABDELHADY MAHMOUD ABDELHAFID AHMED)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 35,
+    fullName: "مسلم فؤاد طرفان (TARFAN FOUAD MUSLIM)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 36,
+    fullName: "أيمن محمود صادق رفعت (RIFAT SADEQ MAHMOUD AYMAN)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 37,
+    fullName: "محمد سعد عبد النعيم أحمد (AHMED NAIM-ABDEL SAAD MOHAMED)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 38,
+    fullName: "محمد سعد عبد المطلب عبد الرازقي (RAZAFI-AL ABDO MUTTALIB ABDEL SAAD MOHAMED)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 39,
+    fullName: "أحمد فؤاد أحمد جاد بلتاجي (BELTAGY GAD AHMED FOUAD AHMED)",
+    idNo: "1147218",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 40,
+    fullName: "أحمد رجب رجب سليمان (SOLIMAN RAGEB RAGEB AHMED)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 41,
+    fullName: "كريم محمد محمد عبد العزيز (AZIZ ABDEL MOHAMED MOHAMED KARIM)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 42,
+    fullName: "علي زكي محمد علي (ALI MOHAMMED ZAKI ALI)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 43,
+    fullName: "ناجي إبراهيم العزولي (EZZOULI IBRAHIM NAJI)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 44,
+    fullName: "شحاتة فتحي حافظ محمد سليمان (SULEIMAN MOHAMMED HAFEZ FATHI SHEHATA)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 45,
+    fullName: "محمد محرم فهمي أبو زيد (ZEID ABU FAHMI MUHARRAM MUHAMMAD)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 46,
+    fullName: "عمرو عبد الناصر عبد الحق عبد الباري (BARRY-ABDEL ABDELHAK NASSER ABDEL AMR)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 47,
+    fullName: "علي حسن إبراهيم عبد الظاهر (ZAHER-ABDEL IBRAHIM HASSAN ALI)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 48,
+    fullName: "مرتضى مجيد السندي (SINDI-AL MAJEED MURTADHA)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "البحرين",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 49,
+    fullName: "أحمد الحسن الدعسكي (DASKI-AL HASSAN-AL AHMED)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "البحرين",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 50,
+    fullName: "عبد الله محمد علي اليزيدي (YAZIDI-AL MOHAMMED ABDULLAH)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-08-01"
+  },
+  {
+    id: 51,
+    fullName: "أحمد علي أحمد برعود (BAROAUD AHMED ALI AHMED)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-08-01"
+  },
+  {
+    id: 52,
+    fullName: "محمد بكر الدباء (DABAA-AL BAKR MOHAMMED)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-08-01"
+  },
+  {
+    id: 53,
+    fullName: "حامد حمد حامد العلي (ALI'-AL HAMID HAMAD HAMID)",
+    idNo: "101505554",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الكويت",
+    addedDate: "2017-08-01"
+  },
+  {
+    id: 54,
+    fullName: "الساعدي عبد الله إبراهيم أبو خزيم (BUKHAZEM IBRAHIM ABDULLAH SAADI-AL)",
+    idNo: "PASSPORT-LIBYA",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "ليبيا",
+    addedDate: "2017-08-01"
+  },
+  {
+    id: 55,
+    fullName: "أحمد عبد الجليل الحسناوي (HASNAWI-AL JALEEL-AL ABD AHMED)",
+    idNo: "54390612",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "ليبيا",
+    addedDate: "2017-08-01"
+  },
+  {
+    id: 56,
+    fullName: "نايف صالح سالم القيسي (QAYSI-AL SALIM SALIH NAYIF)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-10-25"
+  },
+  {
+    id: 57,
+    fullName: "هاشم محسن عيدروس (AYDARUS MUHSIN HASHIM)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-10-25"
+  },
+  {
+    id: 58,
+    fullName: "نشوان العدني (ADANI-AL NASHWAN)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-10-25"
+  },
+  {
+    id: 59,
+    fullName: "خالد عبد الله المرفدي (MARFADI-AL ABDULLAH KHALID)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-10-25"
+  },
+  {
+    id: 60,
+    fullName: "سيف الرب سالم الحيشي (HEESHI-AL SALIM SAIFULRAB)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-10-25"
+  },
+  {
+    id: 61,
+    fullName: "عادل عبده فاري عثمان الذهباني (THAHBANI-AL OTHMAN FARI ABDU ADEL)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-10-25"
+  },
+  {
+    id: 62,
+    fullName: "رضوان قنان (QANAN RADWAN)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-10-25"
+  },
+  {
+    id: 63,
+    fullName: "والي نشوان اليافعي (I'YAFI-AL NASHWAN WALI)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-10-25"
+  },
+  {
+    id: 64,
+    fullName: "خالد سعيد غابش العبيدي (UBAYDI-AL GHABISH ID'SA KHALID)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-10-25"
+  },
+  {
+    id: 65,
+    fullName: "بلال علي الوافي (WAFI-AL ALI BILAL)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-10-25"
+  },
+  {
+    id: 66,
+    fullName: "خالد ناظم دياب (DIAB NAZEM KHALID)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "أمريكا",
+    addedDate: "2017-11-22"
+  },
+  {
+    id: 67,
+    fullName: "د. سالم جابر عمر علي سلطان فتح الله جابر (JABER FATHALLAH SULTAN ALI OMAR JABER SALEM)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "ليبيا",
+    addedDate: "2017-11-22"
+  },
+  {
+    id: 68,
+    fullName: "ميسر علي موسى عبد الله الجبوري (JUBURI-AL ABDALLAH MUSA ALI MAYSAR)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "قطر / العراق",
+    addedDate: "2017-11-22"
+  },
+  {
+    id: 69,
+    fullName: "محمد علي سعيد أتم (ATM SAEED ALI MOHAMMED)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2017-11-22"
+  },
+  {
+    id: 70,
+    fullName: "حسن علي محمد جمعة سلطان (SULTAN A'JUMA MOHAMMED ALI HASAN)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "البحرين",
+    addedDate: "2017-11-22"
+  },
+  {
+    id: 71,
+    fullName: "يحيى السيد إبراهيم محمد موسى (MOUSA MOHAMED IBRAHIM SAYED AL YAHIA)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-11-22"
+  },
+  {
+    id: 72,
+    fullName: "محمد جمال أحمد حشمت عبد الحميد (ABDELHAMEED HESHMAT AHMED GAMAL MOHAMMED)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-11-22"
+  },
+  {
+    id: 73,
+    fullName: "السيد محمود عزت إبراهيم عيسى (EISSA IBRAHIM EZZAT MAHMOUD ALSAYED)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-11-22"
+  },
+  {
+    id: 74,
+    fullName: "قدري محمد فهمي محمود الشيخ (SHAIKH-AL MAHMOUD FAHIM MOHAMMED QADRI)",
+    idNo: "618452",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-11-22"
+  },
+  {
+    id: 75,
+    fullName: "علاء علي علي محمد السماحي (SAMAHI-AL MOHAMMED ALI ALI ALAA)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2017-11-22"
+  },
+  {
+    id: 76,
+    fullName: "مسعود نيكباخت (NIKBAKHT UD'MAS)",
+    idNo: "VISA-2042004010355827",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "النمسا",
+    addedDate: "2018-05-10"
+  },
+  {
+    id: 77,
+    fullName: "سعيد نجفبور (NAJAFPUR ID'SA)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "إيران",
+    addedDate: "2018-05-10"
+  },
+  {
+    id: 78,
+    fullName: "محمد حسن خوداي (I'KHODA HASAN MOHAMMAD)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "إيران",
+    addedDate: "2018-05-10"
+  },
+  {
+    id: 79,
+    fullName: "محمد رضا خدمتي فلدزاجارد (VALADZAGHARD KHEDMATI MOHAMMADREZA)",
+    idNo: "35635875N",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "إيران",
+    addedDate: "2018-05-10"
+  },
+  {
+    id: 80,
+    fullName: "مقداد أميني (AMINI MEGHDAD)",
+    idNo: "36089349U",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "إيران",
+    addedDate: "2018-05-10"
+  },
+  {
+    id: 81,
+    fullName: "فؤاد صالحي (SALEHI FOAD)",
+    idNo: "25265428",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "إيران",
+    addedDate: "2018-05-10"
+  },
+  {
+    id: 82,
+    fullName: "محمد إبراهيم أوهادي (جلال فهدي) (OWHADI EBRAHIM MOHAMMAD)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "إيران",
+    addedDate: "2018-10-15"
+  },
+  {
+    id: 83,
+    fullName: "إسماعيل ريزافي (العميد ريزافي) (RAZAVI IL'ESMA)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "إيران",
+    addedDate: "2018-10-15"
+  },
+  {
+    id: 84,
+    fullName: "عبد الله صمد فاروق (عبد الصمد) (FAROQUI SAMAD ABDULLAH)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "أفغانستان",
+    addedDate: "2018-10-15"
+  },
+  {
+    id: 85,
+    fullName: "محمد داود مزمل (DAWOOD MOHAMMAD)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "أفغانستان",
+    addedDate: "2018-10-15"
+  },
+  {
+    id: 86,
+    fullName: "عبد الرحيم منان (MANAN RAHIM ABDUL)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "أفغانستان",
+    addedDate: "2018-10-15"
+  },
+  {
+    id: 87,
+    fullName: "محمد نعيم باريتش (BARICH NAEEM MOHAMMAD)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "أفغانستان",
+    addedDate: "2018-10-15"
+  },
+  {
+    id: 88,
+    fullName: "سادر إبراهيم (IBRAHIM SADR)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "أفغانستان",
+    addedDate: "2018-10-15"
+  },
+  {
+    id: 89,
+    fullName: "عبد العزيز <حاجي عزيز شاه زماني> (ZAMANI SHAH AZIZ ABDUL)",
+    idNo: "1810244AP",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "باكستان",
+    addedDate: "2018-10-15"
+  },
+  {
+    id: 90,
+    fullName: "حفيظ عبد المجيدي (MAJEED ABDUL HAFEEZ)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "أفغانستان",
+    addedDate: "2018-10-15"
+  },
+  {
+    id: 91,
+    fullName: "عبد الرحمن علي حسين الأحمد الراوي (RAWI-AL AHMAD-AL HUSAYN ALI 'RAHMAN AL-ABD)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (51) لسنة 2020 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "سوريا",
+    addedDate: "2020-09-01"
+  },
+  {
+    id: 92,
+    fullName: "سيد حبيب أحمد خان (KHAN AHMAD HABIB SAYED)",
+    idNo: "2502071P",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (51) لسنة 2020 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "أفغانستان",
+    addedDate: "2020-09-01"
+  },
+  {
+    id: 93,
+    fullName: "أحمد محمد عبد الله محمد الشيبه النعيمي (ALNUAIMI ALSHAIBA MOHAMMED ABDULLA MOHAMMED AHMED)",
+    idNo: "257451",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 94,
+    fullName: "محمد صقر يوسف صقر الزعابي (ZAABI AL SAQER YOUSIF SAQER MOHAMED)",
+    idNo: "10249",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 95,
+    fullName: "حمد محمد رحمه حميد الشامسي (ALSHAMSI HUMAID RAHMAH MOHAMMED HAMAD)",
+    idNo: "253981",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 96,
+    fullName: "سعيد ناصر سعيد ناصر الطنيجي (ALTENEIJI NASER SAEED NASER SAEED)",
+    idNo: "411483",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 97,
+    fullName: "حسن حسين طباجه (TABAJA HUSSAIN HASSAN)",
+    idNo: "58084207",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 98,
+    fullName: "أدهم حسين طباجه (TABAJA HUSSAIN ADHAM)",
+    idNo: "5207219",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 99,
+    fullName: "محمد أحمد مسعد سعيد (SAEED MUSAED AHMED MOHAMMED)",
+    idNo: "118618863",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 100,
+    fullName: "راشد صالح صالح الجرموزى (JARMOUZI AL SALEH SALEH RASHED)",
+    idNo: "7000815",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 101,
+    fullName: "نايف ناصر صالح الجرموزى (ALJARMOUZI SALEH NASSER NAIF)",
+    idNo: "76107095",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 102,
+    fullName: "ذبيح الله عبد القاهر دوراني (Durani Qahir Abdul Zubiullah)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "أفغانستان",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 103,
+    fullName: "سليمان صالح سالم عبوالن (Aboulan Salem Saleh Suliman)",
+    idNo: "8890725",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 104,
+    fullName: "عادل أحمد سالم عبيد علي بادره (Badrah Ali Obaid Salem Ahmed Adel)",
+    idNo: "7772452",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 105,
+    fullName: "علي ناصر عسيري (Alaseeri Nasser Ali)",
+    idNo: "11879",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "السعودية",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 106,
+    fullName: "فضل صالح سالم الطيابي (ALTAYABI SALEM SALEH FADHL)",
+    idNo: "2879473",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 107,
+    fullName: "عاشور عمر عاشور عبيدون (OBAIDOON Ashur Omar Ashur)",
+    idNo: "7777531",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 108,
+    fullName: "حازم محسن الفرحان (FARHAN AL MOHSEN HAZEM)",
+    idNo: "73739119",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "سوريا",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 109,
+    fullName: "مهدي عزيز الهكياستي (KIASATI AZIZOLLAH MEHDI)",
+    idNo: "143729561",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "إيران",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 110,
+    fullName: "فرشاد جعفر حاكم زاده (HAKEMZADEH JAFAR FARSHAD)",
+    idNo: "117728897",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "إيران",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 111,
+    fullName: "سيد رضا سيد محمد قاسمي (GHASEMI MOHMMAD REZA SEYYED)",
+    idNo: "67981903",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "إيران",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 112,
+    fullName: "محسن حسن كاركر حجت (KARGARHODJAT HASSAN MOHSEN)",
+    idNo: "46809739",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "إيران",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 113,
+    fullName: "إبراهيم محمود أحمد محمد (MOHAMMED AHMED MAHMOOD IBRAHIM)",
+    idNo: "261216",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 114,
+    fullName: "أسامة حسين دغيم (DUGHAEM HOUSEN OSAMA)",
+    idNo: "39396225",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "سوريا",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 115,
+    fullName: "عبد الرحمن أدومو موسى (MUSA ADO ABDURRAHAMAN)",
+    idNo: "170211735",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "نيجيريا",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 116,
+    fullName: "صالح يوسف أدامو (ADAMU YUSUF SALIHU)",
+    idNo: "119145993",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "نيجيريا",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 117,
+    fullName: "بشير علي يوسف (YUSUF ALI BASHIR)",
+    idNo: "154101359",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "نيجيريا",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 118,
+    fullName: "محمد إبراهيم عيسى (ISA IBRAHIM MUHAMMED)",
+    idNo: "47171720",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "نيجيريا",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 119,
+    fullName: "إبراهيم علي الحسن (ALHASSAN ALI IBRAHIM)",
+    idNo: "39624466",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "نيجيريا",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 120,
+    fullName: "سوراجو أبو بكر محمد (MUHAMMAD ABUBAKAR SURAJO)",
+    idNo: "175020687",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "نيجيريا",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 121,
+    fullName: "علاء خنفورة (علاء عبد الرزاق علي خنفورة) (Alaa khanfurah)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "سوريا",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 122,
+    fullName: "فادي سعيد كمار (فادي سعيد قمر) (KAMAR SAID FADI)",
+    idNo: "100038025",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "بريطانيا",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 123,
+    fullName: "وليد كامل عوض (AWAD KAMEL WALID)",
+    idNo: "30797785",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "سانت كيتس ونافيس",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 124,
+    fullName: "خالد وليد عوض (AWAD WALID KHALED)",
+    idNo: "112338165",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "سانت كيتس ونافيس",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 125,
+    fullName: "عماد خالق كونداكزي (KANTAKDZHI KHALLAK IMAD)",
+    idNo: "122879693",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "روسيا",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 126,
+    fullName: "محمد أيمن تيسير رشيد المراياتي (MARAYAT RASHID TAYSEER AYMAN MOUHAMMAD)",
+    idNo: "33652035",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الأردن",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 127,
+    fullName: "حسن أحمد مقلد (Moukalled Ahmed Hassan)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (9) لسنة 2023 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2023-01-30"
+  },
+  {
+    id: 128,
+    fullName: "راني حسن مقلد (Moukalled Hassan Rani)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (9) لسنة 2023 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2023-01-30"
+  },
+  {
+    id: 129,
+    fullName: "ريان حسن مقلد (Moukalled Hassan Ryyan)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (9) لسنة 2023 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2023-01-30"
+  },
+  {
+    id: 130,
+    fullName: "يوسف حسن أحمد الملا (MULLA AL AHMAD HASSAN YOUSEF)",
+    idNo: "146957",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "السويد / ليبيريا",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 131,
+    fullName: "سعيد خادم أحمد بن طوق المري (ALMARRI BINTOUQ AHMED KHADEM SAEED)",
+    idNo: "24171753U",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "تركيا / الإمارات",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 132,
+    fullName: "إبراهيم أحمد إبراهيم علي الحمادي (ALHAMMADI ALI IBRAHIM AHMED IBRAHIM)",
+    idNo: "35482622",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات / السويد",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 133,
+    fullName: "إلهام عبد الله أحمد الهاشمي (ALHASHEMI AHMAD ABDULLA ELHAM)",
+    idNo: "2569896A",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "السويد / الإمارات",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 134,
+    fullName: "جاسم راشد خلفان راشد الشامسي (ALSHAMSI RASHED KHALFAN RASHED JASEM)",
+    idNo: "2106900",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 135,
+    fullName: "خالد عبيد يوسف بوعتابه الزعابي (ALZAABI BUATABA YOUSIF OBAID KHALID)",
+    idNo: "92116F47C",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 136,
+    fullName: "عبد الرحمن حسن منيف عبد الله حسن الجابري (ALJABERI .A MUNIF HASAN RAHMAN ABDUL)",
+    idNo: "2454612",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 137,
+    fullName: "حميد عبد الله عبد الرحمن الجرمن النعيمي (ALNUAIMI .J ABDULRAHMAN ABDULLA HUMAID)",
+    idNo: "2535370",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 138,
+    fullName: "عبد الرحمن عمر سالم باجبير الحضرمي (ALHADHRAMI BAJUBAIR SALIM OMAR ABDELRAHMAN)",
+    idNo: "81768FNJR",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات / بريطانيا",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 139,
+    fullName: "علي حسن علي حسين الحمادي (ALHAMMADI HUSAIN ALI HASAN ALI)",
+    idNo: "2363886",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 140,
+    fullName: "محمد علي حسن علي الحمادي (ALHAMMADI ALI HASSAN ALI MOHAMED)",
+    idNo: "2333890",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن / الإمارات",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 141,
+    fullName: "حسن أبشر حور (Xuuroow Abshir Hasaan)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2025-05-15"
+  },
+  {
+    id: 142,
+    fullName: "أدن يوسف سعيد إبراهيم (Ibrahim Saciid Yusuf Aadan)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2025-05-15"
+  },
+  {
+    id: 143,
+    fullName: "مؤمن ديري (Dheere Mumin)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2025-05-15"
+  },
+  {
+    id: 144,
+    fullName: "ماكالين برهان (Burhan Macalin)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2025-05-15"
+  },
+  {
+    id: 145,
+    fullName: "علي أحمد حسين (Hussein Ahmed Ali)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2025-05-15"
+  },
+  {
+    id: 146,
+    fullName: "مكسمات كالي (Cali Maxamed)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2025-05-15"
+  },
+  {
+    id: 147,
+    fullName: "أحمد كبادي (Kabadhe Ahmed)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2025-05-15"
+  },
+  {
+    id: 148,
+    fullName: "سيات أيوتو (Ayuto Siyaat)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2025-05-15"
+  },
+  {
+    id: 149,
+    fullName: "حسن ياريسو آدم (Aadan Yariisow Hassan)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2025-05-15"
+  },
+  {
+    id: 150,
+    fullName: "سعيد عبد الله آدم (Aadan Abdullahi Siciid)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2025-05-15"
+  },
+  {
+    id: 151,
+    fullName: "محمد عبد الله حيري (Hirey Abdullah Mohamed)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2025-05-15"
+  },
+  {
+    id: 152,
+    fullName: "كبدي روبوي (Roobow Cabdi)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2025-05-15"
+  },
+  {
+    id: 153,
+    fullName: "شيخ آدم أبو بكر ماليلي (Malayle Abuukar Aadan Shiek)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2025-05-15"
+  },
+  {
+    id: 154,
+    fullName: "آدم جيس (Jiss Aadan)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2025-05-15"
+  },
+  {
+    id: 155,
+    fullName: "كومار جاد جاد قوها د (Cumar Guhaad)",
+    idNo: "—",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2025-05-15"
+  },
+  {
+    id: 156,
+    fullName: "علي محمد كرنيب (Ali Mohammed Karneeb)",
+    idNo: "000004783501",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 157,
+    fullName: "ناصر حسن نصر (Nasser Hassan Nasr)",
+    idNo: "1730241",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 158,
+    fullName: "حسن شحاده عثمان (Hassan Shehadeh Osman)",
+    idNo: "3571577",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 159,
+    fullName: "سامر حسن فواز (Samer Hassan Fawaz)",
+    idNo: "LR3018026",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 160,
+    fullName: "أحمد محمد يزبك (Ahmed Mohammed Yazbek)",
+    idNo: "473548",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 161,
+    fullName: "عيسى حسين قصير (Isa Hussein Qasir)",
+    idNo: "RL2923703",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الكويت / لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 162,
+    fullName: "إبراهيم علي ضاهر (Ibrahim Ali Daher)",
+    idNo: "2562031",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 163,
+    fullName: "عباس حسن غريب (Abbas Hassan Ghareeb)",
+    idNo: "RL3408611",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 164,
+    fullName: "عماد محمد بزي (Emad Mohammed Bazzi)",
+    idNo: "LR0993984",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 165,
+    fullName: "عزت يوسف عكر (Ezzat Yousef Akr)",
+    idNo: "67598594",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 166,
+    fullName: "وحيد محمود سبيتي (Wahid Mahmud Sbeiti)",
+    idNo: "473548",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 167,
+    fullName: "مصطفى حبيب حرب (Mustafa Habib Harb)",
+    idNo: "00006234426",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 168,
+    fullName: "محمد سليمان بدير (Mohammed Suleiman Badir)",
+    idNo: "000002245367",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 169,
+    fullName: "عادل محمد منصور (Adel Mohammad Mansour)",
+    idNo: "RL3181020",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 170,
+    fullName: "علي احمد كريشت (Ali Ahmed Krisht)",
+    idNo: "000040120529",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 171,
+    fullName: "نعمة أحمد جميل (Nima Ahmad Jamil)",
+    idNo: "000010757716",
+    type: "شخص إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+
+  // -------------------------------------------------------------
+  // ثانياً - التنظيمات المدرجة في قائمة الإرهاب المحلية (172 إلى 246)
+  // -------------------------------------------------------------
+  {
+    id: 172,
+    fullName: "جماعة الإخوان المسلمين الإماراتية (دعوة الإصلاح) (MUSLIM BROTHERHOOD IN THE UAE)",
+    idNo: "ORG-001",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 173,
+    fullName: "خلايا الجهاد الإماراتي (KHALAYA AL JIHAD AL-EMIRATI)",
+    idNo: "ORG-002",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 174,
+    fullName: "أحزاب الأمة في الخليج (OMMAH PARTY)",
+    idNo: "ORG-003",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "دول الخليج",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 175,
+    fullName: "تنظيم القاعدة (AL QAEDA)",
+    idNo: "ORG-004",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "دولي",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 176,
+    fullName: "الدولة الإسلامية في العراق والشام (داعش) (ISIS / ISIL)",
+    idNo: "ORG-005",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "العراق / سوريا",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 177,
+    fullName: "تنظيم القاعدة في شبه الجزيرة العربية (AL-QA'IDA IN THE ARABIAN PENINSULA)",
+    idNo: "ORG-006",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 178,
+    fullName: "أنصار الشريعة في اليمن (ANSAR AL-SHARIA IN YEMEN)",
+    idNo: "ORG-007",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 179,
+    fullName: "تنظيم وجماعة الإخوان المسلمين (THE MUSLIM BROTHERHOOD)",
+    idNo: "ORG-008",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "دولي",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 180,
+    fullName: "الجماعة الإسلامية في مصر (ISLAMIC GROUB IN EGYPT)",
+    idNo: "ORG-009",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 181,
+    fullName: "جماعة أنصار بيت المقدس المصرية (ANSAR BAIT AL-MAQDIS)",
+    idNo: "ORG-010",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 182,
+    fullName: "جماعة أجناد مصر (AJNAD MISR)",
+    idNo: "ORG-011",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مصر",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 183,
+    fullName: "مجلس شورى المجاهدين أكناف بيت المقدس (MAJLIS SHURA AL-MUJAHIDEEN)",
+    idNo: "ORG-012",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "فلسطين",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 184,
+    fullName: "حركة الحوثيين في اليمن (THE HOUTHI MOVEMENT IN YEMEN)",
+    idNo: "ORG-013",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 185,
+    fullName: "حزب الله السعودي في الحجاز (HEZBOLLAH AL-HIJAZ IN SAUDI ARABIA)",
+    idNo: "ORG-014",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "السعودية",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 186,
+    fullName: "حزب الله في دول مجلس التعاون الخليجي (HEZBOLLAH IN GCC)",
+    idNo: "ORG-015",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "دول الخليج",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 187,
+    fullName: "تنظيم القاعدة في إيران (AL-QAIDA ORGNAISATION IN IRAN)",
+    idNo: "ORG-016",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "إيران",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 188,
+    fullName: "منظمة بدر في العراق (BADER ORGANISATION IN IRAQ)",
+    idNo: "ORG-017",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "العراق",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 189,
+    fullName: "عصائب أهل الحق في العراق (ASAAIB AHL AL-HAQ IN IRAQ)",
+    idNo: "ORG-018",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "العراق",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 190,
+    fullName: "كتائب حزب الله (العراق) (HEZBOLLAH BRIGADE IN IRAQ)",
+    idNo: "ORG-019",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "العراق",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 191,
+    fullName: "لواء أبو فضل العباس في سوريا (LIWA ABU AL-FADL AL-ABBAS IN SYRIA)",
+    idNo: "ORG-020",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "سوريا",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 192,
+    fullName: "كتائب لواء اليوم الموعود (العراق) (AL-YOUM AL-MAOUD BRIGADE)",
+    idNo: "ORG-021",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "العراق",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 193,
+    fullName: "لواء عمر بن ياسر (سوريا) (OMAR BIN YASSER BRIGADE)",
+    idNo: "ORG-022",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "سوريا",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 194,
+    fullName: "جماعة أنصار الإسلام العراقية (ANSAR AL-ISLAM)",
+    idNo: "ORG-023",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "العراق",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 195,
+    fullName: "جبهة النصرة في سوريا (AL-NUSRAH FRONT IN SYRIA)",
+    idNo: "ORG-024",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "سوريا",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 196,
+    fullName: "حركة أحرار الشام في سوريا (HARAKET AHRAR ASHAM IN SYRIA)",
+    idNo: "ORG-025",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "سوريا",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 197,
+    fullName: "جيش الإسلام في فلسطين (THE ARMY OF ISLAM IN PALESTINE)",
+    idNo: "ORG-026",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "فلسطين",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 263,
+    fullName: "جمعية مؤسسة القرض الحسن (AL-Qard AL-Hassan Association)",
+    idNo: "LIC-217",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 264,
+    fullName: "شركة التسهيلات ش.م.م (AL Tasheelat Company)",
+    idNo: "REG-2008980",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 265,
+    fullName: "المدققون للمحاسبة والتدقيق (The Auditors for Accounting)",
+    idNo: "REG-278",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 266,
+    fullName: "الخبراء للمحاسبة والتدقيق والدراسات (AL-Khobara For Accounting)",
+    idNo: "REG-81396",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  // -------------------------------------------------------------
+  // خامساً - الأفراد والكيانات المرفوعة أسمائهم من قائمة الإرهاب المحلية (الصفحات 11 و 12)
+  // -------------------------------------------------------------
+  {
+    id: 267,
+    fullName: "محمد سعيد بن حلوان السقطري (SEQATRI-AL HELWAN BIN SAEED MOHAMMAD)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 268,
+    fullName: "خليفة بن محمد الربان (RABBAN-AL MOHAMMAD BIN KHALIFA)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 269,
+    fullName: "عبد الله بن خالد حمد بن عبد الله آل ثاني (THANI-AL ABDULLAH BIN HAMAD BIN KHALID BIN ABDULLAH)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 270,
+    fullName: "عبد الرحيم أحمد الحرام (HARAM-AL AHMAD RAHIM ABDUL)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 271,
+    fullName: "مبارك بن محمد العجي (AJJI-AL MOHAMMAD MUBARAK)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 272,
+    fullName: "جابر بن ناصر المري (MARRI-AL NASSER BIN JABIR)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 273,
+    fullName: "محمد جاسم السليطي (SULAITI-AL JASSIM MOHAMMED)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 274,
+    fullName: "علي بن عبد الله السويدي (SUWAIDI-AL ABDALLAH BIN ALI)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 275,
+    fullName: "هاشم محمد صالح عبد الله العوضي (AWADHY-AL ABDULLAH SALEH HASHIM)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 276,
+    fullName: "حمد عبد الله الفطيس المري (MARRI-AL FUTTAIS-AL ABDULLAH HAMAD)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 277,
+    fullName: "خالد سعيد فضل راشد الرومي البوعينين (BOUNEIN-AL SAEED KHALID)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 278,
+    fullName: "شقر جمعة الشهواني (SHAHWANI-AL JUMMAH SHAQER)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 279,
+    fullName: "صالح بن أحمد الغانم الكواري (KUWARI-AL GHANIM-AL AHMED BIN SALEH)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 280,
+    fullName: "محمد سليمان حيدر محمد الحيدر (HAYDAR-AL MOHAMMED HAIDAR SULAIMAN MOHAMMED)",
+    idNo: "01030941",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 281,
+    fullName: "حيدر حبيب علي (ALI HABEEB HAYDER)",
+    idNo: "3899559",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "العراق",
+    addedDate: "2021-01-01"
+  },
+  {
+    id: 282,
+    fullName: "باسم يوسف حسين الشغانبي (ALSHAGHANBI HUSSEIN YOUSUF BASIM)",
+    idNo: "44907857",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "العراق",
+    addedDate: "2021-01-01"
+  },
+  {
+    id: 283,
+    fullName: "شريف احمد شريف باعلوى (ALAWI BA SHARIF AHMED SHARIF)",
+    idNo: "43260201",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "اليمن",
+    addedDate: "2021-01-01"
+  },
+  {
+    id: 284,
+    fullName: "مانوج ساباروال اوبراكاش (PRAKASH OM SABHARWAL MANOJ)",
+    idNo: "4415541",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (24) لسنة 2024",
+    nationality: "الهند",
+    addedDate: "2021-01-01"
+  },
+  {
+    id: 285,
+    fullName: "عبده عبد الله دائل احمد (AHMED DAEL ABDULLAH ABDO)",
+    idNo: "8948884",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (13) لسنة 2022 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (48) لسنة 2024",
+    nationality: "اليمن",
+    addedDate: "2022-01-01"
+  },
+  {
+    id: 286,
+    fullName: "منظمة كانفاس في صربيا/بلجراد (CANVAS: CENTER FOR APPLIED NONVIOLENT ACTION AND STRATEGIES)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "صربيا",
+    addedDate: "2014-01-01"
+  },
+  {
+    id: 287,
+    fullName: "مركز قطر للعمل التطوعي (QATAR VOLUNTEER CENTER)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 288,
+    fullName: "شركة دوحة أبل (DOHA APPLE)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 289,
+    fullName: "قطر الخيرية (QATAR CHARITY)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 290,
+    fullName: "مؤسسة الشيخ عيد آل ثاني الخيرية (EID CHARITY)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 291,
+    fullName: "مؤسسة الشيخ ثاني بن عبد الله للخدمات الإنسانية (SHEIKH THANI BIN ABDULLAH FOUNDATION)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 292,
+    fullName: "مؤسسة البالغ الخيرية (AL-BALAGH CHARITABLE FOUNDATION)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 293,
+    fullName: "جمعية الإحسان الخيرية (AL-IHSAN CHARITABLE SOCIETY)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "الإمارات",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 201,
+    fullName: "تنظيم القاعدة في بلاد المغرب الإسلامي (AL QAIDA IN THE ISLAMIC MAGHREB)",
+    idNo: "ORG-030",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "شمال أفريقيا",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 202,
+    fullName: "كتيبة أنصار الشريعة في ليبيا (ANSAR AL-SHARIA IN LIBYA)",
+    idNo: "ORG-031",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "ليبيا",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 203,
+    fullName: "جماعة أنصار الشريعة في تونس (ANSAR AL-SHARI'A IN TUNISIA)",
+    idNo: "ORG-032",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "تونس",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 204,
+    fullName: "حركة الشباب المجاهدين الصومالية (AL-SHABAAB SOMALIA)",
+    idNo: "ORG-033",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الصومال",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 205,
+    fullName: "جماعة بوكو حرام في نيجيريا (BOKO HARAM IN NIGERIA)",
+    idNo: "ORG-034",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "نيجيريا",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 206,
+    fullName: "كتيبة المرابطون في مالي (ALMOURABITOUN GROUB IN MALI)",
+    idNo: "ORG-035",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مالي",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 207,
+    fullName: "حركة أنصار الدين في مالي (ANSAR AL-DINE IN MALI)",
+    idNo: "ORG-036",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "مالي",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 208,
+    fullName: "شبكة حقاني الباكستانية (THE HAQQANI NETWORK IN PAKISTAN)",
+    idNo: "ORG-037",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "باكستان",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 209,
+    fullName: "جماعة لشكر طيبة الباكستانية (LASHKAR E-TAYYIBA)",
+    idNo: "ORG-038",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "باكستان",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 210,
+    fullName: "حركة تركستان الشرقية في باكستان (EAST TURKISTAN MOVEMENT)",
+    idNo: "ORG-039",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "باكستان / الصين",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 211,
+    fullName: "جيش محمد في باكستان (JAISH-I-MOHAMMED IN PAKISTAN)",
+    idNo: "ORG-040",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "باكستان",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 212,
+    fullName: "جيش محمد في باكستان والهند (JAISH-E-MOHAMMED)",
+    idNo: "ORG-041",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "باكستان / الهند",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 213,
+    fullName: "المجاهدون الهنود في كشمير / الهند (INDIAN MUJAHIDEEN)",
+    idNo: "ORG-042",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الهند",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 214,
+    fullName: "إمارة القوقاز الإسلامية (الجهاديين الشيشانيين) (CAUCASUS EMIRATE)",
+    idNo: "ORG-043",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "روسيا / الشيشان",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 215,
+    fullName: "الحركة الإسلامية الأوزبكية (ISLAMIC MOVEMENT OF UZBEKISTAN)",
+    idNo: "ORG-044",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "أوزبكستان",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 216,
+    fullName: "جماعة أبو سياف الفلبينية (ABU SAYYAF GROUP)",
+    idNo: "ORG-045",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الفلبين",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 217,
+    fullName: "حركة طالبان باكستان (TAHRIK-E TALIBAN PAKISTAN)",
+    idNo: "ORG-046",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "باكستان",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 218,
+    fullName: "سرايا الدفاع عن بنغازي (ليبيا) (BENGHAZI DEFENSE BRIGADES)",
+    idNo: "ORG-066",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "ليبيا",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 219,
+    fullName: "سرايا الأشتر (البحرين) (AL-ASHTAR BRIGADES)",
+    idNo: "ORG-067",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "البحرين",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 220,
+    fullName: "إئتلاف 14 فبراير (البحرين) (FEBRUARY 14 COALITION)",
+    idNo: "ORG-068",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "البحرين",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 221,
+    fullName: "سرايا المقاومة (البحرين) (POPULAR RESISTANCE BRIGADES)",
+    idNo: "ORG-069",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "البحرين",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 222,
+    fullName: "حزب الله البحريني (البحرين) (BAHRAINS HEZBOLLAH)",
+    idNo: "ORG-070",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "البحرين",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 223,
+    fullName: "سرايا المختار (البحرين) (SARAYA AL-MUKHTAR)",
+    idNo: "ORG-071",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "البحرين",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 224,
+    fullName: "حركة أحرار البحرين (البحرين) (BAHRAIN FREEDOM MOVEMENT)",
+    idNo: "ORG-072",
+    type: "تنظيم إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "البحرين",
+    addedDate: "2017-06-11"
+  },
+
+  // -------------------------------------------------------------
+  // ثالثاً - الكيانات والشركات المدرجة في قائمة الإرهاب المحلية (225 إلى 275)
+  // -------------------------------------------------------------
+  {
+    id: 225,
+    fullName: "منظمة الكرامة (AL-KARAMA ORGANISATION)",
+    idNo: "ENT-001",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "دولي",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 226,
+    fullName: "مجلس العلاقات الأمريكية الإسلامية (كير) (CAIR)",
+    idNo: "ENT-002",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "أمريكا",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 227,
+    fullName: "الجمعية الإسلامية الأمريكية (ماس) (MAS)",
+    idNo: "ENT-003",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "أمريكا",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 228,
+    fullName: "الاتحاد العالمي لعلماء المسلمين (IUMS)",
+    idNo: "ENT-004",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "دولي",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 229,
+    fullName: "اتحاد المنظمات الإسلامية في أوروبا (FADERATION OF ISLAMIC ORGANISATION)",
+    idNo: "ENT-005",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "أوروبا",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 230,
+    fullName: "اتحاد المنظمات الإسلامية في فرنسا (UOIF)",
+    idNo: "ENT-006",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "فرنسا",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 231,
+    fullName: "الرابطة الإسلامية في بريطانيا (MAB)",
+    idNo: "ENT-007",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "بريطانيا",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 232,
+    fullName: "منظمة الإغاثة الإسلامية في لندن (ISLAMIC AID)",
+    idNo: "ENT-015",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "بريطانيا",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 233,
+    fullName: "مؤسسة قرطبة في بريطانيا (THE CORDOBA FOUNDATION)",
+    idNo: "ENT-016",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "بريطانيا",
+    addedDate: "2014-11-15"
+  },
+  {
+    id: 234,
+    fullName: "مؤسسة الرحمة الخيرية (ALRAHMA FOUNDATION FOR HUMAN DEVELOPMENT)",
+    idNo: "ENT-018",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-08-01"
+  },
+  {
+    id: 235,
+    fullName: "قناة النبأ (ALNABAA TV)",
+    idNo: "ENT-020",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "ليبيا",
+    addedDate: "2017-08-01"
+  },
+  {
+    id: 236,
+    fullName: "سوبر ماركت الخير (AL KHAYR SUPERMARKET)",
+    idNo: "ENT-022",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2017-10-25"
+  },
+  {
+    id: 237,
+    fullName: "راشد للصرافة (RASHED EXCHANGE)",
+    idNo: "ENT-025",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "إيران / الإمارات",
+    addedDate: "2018-05-10"
+  },
+  {
+    id: 238,
+    fullName: "جهان أراس كيش (JAHAN ARAS KISH)",
+    idNo: "ENT-026",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "إيران",
+    addedDate: "2018-05-10"
+  },
+  {
+    id: 239,
+    fullName: "شركة تواصل (TAWASUL COMPANY)",
+    idNo: "ENT-028",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (51) لسنة 2020 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "سوريا",
+    addedDate: "2020-09-01"
+  },
+  {
+    id: 240,
+    fullName: "شركة الهرم للصرافة (AL HARAM EXCHANGE)",
+    idNo: "ENT-029",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (51) لسنة 2020 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "سوريا",
+    addedDate: "2020-09-01"
+  },
+  {
+    id: 241,
+    fullName: "شركة الخالدي للصرافة (AL KHALIDI EXCHANGE)",
+    idNo: "ENT-030",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (51) لسنة 2020 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "سوريا",
+    addedDate: "2020-09-01"
+  },
+  {
+    id: 242,
+    fullName: "شركة آثار الأشعة للتجارة (RAY TRACING TRADING CO LLC)",
+    idNo: "576485",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 243,
+    fullName: "شركة م ح الحمرية ارزو الدولية م م ح (ARZOO INTERNATIONAL FZE)",
+    idNo: "1235",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 244,
+    fullName: "شركة حنان للملاحة (HANAN SHIPPING LLC)",
+    idNo: "246003",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 245,
+    fullName: "شركة فور كورنرز بتروليوم (FOUR CORNERS TRADING EST)",
+    idNo: "208202",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 246,
+    fullName: "شركة ساسكو لوجستيك (SASCO LOGISTIC LLC)",
+    idNo: "535215",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 247,
+    fullName: "شركة الجرموزي للتجارة العامة (ALJARMOUZI GENERAL TRADING LLC)",
+    idNo: "525824",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 248,
+    fullName: "شركة الجرموزي للشحن والتخليص (JARMOOZI AL CARGO & CLEARING LLC)",
+    idNo: "546318",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "الإمارات",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 249,
+    fullName: "شركة العمقي وإخوانه للصرافة (AL-OMGY & BROS MONEY EXCHANGE)",
+    idNo: "EXCH-YEMEN",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2021-09-13"
+  },
+  {
+    id: 250,
+    fullName: "العالمية إكسبرس للصرافة والتحويلات المالية (AlAlameya Express Company)",
+    idNo: "EXCH-SANAA",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (13) لسنة 2022 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2022-04-12"
+  },
+  {
+    id: 251,
+    fullName: "شركة الحظاء للصرافة (Al Hadha Exchange Co)",
+    idNo: "EXCH-HADHA",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (13) لسنة 2022 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "اليمن",
+    addedDate: "2022-04-12"
+  },
+  {
+    id: 252,
+    fullName: "لايت مون (LIGHT MOON)",
+    idNo: "IMO-9109550",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (13) لسنة 2022 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "دولي",
+    addedDate: "2022-04-12"
+  },
+  {
+    id: 253,
+    fullName: "CTEX EXCHANGE",
+    idNo: "2061281",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (9) لسنة 2023 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2023-01-30"
+  },
+  {
+    id: 254,
+    fullName: "CAMBRIDGE EDUCATION AND TRAINING CENTER LTD",
+    idNo: "8961546",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "المملكة المتحدة",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 255,
+    fullName: "IMAGINE LTD",
+    idNo: "9881248",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "المملكة المتحدة",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 256,
+    fullName: "WEMBLEY TREE LTD",
+    idNo: "15167935",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "المملكة المتحدة",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 257,
+    fullName: "WASLAFORALL",
+    idNo: "11617032",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "المملكة المتحدة",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 258,
+    fullName: "FUTURE GRADUATES LTD",
+    idNo: "9448340",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "المملكة المتحدة",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 259,
+    fullName: "YAS FOR INVESTMENT AND REAL ESTATE",
+    idNo: "10720363",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "المملكة المتحدة",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 260,
+    fullName: "HOLDCO UK PROPERTIES LIMITED",
+    idNo: "15745822",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "المملكة المتحدة",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 261,
+    fullName: "NAFEL CAPITAL",
+    idNo: "15672268",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "المملكة المتحدة",
+    addedDate: "2025-01-10"
+  },
+  {
+    id: 262,
+    fullName: "بيت مال المسلمين (Bayt Al-Mal ALMuslimeen)",
+    idNo: "UNIT-141",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 263,
+    fullName: "جمعية مؤسسة القرض الحسن (AL-Qard AL-Hassan Association)",
+    idNo: "LIC-217",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 264,
+    fullName: "شركة التسهيلات ش.م.م (AL Tasheelat Company)",
+    idNo: "REG-2008980",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 265,
+    fullName: "المدققون للمحاسبة والتدقيق (The Auditors for Accounting)",
+    idNo: "REG-278",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 266,
+    fullName: "الخبراء للمحاسبة والتدقيق والدراسات (AL-Khobara For Accounting)",
+    idNo: "REG-81396",
+    type: "كيان إرهابي",
+    reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
+    nationality: "لبنان",
+    addedDate: "2026-02-10"
+  },
+  {
+    id: 267,
+    fullName: "محمد سعيد بن حلوان السقطري (SEQATRI-AL HELWAN BIN SAEED)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 268,
+    fullName: "خليفة بن محمد الربان (RABBAN-AL MOHAMMAD BIN KHALIFA)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 269,
+    fullName: "عبد الله بن خالد حمد بن عبد الله آل ثاني (THANI-AL ABDULLAH BIN HAMAD)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 270,
+    fullName: "عبد الرحيم أحمد الحرام (HARAM-AL AHMAD RAHIM ABDUL)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 271,
+    fullName: "مبارك بن محمد العجي (AJJI-AL MOHAMMAD MUBARAK)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 272,
+    fullName: "جابر بن ناصر المري (MARRI-AL NASSER BIN JABIR)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 273,
+    fullName: "محمد جاسم السليطي (SULAITI-AL JASSIM MOHAMMED)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 274,
+    fullName: "علي بن عبد الله السويدي (SUWAIDI-AL ABDALLAH BIN ALI)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 275,
+    fullName: "هاشم محمد صالح عبد الله العوضي (AWADHY-AL ABDULLAH SALEH HASHIM)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 276,
+    fullName: "حمد عبد الله الفطيس المري (MARRI-AL FUTTAIS-AL ABDULLAH HAMAD)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 277,
+    fullName: "خالد سعيد فضل راشد الرومي البوعينين (BOUNEIN-AL SAEED KHALID)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 278,
+    fullName: "شقر جمعة الشهواني (SHAHWANI-AL JUMMAH SHAQER)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 279,
+    fullName: "صالح بن أحمد الغانم الكواري (KUWARI-AL GHANIM-AL AHMED BIN SALEH)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 280,
+    fullName: "محمد سليمان حيدر محمد الحيدر (HAYDAR-AL MOHAMMED HAIDAR)",
+    idNo: "01030941",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 281,
+    fullName: "حيدر حبيب علي (ALI HABEEB HAYDER)",
+    idNo: "3899559",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "العراق",
+    addedDate: "2021-01-01"
+  },
+  {
+    id: 282,
+    fullName: "باسم يوسف حسين الشغانبي (ALSHAGHANBI HUSSEIN YOUSUF)",
+    idNo: "44907857",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "العراق",
+    addedDate: "2021-01-01"
+  },
+  {
+    id: 283,
+    fullName: "شريف أحمد شريف باعلوى (ALAWI BA SHARIF AHMED)",
+    idNo: "43260201",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "اليمن",
+    addedDate: "2021-01-01"
+  },
+  {
+    id: 284,
+    fullName: "مانوج ساباروال اوبراكاش (PRAKASH OM SABHARWAL MANOJ)",
+    idNo: "4415541",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (24) لسنة 2024",
+    nationality: "الهند",
+    addedDate: "2021-01-01"
+  },
+  {
+    id: 285,
+    fullName: "عبده عبد الله دائل احمد (AHMED DAEL ABDULLAH ABDO)",
+    idNo: "8948884",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (13) لسنة 2022 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (48) لسنة 2024",
+    nationality: "اليمن",
+    addedDate: "2020-06-04"
+  },
+  {
+    id: 286,
+    fullName: "منظمة كانفاس في صربيا/بلجراد (CANVAS)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "صربيا",
+    addedDate: "2014-01-01"
+  },
+  {
+    id: 287,
+    fullName: "مركز قطر للعمل التطوعي (QATAR VOLUNTEER CENTER)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 288,
+    fullName: "شركة دوحة أبل (DOHA APPLE)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 289,
+    fullName: "قطر الخيرية (QATAR CHARITY)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 290,
+    fullName: "مؤسسة الشيخ عيد آل ثاني الخيرية (EID CHARITY)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 291,
+    fullName: "مؤسسة الشيخ ثاني بن عبد الله للخدمات الإنسانية (SHEIKH THANI BIN ABDULLAH)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 292,
+    fullName: "مؤسسة البالغ الخيرية (AL-BALAGH CHARITABLE FOUNDATION)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "قطر",
+    addedDate: "2017-06-11"
+  },
+  {
+    id: 293,
+    fullName: "جمعية الإحسان الخيرية (AL-IHSAN CHARITABLE SOCIETY)",
+    idNo: "—",
+    type: "مرفوع الإدراج",
+    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    nationality: "الإمارات",
+    addedDate: "2017-06-11"
+  }
+];

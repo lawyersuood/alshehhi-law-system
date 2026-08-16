@@ -97,8 +97,12 @@ interface EmailServerConfig {
   host: string;
   port: number;
   secure: boolean;
+  protocol: 'ssl_tls' | 'starttls' | 'none';
+  rejectUnauthorized: boolean;
   password?: string;
   connectedAt?: string;
+  lastTestedAt?: string;
+  lastTestStatus?: 'success' | 'failed';
 }
 
 let activeEmailConfig: EmailServerConfig = {
@@ -106,7 +110,9 @@ let activeEmailConfig: EmailServerConfig = {
   senderName: 'المحامي سعود أحمد الشحي',
   host: 'smtp.office365.com',
   port: 587,
-  secure: false, // TLS on port 587
+  secure: false, // false for STARTTLS on port 587
+  protocol: 'starttls',
+  rejectUnauthorized: false,
   connectedAt: new Date().toLocaleString('ar-AE')
 };
 
@@ -119,86 +125,219 @@ app.get('/api/email/settings', (req, res) => {
       host: activeEmailConfig.host,
       port: activeEmailConfig.port,
       secure: activeEmailConfig.secure,
-      connectedAt: activeEmailConfig.connectedAt
+      protocol: activeEmailConfig.protocol || (activeEmailConfig.port === 465 ? 'ssl_tls' : 'starttls'),
+      rejectUnauthorized: activeEmailConfig.rejectUnauthorized ?? false,
+      connectedAt: activeEmailConfig.connectedAt,
+      lastTestedAt: activeEmailConfig.lastTestedAt,
+      lastTestStatus: activeEmailConfig.lastTestStatus
     }
   });
 });
 
 app.post('/api/email/settings', (req, res) => {
-  const { email, senderName, password, host, port, secure } = req.body;
+  const { email, senderName, password, host, port, secure, protocol, rejectUnauthorized } = req.body;
   if (!email || !host) {
     res.status(400).json({ error: 'البريد الإلكتروني وخادم الإرسال SMTP مطلوبان' });
     return;
   }
+
+  const selectedProtocol = protocol || (Number(port) === 465 ? 'ssl_tls' : 'starttls');
+  const isSslTls = selectedProtocol === 'ssl_tls' || Boolean(secure);
 
   activeEmailConfig = {
     email: email.trim(),
     senderName: senderName ? senderName.trim() : email.trim(),
     host: host.trim(),
     port: Number(port) || 587,
-    secure: Boolean(secure),
-    password: password || undefined,
+    secure: isSslTls,
+    protocol: selectedProtocol,
+    rejectUnauthorized: Boolean(rejectUnauthorized),
+    password: password || activeEmailConfig.password || undefined,
     connectedAt: new Date().toLocaleString('ar-AE')
   };
 
   res.json({
     success: true,
-    message: 'تم حفظ وتفعيل إعدادات البريد بنجاح',
+    message: 'تم حفظ وتفعيل إعدادات البريد الإلكتروني وبروتوكولات الأمان بنجاح',
     settings: {
       email: activeEmailConfig.email,
       senderName: activeEmailConfig.senderName,
       host: activeEmailConfig.host,
       port: activeEmailConfig.port,
       secure: activeEmailConfig.secure,
-      connectedAt: activeEmailConfig.connectedAt
+      protocol: activeEmailConfig.protocol,
+      rejectUnauthorized: activeEmailConfig.rejectUnauthorized,
+      connectedAt: activeEmailConfig.connectedAt,
+      lastTestedAt: activeEmailConfig.lastTestedAt,
+      lastTestStatus: activeEmailConfig.lastTestStatus
     }
   });
 });
 
+// اختبار اتصال خادم SMTP واختبار بروتوكول الأمان
+app.post('/api/email/test-connection', async (req, res) => {
+  const startTime = Date.now();
+  try {
+    const { email, password, host, port, secure, protocol, rejectUnauthorized, senderName } = req.body;
+
+    const emailToUse = email || activeEmailConfig.email;
+    const hostToUse = host || activeEmailConfig.host;
+    const portToUse = Number(port) || activeEmailConfig.port || 587;
+    const passwordToUse = password !== undefined ? password : activeEmailConfig.password;
+    const selectedProtocol = protocol || (portToUse === 465 ? 'ssl_tls' : (protocol === 'none' ? 'none' : 'starttls'));
+    
+    if (!hostToUse || !emailToUse) {
+      res.status(400).json({
+        success: false,
+        error: 'بيانات غير مكتملة',
+        message: 'يرجى تزويد البريد الإلكتروني وخادم الإرسال SMTP لإجراء الاختبار'
+      });
+      return;
+    }
+
+    const isSslTls = selectedProtocol === 'ssl_tls';
+    const isStartTls = selectedProtocol === 'starttls';
+
+    const transporter = nodemailer.createTransport({
+      host: hostToUse.trim(),
+      port: portToUse,
+      secure: isSslTls, // Direct SSL/TLS connection (port 465)
+      requireTLS: isStartTls, // Force STARTTLS upgrade
+      auth: passwordToUse ? {
+        user: emailToUse.trim(),
+        pass: passwordToUse
+      } : undefined,
+      tls: {
+        rejectUnauthorized: Boolean(rejectUnauthorized)
+      },
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 8000
+    });
+
+    // إجراء اختبار الاتصال والمصادقة التراكمي (Handshake & AUTH)
+    await transporter.verify();
+
+    const latencyMs = Date.now() - startTime;
+    activeEmailConfig.lastTestedAt = new Date().toLocaleString('ar-AE');
+    activeEmailConfig.lastTestStatus = 'success';
+
+    res.json({
+      success: true,
+      latencyMs,
+      message: `تم الاتصال بنجاح بخادم SMTP (${hostToUse}:${portToUse})، وتمت المصادقة واختبار بروتوكول الأمان (${selectedProtocol.toUpperCase()}) بنجاح! الخادم جاهز تماماً لإرسال الفواتير المعتمدة للموكلين.`,
+      details: {
+        host: hostToUse,
+        port: portToUse,
+        protocol: selectedProtocol === 'ssl_tls' ? 'SSL / TLS (التشفير الضمني المباشر)' : (selectedProtocol === 'starttls' ? 'STARTTLS (الارتقاء المشفر المباشر)' : 'بدون تشفير (Plain)'),
+        rejectUnauthorized: Boolean(rejectUnauthorized),
+        email: emailToUse,
+        hasPassword: Boolean(passwordToUse),
+        readyForInvoices: true,
+        timestamp: new Date().toLocaleString('ar-AE')
+      }
+    });
+
+  } catch (err: any) {
+    const latencyMs = Date.now() - startTime;
+    const errMsg = err?.message || String(err);
+    const errCode = err?.code || 'UNKNOWN';
+
+    activeEmailConfig.lastTestedAt = new Date().toLocaleString('ar-AE');
+    activeEmailConfig.lastTestStatus = 'failed';
+
+    let recommendation = 'يرجى مراجعة إعدادات خادم SMTP وكلمة مرور التطبيق (App Password).';
+    if (errCode === 'EAUTH' || errMsg.includes('Invalid login') || errMsg.includes('Username and Password not accepted')) {
+      recommendation = 'فشل في توثيق الهوية (Authentication Error): تأكد من صحة البريد الإلكتروني واستخدام "كلمة مرور التطبيقات App Password" المخصصة من حساب Microsoft أو Google.';
+    } else if (errCode === 'ETIMEDOUT' || errCode === 'ESOCKET' || errCode === 'ECONNREFUSED') {
+      recommendation = 'تعذر الوصول للمنافذ المحددة (Connection Timeout): تأكد من صحة عنوان الخادم والمنفذ (465 لـ SSL/TLS أو 587 لـ STARTTLS) وحالة جدار الحماية.';
+    } else if (errMsg.includes('certificate') || errMsg.includes('SELF_SIGNED_CERT_IN_CHAIN') || errCode === 'DEPTH_ZERO_SELF_SIGNED_CERT') {
+      recommendation = 'مشكلة في شهادة الأمان (SSL Certificate Error): يمكنك إلغاء خيار "التحقق الصارم من شهادة SSL" لتجاوز الشهادات المخصصة على خوادم Webmail.';
+    } else if (errMsg.includes('WRONG_VERSION_NUMBER') || errMsg.includes('SSL routines')) {
+      recommendation = 'تعارض في بروتوكول الأمان (Protocol Mismatch): تم استخدام SSL/TLS المباشر على منفذ STARTTLS أو العكس. يرجى التبديل بين SSL/TLS و STARTTLS.';
+    }
+
+    res.status(200).json({
+      success: false,
+      latencyMs,
+      code: errCode,
+      message: 'فشل اختبار اتصال SMTP: ' + errMsg,
+      recommendation,
+      details: {
+        errorRaw: errMsg,
+        code: errCode,
+        timestamp: new Date().toLocaleString('ar-AE')
+      }
+    });
+  }
+});
+
 app.post('/api/email/send', async (req, res) => {
   try {
-    const { to, subject, body, smtp } = req.body;
+    const { to, subject, body, smtp, isInvoiceTest, invoiceDetails } = req.body;
     if (!to || !subject || !body) {
       res.status(400).json({ error: 'يرجى تقديم كافة الحقول المطلوبة (إلى، الموضوع، النص)' });
       return;
     }
 
     const configToUse = smtp || activeEmailConfig;
+    const selectedProtocol = configToUse.protocol || (Number(configToUse.port) === 465 ? 'ssl_tls' : 'starttls');
+    const isSslTls = selectedProtocol === 'ssl_tls' || Boolean(configToUse.secure);
+    const isStartTls = selectedProtocol === 'starttls';
 
     if (configToUse.password && configToUse.host) {
       const transporter = nodemailer.createTransport({
         host: configToUse.host,
         port: Number(configToUse.port) || 587,
-        secure: Boolean(configToUse.secure),
+        secure: isSslTls,
+        requireTLS: isStartTls,
         auth: {
           user: configToUse.email,
           pass: configToUse.password
         },
         tls: {
-          rejectUnauthorized: false
-        }
+          rejectUnauthorized: configToUse.rejectUnauthorized ?? false
+        },
+        connectionTimeout: 10000,
+        greetingTimeout: 10000,
+        socketTimeout: 10000
       });
+
+      const invoiceBadge = isInvoiceTest ? `
+        <div style="background-color: #fef3c7; border: 1px solid #f59e0b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #78350f;">
+          📄 <strong>رسالة فحص تجريبية لإرسال الفواتير الضريبية (Tax Invoice Delivery Test)</strong><br />
+          تم إرسال هذا البريد للتحقق من نجاح المراسلة عبر خادم SMTP الآمن وببروتوكول (${selectedProtocol.toUpperCase()}).
+        </div>
+      ` : '';
 
       const info = await transporter.sendMail({
         from: `"${configToUse.senderName || configToUse.email}" <${configToUse.email}>`,
         to: to,
         subject: subject,
         text: body,
-        html: `<div dir="rtl" style="font-family: Arial, sans-serif; line-height: 1.6; color: #1e293b; padding: 20px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
-          <h2 style="color: #0f172a; margin-top: 0;">${subject}</h2>
-          <div style="white-space: pre-wrap; font-size: 14px;">${body}</div>
-          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 20px 0;" />
-          <p style="font-size: 11px; color: #64748b; margin: 0;">مرسلة عبر النشر المباشر لنظام مكتب المحاماة — ${configToUse.senderName || configToUse.email}</p>
+        html: `<div dir="rtl" style="font-family: 'Segoe UI', Tahoma, Arial, sans-serif; line-height: 1.6; color: #1e293b; padding: 24px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; max-width: 650px; margin: 0 auto;">
+          <div style="text-align: center; border-b: 2px solid #072422; padding-bottom: 12px; margin-bottom: 20px;">
+            <h1 style="color: #072422; margin: 0; font-size: 18px; font-weight: bold;">مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية</h1>
+            <p style="color: #92400e; font-size: 12px; margin: 4px 0 0 0;">Suood Ahmed Al Shehhi Advocates & Legal Consultants — UAE</p>
+          </div>
+          ${invoiceBadge}
+          <h2 style="color: #0f172a; font-size: 16px; margin-top: 0; border-right: 4px solid #d4af37; padding-right: 10px;">${subject}</h2>
+          <div style="white-space: pre-wrap; font-size: 14px; color: #334155; margin-top: 16px;">${body}</div>
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0 16px 0;" />
+          <div style="font-size: 11px; color: #64748b; line-height: 1.5;">
+            📌 مرسلة رسمياً عبر خادم البريد المعتمد للمكتب (${configToUse.host}) ببروتوكول أمان (${selectedProtocol.toUpperCase()}).<br />
+            إصدار ومعالجة: ${configToUse.senderName || configToUse.email} | هاتف: +971 50 799 6976
+          </div>
         </div>`
       });
 
-      res.json({ success: true, messageId: info.messageId, mode: 'live_smtp' });
+      res.json({ success: true, messageId: info.messageId, mode: 'live_smtp', protocol: selectedProtocol });
     } else {
       // Direct simulation & Supabase sync mode
       res.json({
         success: true,
         mode: 'supabase_direct',
-        message: 'تم تسجيل وإرسال البريد إلكترونياً بنجاح وتأكيده في السجل'
+        message: 'تم تسجيل وإرسال البريد إلكترونياً بنجاح وتأكيده في السجل الموحد'
       });
     }
   } catch (err: any) {

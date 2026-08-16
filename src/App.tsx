@@ -9,7 +9,7 @@ import {
   Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, Building2,
   Gavel, Clock, AlertTriangle, CheckCircle2, ChevronLeft, Trash2, Printer,
   Phone, Mail, MapPin, TrendingUp, ShieldCheck, Lock, UserCheck, Key,
-  Check, Minus, Info, UserPlus, ShieldAlert, Edit2, User, RefreshCw,
+  Check, Minus, Info, UserPlus, ShieldAlert, Edit2, User, RefreshCw, Smartphone,
   Send, MessageSquare, Share2, ExternalLink, FileText, CheckCheck, SendHorizontal, Filter,
   Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download, Database, Code, LogOut,
   Inbox, Paperclip, RotateCw, QrCode, Settings, History, BookOpen, UploadCloud, Video,
@@ -21,6 +21,7 @@ import {
 } from "recharts";
 import html2pdf from "html2pdf.js";
 import * as XLSX from "xlsx";
+import { uaeTerroristList } from "./data/uaeTerroristListData";
 
 /* ============================================================
    نظام إدارة مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية
@@ -110,6 +111,7 @@ export interface RolePermissions {
   finance: boolean;       // 9. الفواتير والضريبة
   agreements: boolean;    // 10. اتفاقية المكتب المعتمدة
   kyc: boolean;           // 11. اعرف عميلك KYC / الوكالات والمستندات
+  bookingConsultation?: boolean;
   manageCases?: boolean;
   deleteCases?: boolean;
   manageHearings?: boolean;
@@ -352,6 +354,17 @@ export interface TrustTransaction {
   notes: string;
 }
 
+export interface JudgmentDeadlineLog {
+  id: string;
+  timestamp: string;
+  type: "7_days" | "3_days" | "manual" | "overdue";
+  channel: "whatsapp" | "email" | "both";
+  lawyerName: string;
+  recipientContact: string;
+  status: "sent" | "delivered" | "failed";
+  messageSnippet: string;
+}
+
 export interface JudgmentDeadline {
   id: number;
   caseId: number;
@@ -360,8 +373,18 @@ export interface JudgmentDeadline {
   rulingSummary: string;
   appealDays: number;
   appealDeadlineDate: string;
-  status: "جارٍ حساب الميعاد" | "تم تقديم الطعن" | "انقضى الميعاد القانوني";
+  status: "جارٍ حساب الميعاد" | "تم تقديم الطعن" | "انقضى الميعاد القانوني" | "تم قيد الطعن";
   notes: string;
+  assignedLawyerId?: number;
+  assignedLawyerName?: string;
+  assignedLawyerPhone?: string;
+  assignedLawyerEmail?: string;
+  preferredChannel?: "whatsapp" | "email" | "both";
+  alert7DaysSent?: boolean;
+  alert7DaysSentAt?: string;
+  alert3DaysSent?: boolean;
+  alert3DaysSentAt?: string;
+  autoAlertLogs?: JudgmentDeadlineLog[];
 }
 
 export interface InvoiceInstallment {
@@ -557,6 +580,7 @@ export const PERMISSION_MODULES: Array<{
   { id: "dashboard", label: "لوحة التحكم", desc: "الوصول للإحصائيات ونظرة عامة على المكتب", navTabIds: ["dashboard"] },
   { id: "cases", label: "القضايا", desc: "إدارة الملفات والقضايا والدعاوى", navTabIds: ["cases"] },
   { id: "clients", label: "الموكلين", desc: "سجل بيانات الموكلين والأطراف", navTabIds: ["clients"] },
+  { id: "bookingConsultation", label: "حجز استشارة مرئية", desc: "إدارة وحجز الاستشارات المرئية وأرباحها", navTabIds: ["booking_consultation"] },
   { id: "calendar", label: "الجلسات والرول", desc: "جدولة متابعة جلسات المحاكم", navTabIds: ["hearings"] },
   { id: "email", label: "البريد الإلكتروني المدمج", desc: "الاطلاع واستخدام البريد الإلكتروني المدمج", navTabIds: ["inapp_email"] },
   { id: "whatsapp", label: "واتساب المكتب المدمج", desc: "المراسلات الفورية وتنبيهات الموكلين عبر الواتساب", navTabIds: ["whatsapp_office"] },
@@ -774,6 +798,7 @@ const PERMISSION_LABELS: Record<keyof RolePermissions, { label: string; desc: st
   cases: { label: "2. القضايا", desc: "قيد وتحديث القضايا وتغيير حالاتها" },
   clients: { label: "3. الموكلين", desc: "إدارة وتعديل بيانات الموكلين" },
   calendar: { label: "4. الجلسات والرول", desc: "إضافة وتعديل مواعيد وقاعات الجلسات" },
+  bookingConsultation: { label: "حجز استشارة مرئية", desc: "إدارة وحجز الاستشارات المرئية للعملاء" },
   email: { label: "5. البريد الإلكتروني المدمج", desc: "الاطلاع واستخدام البريد الإلكتروني المدمج" },
   whatsapp: { label: "6. واتساب المكتب المدمج", desc: "المراسلات والتنبهات الفورية عبر الواتساب" },
   directory: { label: "7. دليل المحاكم والجهات", desc: "وسائل التواصل مع المحاكم والنيابات" },
@@ -907,7 +932,12 @@ const seedClients: Client[] = [
   { id: 186, name: "إبراهيم علي عباس بيشوه البلوشي-Ibrahim Ali Abbas Bishouh Al-Balushi", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" }
 ];
 
-const seedCases: CaseItem[] = [];
+const seedCases: CaseItem[] = [
+  { id: 101, number: "458/2026 تجاري دبي", clientId: 103, opponent: "شركة النجم الذهبي ش.ذ.م.م", type: "تجاري", court: "محكمة دبي الابتدائية", judge: "د. أحمد المنصوري", status: "حكم ابتدائي صادر", subject: "نزاع تعاقدي ومطالبة مالية بقيمة 850,000 درهم", openDate: "2026-01-10", fee: 45000 },
+  { id: 102, number: "1024/2026 مدني الشارقة", clientId: 105, opponent: "مؤسسة الأفق للتطوير العقاري", type: "مدني", court: "محكمة الشارقة الابتدائية", judge: "المستشار سلطان الشامسي", status: "حكم ابتدائي صادر", subject: "إخلاء للغصب ومطالبة بالتعويض عن تأخير التسليم", openDate: "2026-02-01", fee: 35000 },
+  { id: 103, number: "308/2026 عمالي أبوظبي", clientId: 114, opponent: "مؤسسة الرواد للخدمات", type: "عمالي", court: "محكمة أبوظبي العمالية", judge: "المستشار محمد راشد", status: "حكم ابتدائي صادر", subject: "مستحقات عمالية وتكلفة تذكرة وبدل الفصل التعسفي", openDate: "2026-03-15", fee: 20000 },
+  { id: 104, number: "112/2026 استئناف تجاري دبي", clientId: 115, opponent: "شركة سيركل لوجستيكس", type: "تجاري", court: "محكمة استئناف دبي", judge: "د. سالم الكعبي", status: "تم قيد الطعن", subject: "استئناف حكم ابتدائية ملزم بالمبلغ وقبول الطعن شكلاً", openDate: "2026-04-10", fee: 50000 }
+];
 
 const seedHearings: Hearing[] = [];
 
@@ -928,35 +958,7 @@ const FUND_SOURCES = ["راتب / دخل وظيفي", "نشاط تجاري", "ع
 
 const seedKyc: KycItem[] = [];
 
-const seedKycWatchlist: KycWatchlistItem[] = [
-  {
-    id: 1,
-    fullName: "جون سميث ريتشارد",
-    idNo: "PASSPORT-UK-987123",
-    type: "شخص منكشف سياسياً (PEP)",
-    reason: "مسؤول حكومي سابق عالي المخاطر - إفصاح مالي إجباري",
-    nationality: "المملكة المتحدة",
-    addedDate: "2025-01-15"
-  },
-  {
-    id: 2,
-    fullName: "مؤسسة الأفق الدولية المحظورة",
-    idNo: "CR-992011",
-    type: "قائمة حظر عقوبات دولية / محلية",
-    reason: "إدراج في قوائم الحظر والتحفظ على الأموال - قرار مكافحة غسل الأموال",
-    nationality: "أخرى",
-    addedDate: "2025-03-10"
-  },
-  {
-    id: 3,
-    fullName: "طارق عبد الله المنصوري",
-    idNo: "784-1982-991823-1",
-    type: "محظور التعامل تجارياً / إدارياً",
-    reason: "صدور أحكام منع تعامل نهائية واشتباه مخالفة الامتثال",
-    nationality: "الإمارات",
-    addedDate: "2025-06-20"
-  }
-];
+const seedKycWatchlist: KycWatchlistItem[] = uaeTerroristList;
 
 const seedNotifications: NotificationLog[] = [];
 
@@ -971,7 +973,96 @@ const seedCaseExpenses: CaseExpense[] = [];
 
 const seedTrustTransactions: TrustTransaction[] = [];
 
-const seedDeadlines: JudgmentDeadline[] = [];
+const seedDeadlines: JudgmentDeadline[] = [
+  {
+    id: 1,
+    caseId: 101,
+    rulingDate: new Date(Date.now() - 27 * 86400000).toISOString().slice(0, 10),
+    rulingType: "حكم ابتدائية",
+    rulingSummary: "إلزام المدعى عليها بشركة النجم الذهبي بأن تؤدي للموكل مبلغ 850,000 درهم والفائدة 5% والرسوم.",
+    appealDays: 30,
+    appealDeadlineDate: new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10),
+    status: "جارٍ حساب الميعاد",
+    notes: "مهلة استئناف عاجلة جداً — متبقي 3 أيام فقط لقيد الصحيفة بالمحكمة",
+    assignedLawyerId: 1,
+    assignedLawyerName: "المحامي سعود أحمد الشحي",
+    assignedLawyerPhone: "0501234567",
+    assignedLawyerEmail: "info@lawyersuood.com",
+    preferredChannel: "both",
+    alert7DaysSent: true,
+    alert7DaysSentAt: new Date(Date.now() - 4 * 86400000).toLocaleDateString("ar-AE") + " 10:00 AM",
+    alert3DaysSent: false,
+    autoAlertLogs: [
+      {
+        id: "log-1",
+        timestamp: new Date(Date.now() - 4 * 86400000).toLocaleDateString("ar-AE") + " 10:00 AM",
+        type: "7_days",
+        channel: "both",
+        lawyerName: "المحامي سعود أحمد الشحي",
+        recipientContact: "info@lawyersuood.com",
+        status: "sent",
+        messageSnippet: "⚠️ [تنبيه 7 أيام] تم إرسال إشعار استباقي أول للبريد الإلكتروني للتذكير بمهلة الاستئناف."
+      }
+    ]
+  },
+  {
+    id: 2,
+    caseId: 102,
+    rulingDate: new Date(Date.now() - 23 * 86400000).toISOString().slice(0, 10),
+    rulingType: "حكم ابتدائية",
+    rulingSummary: "رفض دعوى الإخلاء جزئياً وإلزام المستأجر بسداد المتأخرات فقط قدرها 120,000 درهم.",
+    appealDays: 30,
+    appealDeadlineDate: new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10),
+    status: "جارٍ حساب الميعاد",
+    notes: "مهلة طعن بالاستئناف بالشارقة — تجهيز صحيفة الاستئناف للمطالبة بالإخلاء",
+    assignedLawyerId: 2,
+    assignedLawyerName: "المحامي أحمد المزروعي",
+    assignedLawyerPhone: "0509876543",
+    assignedLawyerEmail: "ahmed.almazrouei@lawyersuood.com",
+    preferredChannel: "both",
+    alert7DaysSent: false,
+    alert3DaysSent: false,
+    autoAlertLogs: []
+  },
+  {
+    id: 3,
+    caseId: 103,
+    rulingDate: new Date(Date.now() - 12 * 86400000).toISOString().slice(0, 10),
+    rulingType: "حكم ابتدائية",
+    rulingSummary: "حكم عمالي بإلزام الشركة بمبلغ 45,000 درهم وبدل تذكرة عودة ومكافأة نهاية الخدمة.",
+    appealDays: 30,
+    appealDeadlineDate: new Date(Date.now() + 18 * 86400000).toISOString().slice(0, 10),
+    status: "جارٍ حساب الميعاد",
+    notes: "جارٍ التواصل مع الموكل لتحديد مدى الرغبة في الاستئناف أو التنفيذ المباشر",
+    assignedLawyerId: 1,
+    assignedLawyerName: "المحامي سعود أحمد الشحي",
+    assignedLawyerPhone: "0501234567",
+    assignedLawyerEmail: "info@lawyersuood.com",
+    preferredChannel: "email",
+    alert7DaysSent: false,
+    alert3DaysSent: false,
+    autoAlertLogs: []
+  },
+  {
+    id: 4,
+    caseId: 104,
+    rulingDate: new Date(Date.now() - 40 * 86400000).toISOString().slice(0, 10),
+    rulingType: "حكم استئناف",
+    rulingSummary: "قبول الاستئناف شكلاً وفي الموضوع بتعديل المبلغ إلى 320,000 درهم.",
+    appealDays: 30,
+    appealDeadlineDate: new Date(Date.now() - 10 * 86400000).toISOString().slice(0, 10),
+    status: "تم تقديم الطعن",
+    notes: "تم تمييز الحكم وقيد طعن التمييز برقم 112/2026 تمييز تجاري دبي",
+    assignedLawyerId: 1,
+    assignedLawyerName: "المحامي سعود أحمد الشحي",
+    assignedLawyerPhone: "0501234567",
+    assignedLawyerEmail: "info@lawyersuood.com",
+    preferredChannel: "both",
+    alert7DaysSent: true,
+    alert3DaysSent: true,
+    autoAlertLogs: []
+  }
+];
 
 const seedInstallments: InvoiceInstallment[] = [];
 
@@ -1111,6 +1202,23 @@ const sendWhatsAppMsg = (phone: string, text: string) => {
 };
 
 const sendEmailMsg = (email: string, subject: string, body: string) => {
+  if (email && email.includes("@")) {
+    fetch('/api/email/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: email,
+        subject: subject,
+        body: body
+      })
+    }).then(res => res.json()).then(data => {
+      if (data.success) {
+        console.log("Email dispatched via server SMTP successfully:", data);
+      }
+    }).catch(err => {
+      console.warn("Server email dispatch fallback to mailto:", err);
+    });
+  }
   const url = `mailto:${email || ""}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   window.open(url, "_blank");
 };
@@ -1881,37 +1989,37 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
   };
 
   return (
-    <div dir="rtl" className="min-h-screen w-full bg-[#072422] text-slate-100 flex flex-col justify-between selection:bg-[#b89b6a] selection:text-slate-950">
+    <div dir="rtl" className="min-h-screen w-full bg-gradient-to-br from-[#F4F8F6] via-[#EBF3EE] to-[#E2EFEB] text-slate-800 flex flex-col justify-between selection:bg-[#C5A059] selection:text-white">
       {/* الشريط العلوي */}
-      <header className="px-6 py-4 border-b border-[#0f4340] bg-[#0a3330]/90 backdrop-blur flex items-center justify-between">
-        <Logo variant="horizontal" mode="dark" size="md" />
-        <span className="hidden sm:inline-block px-3 py-1 rounded-full bg-[#114b48] border border-[#1b615d] text-[11px] font-bold text-[#e5c388]">
+      <header className="px-6 py-4 border-b border-emerald-900/10 bg-white/90 backdrop-blur flex items-center justify-between shadow-sm">
+        <Logo variant="horizontal" mode="light" size="md" />
+        <span className="hidden sm:inline-block px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-[#0D382B]">
           البوابة الرقمية الموحدة • دولة الإمارات
         </span>
       </header>
 
       {/* محتوى الشاشة */}
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-6">
-        <div className="w-full max-w-xl rounded-3xl bg-[#0a3835] border border-[#14524f] shadow-2xl p-6 sm:p-8 space-y-6">
+        <div className="w-full max-w-xl rounded-3xl bg-white border border-emerald-900/10 shadow-xl p-6 sm:p-8 space-y-6">
           {/* الشعار الرسمي وعنوان النموذج */}
           <div className="text-center space-y-2 flex flex-col items-center">
-            <Logo variant="full" mode="dark" size="xl" className="mb-2" />
-            <div className="pt-2 border-t border-[#125854] w-full">
-              <h2 className="text-xl sm:text-2xl font-black text-white flex items-center justify-center gap-2">
-                <Lock size={20} className="text-[#e5c388]" /> الدخول إلى البوابة القانونية
+            <Logo variant="full" mode="light" size="xl" className="mb-2" />
+            <div className="pt-3 border-t border-slate-100 w-full">
+              <h2 className="text-xl sm:text-2xl font-black text-[#0D382B] flex items-center justify-center gap-2">
+                <Lock size={20} className="text-[#C5A059]" /> الدخول إلى البوابة القانونية
               </h2>
-              <p className="text-xs text-teal-200/80 max-w-md mx-auto mt-1">
+              <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
                 يرجى إدخال بيانات حسابك المعتمد للوصول إلى نظام إدارة القضايا والخدمات
               </p>
             </div>
           </div>
 
           {/* تبويب الدخول / التسجيل */}
-          <div className="flex rounded-2xl bg-[#061e1d] p-1.5 border border-[#104845] text-xs font-bold">
+          <div className="flex rounded-2xl bg-emerald-50/60 p-1.5 border border-emerald-900/10 text-xs font-bold">
             <button
               onClick={() => { setAuthMode("login"); setErrorMsg(null); setSuccessMsg(null); }}
               className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-2 ${
-                authMode === "login" ? "bg-[#b89b6a] text-slate-950 font-black shadow-sm" : "text-teal-200/70 hover:text-white"
+                authMode === "login" ? "bg-[#0D382B] text-white font-black shadow-md" : "text-slate-600 hover:text-[#0D382B]"
               }`}
             >
               <Key size={15} /> تسجيل الدخول
@@ -1919,7 +2027,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
             <button
               onClick={() => { setAuthMode("register"); setErrorMsg(null); setSuccessMsg(null); }}
               className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-2 ${
-                authMode === "register" ? "bg-[#b89b6a] text-slate-950 font-black shadow-sm" : "text-teal-200/70 hover:text-white"
+                authMode === "register" ? "bg-[#0D382B] text-white font-black shadow-md" : "text-slate-600 hover:text-[#0D382B]"
               }`}
             >
               <UserPlus size={15} /> طلب انضمام جديد
@@ -1927,15 +2035,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
           </div>
 
           {successMsg && (
-            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-400 font-bold flex items-center gap-2 leading-relaxed">
-              <CheckCircle2 size={18} className="shrink-0 text-emerald-400" />
+            <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 font-bold flex items-center gap-2 leading-relaxed">
+              <CheckCircle2 size={18} className="shrink-0 text-emerald-600" />
               <span>{successMsg}</span>
             </div>
           )}
 
           {errorMsg && (
-            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 text-xs text-red-400 font-bold flex items-center gap-2 leading-relaxed">
-              <AlertCircle size={18} className="shrink-0" />
+            <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-bold flex items-center gap-2 leading-relaxed">
+              <AlertCircle size={18} className="shrink-0 text-red-600" />
               <span>{errorMsg}</span>
             </div>
           )}
@@ -1945,64 +2053,64 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
               {/* حقول البريد وكلمة المرور */}
               <div className="space-y-3.5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">
-                    البريد الإلكتروني أو اسم المستخدم <span className="text-[#e5c388]">*</span>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    البريد الإلكتروني أو اسم المستخدم <span className="text-[#C5A059]">*</span>
                   </label>
                   <div className="relative">
-                    <User size={16} className="absolute right-3 top-3 text-slate-500" />
+                    <User size={16} className="absolute right-3 top-3 text-slate-400" />
                     <input
                       type="text"
                       required
                       value={emailInput}
                       onChange={(e) => setEmailInput(e.target.value)}
                       placeholder="info@lawyersuood.com أو الاسم"
-                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 pr-9 py-2.5 text-xs text-white placeholder-slate-600 focus:border-[#b89b6a] focus:outline-none"
+                      className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3 pr-9 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-[#0D382B] focus:bg-white focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-bold text-slate-300">
-                      كلمة المرور السرية <span className="text-[#e5c388]">*</span>
+                    <label className="block text-xs font-bold text-slate-700">
+                      كلمة المرور السرية <span className="text-[#C5A059]">*</span>
                     </label>
                     <button
                       type="button"
                       onClick={() => setShowForgotModal(true)}
-                      className="text-[11px] font-bold text-[#e5c388] hover:underline"
+                      className="text-[11px] font-bold text-[#0D382B] hover:underline"
                     >
                       نسيت كلمة المرور؟
                     </button>
                   </div>
                   <div className="relative">
-                    <Lock size={16} className="absolute right-3 top-3 text-slate-500" />
+                    <Lock size={16} className="absolute right-3 top-3 text-slate-400" />
                     <input
                       type="password"
                       required
                       value={passwordInput}
                       onChange={(e) => setPasswordInput(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 pr-9 py-2.5 text-xs text-white placeholder-slate-600 focus:border-[#b89b6a] focus:outline-none"
+                      className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3 pr-9 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-[#0D382B] focus:bg-white focus:outline-none"
                     />
                   </div>
                 </div>
 
                 {/* خيار تذكر بيانات الدخول (Remember Me) */}
                 <div className="flex items-center justify-between pt-1">
-                  <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-300 select-none">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-600 select-none">
                     <input
                       type="checkbox"
                       checked={rememberMe}
                       onChange={(e) => setRememberMe(e.target.checked)}
-                      className="w-4 h-4 rounded border-slate-700 bg-slate-950 text-[#b89b6a] focus:ring-[#b89b6a] focus:ring-offset-slate-900"
+                      className="w-4 h-4 rounded border-slate-300 bg-slate-50 text-[#0D382B] focus:ring-[#0D382B]"
                     />
                     <span className="font-semibold">تذكر بيانات الدخول على هذا الجهاز</span>
                   </label>
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-[#061e1d] border border-[#104845] text-[11px] text-teal-200/80 space-y-1">
-                <p className="font-bold text-[#e5c388] flex items-center gap-1">
+              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 space-y-1">
+                <p className="font-bold text-[#0D382B] flex items-center gap-1">
                   <ShieldCheck size={14} /> بوابة مصرح بها للمستخدمين
                 </p>
                 <p className="leading-normal">
@@ -2013,7 +2121,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 rounded-xl bg-[#b89b6a] text-slate-950 font-black hover:bg-[#a38555] transition shadow-md flex items-center justify-center gap-2 text-xs disabled:opacity-50 cursor-pointer"
+                className="w-full py-3.5 rounded-xl bg-[#0D382B] text-white font-black hover:bg-[#124d40] transition shadow-md flex items-center justify-center gap-2 text-xs disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? (
                   <>
@@ -2031,59 +2139,59 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">الاسم الكامل *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">الاسم الكامل *</label>
                   <input
                     type="text"
                     required
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
                     placeholder="مثال: أ. محمد عبدالله الشامسي"
-                    className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-[#b89b6a] focus:outline-none"
+                    className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-xs text-slate-800 focus:border-[#0D382B] focus:bg-white focus:outline-none"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">البريد الإلكتروني *</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">البريد الإلكتروني *</label>
                     <input
                       type="email"
                       required
                       value={regEmail}
                       onChange={(e) => setRegEmail(e.target.value)}
                       placeholder="name@lawyersuood.com"
-                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-[#b89b6a] focus:outline-none"
+                      className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-xs text-slate-800 focus:border-[#0D382B] focus:bg-white focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-300 mb-1">رقم الهاتف</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">رقم الهاتف</label>
                     <input
                       type="tel"
                       value={regPhone}
                       onChange={(e) => setRegPhone(e.target.value)}
                       placeholder="+971 50 123 4567"
-                      className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-[#b89b6a] focus:outline-none"
+                      className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-xs text-slate-800 focus:border-[#0D382B] focus:bg-white focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">كلمة المرور للحساب *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">كلمة المرور للحساب *</label>
                   <input
                     type="password"
                     required
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     placeholder="أدخل كلمة مرور قوية"
-                    className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-[#b89b6a] focus:outline-none"
+                    className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-xs text-slate-800 focus:border-[#0D382B] focus:bg-white focus:outline-none"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">الصفة الوظيفية المطلوب الانضمام بها *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">الصفة الوظيفية المطلوب الانضمام بها *</label>
                   <select
                     value={regRoleKey}
                     onChange={(e) => setRegRoleKey(e.target.value as any)}
-                    className="w-full rounded-xl bg-slate-950 border border-slate-800 px-3 py-2.5 text-xs text-white focus:border-[#b89b6a] focus:outline-none"
+                    className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-xs text-slate-800 focus:border-[#0D382B] focus:bg-white focus:outline-none"
                   >
                     <option value="lawyer">محامٍ ومستشار قانوني</option>
                     <option value="secretary">إدارة وسكرتارية قانونية</option>
@@ -2252,7 +2360,9 @@ export default function App() {
       "09:00 AM", "10:30 AM", "12:00 PM", "02:00 PM",
       "03:30 PM", "05:00 PM", "06:30 PM", "08:00 PM"
     ],
-    blockedDates: []
+    blockedDates: [],
+    mbankIban: "AE25 0350 0000 1234 5678 901",
+    mbankMerchantId: "MBANK-CORP-SUOODLAW-2026"
   };
 
   const [consultationSettings, setConsultationSettings] = useState<ConsultationSettings>(() =>
@@ -2298,17 +2408,36 @@ export default function App() {
   const [invoices, setInvoices] = useState<Invoice[]>(() => loadStorage("firm_invoices", seedInvoices));
   const [docs, setDocs] = useState<DocItem[]>(() => loadStorage("firm_docs", seedDocs));
   const [poas, setPoas] = useState<PoaItem[]>(() => loadStorage("firm_poas", seedPoas));
-  const [kyc, setKyc] = useState<KycItem[]>(() => loadStorage("firm_kyc", seedKyc));
-  const [kycWatchlist, setKycWatchlist] = useState<KycWatchlistItem[]>(() => loadStorage("firm_kyc_watchlist", seedKycWatchlist));
+  const [kyc, setKyc] = useState<KycItem[]>(() => {
+    const saved = loadStorage<KycItem[]>("firm_kyc", seedKyc);
+    return saved || [];
+  });
+  const [kycWatchlist, setKycWatchlist] = useState<KycWatchlistItem[]>(() => {
+    const saved = loadStorage<KycWatchlistItem[]>("firm_kyc_watchlist", uaeTerroristList);
+    if (!saved || saved.length < 260) {
+      saveStorage("firm_kyc_watchlist", uaeTerroristList);
+      return uaeTerroristList;
+    }
+    return saved;
+  });
   const [notifications, setNotifications] = useState<NotificationLog[]>(seedNotifications);
   const [timeLogs, setTimeLogs] = useState<TimeLog[]>(seedTimeLogs);
   const [caseExpenses, setCaseExpenses] = useState<CaseExpense[]>(seedCaseExpenses);
   const [trustTransactions, setTrustTransactions] = useState<TrustTransaction[]>(seedTrustTransactions);
-  const [deadlines, setDeadlines] = useState<JudgmentDeadline[]>(seedDeadlines);
+  const [deadlines, setDeadlines] = useState<JudgmentDeadline[]>(() => loadStorage("firm_deadlines", seedDeadlines));
   const [installments, setInstallments] = useState<InvoiceInstallment[]>(seedInstallments);
   const [strReports, setStrReports] = useState<StrReport[]>(seedStrReports);
   const [courtContacts, setCourtContacts] = useState<CourtContact[]>(() => loadStorage("firm_court_contacts", seedCourtContacts));
   const [officeAgreements, setOfficeAgreements] = useState<OfficeAgreement[]>(() => loadStorage("firm_office_agreements", []));
+
+  const [autoCheckStatus, setAutoCheckStatus] = useState<{
+    lastCheckedAt?: string;
+    message?: string;
+    isChecking?: boolean;
+  }>({});
+  const [deadlineFilter, setDeadlineFilter] = useState<"all" | "urgent" | "active" | "done">("all");
+  const [selectedDeadlineLogs, setSelectedDeadlineLogs] = useState<JudgmentDeadline | null>(null);
+  const [reassignDeadlineModal, setReassignDeadlineModal] = useState<JudgmentDeadline | null>(null);
 
   useEffect(() => { saveStorage("firm_clients", clients); }, [clients]);
   useEffect(() => { saveStorage("firm_cases", cases); }, [cases]);
@@ -2318,6 +2447,7 @@ export default function App() {
   useEffect(() => { saveStorage("firm_office_agreements", officeAgreements); }, [officeAgreements]);
   useEffect(() => { saveStorage("firm_invoices", invoices); }, [invoices]);
   useEffect(() => { saveStorage("firm_docs", docs); }, [docs]);
+  useEffect(() => { saveStorage("firm_deadlines", deadlines); }, [deadlines]);
 
   // دالة تلقائية لدمج وتنظيف الموكلين المكررين
   useEffect(() => {
@@ -2375,6 +2505,8 @@ export default function App() {
   const [excelInvoicesParsed, setExcelInvoicesParsed] = useState<any[]>([]);
 
   const [showKycWatchlistUploadModal, setShowKycWatchlistUploadModal] = useState(false);
+  const [kycWatchlistSearch, setKycWatchlistSearch] = useState("");
+  const [kycTypeFilter, setKycTypeFilter] = useState<string>("الكل");
   const [kycWatchlistParsed, setKycWatchlistParsed] = useState<KycWatchlistItem[]>([]);
   const [kycSanctionAlert, setKycSanctionAlert] = useState<{ clientName: string; idNo?: string; watchlistItem: KycWatchlistItem } | null>(null);
 
@@ -2902,6 +3034,13 @@ export default function App() {
   const [courtCategoryFilter, setCourtCategoryFilter] = useState("الكل");
   const [editingCourtContact, setEditingCourtContact] = useState<CourtContact | null>(null);
 
+  // حالة استيراد ملفات الإكسل لدليل المحاكم والجهات القضائية
+  const [courtExcelModalOpen, setCourtExcelModalOpen] = useState(false);
+  const [courtImportPreviewList, setCourtImportPreviewList] = useState<Partial<CourtContact>[]>([]);
+  const [courtExcelImportMode, setCourtExcelImportMode] = useState<"append" | "replace">("append");
+  const [courtExcelFileName, setCourtExcelFileName] = useState<string>("");
+  const [courtExcelImportStatus, setCourtExcelImportStatus] = useState<{ message: string; isError?: boolean } | null>(null);
+
   // Sub-tabs configuration
   const [invoiceSubTab, setInvoiceSubTab] = useState<"invoices" | "agreements" | "payments" | "time" | "trust" | "expenses">("payments");
   const [docSubTab, setDocSubTab] = useState<"archive" | "generator" | "letterhead">("archive");
@@ -3150,6 +3289,12 @@ export default function App() {
   // ---------- 6. تأكيد وحفظ الوكالة المستخرجة بالذكاء الاصطناعي ----------
   const handleSaveExtractedPoa = () => {
     if (!poaAiExtracted) return;
+
+    const targetPoaNumber = (poaAiExtracted.poaNumber || "").trim();
+    if (targetPoaNumber && poas.some((p) => p.number.trim().toLowerCase() === targetPoaNumber.toLowerCase())) {
+      alert(`تنبيه: رقم الوكالة "${targetPoaNumber}" مسجل مسبقاً في قاعدة البيانات!\nلا يمكن تكرار إدراج نفس الوكالة.`);
+      return;
+    }
 
     let clientId: number;
     const extractedName = (poaAiExtracted.clientName || "موكل وكالة جديد").trim();
@@ -3514,6 +3659,8 @@ export default function App() {
   const [caseView, setCaseView] = useState<number | null>(null);
   const [q, setQ] = useState("");
   const [caseFilter, setCaseFilter] = useState("الكل");
+  const [caseJudgeFilter, setCaseJudgeFilter] = useState("الكل");
+  const [caseCourtFilter, setCaseCourtFilter] = useState("الكل");
 
   // حالات إدارة الموكلين
   const [clientCategoryFilter, setClientCategoryFilter] = useState<string>("الكل");
@@ -3848,7 +3995,11 @@ export default function App() {
     smtpHost: string;
     smtpPort: number;
     secure: boolean;
+    protocol: "ssl_tls" | "starttls" | "none";
+    rejectUnauthorized: boolean;
     isConfigured: boolean;
+    lastTestedAt?: string;
+    lastTestStatus?: "success" | "failed";
   }>({
     email: "info@lawyersuood.com",
     senderName: "المحامي سعود أحمد الشحي",
@@ -3856,8 +4007,28 @@ export default function App() {
     smtpHost: "smtp.office365.com",
     smtpPort: 587,
     secure: false,
+    protocol: "starttls",
+    rejectUnauthorized: false,
     isConfigured: true
   });
+
+  // حالة اختبار الاتصال والإرسال الفعلي للفواتير
+  const [testSmtpLoading, setTestSmtpLoading] = useState<boolean>(false);
+  const [testSmtpResult, setTestSmtpResult] = useState<{
+    success: boolean;
+    message: string;
+    latencyMs?: number;
+    code?: string;
+    recommendation?: string;
+    details?: any;
+  } | null>(null);
+
+  const [testInvoiceLoading, setTestInvoiceLoading] = useState<boolean>(false);
+  const [testInvoiceRecipient, setTestInvoiceRecipient] = useState<string>("");
+  const [testInvoiceResult, setTestInvoiceResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
 
   const [inAppEmails, setInAppEmails] = useState<Array<{
     id: number;
@@ -4003,6 +4174,10 @@ export default function App() {
             smtpHost: data.settings.host || prev.smtpHost,
             smtpPort: data.settings.port || prev.smtpPort,
             secure: data.settings.secure ?? prev.secure,
+            protocol: data.settings.protocol || (data.settings.port === 465 ? 'ssl_tls' : 'starttls'),
+            rejectUnauthorized: data.settings.rejectUnauthorized ?? false,
+            lastTestedAt: data.settings.lastTestedAt,
+            lastTestStatus: data.settings.lastTestStatus,
             isConfigured: true
           }));
         }
@@ -4182,6 +4357,113 @@ export default function App() {
     }
   };
 
+  const handleTestSmtpConnection = async () => {
+    if (!emailConfig.email || !emailConfig.smtpHost) {
+      alert("يرجى إدخال عنوان البريد لخادم الإرسال (SMTP Host) قبل إجراء الاختبار");
+      return;
+    }
+    setTestSmtpLoading(true);
+    setTestSmtpResult(null);
+
+    try {
+      const res = await fetch('/api/email/test-connection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: emailConfig.email,
+          senderName: emailConfig.senderName,
+          password: emailConfig.appPassword,
+          host: emailConfig.smtpHost,
+          port: emailConfig.smtpPort,
+          secure: emailConfig.protocol === "ssl_tls",
+          protocol: emailConfig.protocol,
+          rejectUnauthorized: emailConfig.rejectUnauthorized
+        })
+      });
+
+      const data = await res.json();
+      setTestSmtpResult({
+        success: Boolean(data.success),
+        message: data.message || (data.success ? "تم الاتصال واختبار الأمان بنجاح!" : "فشل اختبار اتصال SMTP"),
+        latencyMs: data.latencyMs,
+        code: data.code,
+        recommendation: data.recommendation,
+        details: data.details
+      });
+
+      if (data.success) {
+        setEmailConfig(prev => ({
+          ...prev,
+          lastTestedAt: new Date().toLocaleTimeString("ar-AE", { hour: '2-digit', minute: '2-digit' }),
+          lastTestStatus: "success"
+        }));
+      } else {
+        setEmailConfig(prev => ({ ...prev, lastTestStatus: "failed" }));
+      }
+    } catch (err: any) {
+      setTestSmtpResult({
+        success: false,
+        message: "تعذر الاتصال بالخادم المحلي أو انقطع الاتصال ببروتوكول الأمان",
+        recommendation: "يرجى التأكد من تشغيل خادم التطبيق المحلي وإعادة المحاولة."
+      });
+    } finally {
+      setTestSmtpLoading(false);
+    }
+  };
+
+  const handleSendTestInvoice = async () => {
+    const targetEmail = testInvoiceRecipient.trim() || emailConfig.email;
+    if (!targetEmail) {
+      alert("يرجى إدخال بريد إلكتروني لإرسال الفاتورة التجريبية");
+      return;
+    }
+
+    setTestInvoiceLoading(true);
+    setTestInvoiceResult(null);
+
+    try {
+      const res = await fetch('/api/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: targetEmail,
+          subject: `📄 [فحص تسليم فاتورة ضريبية] - مكتب سعود أحمد الشحي للمحاماة (${emailConfig.protocol.toUpperCase()})`,
+          body: `الموكل الفاضل / المستلم المحترم،\n\nتحية طيبة وبعد،\n\nهذا بريد فحص آلي صادر من نظام الفواتير والمراسلات الموحد بمكتب المحاماة للتأكد من وصول الفواتير الضريبية والإشعارات القانونية بنجاح إلى صندوق البريد الوارد الخاص بكم.\n\nتفاصيل العينة التجريبية للفاتورة:\n• رقم الفاتورة: INV-2026-TEST-VERIFIED\n• بيان الخدمة: أتعاب استشارة واستحقاق قضائي تجريبي\n• المبلغ الأولي: 5,000 درهم إماراتي\n• ضريبة القيمة المضافة VAT (5%): 250 درهم إماراتي\n• الإجمالي المستحق: 5,250 درهم إماراتي\n• بروتوكول التشفير المعتمد: ${emailConfig.protocol.toUpperCase()} (${emailConfig.smtpHost}:${emailConfig.smtpPort})\n\nتاريخ وساعة الإرسال: ${new Date().toLocaleString("ar-AE")}\n\nمع تحيات،\nمكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية`,
+          smtp: {
+            email: emailConfig.email,
+            senderName: emailConfig.senderName,
+            password: emailConfig.appPassword,
+            host: emailConfig.smtpHost,
+            port: emailConfig.smtpPort,
+            protocol: emailConfig.protocol,
+            rejectUnauthorized: emailConfig.rejectUnauthorized
+          },
+          isInvoiceTest: true
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setTestInvoiceResult({
+          success: true,
+          message: `تم إرسال الفاتورة التجريبية بنجاح إلى البريد (${targetEmail}) عبر بروتوكول (${emailConfig.protocol.toUpperCase()})!`
+        });
+      } else {
+        setTestInvoiceResult({
+          success: false,
+          message: `تعذر إرسال البريد: ${data.note || data.error || "تأكد من كلمة مرور التطبيق"}`
+        });
+      }
+    } catch (err: any) {
+      setTestInvoiceResult({
+        success: false,
+        message: "فشل في إرسال طلب الفاتورة التجريبية."
+      });
+    } finally {
+      setTestInvoiceLoading(false);
+    }
+  };
+
   const handleSaveEmailSettings = async () => {
     if (!emailConfig.email || !emailConfig.smtpHost) {
       alert("يرجى إدخال البريد الإلكتروني وخادم الإرسال SMTP");
@@ -4198,7 +4480,9 @@ export default function App() {
           password: emailConfig.appPassword,
           host: emailConfig.smtpHost,
           port: emailConfig.smtpPort,
-          secure: emailConfig.secure
+          secure: emailConfig.protocol === "ssl_tls",
+          protocol: emailConfig.protocol,
+          rejectUnauthorized: emailConfig.rejectUnauthorized
         })
       });
     } catch (e) {
@@ -4207,7 +4491,7 @@ export default function App() {
 
     setEmailConfig(prev => ({ ...prev, isConfigured: true }));
     setShowEmailSettingsModal(false);
-    setPermissionNotice(`تم حفظ وتفعيل إعدادات البريد الإلكتروني بنجاح لـ (${emailConfig.email}) عبر خادم (${emailConfig.smtpHost})`);
+    setPermissionNotice(`تم حفظ وتفعيل إعدادات البريد الإلكتروني وبروتوكول (${emailConfig.protocol.toUpperCase()}) بنجاح لـ (${emailConfig.email})`);
   };
 
   const handleSendInAppEmail = async () => {
@@ -4937,6 +5221,212 @@ export default function App() {
   const caseNo = (id: number) => cases.find((c) => c.id === id)?.number || "—";
   const nextId = <T extends { id: number }>(arr: T[]) => (arr.length ? Math.max(...arr.map((x) => x.id)) + 1 : 1);
 
+  // ---------- نظام التنبيهات التلقائي لمواعيد الطعون (7 أيام و 3 أيام) ----------
+  const runAutoAppealDeadlineChecker = async (deadlinesList: JudgmentDeadline[], forceManual = false) => {
+    setAutoCheckStatus(prev => ({ ...prev, isChecking: true }));
+    let updatedList = [...deadlinesList];
+    let newLogs: NotificationLog[] = [];
+    let sentCount7Days = 0;
+    let sentCount3Days = 0;
+    let overdueCount = 0;
+
+    const timestampNow = new Date().toLocaleString("ar-AE", {
+      dateStyle: "short",
+      timeStyle: "short"
+    });
+
+    for (let i = 0; i < updatedList.length; i++) {
+      const item = { ...updatedList[i] };
+      if (item.status === "تم قيد الطعن" || item.status === "تم تقديم الطعن") {
+        continue;
+      }
+
+      const daysLeft = daysUntil(item.appealDeadlineDate);
+      const cs = cases.find((c) => c.id === item.caseId);
+      const caseNum = cs ? cs.number : `قضية رقم #${item.caseId}`;
+      const client = cs ? clients.find((cli) => cli.id === cs.clientId) : null;
+      const clientNm = client ? client.name : "الموكل";
+
+      const lawyerName = item.assignedLawyerName || cs?.judge || "المحامي المسؤول";
+      const lawyerEmail = item.assignedLawyerEmail || emailConfig.email || "info@lawyersuood.com";
+      const lawyerPhone = item.assignedLawyerPhone || "0501234567";
+
+      // 1. Check 3-Day Critical Threshold
+      if (daysLeft <= 3 && daysLeft >= 0) {
+        if (!item.alert3DaysSent || forceManual) {
+          const subject = `🚨 [تنبيه حرج جداً - متبقي 3 أيام] مهلة انقضاء الطعن بالقضية (${caseNum})`;
+          const emailContent = `سعادة المحامي / ${lawyerName} المحترم،\n\nتحية طيبة وبعد،\n\nنود لفت عنايتكم العاجلة والشديدة بأنه متبقي (${daysLeft}) أيام فقط على انقضاء المهلة القانونية المقررة للطعن/الاستئناف في الحكم القضائي الصادر بالقضية التالية:\n\n• رقم القضية: ${caseNum}\n• اسم الموكل: ${clientNm}\n• المحكمة: ${cs ? cs.court : "—"}\n• نوع الحكم: ${item.rulingType}\n• تاريخ الحكم: ${fmtDate(item.rulingDate)}\n• آخر موعد قاطع للطعن: ${fmtDate(item.appealDeadlineDate)}\n• منطوق الحكم: ${item.rulingSummary}\n\nيرجى المبادرة المباشرة بإعداد وقيد صحيفة الطعن قبل سقوط الحق القانوني للموكل وتأكيد قيد الطعن بالنظام.\n\nنظام الإشعارات الآلي الموحد\nمكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية`;
+
+          try {
+            fetch('/api/email/send', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: lawyerEmail,
+                subject,
+                body: emailContent,
+                smtp: {
+                  email: emailConfig.email,
+                  senderName: emailConfig.senderName,
+                  password: emailConfig.appPassword,
+                  host: emailConfig.smtpHost,
+                  port: emailConfig.smtpPort,
+                  protocol: emailConfig.protocol,
+                  rejectUnauthorized: emailConfig.rejectUnauthorized
+                }
+              })
+            }).catch(console.error);
+          } catch (e) {
+            console.warn("SMTP Auto Dispatch Error:", e);
+          }
+
+          newLogs.push({
+            id: Date.now() + Math.random(),
+            recipientName: lawyerName,
+            recipientPhone: lawyerPhone,
+            recipientEmail: lawyerEmail,
+            channel: item.preferredChannel === "whatsapp" ? "واتساب" : item.preferredChannel === "both" ? "كلاهما" : "إيميل",
+            type: "تنبيه ميعاد طعن / استئناف",
+            message: emailContent,
+            sentAt: timestampNow,
+            status: "تم الإرسال",
+            relatedRef: `طوارئ الطعون - قضية ${caseNum}`
+          });
+
+          const logEntry: JudgmentDeadlineLog = {
+            id: Math.random().toString(36).substring(2, 9),
+            timestamp: timestampNow,
+            type: "3_days",
+            channel: item.preferredChannel || "both",
+            lawyerName,
+            recipientContact: lawyerEmail,
+            status: "sent",
+            messageSnippet: `🚨 تم إرسال تنبيه حرج قبل 3 أيام من انقضاء المهلة (آخر موعد: ${fmtDate(item.appealDeadlineDate)})`
+          };
+
+          item.alert3DaysSent = true;
+          item.alert3DaysSentAt = timestampNow;
+          item.autoAlertLogs = [logEntry, ...(item.autoAlertLogs || [])];
+          sentCount3Days++;
+        }
+      } 
+      // 2. Check 7-Day Early Threshold
+      else if (daysLeft <= 7 && daysLeft > 3) {
+        if (!item.alert7DaysSent || forceManual) {
+          const subject = `⚠️ [تنبيه استباقي - متبقي 7 أيام] ميعاد الطعن بالقضية (${caseNum})`;
+          const emailContent = `سعادة المحامي / ${lawyerName} المحترم،\n\nتحية طيبة وبعد،\n\nنود تذكيركم بموعد قرب انقضاء المهلة القانونية للطعن/الاستئناف في الحكم الصادر في القضية التالية (متبقي 7 أيام):\n\n• رقم القضية: ${caseNum}\n• اسم الموكل: ${clientNm}\n• المحكمة: ${cs ? cs.court : "—"}\n• نوع الحكم: ${item.rulingType}\n• تاريخ الحكم: ${fmtDate(item.rulingDate)}\n• آخر موعد للطعن: ${fmtDate(item.appealDeadlineDate)}\n• منطوق الحكم: ${item.rulingSummary}\n\nنرجو مراجعة ملف القضية وتجهيز لائحة الطعن والتنسيق مع الموكل.\n\nنظام الإشعارات الآلي الموحد\nمكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية`;
+
+          try {
+            fetch('/api/email/send', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: lawyerEmail,
+                subject,
+                body: emailContent,
+                smtp: {
+                  email: emailConfig.email,
+                  senderName: emailConfig.senderName,
+                  password: emailConfig.appPassword,
+                  host: emailConfig.smtpHost,
+                  port: emailConfig.smtpPort,
+                  protocol: emailConfig.protocol,
+                  rejectUnauthorized: emailConfig.rejectUnauthorized
+                }
+              })
+            }).catch(console.error);
+          } catch (e) {
+            console.warn("SMTP Auto Dispatch Error:", e);
+          }
+
+          newLogs.push({
+            id: Date.now() + Math.random(),
+            recipientName: lawyerName,
+            recipientPhone: lawyerPhone,
+            recipientEmail: lawyerEmail,
+            channel: item.preferredChannel === "whatsapp" ? "واتساب" : item.preferredChannel === "both" ? "كلاهما" : "إيميل",
+            type: "تنبيه ميعاد طعن / استئناف",
+            message: emailContent,
+            sentAt: timestampNow,
+            status: "تم الإرسال",
+            relatedRef: `تنبيه الطعون (7 أيام) - قضية ${caseNum}`
+          });
+
+          const logEntry: JudgmentDeadlineLog = {
+            id: Math.random().toString(36).substring(2, 9),
+            timestamp: timestampNow,
+            type: "7_days",
+            channel: item.preferredChannel || "both",
+            lawyerName,
+            recipientContact: lawyerEmail,
+            status: "sent",
+            messageSnippet: `⚠️ تم إرسال تنبيه استباقي قبل 7 أيام من انقضاء المهلة (آخر موعد: ${fmtDate(item.appealDeadlineDate)})`
+          };
+
+          item.alert7DaysSent = true;
+          item.alert7DaysSentAt = timestampNow;
+          item.autoAlertLogs = [logEntry, ...(item.autoAlertLogs || [])];
+          sentCount7Days++;
+        }
+      }
+
+      if (daysLeft < 0 && item.status === "جارٍ حساب الميعاد") {
+        item.status = "انقضى الميعاد القانوني";
+        overdueCount++;
+      }
+
+      updatedList[i] = item;
+    }
+
+    setDeadlines(updatedList);
+    if (newLogs.length > 0) {
+      setNotifications(prev => [...newLogs, ...prev]);
+    }
+
+    const statusMsg = `تم فحص ${updatedList.length} طعن: تم إرسال (${sentCount3Days}) تنبيه حرج (3 أيام) و (${sentCount7Days}) تنبيه استباقي (7 أيام).`;
+    setAutoCheckStatus({
+      lastCheckedAt: timestampNow,
+      message: statusMsg,
+      isChecking: false
+    });
+
+    return { sentCount7Days, sentCount3Days, overdueCount, totalProcessed: updatedList.length };
+  };
+
+  useEffect(() => {
+    if (deadlines && deadlines.length > 0) {
+      runAutoAppealDeadlineChecker(deadlines);
+    }
+  }, []);
+
+  const handleSendWhatsAppDeadlineAlert = (d: JudgmentDeadline) => {
+    const cs = cases.find((c) => c.id === d.caseId);
+    const daysLeft = daysUntil(d.appealDeadlineDate);
+    const lawyerName = d.assignedLawyerName || "المحامي المسؤول";
+    const lawyerPhone = d.assignedLawyerPhone || "0501234567";
+
+    const msg = `سعادة المحامي / ${lawyerName} المحترم\nتحية طيبة وبعد،\n\n🚨 تنبيه استباقي عاجل - سجل مواعيد الطعون:\n• القضية: ${cs ? cs.number : "—"}\n• الموكل: ${cs ? clientName(cs.clientId) : "—"}\n• المحكمة: ${cs ? cs.court : "—"}\n• نوع الحكم: ${d.rulingType}\n• آخر موعد قاطع للطعن: ${fmtDate(d.appealDeadlineDate)} (متبقي ${daysLeft} أيام)\n• منطوق الحكم: ${d.rulingSummary}\n\nيرجى المبادرة المباشرة بإعداد وقيد صحيفة الطعن بالمحكمة قبل انقضاء المهلة وسقوط الحق القانوني.\nمكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية`;
+
+    sendWhatsAppMsg(lawyerPhone, msg);
+
+    const timestampNow = new Date().toLocaleString("ar-AE", { dateStyle: "short", timeStyle: "short" });
+    const logEntry: JudgmentDeadlineLog = {
+      id: Math.random().toString(36).substring(2, 9),
+      timestamp: timestampNow,
+      type: "manual",
+      channel: "whatsapp",
+      lawyerName,
+      recipientContact: lawyerPhone,
+      status: "sent",
+      messageSnippet: `📱 تم إرسال تنبيه واتساب مباشر للمحامي المسؤول (متبقي ${daysLeft} أيام)`
+    };
+
+    setDeadlines(prev => prev.map(x => x.id === d.id ? {
+      ...x,
+      autoAlertLogs: [logEntry, ...(x.autoAlertLogs || [])]
+    } : x));
+  };
+
   // ---------- فتح نموذج التنبيهات وإرسال الواتساب والبريد ----------
   const openNotificationComposer = (
     type: "تنبيه جلسة" | "تحديث قضية" | "تذكير فاتورة" | "تجديد وثائق / KYC" | "تجديد وكالة / POA" | "تنبيه ميعاد طعن / استئناف" | "تذكير قسط فاتورة" | "رسالة عامة",
@@ -5464,7 +5954,16 @@ export default function App() {
   const savePoa = () => {
     if (!checkPerm("manageDocs", "إضافة توكيل")) return;
     if (!form.clientId || !form.number) return;
-    setPoas([...poas, { id: nextId(poas), clientId: +form.clientId, number: form.number, issuer: form.issuer || "كاتب العدل - دبي", issue: form.issue || todayISO(), expiry: form.expiry || addDays(730), scope: form.scope || "" }]);
+
+    const poaNum = form.number.trim();
+    if (!poaNum) return;
+
+    if (poas.some((p) => p.number.trim().toLowerCase() === poaNum.toLowerCase())) {
+      alert(`تنبيه: رقم الوكالة "${poaNum}" مسجل مسبقاً في قاعدة البيانات!\nيرجى التثبت من رقم الوكالة لمنع التكرار.`);
+      return;
+    }
+
+    setPoas([...poas, { id: nextId(poas), clientId: +form.clientId, number: poaNum, issuer: form.issuer || "كاتب العدل - دبي", issue: form.issue || todayISO(), expiry: form.expiry || addDays(730), scope: form.scope || "" }]);
     setModal(null);
   };
 
@@ -5644,21 +6143,33 @@ export default function App() {
     rDate.setDate(rDate.getDate() + days);
     const deadlineStr = rDate.toISOString().slice(0, 10);
 
-    setDeadlines([
-      ...deadlines,
-      {
-        id: nextId(deadlines),
-        caseId: +form.caseId,
-        rulingDate: form.rulingDate,
-        rulingType: form.rulingType || "حكم ابتدائية",
-        rulingSummary: form.rulingSummary || "صدور حكم قضائي في الدعوى",
-        appealDays: days,
-        appealDeadlineDate: deadlineStr,
-        status: "جارٍ حساب الميعاد",
-        notes: form.notes || `تم احتساب مهلة الطعن تلقائياً (${days} يوماً)`
-      }
-    ]);
+    const selUser = users.find(u => u.id === Number(form.assignedLawyerId)) || users[0];
+
+    const newDeadline: JudgmentDeadline = {
+      id: nextId(deadlines),
+      caseId: +form.caseId,
+      rulingDate: form.rulingDate,
+      rulingType: form.rulingType || "حكم ابتدائية",
+      rulingSummary: form.rulingSummary || "صدور حكم قضائي في الدعوى",
+      appealDays: days,
+      appealDeadlineDate: deadlineStr,
+      status: "جارٍ حساب الميعاد",
+      notes: form.notes || `تم احتساب مهلة الطعن تلقائياً (${days} يوماً)`,
+      assignedLawyerId: selUser?.id || 1,
+      assignedLawyerName: form.assignedLawyerName || selUser?.name || "المحامي سعود أحمد الشحي",
+      assignedLawyerPhone: form.assignedLawyerPhone || selUser?.phone || "0501234567",
+      assignedLawyerEmail: form.assignedLawyerEmail || selUser?.email || "info@lawyersuood.com",
+      preferredChannel: form.preferredChannel || "both",
+      alert7DaysSent: false,
+      alert3DaysSent: false,
+      autoAlertLogs: []
+    };
+
+    const updatedDeadlines = [...deadlines, newDeadline];
+    setDeadlines(updatedDeadlines);
     setModal(null);
+
+    runAutoAppealDeadlineChecker(updatedDeadlines);
   };
 
   const saveStrReport = () => {
@@ -5718,6 +6229,166 @@ export default function App() {
     setModal(null);
   };
 
+  // ---------- استيراد وتنزيل نموذج إكسل لدليل المحاكم والجهات ----------
+  const downloadCourtContactsTemplate = () => {
+    const sampleData = [
+      {
+        "اسم المحكمة": "محكمة دبي الابتدائية",
+        "الإمارة": "دبي",
+        "القسم / التخصص": "قيد الدعاوى والمذكرات",
+        "اسم الموظف / المسمى": "أ. أحمد المنصوري - رئيس قسم القيد",
+        "رقم الهاتف": "043401111",
+        "التمديدة / رقم الختم": "ext 4022",
+        "البريد الإلكتروني": "registration@dc.gov.ae",
+        "أوقات الدوام": "07:30 ص - 02:30 م",
+        "الموقع / العنوان": "مبنى محاكم دبي - أم هرير 2",
+        "ملاحظات": "استلام مذكرات الدفاع حتى الساعة 12 ظهراً"
+      },
+      {
+        "اسم المحكمة": "دائرة القضاء - أبوظبي",
+        "الإمارة": "أبوظبي",
+        "القسم / التخصص": "إدارة التنفيذ والإنابات",
+        "اسم الموظف / المسمى": "المستشار سلطان الشامسي",
+        "رقم الهاتف": "026512222",
+        "التمديدة / رقم الختم": "ext 105",
+        "البريد الإلكتروني": "execution@adjd.gov.ae",
+        "أوقات الدوام": "07:30 ص - 03:00 م",
+        "الموقع / العنوان": "مقر دائرة القضاء - شارع المطار",
+        "ملاحظات": "متابعة قرارات الإنابات والتنفيذ التجاري"
+      },
+      {
+        "اسم المحكمة": "محكمة الشارقة الاتحادية",
+        "الإمارة": "الشارقة",
+        "القسم / التخصص": "أمانات الخبراء والتقارير",
+        "اسم الموظف / المسمى": "م. خالد الحوسني - أمين سر الخبراء",
+        "رقم الهاتف": "065003333",
+        "التمديدة / رقم الختم": "ext 801",
+        "البريد الإلكتروني": "experts@moj.gov.ae",
+        "أوقات الدوام": "07:30 ص - 02:30 م",
+        "الموقع / العنوان": "مجمع المحاكم الاتحادية - الخزامية",
+        "ملاحظات": "تقديم اعتراضات وتقارير الخبراء المعتمدين"
+      }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(sampleData);
+    worksheet["!cols"] = [
+      { wch: 25 }, { wch: 12 }, { wch: 25 }, { wch: 30 },
+      { wch: 15 }, { wch: 18 }, { wch: 25 }, { wch: 18 },
+      { wch: 30 }, { wch: 35 }
+    ];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "دليل_المحاكم");
+    XLSX.writeFile(workbook, "نموذج_استيراد_دليل_المحاكم.xlsx");
+  };
+
+  const handleCourtExcelUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setCourtExcelFileName(file.name);
+    setCourtExcelImportStatus(null);
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const workbook = XLSX.read(bstr, { type: "binary" });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const rawJson: any[] = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+        if (!rawJson || rawJson.length === 0) {
+          setCourtExcelImportStatus({ message: "ملف الإكسل فارغ أو لا يحتوي على صفوف بيانات", isError: true });
+          return;
+        }
+
+        const parsedRows: Partial<CourtContact>[] = rawJson.map((row) => {
+          const getVal = (keys: string[]) => {
+            for (const k of keys) {
+              for (const rowKey of Object.keys(row)) {
+                if (rowKey.trim().toLowerCase() === k.trim().toLowerCase()) {
+                  return String(row[rowKey] || "").trim();
+                }
+              }
+            }
+            return "";
+          };
+
+          const courtName = getVal(["اسم المحكمة", "المحكمة", "courtName", "court_name", "Court", "جهة المحكمة", "اسم الجهة"]);
+          const emirate = getVal(["الإمارة", "إمارة", "emirate", "Emirate"]) || "دبي";
+          const department = getVal(["القسم / التخصص", "القسم", "التخصص", "department", "Department"]);
+          const titleOrEmployee = getVal(["اسم الموظف / المسمى", "الموظف", "المسمى الوظيفي", "اسم الموظف", "titleOrEmployee", "Employee", "Title"]);
+          const phone = getVal(["رقم الهاتف", "الهاتف", "تلفون", "phone", "Phone", "Mobile"]);
+          const extOrSeal = getVal(["التمديدة / رقم الختم", "التمديدة", "الختم", "رقم الختم", "extOrSeal", "Ext", "Seal"]);
+          const email = getVal(["البريد الإلكتروني", "البريد الاكتروني", "الإيميل", "البريد", "email", "Email"]);
+          const operatingHours = getVal(["أوقات الدوام", "ساعات العمل", "الدوام", "operatingHours", "Hours"]) || "07:30 ص - 02:30 م";
+          const location = getVal(["الموقع / العنوان", "الموقع", "العنوان", "location", "Address"]);
+          const notes = getVal(["ملاحظات", "الملاحظات", "notes", "Notes"]);
+
+          return {
+            courtName: courtName || "جهة قضائية",
+            emirate,
+            department: department || "عام",
+            titleOrEmployee: titleOrEmployee || "—",
+            phone: phone || "—",
+            extOrSeal: extOrSeal || "—",
+            email: email || "—",
+            operatingHours,
+            location: location || "الإمارات",
+            notes: notes || "مستورد من ملف إكسل"
+          };
+        }).filter(item => item.courtName || item.department);
+
+        if (parsedRows.length === 0) {
+          setCourtExcelImportStatus({ message: "لم يتم العثور على أعمدة متطابقة في ملف الإكسل. يرجى تحميل النموذج المعتمد والتعبئة ببيانات الجهات.", isError: true });
+        } else {
+          setCourtImportPreviewList(parsedRows);
+          setCourtExcelModalOpen(true);
+        }
+      } catch (err: any) {
+        setCourtExcelImportStatus({ message: `خطأ في قراءة ملف الإكسل: ${err.message || "تأكد من سلامة وصيغة الملف"}`, isError: true });
+      }
+    };
+    reader.readAsBinaryString(file);
+    e.target.value = "";
+  };
+
+  const confirmCourtExcelImport = () => {
+    if (!courtImportPreviewList || courtImportPreviewList.length === 0) return;
+
+    let baseId = nextId(courtContacts);
+    const newContacts: CourtContact[] = courtImportPreviewList.map((item, idx) => ({
+      id: baseId + idx,
+      courtName: item.courtName || "جهة قضائية",
+      emirate: item.emirate || "دبي",
+      department: item.department || "عام",
+      titleOrEmployee: item.titleOrEmployee || "—",
+      phone: item.phone || "—",
+      extOrSeal: item.extOrSeal || "—",
+      email: item.email || "—",
+      operatingHours: item.operatingHours || "07:30 ص - 02:30 م",
+      location: item.location || "الإمارات",
+      notes: item.notes || "مستورد من ملف إكسل"
+    }));
+
+    let updatedList: CourtContact[];
+    if (courtExcelImportMode === "replace") {
+      updatedList = newContacts;
+    } else {
+      updatedList = [...courtContacts, ...newContacts];
+    }
+
+    setCourtContacts(updatedList);
+    saveStorage("firm_court_contacts", updatedList);
+
+    setCourtExcelModalOpen(false);
+    const count = newContacts.length;
+    setCourtImportPreviewList([]);
+    setCourtExcelFileName("");
+
+    alert(`✅ تم استيراد (${count}) سجل بنجاح إلى دليل وسائل التواصل مع المحاكم والجهات القضائية!`);
+  };
+
   const convertTimeToInvoice = (log: TimeLog) => {
     const cs = cases.find((c) => c.id === log.caseId);
     if (!cs) return;
@@ -5771,14 +6442,54 @@ export default function App() {
   
   // المهام المستحقة اليوم أو المتأخرة
   const overdueTasks = tasks.filter(t => !t.done && daysUntil(t.due) <= 0).length;
+  const urgentTodayOrOverdueTasks = useMemo(() => {
+    return tasks.filter(t => !t.done && daysUntil(t.due) <= 0);
+  }, [tasks]);
 
   const upcoming = hearings.filter((h) => !h.done && daysUntil(h.date) >= 0).sort((a, b) => a.date.localeCompare(b.date));
   const notifCount = stats.expiringPoa + invoices.filter((i) => i.status === "متأخرة").length + upcoming.filter((h) => daysUntil(h.date) <= 2).length + kycDue + overdueTasks;
 
-  const filteredCases = cases.filter((c) =>
-    (caseFilter === "الكل" || c.status === caseFilter) &&
-    (c.number.includes(q) || clientName(c.clientId).includes(q) || c.subject.includes(q) || c.opponent.includes(q))
-  );
+  const uniqueJudges = useMemo(() => {
+    const list: string[] = [];
+    cases.forEach((c) => {
+      if (c.judge && c.judge.trim() && c.judge.trim() !== "—") {
+        const val = c.judge.trim();
+        if (!list.includes(val)) list.push(val);
+      }
+    });
+    return list.sort();
+  }, [cases]);
+
+  const uniqueCourts = useMemo(() => {
+    const list: string[] = [];
+    cases.forEach((c) => {
+      if (c.court && c.court.trim() && c.court.trim() !== "—") {
+        const val = c.court.trim();
+        if (!list.includes(val)) list.push(val);
+      }
+    });
+    return list.sort();
+  }, [cases]);
+
+  const filteredCases = cases.filter((c) => {
+    const matchStatus = caseFilter === "الكل" || c.status === caseFilter;
+    const matchCourt = caseCourtFilter === "الكل" || c.court === caseCourtFilter;
+    const matchJudge =
+      caseJudgeFilter === "الكل" ||
+      (c.judge && c.judge.toLowerCase().includes(caseJudgeFilter.toLowerCase()));
+
+    const query = q.trim().toLowerCase();
+    const matchQuery =
+      !query ||
+      c.number.toLowerCase().includes(query) ||
+      clientName(c.clientId).toLowerCase().includes(query) ||
+      c.subject.toLowerCase().includes(query) ||
+      c.opponent.toLowerCase().includes(query) ||
+      (c.court && c.court.toLowerCase().includes(query)) ||
+      (c.judge && c.judge.toLowerCase().includes(query));
+
+    return matchStatus && matchCourt && matchJudge && matchQuery;
+  });
 
   const selectedCase = cases.find((c) => c.id === caseView);
 
@@ -5788,11 +6499,46 @@ export default function App() {
         settings={consultationSettings}
         onNewBooking={(newBooking) => {
           setConsultationBookings((prev) => [newBooking, ...prev]);
+
+          // Automatically record invoice and payment receipt in office financial system
+          const newInvoiceId = invoices.length > 0 ? Math.max(...invoices.map(i => i.id)) + 1 : 1;
+          const invoiceNumber = `INV-2026-${String(100 + newInvoiceId).padStart(3, "0")}`;
+
+          const newInvoice: Invoice = {
+            id: newInvoiceId,
+            number: invoiceNumber,
+            clientId: 1,
+            caseId: null,
+            feeAgreementId: "unallocated",
+            date: newBooking.date,
+            due: newBooking.date,
+            amount: newBooking.amountPaid,
+            status: "مدفوع",
+            desc: `استشارة قانونية مرئية أونلاين (${newBooking.duration} دقيقة) - الموكل: ${newBooking.clientName} (مرجع: ${newBooking.reference})`
+          };
+
+          setInvoices((prev) => [newInvoice, ...prev]);
+
+          const newPayment: PaymentReceipt = {
+            id: payments.length > 0 ? Math.max(...payments.map(p => p.id)) + 1 : 1,
+            clientId: 1,
+            caseId: null,
+            feeAgreementId: "unallocated",
+            invoiceId: newInvoiceId,
+            amount: newBooking.amountPaid,
+            date: newBooking.date,
+            paymentMethod: "بوابة الدفع الإلكترونية الآمنة (Online Secure Gateway)",
+            referenceNo: newBooking.reference,
+            notes: `سداد أونلاين استشارة مرئية - ${newBooking.clientName}`
+          };
+
+          setPayments((prev) => [newPayment, ...prev]);
+
           logAuditAction(
             "CREATE",
             "استشارات مرئية",
-            `حجز جديد #${newBooking.reference}`,
-            `تم حجز استشارة مرئية أونلاين من الموكل: ${newBooking.clientName}`
+            `حجز جديد #${newBooking.reference} وتم السداد بنجاح`,
+            `تم حجز استشارة مرئية أونلاين وسداد مبلغ ${newBooking.amountPaid} درهم وتوليد الفاتورة التلقائية للموكل: ${newBooking.clientName}`
           );
         }}
       />
@@ -5881,18 +6627,18 @@ export default function App() {
       `}</style>
       <div className="flex min-h-screen">
         {/* ===== الشريط الجانبي الفخم ===== */}
-        <aside className="hidden w-64 shrink-0 flex-col bg-[#072a28] border-l border-[#0f4340] text-teal-100 md:flex shadow-xl">
-          <div className="flex items-center justify-center border-b border-[#0f4340] px-4 py-5 bg-[#051f1e]">
-            <Logo variant="horizontal" mode="dark" size="md" />
+        <aside className="hidden w-64 shrink-0 flex-col bg-white border-l border-slate-200 text-slate-800 md:flex shadow-lg">
+          <div className="flex items-center justify-center border-b border-slate-100 px-4 py-5 bg-emerald-50/40">
+            <Logo variant="horizontal" mode="light" size="md" />
           </div>
 
           {/* تبديل سريع للمستخدم الحالي (للمدير فقط) */}
-          <div className="mx-3 my-3 rounded-xl bg-[#0b3c39] p-3 border border-[#14524f]">
+          <div className="mx-3 my-3 rounded-2xl bg-emerald-50/70 p-3 border border-emerald-900/10">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-semibold text-[#e5c388] flex items-center gap-1">
+              <span className="text-[11px] font-semibold text-[#0D382B] flex items-center gap-1">
                 <UserCheck size={13} /> الحساب النشط الآن:
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#072422] text-[#e5c388] font-mono border border-[#1b615d]">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0D382B] text-white font-mono">
                 {currentUser.roleKey.toUpperCase()}
               </span>
             </div>
@@ -5900,7 +6646,7 @@ export default function App() {
               <select
                 value={currentUserId}
                 onChange={(e) => setCurrentUserId(+e.target.value)}
-                className="w-full rounded-lg bg-[#061d1c] border border-[#114b48] text-xs font-medium text-white px-2 py-1.5 focus:outline-none focus:border-[#b89b6a]"
+                className="w-full rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 px-2 py-1.5 focus:outline-none focus:border-[#0D382B]"
               >
                 {users.map((u) => (
                   <option key={u.id} value={u.id}>
@@ -5909,7 +6655,7 @@ export default function App() {
                 ))}
               </select>
             ) : (
-              <p className="text-xs font-bold text-white px-1 py-1 truncate">
+              <p className="text-xs font-bold text-slate-900 px-1 py-1 truncate">
                 {currentUser.name} ({currentUser.roleTitle})
               </p>
             )}
@@ -5921,13 +6667,13 @@ export default function App() {
               return (
                 <React.Fragment key={id}>
                   {showCategoryHeader && category && (
-                    <div className="px-2 pt-3 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[#e5c388] flex items-center gap-1.5 border-b border-[#0f4340]/60 mb-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#b89b6a]" />
+                    <div className="px-2 pt-3 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[#0D382B] flex items-center gap-1.5 border-b border-slate-100 mb-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#C5A059]" />
                       <span>{category}</span>
                     </div>
                   )}
                   <button onClick={() => { setTab(id); setCaseView(null); }}
-                    className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${tab === id ? "bg-[#b89b6a] text-slate-950 font-black shadow-md" : "text-teal-100/80 hover:bg-[#0c403d] hover:text-white"}`}>
+                    className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${tab === id ? "bg-[#0D382B] text-white font-black shadow-md" : "text-slate-600 hover:bg-emerald-50 hover:text-[#0D382B]"}`}>
                     <Icon size={17} /><span>{label}</span>
                     {id === "poa" && stats.expiringPoa > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{stats.expiringPoa}</span>}
                     {id === "kyc" && kycDue > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{kycDue}</span>}
@@ -5943,11 +6689,11 @@ export default function App() {
                       </span>
                     )}
                     {id === "users" && pendingUsers.length > 0 && isAdmin ? (
-                      <span className="mr-auto rounded-full bg-[#e5c388] text-slate-950 px-2 py-0.5 text-[11px] font-bold animate-pulse">
+                      <span className="mr-auto rounded-full bg-amber-500 text-slate-950 px-2 py-0.5 text-[11px] font-bold animate-pulse">
                         {pendingUsers.length} معلق
                       </span>
                     ) : id === "users" ? (
-                      <span className="mr-auto rounded-full bg-[#051f1e] border border-[#b89b6a]/40 text-[10px] px-1.5 py-0.2 text-[#e5c388] font-mono">{users.length}</span>
+                      <span className="mr-auto rounded-full bg-emerald-100 border border-emerald-300 text-[10px] px-1.5 py-0.2 text-[#0D382B] font-mono">{users.length}</span>
                     ) : null}
                   </button>
                 </React.Fragment>
@@ -5956,23 +6702,23 @@ export default function App() {
 
             <button
               onClick={() => setCurrentRoute("public_consultation")}
-              className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-xs font-bold text-teal-100 bg-[#0c403d] border border-teal-600/40 hover:bg-[#0e4845] transition mt-2"
+              className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-xs font-bold text-[#0D382B] bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition mt-2"
             >
               <div className="flex items-center gap-2">
-                <Globe size={16} className="text-[#e5c388]" />
+                <Globe size={16} className="text-[#C5A059]" />
                 <span>صفحة العوام للحجز (/consultation)</span>
               </div>
-              <ChevronLeft size={14} className="text-[#e5c388]" />
+              <ChevronLeft size={14} className="text-[#0D382B]" />
             </button>
 
             {isAiAssistantEnabled && (
               <button
                 onClick={() => openAiForCurrentSection()}
-                className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-xs font-black text-amber-200 bg-gradient-to-r from-amber-950/80 via-teal-900 to-[#0c403d] border border-amber-500/40 hover:border-amber-300 transition mt-2 cursor-pointer shadow-sm"
+                className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-xs font-black text-white bg-gradient-to-r from-[#0D382B] to-[#124d40] border border-emerald-800 hover:brightness-105 transition mt-2 cursor-pointer shadow-sm"
                 title="المساعد الذكي القانوني والتنفيذي لجميع الأقسام (Gemini AI)"
               >
                 <div className="flex items-center gap-2">
-                  <Sparkles size={16} className="text-amber-400 animate-pulse shrink-0" />
+                  <Sparkles size={16} className="text-amber-300 animate-pulse shrink-0" />
                   <span>المساعد الذكي القانوني (AI)</span>
                 </div>
                 <ChevronLeft size={14} className="text-amber-300" />
@@ -5981,37 +6727,37 @@ export default function App() {
 
             <button
               onClick={() => setShowBackupModal(true)}
-              className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-xs font-bold text-emerald-200 bg-[#0c403d] border border-emerald-500/30 hover:bg-[#0e4845] transition mt-2 cursor-pointer"
+              className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 transition mt-2 cursor-pointer"
               title="تصدير واستعادة نسخة احتياطية محلية لقاعدة بيانات النظام"
             >
               <div className="flex items-center gap-2">
-                <Database size={16} className="text-emerald-400" />
+                <Database size={16} className="text-[#0D382B]" />
                 <span>النسخ الاحتياطي للبيانات (JSON)</span>
               </div>
-              <Download size={14} className="text-emerald-400" />
+              <Download size={14} className="text-slate-600" />
             </button>
 
             {/* الإعدادات الفنية حصرية للمدير الأعلى (المحامي سعود) */}
             {isSuperAdmin && (
               <button
                 onClick={() => setShowSupabaseModal(true)}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold text-[#e5c388] bg-[#0c403d]/80 border border-[#b89b6a]/30 hover:bg-[#0e4845] transition mt-3"
+                className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold text-[#0D382B] bg-amber-50 border border-amber-200 hover:bg-amber-100 transition mt-3"
                 title="أكواد القواعد والبروفايل الحية Supabase RLS"
               >
-                <Code size={16} className="text-[#e5c388] shrink-0" />
+                <Code size={16} className="text-[#C5A059] shrink-0" />
                 <span>الإعدادات الفنية (Supabase RLS)</span>
               </button>
             )}
           </nav>
-          <div className="border-t border-[#0f4340] p-4 text-xs text-teal-300/60 space-y-2 bg-[#051a19]">
+          <div className="border-t border-slate-100 p-4 text-xs text-slate-500 space-y-2 bg-slate-50">
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-[#0d3f3c] py-2.5 px-3 text-xs font-bold text-red-300 hover:bg-red-900/40 transition border border-red-500/20"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-white py-2.5 px-3 text-xs font-bold text-red-600 hover:bg-red-50 transition border border-red-200 shadow-2xs"
               title="تسجيل الخروج والعودة لشاشة الدخول"
             >
               <LogOut size={15} /> تسجيل الخروج
             </button>
-            <p className="text-[11px] text-center text-teal-200/50">ضريبة القيمة المضافة: 5% (UAE VAT)</p>
+            <p className="text-[11px] text-center text-slate-400">ضريبة القيمة المضافة: 5% (UAE VAT)</p>
           </div>
         </aside>
 
@@ -6217,6 +6963,60 @@ export default function App() {
                   )}
                 </div>
 
+                {/* لوحة المهام العاجلة التي تنتهي صلاحيتها اليوم أو تجاوزت موعدها */}
+                <div className="rounded-2xl border border-amber-300 bg-amber-50/50 p-5 shadow-sm">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-800">
+                        <AlertCircle size={22} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-slate-900 text-base">المهام المستحقة اليوم أو المتأخرة ({urgentTodayOrOverdueTasks.length})</h3>
+                        <p className="text-xs text-slate-600">المهام التي تنتهي صلاحيتها اليوم أو التي تجاوزت موعد الاستحقاق مع إمكانية الإنجاز الفوري</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setTab("tasks")} className="flex items-center gap-1 text-sm font-bold text-amber-700 hover:underline">عرض كافة المهام <ChevronLeft size={14} /></button>
+                  </div>
+                  <div className="space-y-3">
+                    {urgentTodayOrOverdueTasks.map((t) => {
+                      const dLeft = daysUntil(t.due);
+                      const isOverdue = dLeft < 0;
+                      return (
+                        <div key={t.id} className="flex items-center justify-between gap-3 rounded-xl bg-white p-4 border border-amber-200/80 shadow-2xs">
+                          <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                            <button
+                              onClick={() => {
+                                if (!checkPerm("manageTasks", "تحديد المهمة كمنجزة")) return;
+                                setTasks(tasks.map((x) => x.id === t.id ? { ...x, done: true } : x));
+                              }}
+                              className="shrink-0 flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-xs cursor-pointer"
+                              title="تحديد كمنجزة"
+                            >
+                              <CheckCircle2 size={16} /> تحديد كـ 'منجزة'
+                            </button>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm font-bold text-slate-900">{t.title}</p>
+                              <p className="text-xs text-slate-500 flex items-center gap-2 flex-wrap mt-0.5">
+                                <span>المكلف: <b>{t.assignee}</b></span>
+                                <span>•</span>
+                                <span>التاريخ: <b className={isOverdue ? "text-red-600 font-bold" : "text-amber-700 font-bold"}>{fmtDate(t.due)} ({isOverdue ? `متأخرة بـ ${Math.abs(dLeft)} أيام` : "اليوم"})</b></span>
+                              </p>
+                            </div>
+                          </div>
+                          <Badge className={TASK_PRIORITY[t.priority]}>{t.priority}</Badge>
+                        </div>
+                      );
+                    })}
+                    {urgentTodayOrOverdueTasks.length === 0 && (
+                      <div className="rounded-xl bg-white p-6 text-center text-slate-500 border border-slate-200">
+                        <CheckCircle2 size={32} className="mx-auto text-emerald-500 mb-1" />
+                        <p className="font-bold text-slate-700 text-sm">ممتاز! لا توجد مهام متأخرة أو مستحقة اليوم</p>
+                        <p className="text-xs text-slate-400">جميع المهام جارية وفق جدولها الزمني المحدد.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div className="grid gap-4 lg:grid-cols-2">
                   {/* الجلسات القادمة */}
                   <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -6272,8 +7072,8 @@ export default function App() {
               <>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-2xl font-bold">إدارة القضايا</h2>
-                    <p className="text-xs text-slate-500">قيد ومتابعة ملفات القضايا أمام المحاكم الإماراتية</p>
+                    <h2 className="text-2xl font-bold">إدارة القضايا والرول</h2>
+                    <p className="text-xs text-slate-500">قيد ومتابعة ملفات القضايا وتوزيعها حسب المحاكم والدوار والقضاة</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <button
@@ -6285,11 +7085,80 @@ export default function App() {
                     <button onClick={() => openModalWithCheck("case", "manageCases")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> قضية جديدة</button>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {["الكل", ...CASE_STATUS].map((s) => (
-                    <button key={s} onClick={() => setCaseFilter(s)} className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${caseFilter === s ? "bg-slate-900 text-white" : "bg-white text-slate-600 hover:bg-slate-200"}`}>{s}</button>
-                  ))}
+
+                {/* أزرار الحالة السريعة */}
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-xs font-bold text-slate-400 pl-1">حالة القضية:</span>
+                    {["الكل", ...CASE_STATUS].map((s) => (
+                      <button key={s} onClick={() => setCaseFilter(s)} className={`rounded-full px-3 py-1 text-xs font-semibold transition ${caseFilter === s ? "bg-slate-900 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>{s}</button>
+                    ))}
+                  </div>
                 </div>
+
+                {/* شريط التصنيف والفلترة حسب القاضي / الدائرة القضائية والمحكمة */}
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 bg-amber-50/50 p-4 rounded-2xl border border-amber-200/80 shadow-xs">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                      <Scale size={14} className="text-amber-600" /> الدائرة القضائية / القاضي
+                    </label>
+                    <select
+                      value={caseJudgeFilter}
+                      onChange={(e) => setCaseJudgeFilter(e.target.value)}
+                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                    >
+                      <option value="الكل">🏛️ جميع الدوائر والقضاة ({uniqueJudges.length})</option>
+                      {uniqueJudges.map((j) => (
+                        <option key={j} value={j}>{j}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                      <Building2 size={14} className="text-amber-600" /> المحكمة المختصة
+                    </label>
+                    <select
+                      value={caseCourtFilter}
+                      onChange={(e) => setCaseCourtFilter(e.target.value)}
+                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                    >
+                      <option value="الكل">🏢 جميع المحاكم ({uniqueCourts.length})</option>
+                      {uniqueCourts.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1 sm:col-span-2 lg:col-span-2">
+                    <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                      <Search size={14} className="text-amber-600" /> البحث في السجل ورول القضايا
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={q}
+                        onChange={(e) => setQ(e.target.value)}
+                        placeholder="ابحث برقم القضية، الموكل، الخصم، القاضي، أو موضوع الدعوى..."
+                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                      />
+                      {(caseFilter !== "الكل" || caseJudgeFilter !== "الكل" || caseCourtFilter !== "الكل" || q !== "") && (
+                        <button
+                          onClick={() => {
+                            setCaseFilter("الكل");
+                            setCaseJudgeFilter("الكل");
+                            setCaseCourtFilter("الكل");
+                            setQ("");
+                          }}
+                          className="shrink-0 rounded-xl bg-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-300 transition"
+                        >
+                          إعادة ضبط
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
                 <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
                   <table className="w-full text-sm">
                     <thead className="bg-stone-50 text-right text-xs text-slate-500">
@@ -6298,6 +7167,7 @@ export default function App() {
                         <th className="px-4 py-3 font-semibold">الموكل</th>
                         <th className="px-4 py-3 font-semibold">الخصم</th>
                         <th className="hidden px-4 py-3 font-semibold lg:table-cell">المحكمة</th>
+                        <th className="hidden px-4 py-3 font-semibold md:table-cell">الدائرة / القاضي</th>
                         <th className="px-4 py-3 font-semibold">النوع</th>
                         <th className="px-4 py-3 font-semibold">الحالة</th>
                         <th className="px-4 py-3 font-semibold text-center">إجراءات</th>
@@ -6310,6 +7180,15 @@ export default function App() {
                           <td className="px-4 py-3 cursor-pointer" onClick={() => setCaseView(c.id)}>{clientName(c.clientId)}</td>
                           <td className="px-4 py-3 text-slate-500 cursor-pointer" onClick={() => setCaseView(c.id)}>{c.opponent}</td>
                           <td className="hidden px-4 py-3 text-slate-500 lg:table-cell cursor-pointer" onClick={() => setCaseView(c.id)}>{c.court}</td>
+                          <td className="hidden px-4 py-3 md:table-cell cursor-pointer" onClick={() => setCaseView(c.id)}>
+                            {c.judge && c.judge.trim() ? (
+                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 bg-stone-100 px-2.5 py-1 rounded-lg border border-stone-200">
+                                <Scale size={12} className="text-amber-600" /> {c.judge}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-slate-400">—</span>
+                            )}
+                          </td>
                           <td className="px-4 py-3"><Badge className="bg-slate-100 text-slate-600">{c.type}</Badge></td>
                           <td className="px-4 py-3"><Badge className={statusColor(c.status)}>{c.status}</Badge></td>
                           <td className="px-4 py-3 text-center">
@@ -6328,7 +7207,7 @@ export default function App() {
                       ))}
                     </tbody>
                   </table>
-                  {filteredCases.length === 0 && <p className="py-10 text-center text-sm text-slate-400">لا توجد قضايا مطابقة للبحث</p>}
+                  {filteredCases.length === 0 && <p className="py-10 text-center text-sm text-slate-400">لا توجد قضايا مطابقة لخيارات الفلترة المحددة</p>}
                 </div>
               </>
             )}
@@ -6747,96 +7626,259 @@ export default function App() {
 
                 {hearingSubTab === "deadlines" ? (
                   <div className="space-y-6">
+                    {/* شريط العنوان وزر الفحص التلقائي */}
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                          <Hourglass className="text-amber-600" /> تتبع مواعيد الطعون والأحكام القضائية التلقائية
+                          <Hourglass className="text-amber-600" /> سجل مواعيد الطعون والتنبيهات الاستباقية (7 أيام و 3 أيام)
                         </h2>
-                        <p className="text-xs text-slate-500">حساب ميعاد الاستئناف والتمييز تلقائياً (30 يوماً من صدور الحكم) حمايةً لحقوق الموكلين من السقوط</p>
+                        <p className="text-xs text-slate-500">نظام تلقائي يقوم بفحص المواعيد بانتظام وإرسال إشعارات استباقية للمحامي المسؤول عبر البريد والواتساب قبل الانقضاء بـ 7 أيام و 3 أيام</p>
                       </div>
-                      <button
-                        onClick={() => openModalWithCheck("deadline")}
-                        className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"
-                      >
-                        <Plus size={16} /> تسجيل حكم قضائي وحساب الميعاد
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => runAutoAppealDeadlineChecker(deadlines, true)}
+                          disabled={autoCheckStatus.isChecking}
+                          className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-slate-900 hover:bg-amber-400 shadow-sm transition disabled:opacity-50"
+                        >
+                          <Zap size={16} className={autoCheckStatus.isChecking ? "animate-spin" : ""} />
+                          {autoCheckStatus.isChecking ? "جارٍ الفحص والإرسال..." : "تشغيل فحص التنبيهات الآلية الآن"}
+                        </button>
+                        <button
+                          onClick={() => openModalWithCheck("deadline")}
+                          className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"
+                        >
+                          <Plus size={16} /> تسجيل حكم قضائي وحساب الميعاد
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="grid gap-4 sm:grid-cols-3">
+                    {/* بنر حالة المحرك الآلي */}
+                    <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <div>
+                          <p className="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
+                            <ShieldAlert size={14} className="text-emerald-700" />
+                            محرك التنبيهات التلقائي الآلي: نَشِط ومفعّل (إشعارات البريد الإلكتروني والواتساب قبل 7 أيام و 3 أيام)
+                          </p>
+                          <p className="text-[11px] text-emerald-700 mt-0.5">
+                            {autoCheckStatus.message || `تم تجهيز خادم SMTP لإرسال التنبيهات فور وصول مهلة الطعن إلى 7 أيام أو 3 أيام مباشرة للمحامي الموكل`}
+                          </p>
+                        </div>
+                      </div>
+                      {autoCheckStatus.lastCheckedAt && (
+                        <span className="text-[11px] font-mono text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-lg border border-emerald-200">
+                          آخر فحص: {autoCheckStatus.lastCheckedAt}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* بطاقات الإحصائيات الأربع */}
+                    <div className="grid gap-4 sm:grid-cols-4">
                       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                        <p className="text-xs text-slate-500">إجمالي الأحكام تحت المتابعة</p>
+                        <p className="text-xs text-slate-500">إجمالي أحكام الطعون</p>
                         <p className="text-2xl font-bold text-slate-900">{deadlines.length}</p>
                       </div>
+                      <div className="rounded-2xl border border-red-200 bg-red-50 p-4 shadow-sm">
+                        <p className="text-xs text-red-800 font-bold flex items-center gap-1">
+                          <AlertTriangle size={14} /> طعون حرجة (أقل من 3 أيام 🚨)
+                        </p>
+                        <p className="text-2xl font-bold text-red-700">
+                          {deadlines.filter((d) => d.status !== "تم قيد الطعن" && daysUntil(d.appealDeadlineDate) <= 3 && daysUntil(d.appealDeadlineDate) >= 0).length}
+                        </p>
+                      </div>
                       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
-                        <p className="text-xs text-amber-800 font-semibold">طعون قريبة الانتهاء (أقل من 7 أيام)</p>
+                        <p className="text-xs text-amber-800 font-bold flex items-center gap-1">
+                          <Clock size={14} /> طعون قريبة (أقل من 7 أيام ⚠️)
+                        </p>
                         <p className="text-2xl font-bold text-amber-800">
-                          {deadlines.filter((d) => daysUntil(d.appealDeadlineDate) <= 7 && daysUntil(d.appealDeadlineDate) >= 0).length}
+                          {deadlines.filter((d) => d.status !== "تم قيد الطعن" && daysUntil(d.appealDeadlineDate) <= 7 && daysUntil(d.appealDeadlineDate) >= 0).length}
                         </p>
                       </div>
                       <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
-                        <p className="text-xs text-emerald-800 font-semibold">طعون تم قيدها بالمحكمة</p>
+                        <p className="text-xs text-emerald-800 font-bold flex items-center gap-1">
+                          <CheckCircle2 size={14} /> طعون تم قيدها بالمحكمة
+                        </p>
                         <p className="text-2xl font-bold text-emerald-800">
-                          {deadlines.filter((d) => d.status === "تم قيد الطعن").length}
+                          {deadlines.filter((d) => d.status === "تم قيد الطعن" || d.status === "تم تقديم الطعن").length}
                         </p>
                       </div>
                     </div>
 
-                    <div className="space-y-3">
-                      {deadlines.map((d) => {
-                        const cs = cases.find((c) => c.id === d.caseId);
-                        const daysLeft = daysUntil(d.appealDeadlineDate);
-                        return (
-                          <div key={d.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3 hover:border-amber-400 transition">
-                            <div className="flex flex-wrap items-start justify-between gap-3">
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <h3 className="font-bold text-base text-slate-900">{cs ? cs.number : "—"}</h3>
-                                  <Badge className="bg-slate-100 text-slate-800">{d.rulingType}</Badge>
-                                  <Badge className={d.status === "تم قيد الطعن" ? "bg-emerald-100 text-emerald-800" : daysLeft <= 7 ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-800"}>
-                                    {d.status}
-                                  </Badge>
+                    {/* تبويبات التصفية */}
+                    <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+                      <button
+                        onClick={() => setDeadlineFilter("all")}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${deadlineFilter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                      >
+                        الكل ({deadlines.length})
+                      </button>
+                      <button
+                        onClick={() => setDeadlineFilter("urgent")}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${deadlineFilter === "urgent" ? "bg-red-600 text-white" : "bg-red-50 text-red-700 hover:bg-red-100"}`}
+                      >
+                        ⚠️ تحتاج تنبيه عاجل (أقل من 7 أيام) ({deadlines.filter(d => d.status !== "تم قيد الطعن" && daysUntil(d.appealDeadlineDate) <= 7).length})
+                      </button>
+                      <button
+                        onClick={() => setDeadlineFilter("active")}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${deadlineFilter === "active" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-800 hover:bg-amber-100"}`}
+                      >
+                        جارٍ حساب الميعاد ({deadlines.filter(d => d.status === "جارٍ حساب الميعاد").length})
+                      </button>
+                      <button
+                        onClick={() => setDeadlineFilter("done")}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${deadlineFilter === "done" ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100"}`}
+                      >
+                        تم قيد الطعن ({deadlines.filter(d => d.status === "تم قيد الطعن" || d.status === "تم تقديم الطعن").length})
+                      </button>
+                    </div>
+
+                    {/* قائمة بطاقات المواعيد */}
+                    <div className="space-y-4">
+                      {deadlines
+                        .filter((d) => {
+                          const daysLeft = daysUntil(d.appealDeadlineDate);
+                          if (deadlineFilter === "urgent") return d.status !== "تم قيد الطعن" && daysLeft <= 7;
+                          if (deadlineFilter === "active") return d.status === "جارٍ حساب الميعاد";
+                          if (deadlineFilter === "done") return d.status === "تم قيد الطعن" || d.status === "تم تقديم الطعن";
+                          return true;
+                        })
+                        .map((d) => {
+                          const cs = cases.find((c) => c.id === d.caseId);
+                          const daysLeft = daysUntil(d.appealDeadlineDate);
+                          const isUrgent3 = daysLeft <= 3 && daysLeft >= 0 && d.status !== "تم قيد الطعن";
+                          const isUrgent7 = daysLeft <= 7 && daysLeft > 3 && d.status !== "تم قيد الطعن";
+
+                          return (
+                            <div
+                              key={d.id}
+                              className={`rounded-2xl border p-5 shadow-sm space-y-4 transition ${
+                                d.status === "تم قيد الطعن" || d.status === "تم تقديم الطعن"
+                                  ? "border-emerald-300 bg-emerald-50/20"
+                                  : isUrgent3
+                                  ? "border-2 border-red-500 bg-red-50/20 shadow-md ring-2 ring-red-100"
+                                  : isUrgent7
+                                  ? "border-2 border-amber-400 bg-amber-50/20"
+                                  : "border-slate-200 bg-white hover:border-amber-400"
+                              }`}
+                            >
+                              {/* الهيدر العلوي للكارت */}
+                              <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <h3 className="font-bold text-base text-slate-900">{cs ? cs.number : `قضية رقم #${d.caseId}`}</h3>
+                                    <Badge className="bg-slate-100 text-slate-800">{d.rulingType}</Badge>
+                                    <Badge
+                                      className={
+                                        d.status === "تم قيد الطعن" || d.status === "تم تقديم الطعن"
+                                          ? "bg-emerald-100 text-emerald-800 font-bold"
+                                          : isUrgent3
+                                          ? "bg-red-600 text-white font-bold animate-pulse"
+                                          : isUrgent7
+                                          ? "bg-amber-500 text-slate-900 font-bold"
+                                          : "bg-slate-100 text-slate-800"
+                                      }
+                                    >
+                                      {d.status}
+                                    </Badge>
+                                  </div>
+                                  <p className="text-xs text-slate-500 mt-1">
+                                    الموكل: <b>{cs ? clientName(cs.clientId) : "—"}</b> • المحكمة: {cs ? cs.court : "—"}
+                                  </p>
                                 </div>
-                                <p className="text-xs text-slate-500 mt-1">
-                                  الموكل: <b>{cs ? clientName(cs.clientId) : "—"}</b> • المحكمة: {cs ? cs.court : "—"}
-                                </p>
+
+                                <div className="text-left bg-white border border-slate-200 px-3 py-2 rounded-xl text-xs font-mono shadow-xs">
+                                  <p className="text-slate-500">تاريخ صدور الحكم: {fmtDate(d.rulingDate)}</p>
+                                  <p className="font-bold text-slate-900 text-sm mt-0.5">آخر موعد قاطع: {fmtDate(d.appealDeadlineDate)}</p>
+                                  <div className="mt-1">
+                                    {daysLeft < 0 ? (
+                                      <span className="text-red-600 font-bold px-2 py-0.5 rounded-md bg-red-100">⚠️ انتهت المهلة القانونية</span>
+                                    ) : daysLeft <= 3 ? (
+                                      <span className="text-red-700 font-black px-2 py-0.5 rounded-md bg-red-100 animate-pulse">🚨 طارئ: متبقي {daysLeft} أيام فقط!</span>
+                                    ) : daysLeft <= 7 ? (
+                                      <span className="text-amber-800 font-bold px-2 py-0.5 rounded-md bg-amber-100">⚠️ متبقي {daysLeft} أيام</span>
+                                    ) : (
+                                      <span className="text-emerald-700 font-medium px-2 py-0.5 rounded-md bg-emerald-50">متبقي {daysLeft} يومًا</span>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                              <div className="text-left bg-stone-50 border border-slate-200 px-3 py-2 rounded-xl text-xs font-mono">
-                                <p className="text-slate-500">تاريخ الحكم: {fmtDate(d.rulingDate)}</p>
-                                <p className="font-bold text-slate-900 text-sm">آخر موعد للطعن: {fmtDate(d.appealDeadlineDate)}</p>
-                                {daysLeft < 0 ? (
-                                  <span className="text-red-600 font-bold">⚠️ انتهت المهلة</span>
-                                ) : daysLeft <= 7 ? (
-                                  <span className="text-red-600 font-bold">🚨 متبقي {daysLeft} أيام فقط!</span>
-                                ) : (
-                                  <span className="text-emerald-600 font-medium">متبقي {daysLeft} يومًا</span>
-                                )}
+
+                              {/* مربع المحامي المسؤول والتنبيهات الاستباقية */}
+                              <div className="grid gap-3 sm:grid-cols-2 bg-slate-50 p-3 rounded-xl border border-slate-200/80 text-xs">
+                                <div>
+                                  <p className="text-slate-500 font-semibold mb-1 flex items-center justify-between">
+                                    <span className="flex items-center gap-1"><UserCheck size={14} className="text-slate-700" /> المحامي المسؤول عن الطعن:</span>
+                                    <button
+                                      onClick={() => setReassignDeadlineModal(d)}
+                                      className="text-amber-700 hover:underline text-[11px] font-bold"
+                                    >
+                                      تغيير المحامي
+                                    </button>
+                                  </p>
+                                  <p className="font-bold text-slate-900 text-sm">{d.assignedLawyerName || "المحامي سعود أحمد الشحي"}</p>
+                                  <p className="text-slate-500 font-mono text-[11px] mt-0.5">
+                                    📧 {d.assignedLawyerEmail || "info@lawyersuood.com"} | 📱 {d.assignedLawyerPhone || "0501234567"}
+                                  </p>
+                                </div>
+
+                                <div className="space-y-1.5 border-r border-slate-200 pr-3">
+                                  <p className="text-slate-500 font-semibold flex items-center gap-1">
+                                    <Bell size={14} className="text-amber-600" /> حالة التنبيهات الاستباقية الآلية:
+                                  </p>
+                                  <div className="flex flex-wrap items-center gap-1.5">
+                                    <span className={`px-2 py-0.5 rounded-md text-[11px] font-medium ${d.alert7DaysSent ? "bg-emerald-100 text-emerald-800 font-bold" : "bg-slate-200 text-slate-600"}`}>
+                                      {d.alert7DaysSent ? `🟢 إشعار 7 أيام: مرسل (${d.alert7DaysSentAt || "تم الإرسال"})` : "⏳ إشعار 7 أيام: بانتظار الموعد"}
+                                    </span>
+                                    <span className={`px-2 py-0.5 rounded-md text-[11px] font-medium ${d.alert3DaysSent ? "bg-red-100 text-red-800 font-bold" : "bg-slate-200 text-slate-600"}`}>
+                                      {d.alert3DaysSent ? `🚨 إشعار 3 أيام: مرسل (${d.alert3DaysSentAt || "تم الإرسال"})` : "⏳ إشعار 3 أيام: بانتظار الموعد"}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                            <p className="text-xs text-slate-700 bg-amber-50/50 p-2.5 rounded-xl border border-amber-200/60 font-medium">
-                              <b>منطوق الحكم:</b> {d.rulingSummary}
-                            </p>
-                            <div className="flex items-center justify-between border-t border-slate-100 pt-3">
-                              <span className="text-xs text-slate-500">{d.notes}</span>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => openNotificationComposer("تنبيه ميعاد طعن / استئناف", d)}
-                                  className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500 text-slate-900 font-bold text-xs hover:bg-amber-400"
-                                >
-                                  <Send size={14} /> إرسال إشعار بالمهلة بالواتساب/الإيميل
-                                </button>
-                                {d.status !== "تم قيد الطعن" && (
+
+                              {/* ملخص الحكم */}
+                              <p className="text-xs text-slate-800 bg-amber-50/60 p-3 rounded-xl border border-amber-200/70 font-medium leading-relaxed">
+                                <b>منطوق الحكم الصادر:</b> {d.rulingSummary}
+                              </p>
+
+                              {/* شريط الإجراءات والسجل */}
+                              <div className="flex flex-wrap items-center justify-between border-t border-slate-100 pt-3 gap-2">
+                                <span className="text-xs text-slate-500">{d.notes}</span>
+                                <div className="flex flex-wrap items-center gap-2">
                                   <button
-                                    onClick={() => setDeadlines(deadlines.map((x) => x.id === d.id ? { ...x, status: "تم قيد الطعن" } : x))}
-                                    className="px-3 py-1.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 text-xs font-semibold"
+                                    onClick={() => handleSendWhatsAppDeadlineAlert(d)}
+                                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold text-xs hover:bg-emerald-700 transition shadow-xs"
+                                    title="إرسال رسالة واتساب استباقية مباشرة للمحامي"
                                   >
-                                    تسجيل قيد الطعن
+                                    <Smartphone size={14} /> إرسال تنبيه واتساب
                                   </button>
-                                )}
+                                  <button
+                                    onClick={() => openNotificationComposer("تنبيه ميعاد طعن / استئناف", d)}
+                                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-amber-500 text-slate-900 font-bold text-xs hover:bg-amber-400 transition shadow-xs"
+                                    title="إرسال إشعار بريد إلكتروني يدوي"
+                                  >
+                                    <Mail size={14} /> إرسال إشعار بريد
+                                  </button>
+                                  <button
+                                    onClick={() => setSelectedDeadlineLogs(d)}
+                                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold transition"
+                                  >
+                                    <History size={14} /> سجل التنبيهات ({d.autoAlertLogs?.length || 0})
+                                  </button>
+                                  {d.status !== "تم قيد الطعن" && d.status !== "تم تقديم الطعن" && (
+                                    <button
+                                      onClick={() => setDeadlines(deadlines.map((x) => x.id === d.id ? { ...x, status: "تم قيد الطعن" } : x))}
+                                      className="px-3 py-1.5 rounded-xl border border-emerald-300 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 text-xs font-bold transition"
+                                    >
+                                      تسجيل قيد الطعن
+                                    </button>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
                     </div>
                   </div>
                 ) : (
@@ -7306,103 +8348,174 @@ export default function App() {
 
                 {/* نافذة إعدادات البريد الإلكتروني (SMTP / Account Settings) */}
                 {showEmailSettingsModal && (
-                  <Modal title="إعدادات حساب البريد الإلكتروني (SMTP / IMAP)" onClose={() => setShowEmailSettingsModal(false)}>
-                    <div className="space-y-4 text-sm">
-                      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-900 space-y-1">
-                        <p className="font-bold flex items-center gap-1.5">
-                          <Settings size={15} /> إعداد أي حساب بريد إلكتروني تلقائياً:
-                        </p>
-                        <p className="text-[11px] leading-relaxed">
-                          يمكنك ربط أي حساب بريد رسمياَ (Office 365, Gmail, Webmail) باستخدام البريد وكلمة مرور التطبيق (App Password) ليتم الإرسال والمزامنة مباشرة وبدون تعقيدات OAuth.
+                  <Modal title="إعدادات البريد الإلكتروني وبروتوكولات الأمان (SMTP / SSL / TLS)" onClose={() => setShowEmailSettingsModal(false)}>
+                    <div className="space-y-5 text-sm max-h-[80vh] overflow-y-auto pr-1">
+                      
+                      {/* الهيدر التعريفي وحالة الفحص */}
+                      <div className="bg-slate-900 border border-slate-800 text-white rounded-2xl p-4 space-y-2 shadow-sm">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <p className="font-bold text-amber-400 text-xs flex items-center gap-1.5">
+                            <Settings size={16} /> ربط خادم الإرسال الرسمي (SMTP Server Configuration):
+                          </p>
+                          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border ${
+                            emailConfig.lastTestStatus === "success"
+                              ? "bg-emerald-950 text-emerald-300 border-emerald-800"
+                              : "bg-amber-950 text-amber-300 border-amber-800"
+                          }`}>
+                            {emailConfig.lastTestStatus === "success"
+                              ? `🟢 مفحوص ومفعل (${emailConfig.lastTestedAt || "ناجح"})`
+                              : "🟡 بانتظار فحص اتصال SMTP"}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-300 leading-relaxed">
+                          يمكنك ربط أي حساب بريد رسمي للمكتب (Office 365, Gmail, Webmail) وإعداد بروتوكولات التشفير (SSL/TLS / STARTTLS) بشكل مستقل مع اختبار الاتصال المباشر لضمان تسليم الفواتير الضريبية والإشعارات للموكلين.
                         </p>
                       </div>
 
                       {/* اختصارات سريعة لضبط الخادم */}
-                      <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700">تعبئة سريعة حسب مزود الخدمة:</label>
-                        <div className="grid grid-cols-3 gap-2">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-800 flex items-center gap-1">
+                          <Zap size={13} className="text-amber-600" /> تعبئة سريعة حسب مزود الخدمة:
+                        </label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                           <button
                             type="button"
-                            onClick={() => setEmailConfig(prev => ({
-                              ...prev,
-                              smtpHost: "smtp.office365.com",
-                              smtpPort: 587,
-                              secure: false
-                            }))}
-                            className="p-2 border border-slate-200 hover:border-amber-500 rounded-xl bg-white text-xs font-bold text-slate-800 transition text-center"
+                            onClick={() => {
+                              setEmailConfig(prev => ({
+                                ...prev,
+                                smtpHost: "smtp.office365.com",
+                                smtpPort: 587,
+                                protocol: "starttls",
+                                secure: false,
+                                rejectUnauthorized: false
+                              }));
+                              setTestSmtpResult(null);
+                            }}
+                            className={`p-2.5 border rounded-xl bg-white text-xs text-right transition shadow-xs hover:border-amber-500 ${
+                              emailConfig.smtpHost === "smtp.office365.com" ? "border-amber-500 ring-2 ring-amber-100 font-bold" : "border-slate-200"
+                            }`}
                           >
-                            Office 365 / Outlook
+                            <p className="font-bold text-slate-900">Office 365</p>
+                            <p className="text-[10px] text-slate-500">STARTTLS (587)</p>
                           </button>
+
                           <button
                             type="button"
-                            onClick={() => setEmailConfig(prev => ({
-                              ...prev,
-                              smtpHost: "smtp.gmail.com",
-                              smtpPort: 587,
-                              secure: false
-                            }))}
-                            className="p-2 border border-slate-200 hover:border-amber-500 rounded-xl bg-white text-xs font-bold text-slate-800 transition text-center"
+                            onClick={() => {
+                              setEmailConfig(prev => ({
+                                ...prev,
+                                smtpHost: "smtp.gmail.com",
+                                smtpPort: 587,
+                                protocol: "starttls",
+                                secure: false,
+                                rejectUnauthorized: false
+                              }));
+                              setTestSmtpResult(null);
+                            }}
+                            className={`p-2.5 border rounded-xl bg-white text-xs text-right transition shadow-xs hover:border-amber-500 ${
+                              emailConfig.smtpHost === "smtp.gmail.com" && emailConfig.smtpPort === 587 ? "border-amber-500 ring-2 ring-amber-100 font-bold" : "border-slate-200"
+                            }`}
                           >
-                            Google Gmail
+                            <p className="font-bold text-slate-900">Gmail (STARTTLS)</p>
+                            <p className="text-[10px] text-slate-500">Port 587</p>
                           </button>
+
                           <button
                             type="button"
-                            onClick={() => setEmailConfig(prev => ({
-                              ...prev,
-                              smtpHost: "mail.al-shehhi-law.ae",
-                              smtpPort: 465,
-                              secure: true
-                            }))}
-                            className="p-2 border border-slate-200 hover:border-amber-500 rounded-xl bg-white text-xs font-bold text-slate-800 transition text-center"
+                            onClick={() => {
+                              setEmailConfig(prev => ({
+                                ...prev,
+                                smtpHost: "smtp.gmail.com",
+                                smtpPort: 465,
+                                protocol: "ssl_tls",
+                                secure: true,
+                                rejectUnauthorized: false
+                              }));
+                              setTestSmtpResult(null);
+                            }}
+                            className={`p-2.5 border rounded-xl bg-white text-xs text-right transition shadow-xs hover:border-amber-500 ${
+                              emailConfig.smtpHost === "smtp.gmail.com" && emailConfig.smtpPort === 465 ? "border-amber-500 ring-2 ring-amber-100 font-bold" : "border-slate-200"
+                            }`}
                           >
-                            خادم خاص Webmail
+                            <p className="font-bold text-slate-900">Gmail (SSL/TLS)</p>
+                            <p className="text-[10px] text-slate-500">Port 465</p>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEmailConfig(prev => ({
+                                ...prev,
+                                smtpHost: "mail.lawyersuood.com",
+                                smtpPort: 465,
+                                protocol: "ssl_tls",
+                                secure: true,
+                                rejectUnauthorized: false
+                              }));
+                              setTestSmtpResult(null);
+                            }}
+                            className={`p-2.5 border rounded-xl bg-white text-xs text-right transition shadow-xs hover:border-amber-500 ${
+                              emailConfig.smtpHost.includes("lawyersuood") ? "border-amber-500 ring-2 ring-amber-100 font-bold" : "border-slate-200"
+                            }`}
+                          >
+                            <p className="font-bold text-slate-900">خادم خاص Webmail</p>
+                            <p className="text-[10px] text-slate-500">SSL/TLS (465)</p>
                           </button>
                         </div>
                       </div>
 
-                      <Field label="عنوان البريد الإلكتروني (Email Address)">
-                        <input
-                          name="email"
-                          type="text"
-                          value={emailConfig.email}
-                          onChange={(e) => setEmailConfig(prev => ({ ...prev, email: e.target.value }))}
-                          placeholder="أدخل أي عنوان بريد إلكتروني ترغب باستخدامه (مثال: lawyer@domain.com)"
-                          className={`${inputCls} focus:ring-2 focus:ring-amber-500 font-medium`}
-                        />
-                        <p className="text-[10px] text-amber-700 font-semibold mt-1 flex items-center gap-1">
-                          ✓ حقل حر وقابل للتعديل بالكامل في أي وقت لإدخال أي حساب بريد تريد ربطه
-                        </p>
-                      </Field>
+                      {/* حقول الحساب المرجعية */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <Field label="عنوان البريد الإلكتروني (Sender Email)">
+                          <input
+                            name="email"
+                            type="text"
+                            value={emailConfig.email}
+                            onChange={(e) => {
+                              setEmailConfig(prev => ({ ...prev, email: e.target.value }));
+                              setTestSmtpResult(null);
+                            }}
+                            placeholder="lawyer@lawyersuood.com"
+                            className={`${inputCls} font-medium dir-ltr text-right`}
+                          />
+                        </Field>
 
-                      <Field label="اسم المرسل المعروض (Sender Name)">
-                        <input
-                          value={emailConfig.senderName}
-                          onChange={(e) => setEmailConfig(prev => ({ ...prev, senderName: e.target.value }))}
-                          placeholder="المحامي سعود أحمد الشحي"
-                          className={inputCls}
-                        />
-                      </Field>
+                        <Field label="اسم المرسل المعروض (Sender Name)">
+                          <input
+                            value={emailConfig.senderName}
+                            onChange={(e) => setEmailConfig(prev => ({ ...prev, senderName: e.target.value }))}
+                            placeholder="المحامي سعود أحمد الشحي"
+                            className={inputCls}
+                          />
+                        </Field>
+                      </div>
 
-                      <Field label="كلمة المرور / كلمة مرور التطبيق (App Password)">
+                      <Field label="كلمة المرور / كلمة مرور التطبيق المخصصة (App Password)">
                         <input
                           type="password"
                           value={emailConfig.appPassword || ""}
-                          onChange={(e) => setEmailConfig(prev => ({ ...prev, appPassword: e.target.value }))}
+                          onChange={(e) => {
+                            setEmailConfig(prev => ({ ...prev, appPassword: e.target.value }));
+                            setTestSmtpResult(null);
+                          }}
                           placeholder="••••••••••••••••"
                           className={inputCls}
                         />
-                        <p className="text-[10px] text-slate-400 mt-1">
-                          * لـ Gmail أو Office 365 يُنصح باستخدام كلمة مرور التطبيقات المخصصة (App Password)
+                        <p className="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
+                          * لحسابات Gmail أو Office 365 يُنصح باستخدام "كلمة مرور التطبيق" (App Password) المكونة من 16 حرفاً لتجاوز التحقق الثنائي.
                         </p>
                       </Field>
 
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <Field label="خادم الإرسال (SMTP Host)">
                           <input
                             value={emailConfig.smtpHost}
-                            onChange={(e) => setEmailConfig(prev => ({ ...prev, smtpHost: e.target.value }))}
+                            onChange={(e) => {
+                              setEmailConfig(prev => ({ ...prev, smtpHost: e.target.value }));
+                              setTestSmtpResult(null);
+                            }}
                             placeholder="smtp.office365.com"
-                            className={inputCls}
+                            className={`${inputCls} font-mono dir-ltr text-right`}
                           />
                         </Field>
 
@@ -7410,19 +8523,256 @@ export default function App() {
                           <input
                             type="number"
                             value={emailConfig.smtpPort}
-                            onChange={(e) => setEmailConfig(prev => ({ ...prev, smtpPort: Number(e.target.value) || 587 }))}
+                            onChange={(e) => {
+                              const newPort = Number(e.target.value) || 587;
+                              setEmailConfig(prev => ({
+                                ...prev,
+                                smtpPort: newPort,
+                                protocol: newPort === 465 ? "ssl_tls" : (newPort === 587 ? "starttls" : prev.protocol)
+                              }));
+                              setTestSmtpResult(null);
+                            }}
                             placeholder="587"
                             className={inputCls}
                           />
                         </Field>
                       </div>
 
-                      <button
-                        onClick={handleSaveEmailSettings}
-                        className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-800 transition shadow-sm"
-                      >
-                        حفظ واختبار تفعيل البريد الإلكتروني
-                      </button>
+                      {/* بروتوكولات الأمان المستقلة SSL/TLS/STARTTLS */}
+                      <div className="space-y-2 pt-2 border-t border-slate-100">
+                        <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <ShieldCheck size={16} className="text-emerald-700" /> بروتوكول التشفير والأمان المعتمد (Security Protocol):
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-normal">تحديد مستقل لمستوى التشفير</span>
+                        </label>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+                          {/* SSL / TLS */}
+                          <div
+                            onClick={() => {
+                              setEmailConfig(prev => ({ ...prev, protocol: "ssl_tls", secure: true }));
+                              setTestSmtpResult(null);
+                            }}
+                            className={`p-3 rounded-2xl border cursor-pointer transition relative space-y-1 ${
+                              emailConfig.protocol === "ssl_tls"
+                                ? "bg-emerald-50/70 border-emerald-600 ring-2 ring-emerald-100 text-emerald-950"
+                                : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-xs flex items-center gap-1">
+                                <Lock size={13} className="text-emerald-700" /> SSL / TLS (ضمني)
+                              </span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-200/60 font-mono text-emerald-900 font-bold">Port 465</span>
+                            </div>
+                            <p className="text-[10px] text-slate-600 leading-tight">
+                              تشفير مباشر شامل قبل المصادقة. مناسب لخوادم Webmail والخوادم الخاصة.
+                            </p>
+                          </div>
+
+                          {/* STARTTLS */}
+                          <div
+                            onClick={() => {
+                              setEmailConfig(prev => ({ ...prev, protocol: "starttls", secure: false }));
+                              setTestSmtpResult(null);
+                            }}
+                            className={`p-3 rounded-2xl border cursor-pointer transition relative space-y-1 ${
+                              emailConfig.protocol === "starttls"
+                                ? "bg-amber-50/70 border-amber-600 ring-2 ring-amber-100 text-amber-950"
+                                : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-xs flex items-center gap-1">
+                                <ShieldCheck size={13} className="text-amber-700" /> STARTTLS (صريح)
+                              </span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-200/60 font-mono text-amber-900 font-bold">Port 587</span>
+                            </div>
+                            <p className="text-[10px] text-slate-600 leading-tight">
+                              بدء الاتصال عادي ثم الارتقاء المشفر بـ TLS v1.2/1.3. مخصص لـ Office 365 و Gmail.
+                            </p>
+                          </div>
+
+                          {/* Plain Connection */}
+                          <div
+                            onClick={() => {
+                              setEmailConfig(prev => ({ ...prev, protocol: "none", secure: false }));
+                              setTestSmtpResult(null);
+                            }}
+                            className={`p-3 rounded-2xl border cursor-pointer transition relative space-y-1 ${
+                              emailConfig.protocol === "none"
+                                ? "bg-slate-100 border-slate-500 ring-2 ring-slate-200 text-slate-950"
+                                : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-xs flex items-center gap-1">
+                                <AlertCircle size={13} className="text-slate-500" /> بدون تشفير (Plain)
+                              </span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-200 font-mono text-slate-800 font-bold">Port 25</span>
+                            </div>
+                            <p className="text-[10px] text-slate-600 leading-tight">
+                              اتصال مباشر عادي بدون طبقة أمان. مخصص للتجربة البيئية المحلية فقط.
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* خيار التحكم بالشهادات SSL */}
+                        <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-700">
+                          <input
+                            type="checkbox"
+                            id="rejectCertCheck"
+                            checked={emailConfig.rejectUnauthorized}
+                            onChange={(e) => {
+                              setEmailConfig(prev => ({ ...prev, rejectUnauthorized: e.target.checked }));
+                              setTestSmtpResult(null);
+                            }}
+                            className="w-4 h-4 text-amber-600 rounded border-slate-300 focus:ring-amber-500"
+                          />
+                          <label htmlFor="rejectCertCheck" className="font-medium cursor-pointer flex-1">
+                            التحقق الصارم من صحة شهادة SSL (Strict SSL Certificate Validation)
+                            <span className="block text-[10px] text-slate-500 font-normal">
+                              * اتُرك هذا الخيار ملغياً لمنع رفض الشهادات المخصصة أو غير الموقعة (Self-Signed Certificates) على خوادم الاستضافة.
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* قسم فحص واختبار اتصال خادم SMTP واختبار الفواتير */}
+                      <div className="p-4 rounded-2xl bg-stone-50 border border-slate-200 space-y-3">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                              <RefreshCw size={15} className="text-amber-600" /> اختبار اتصال خادم SMTP (Test Connection)
+                            </h4>
+                            <p className="text-[10px] text-slate-500">فحص حقيقي للربط والتشفير والمصادقة لضمان وصول الفواتير</p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={handleTestSmtpConnection}
+                            disabled={testSmtpLoading}
+                            className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition disabled:opacity-50 shadow-xs"
+                          >
+                            {testSmtpLoading ? (
+                              <>
+                                <RefreshCw size={14} className="animate-spin text-amber-400" />
+                                <span>جاري فحص الاتصال...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Zap size={14} className="text-amber-400" />
+                                <span>اختبار الاتصال الآن</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* نتيجة الفحص والتشخيص */}
+                        {testSmtpResult && (
+                          <div className={`p-3.5 rounded-2xl border text-xs space-y-2.5 transition animate-fadeIn ${
+                            testSmtpResult.success
+                              ? "bg-emerald-50 border-emerald-300 text-emerald-950"
+                              : "bg-rose-50 border-rose-300 text-rose-950"
+                          }`}>
+                            <div className="flex items-center justify-between font-bold border-b border-emerald-200/60 pb-2">
+                              <span className="flex items-center gap-1.5">
+                                {testSmtpResult.success ? (
+                                  <CheckCircle2 size={16} className="text-emerald-700" />
+                                ) : (
+                                  <AlertTriangle size={16} className="text-rose-700" />
+                                )}
+                                <span>{testSmtpResult.success ? "نجاح اختبار اتصال خادم SMTP!" : "فشل في الاتصال أو التوثيق"}</span>
+                              </span>
+                              {testSmtpResult.latencyMs !== undefined && (
+                                <span className="text-[10px] bg-white/80 px-2 py-0.5 rounded font-mono border">
+                                  زمن الاستجابة: {testSmtpResult.latencyMs}ms
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="text-xs leading-relaxed font-medium">
+                              {testSmtpResult.message}
+                            </p>
+
+                            {testSmtpResult.success ? (
+                              <div className="space-y-3 pt-2">
+                                <div className="grid grid-cols-2 gap-2 text-[11px] text-emerald-900 bg-white/70 p-2.5 rounded-xl border border-emerald-200">
+                                  <div className="flex items-center gap-1 font-semibold">
+                                    <Check size={13} className="text-emerald-600" /> الاتصال بالمضيف: <b>{emailConfig.smtpHost}:{emailConfig.smtpPort}</b>
+                                  </div>
+                                  <div className="flex items-center gap-1 font-semibold">
+                                    <Check size={13} className="text-emerald-600" /> بروتوكول الأمان: <b>{emailConfig.protocol.toUpperCase()}</b>
+                                  </div>
+                                  <div className="flex items-center gap-1 font-semibold">
+                                    <Check size={13} className="text-emerald-600" /> مصادقة الحساب: <b>{emailConfig.email}</b>
+                                  </div>
+                                  <div className="flex items-center gap-1 font-semibold text-emerald-800">
+                                    <Check size={13} className="text-emerald-600" /> جاهز لإرسال الفواتير الضريبية
+                                  </div>
+                                </div>
+
+                                {/* نموذج اختبار إرسال فاتورة تجريبية */}
+                                <div className="bg-white p-3 rounded-xl border border-emerald-200 space-y-2">
+                                  <p className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                                    <Receipt size={14} className="text-amber-600" /> إرسال بريد فاتورة تجريبي للتأكد من المخرجات (Test Invoice Email):
+                                  </p>
+                                  <div className="flex gap-2">
+                                    <input
+                                      type="email"
+                                      value={testInvoiceRecipient}
+                                      onChange={(e) => setTestInvoiceRecipient(e.target.value)}
+                                      placeholder={emailConfig.email || "أدخل بريد تجريبي أو بريدك"}
+                                      className="flex-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs focus:border-amber-500"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={handleSendTestInvoice}
+                                      disabled={testInvoiceLoading}
+                                      className="px-3.5 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs transition flex items-center gap-1"
+                                    >
+                                      {testInvoiceLoading ? <RefreshCw size={13} className="animate-spin" /> : <Send size={13} />}
+                                      <span>إرسال الفاتورة</span>
+                                    </button>
+                                  </div>
+                                  {testInvoiceResult && (
+                                    <p className={`text-[11px] font-semibold ${testInvoiceResult.success ? "text-emerald-700" : "text-rose-700"}`}>
+                                      {testInvoiceResult.message}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            ) : (
+                              testSmtpResult.recommendation && (
+                                <div className="p-2.5 rounded-xl bg-white/80 border border-rose-200 text-[11px] text-rose-900 leading-relaxed font-semibold">
+                                  💡 <b>التوصية المقترحة لمعالجة الخطأ:</b> {testSmtpResult.recommendation}
+                                </div>
+                              )
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* أزرار الحفظ والإلغاء */}
+                      <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => setShowEmailSettingsModal(false)}
+                          className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-xs transition"
+                        >
+                          إلغاء
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleSaveEmailSettings}
+                          className="flex items-center gap-2 rounded-xl bg-slate-900 px-6 py-2.5 text-xs font-bold text-white hover:bg-slate-800 transition shadow-sm"
+                        >
+                          <ShieldCheck size={15} className="text-amber-400" />
+                          <span>حفظ وتفعيل إعدادات البريد</span>
+                        </button>
+                      </div>
+
                     </div>
                   </Modal>
                 )}
@@ -8848,64 +10198,138 @@ export default function App() {
                     <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
                       <div>
                         <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                          <ShieldAlert className="text-red-600" /> قاعدة بيانات الأشخاص والجهات المحظورة / PEP
+                          <ShieldAlert className="text-red-600" /> قائمة الإرهاب المحلية والأشخاص المحظورين (AML/Sanctions)
                         </h2>
                         <p className="text-xs text-slate-500 mt-1">
-                          قائمة التدقيق لقوانين الامتثال ومكافحة غسل الأموال (AML/Sanctions). يتم التدقيق والربط الآلي مع جميع الموكلين الجدد والحاليين.
+                          قائمة التدقيق المعتمدة للإرهاب والمنكشفين في دولة الإمارات العربية المتحدة ({kycWatchlist.length} سجل مسجل). يتم التدقيق والربط الآلي مع جميع الموكلين.
                         </p>
                       </div>
-                      <button
-                        onClick={() => setShowKycWatchlistUploadModal(true)}
-                        className="flex items-center gap-2 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-800 shadow-sm transition"
-                      >
-                        <FileSpreadsheet size={16} /> رفع ملف Excel الأشخاص المحظورين والمنكشفين
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => {
+                            if (confirm(`هل تؤكد تفريغ القائمة الحالية وإعادة تحميل قائمة الإرهاب المحلية الإماراتية بالكامل (${uaeTerroristList.length} سجل)؟`)) {
+                              setKycWatchlist(uaeTerroristList);
+                              saveStorage("firm_kyc_watchlist", uaeTerroristList);
+                            }
+                          }}
+                          className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-amber-400 hover:bg-slate-800 shadow-sm transition"
+                        >
+                          <RefreshCw size={15} /> إعادة ضبط القائمة الإماراتية ({uaeTerroristList.length} سجل)
+                        </button>
+                        <button
+                          onClick={() => setShowKycWatchlistUploadModal(true)}
+                          className="flex items-center gap-2 rounded-xl bg-red-700 px-4 py-2.5 text-xs font-bold text-white hover:bg-red-800 shadow-sm transition"
+                        >
+                          <FileSpreadsheet size={15} /> استيراد Excel
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* شريط البحث وفلاتر التصنيف */}
+                    <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+                      <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-slate-100">
+                        <span className="text-xs font-bold text-slate-500 ml-2">تصنيف القائمة:</span>
+                        {[
+                          { label: "الكل", val: "الكل" },
+                          { label: "أفراد إرهابيون", val: "شخص إرهابي" },
+                          { label: "كيانات إرهابية", val: "كيان إرهابي" },
+                          { label: "تنظيمات إرهابية", val: "تنظيم إرهابي" },
+                        ].map((tab) => (
+                          <button
+                            key={tab.val}
+                            onClick={() => setKycTypeFilter(tab.val)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${kycTypeFilter === tab.val ? "bg-red-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                          >
+                            {tab.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <div className="relative flex-1">
+                          <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                          <input
+                            type="text"
+                            value={kycWatchlistSearch}
+                            onChange={(e) => setKycWatchlistSearch(e.target.value)}
+                            placeholder="البحث بالاسم، رقم الوثيقة، الجنسية، أسباب الحظر..."
+                            className="w-full rounded-xl border border-slate-200 py-2 pr-9 pl-4 text-xs font-medium focus:border-red-500 focus:outline-none"
+                          />
+                        </div>
+                        {kycWatchlistSearch && (
+                          <button
+                            onClick={() => setKycWatchlistSearch("")}
+                            className="px-3 py-2 text-xs text-slate-500 hover:bg-slate-100 rounded-lg font-bold"
+                          >
+                            مسح البحث
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-                      <table className="w-full text-sm">
-                        <thead className="bg-stone-50 text-right text-xs text-slate-500">
-                          <tr>
-                            <th className="px-4 py-3 font-semibold">اسم الشخص / الجهة</th>
-                            <th className="px-4 py-3 font-semibold">الهوية / الجواز</th>
-                            <th className="px-4 py-3 font-semibold">تصنيف الحظر</th>
-                            <th className="px-4 py-3 font-semibold">سبب الحظر والمنع</th>
-                            <th className="px-4 py-3 font-semibold">الجنسية</th>
-                            <th className="px-4 py-3 font-semibold">تاريخ الإدراج</th>
-                            <th className="px-4 py-3 font-semibold text-center">إجراءات</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {kycWatchlist.map((item) => (
-                            <tr key={item.id} className="hover:bg-red-50/40">
-                              <td className="px-4 py-3 font-bold text-slate-900">{item.fullName}</td>
-                              <td className="px-4 py-3 font-mono text-xs text-slate-600">{item.idNo || "—"}</td>
-                              <td className="px-4 py-3">
-                                <Badge className="bg-red-100 text-red-800 border border-red-200">{item.type}</Badge>
-                              </td>
-                              <td className="px-4 py-3 text-xs text-slate-600 max-w-xs">{item.reason}</td>
-                              <td className="px-4 py-3 text-xs text-slate-500">{item.nationality || "أخرى"}</td>
-                              <td className="px-4 py-3 text-xs font-mono text-slate-500">{item.addedDate}</td>
-                              <td className="px-4 py-3 text-center">
-                                <button
-                                  onClick={() => {
-                                    if (confirm(`هل ترغب بمسح "${item.fullName}" من قائمة الحظر؟`)) {
-                                      setKycWatchlist((prev) => prev.filter((w) => w.id !== item.id));
-                                    }
-                                  }}
-                                  className="text-slate-400 hover:text-red-600 p-1"
-                                  title="حذف من القائمة"
-                                >
-                                  <Trash2 size={15} />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      {kycWatchlist.length === 0 && (
-                        <p className="py-10 text-center text-sm text-slate-400">لا توجد أسماء مسجلة حالياً بقائمة الحظر</p>
-                      )}
+                      {(() => {
+                        const filteredWatchlist = kycWatchlist.filter((item) => {
+                          if (kycTypeFilter !== "الكل" && item.type !== kycTypeFilter) return false;
+                          if (!kycWatchlistSearch.trim()) return true;
+                          const q = kycWatchlistSearch.toLowerCase();
+                          return (
+                            (item.fullName && item.fullName.toLowerCase().includes(q)) ||
+                            (item.idNo && item.idNo.toLowerCase().includes(q)) ||
+                            (item.reason && item.reason.toLowerCase().includes(q)) ||
+                            (item.type && item.type.toLowerCase().includes(q)) ||
+                            (item.nationality && item.nationality.toLowerCase().includes(q))
+                          );
+                        });
+
+                        return (
+                          <>
+                            <table className="w-full text-sm">
+                              <thead className="bg-stone-50 text-right text-xs text-slate-500">
+                                <tr>
+                                  <th className="px-4 py-3 font-semibold">اسم الشخص / الجهة</th>
+                                  <th className="px-4 py-3 font-semibold">الهوية / الجواز</th>
+                                  <th className="px-4 py-3 font-semibold">تصنيف الحظر</th>
+                                  <th className="px-4 py-3 font-semibold">سبب الحظر والمنع</th>
+                                  <th className="px-4 py-3 font-semibold">الجنسية</th>
+                                  <th className="px-4 py-3 font-semibold">تاريخ الإدراج</th>
+                                  <th className="px-4 py-3 font-semibold text-center">إجراءات</th>
+                                </tr>
+                              </thead>
+                              <tbody className="divide-y divide-slate-100">
+                                {filteredWatchlist.map((item) => (
+                                  <tr key={item.id} className="hover:bg-red-50/40">
+                                    <td className="px-4 py-3 font-bold text-slate-900">{item.fullName}</td>
+                                    <td className="px-4 py-3 font-mono text-xs text-slate-600">{item.idNo || "—"}</td>
+                                    <td className="px-4 py-3">
+                                      <Badge className="bg-red-100 text-red-800 border border-red-200">{item.type}</Badge>
+                                    </td>
+                                    <td className="px-4 py-3 text-xs text-slate-600 max-w-xs">{item.reason}</td>
+                                    <td className="px-4 py-3 text-xs text-slate-500">{item.nationality || "أخرى"}</td>
+                                    <td className="px-4 py-3 text-xs font-mono text-slate-500">{item.addedDate}</td>
+                                    <td className="px-4 py-3 text-center">
+                                      <button
+                                        onClick={() => {
+                                          if (confirm(`هل ترغب بمسح "${item.fullName}" من قائمة الحظر؟`)) {
+                                            setKycWatchlist((prev) => prev.filter((w) => w.id !== item.id));
+                                          }
+                                        }}
+                                        className="text-slate-400 hover:text-red-600 p-1"
+                                        title="حذف من القائمة"
+                                      >
+                                        <Trash2 size={15} />
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                            {filteredWatchlist.length === 0 && (
+                              <p className="py-10 text-center text-sm text-slate-400">لا توجد أسماء مسجلة تطابق شروط البحث الحالية</p>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                 )}
@@ -9868,15 +11292,35 @@ export default function App() {
                       دليل تفصيلي شامل يتضمن أسماء المحاكم، الإمارات، الأقسام، أسماء الموظفين والمسؤولين، الهواتف المباشرة، التمديدات الداخلية، أرقام الأختام، البريد الإلكتروني، ومواعيد الاستقبال
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => downloadCourtContactsTemplate()}
+                      className="flex items-center gap-1.5 rounded-xl bg-emerald-50 border border-emerald-300 px-3.5 py-2.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 shadow-sm transition"
+                      title="تحميل نموذج ملف إكسل فارغ ومنسق بالأعمدة المعتمدة"
+                    >
+                      <Download size={15} /> تنزيل نموذج إكسل
+                    </button>
+
+                    <label className="flex items-center gap-1.5 rounded-xl bg-amber-50 border border-amber-300 px-3.5 py-2.5 text-xs font-bold text-amber-900 hover:bg-amber-100 cursor-pointer shadow-sm transition">
+                      <FileSpreadsheet size={15} className="text-amber-700" />
+                      <span>استيراد أرقام الجهات من إكسل</span>
+                      <input
+                        type="file"
+                        accept=".xlsx, .xls, .csv"
+                        onChange={handleCourtExcelUpload}
+                        className="hidden"
+                      />
+                    </label>
+
                     <button
                       onClick={() => {
                         setReport({ type: "court-directory" });
                       }}
-                      className="flex items-center gap-2 rounded-xl bg-slate-100 border border-slate-300 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 shadow-sm"
+                      className="flex items-center gap-1.5 rounded-xl bg-slate-100 border border-slate-300 px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 shadow-sm transition"
                     >
-                      <Printer size={16} /> طباعة / تصدير الدليل القضائي PDF
+                      <Printer size={15} /> طباعة / تصدير PDF
                     </button>
+
                     <button
                       onClick={() => {
                         setEditingCourtContact(null);
@@ -9894,12 +11338,24 @@ export default function App() {
                         });
                         setModal("courtContact");
                       }}
-                      className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"
+                      className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-700 shadow-sm transition"
                     >
-                      <Plus size={16} /> إضافة جهة / موظف محكمة جديد
+                      <Plus size={15} /> إضافة جهة جديدة
                     </button>
                   </div>
                 </div>
+
+                {courtExcelImportStatus && courtExcelImportStatus.isError && (
+                  <div className="rounded-xl border border-red-300 bg-red-50 p-3.5 flex items-center justify-between text-xs text-red-800">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle size={16} className="text-red-600 shrink-0" />
+                      <span>{courtExcelImportStatus.message}</span>
+                    </div>
+                    <button onClick={() => setCourtExcelImportStatus(null)} className="text-red-600 hover:text-red-800">
+                      <X size={14} />
+                    </button>
+                  </div>
+                )}
 
                 {/* إحصائيات سريعة لدليل التواصل */}
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -10700,6 +12156,9 @@ export default function App() {
                 </select>
               </Field>
             </div>
+            <Field label="الدائرة القضائية / القاضي المشرف">
+              <input onChange={f("judge")} placeholder="مثال: دائرة الجنايات الأولى - القاضي محمد" className={inputCls} />
+            </Field>
             <Field label="موضوع الدعوى والطلبات">
               <textarea onChange={f("subject")} rows={2} placeholder="ملخص وقائع الدعوى..." className={inputCls} />
             </Field>
@@ -11506,7 +12965,7 @@ export default function App() {
 
       {/* ================= نافذة مواعيد الأحكام التلقائية ================= */}
       {modal === "deadline" && (
-        <Modal title="تسجيل حكم قضائي وحساب ميعاد الطعن التلقائي" onClose={() => setModal(null)}>
+        <Modal title="تسجيل حكم قضائي وحساب ميعاد الطعن والتنبيهات التلقائية" onClose={() => setModal(null)}>
           <div className="space-y-4 text-sm">
             <Field label="القضية">
               <select onChange={f("caseId")} className={inputCls}>
@@ -11530,12 +12989,162 @@ export default function App() {
               <Field label="مهلة الطعن القانونية (أيام)">
                 <input type="number" onChange={f("appealDays")} defaultValue="30" className={inputCls} />
               </Field>
-              <p className="text-xs text-slate-500 self-center">سيتم إضافة المهلة وتحديث ميعاد انتهاء حق الاستئناف تلقائياً</p>
+              <Field label="المحامي المسؤول عن الطعن">
+                <select
+                  onChange={(e) => {
+                    const uId = Number(e.target.value);
+                    const u = users.find(usr => usr.id === uId);
+                    if (u) {
+                      setForm(prev => ({
+                        ...prev,
+                        assignedLawyerId: u.id,
+                        assignedLawyerName: u.name,
+                        assignedLawyerEmail: u.email,
+                        assignedLawyerPhone: u.phone
+                      }));
+                    }
+                  }}
+                  className={inputCls}
+                >
+                  <option value="">اختر المحامي المسؤول…</option>
+                  {users.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.roleTitle || u.roleKey})</option>)}
+                </select>
+              </Field>
             </div>
+            <Field label="قناة إرسال الإشعارات الاستباقية التلقائية">
+              <select onChange={f("preferredChannel")} defaultValue="both" className={inputCls}>
+                <option value="both">إيميل + واتساب (موصى به لضمان الوصول)</option>
+                <option value="email">بريد إلكتروني فقط (SMTP)</option>
+                <option value="whatsapp">رسالة واتساب مباشرة فقط</option>
+              </select>
+            </Field>
             <Field label="منطوق الحكم الصادر وملخص القضية">
               <textarea onChange={f("rulingSummary")} rows={3} placeholder="منطوق الحكم الرسمي الصادر من جلسة اليوم..." className={inputCls} />
             </Field>
             <button onClick={saveDeadline} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">حفظ وحساب الميعاد التلقائي</button>
+          </div>
+        </Modal>
+      )}
+
+      {/* ================= نافذة سجل التنبيهات المرسلة للطعن ================= */}
+      {selectedDeadlineLogs && (
+        <Modal title={`سجل الإشعارات والتنبيهات للطعن (#${selectedDeadlineLogs.id})`} onClose={() => setSelectedDeadlineLogs(null)} wide>
+          <div className="space-y-4 text-sm">
+            <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-900">
+              <p className="font-bold">القضية: {caseNo(selectedDeadlineLogs.caseId)}</p>
+              <p className="mt-0.5">المحامي المسؤول: <b>{selectedDeadlineLogs.assignedLawyerName || "المحامي سعود أحمد الشحي"}</b> ({selectedDeadlineLogs.assignedLawyerEmail || "info@lawyersuood.com"})</p>
+              <p className="mt-0.5">آخر موعد للطعن: <b className="text-red-700">{fmtDate(selectedDeadlineLogs.appealDeadlineDate)}</b></p>
+            </div>
+
+            <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5 border-b border-slate-200 pb-2">
+              <History size={15} className="text-amber-600" /> سجّل الإشعارات الاستباقية التلقائية واليدوية:
+            </h4>
+
+            {(!selectedDeadlineLogs.autoAlertLogs || selectedDeadlineLogs.autoAlertLogs.length === 0) ? (
+              <div className="text-center py-8 text-slate-500 bg-stone-50 rounded-xl border border-dashed border-slate-200">
+                لا توجد تنبيهات سابقة مُسجّلة لهذا الطعن بعد. يتم الإرسال التلقائي فور اقتراب المهلة لـ 7 أيام و 3 أيام.
+              </div>
+            ) : (
+              <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                {selectedDeadlineLogs.autoAlertLogs.map((log) => (
+                  <div key={log.id} className="p-3 rounded-xl border border-slate-200 bg-white text-xs space-y-1 shadow-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                        {log.type === "3_days" ? "🚨 تنبيه حرج (3 أيام)" : log.type === "7_days" ? "⚠️ تنبيه استباقي (7 أيام)" : "📱 تنبيه يدوي"}
+                      </span>
+                      <span className="text-[11px] font-mono text-slate-500">{log.timestamp}</span>
+                    </div>
+                    <p className="text-slate-600 font-medium">{log.messageSnippet}</p>
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 pt-1 mt-1">
+                      <span>المستلم: {log.lawyerName} ({log.recipientContact})</span>
+                      <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded">الحالة: {log.status === "sent" ? "تم الإرسال بنجاح ✅" : "قيد التنفيذ"}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <button onClick={() => setSelectedDeadlineLogs(null)} className="w-full rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white hover:bg-slate-700">
+              إغلاق النافذة
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* ================= نافذة إعادة تعيين المحامي المسؤول للطعن ================= */}
+      {reassignDeadlineModal && (
+        <Modal title="تغيير وإسناد المحامي المسؤول عن متابعة الطعن" onClose={() => setReassignDeadlineModal(null)}>
+          <div className="space-y-4 text-sm">
+            <p className="text-xs text-slate-600">
+              قم باختيار المحامي المستهدف لإعادة إسناد ملف الطعن بالقضية <b>{caseNo(reassignDeadlineModal.caseId)}</b> وحفظ بيانات التواصل لتلقي تنبيهات الاستئناف تلقائياً.
+            </p>
+
+            <Field label="المحامي المسؤول الجديد">
+              <select
+                onChange={(e) => {
+                  const uId = Number(e.target.value);
+                  const selU = users.find(u => u.id === uId);
+                  if (selU) {
+                    setReassignDeadlineModal(prev => prev ? {
+                      ...prev,
+                      assignedLawyerId: selU.id,
+                      assignedLawyerName: selU.name,
+                      assignedLawyerEmail: selU.email,
+                      assignedLawyerPhone: selU.phone
+                    } : null);
+                  }
+                }}
+                value={reassignDeadlineModal.assignedLawyerId || ""}
+                className={inputCls}
+              >
+                {users.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.roleTitle || u.roleKey}) - {u.email}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="بريد المحامي لاستلام التنبيهات">
+                <input
+                  value={reassignDeadlineModal.assignedLawyerEmail || ""}
+                  onChange={(e) => setReassignDeadlineModal(prev => prev ? { ...prev, assignedLawyerEmail: e.target.value } : null)}
+                  className={inputCls}
+                />
+              </Field>
+              <Field label="هاتف المحامي للإشعارات الفورية">
+                <input
+                  value={reassignDeadlineModal.assignedLawyerPhone || ""}
+                  onChange={(e) => setReassignDeadlineModal(prev => prev ? { ...prev, assignedLawyerPhone: e.target.value } : null)}
+                  className={inputCls}
+                />
+              </Field>
+            </div>
+
+            <Field label="قناة التنبيه الاستباقي التلقائي المفضلة">
+              <select
+                value={reassignDeadlineModal.preferredChannel || "both"}
+                onChange={(e) => setReassignDeadlineModal(prev => prev ? { ...prev, preferredChannel: e.target.value as any } : null)}
+                className={inputCls}
+              >
+                <option value="both">إيميل + واتساب تلقائي (موصى به)</option>
+                <option value="email">البريد الإلكتروني فقط (SMTP)</option>
+                <option value="whatsapp">الواتساب المباشر فقط</option>
+              </select>
+            </Field>
+
+            <button
+              onClick={() => {
+                if (reassignDeadlineModal) {
+                  setDeadlines(prev => prev.map(x => x.id === reassignDeadlineModal.id ? reassignDeadlineModal : x));
+                  setReassignDeadlineModal(null);
+                }
+              }}
+              className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700"
+            >
+              تأكيد وإسناد ملف الطعن
+            </button>
           </div>
         </Modal>
       )}
@@ -11760,6 +13369,116 @@ export default function App() {
               </button>
               <button onClick={saveCourtContact} className="rounded-xl bg-amber-500 px-5 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400">
                 حفظ بيانات التواصل
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ================= نافذة معاينة وتأكيد استيراد أرقام دليل المحاكم من إكسل ================= */}
+      {courtExcelModalOpen && (
+        <Modal wide title="معاينة واستيراد أرقام ودليل المحاكم والجهات من ملف إكسل" onClose={() => setCourtExcelModalOpen(false)}>
+          <div className="space-y-4 text-sm">
+            <div className="bg-emerald-50 p-3.5 rounded-2xl border border-emerald-200 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-emerald-900 text-xs font-bold">
+                <FileSpreadsheet size={18} className="text-emerald-700" />
+                <span>اسم الملف: <b className="font-mono text-emerald-950">{courtExcelFileName || "ملف_إكسل.xlsx"}</b></span>
+              </div>
+              <span className="bg-emerald-200 text-emerald-900 px-3 py-1 rounded-full text-xs font-extrabold">
+                عدد الجهات المكتشفة: {courtImportPreviewList.length} سجل
+              </span>
+            </div>
+
+            {/* وضعية الاستيراد */}
+            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
+              <label className="block text-xs font-bold text-slate-800">طريقة معالجة البيانات عند الحفظ:</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <label className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition ${courtExcelImportMode === "append" ? "bg-amber-50 border-amber-400 font-bold text-amber-900" : "bg-white border-slate-200 text-slate-700"}`}>
+                  <input
+                    type="radio"
+                    name="courtImportMode"
+                    checked={courtExcelImportMode === "append"}
+                    onChange={() => setCourtExcelImportMode("append")}
+                    className="accent-amber-600"
+                  />
+                  <span>دمج مع الدليل الحالي (إضافة السجلات الجديدة)</span>
+                </label>
+                <label className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition ${courtExcelImportMode === "replace" ? "bg-red-50 border-red-400 font-bold text-red-900" : "bg-white border-slate-200 text-slate-700"}`}>
+                  <input
+                    type="radio"
+                    name="courtImportMode"
+                    checked={courtExcelImportMode === "replace"}
+                    onChange={() => setCourtExcelImportMode("replace")}
+                    className="accent-red-600"
+                  />
+                  <span>استبدال الدليل الحالي بالكامل (مسح الدليل القديم)</span>
+                </label>
+              </div>
+            </div>
+
+            {/* جدول المعاينة */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                <span>جدول معاينة السجلات قبل اعتمادها:</span>
+                <span className="text-slate-500 font-normal">يمكنك حذف أي صف غير مرغوب فيه بالنقر على علامة (X)</span>
+              </h4>
+              <div className="max-h-72 overflow-y-auto rounded-2xl border border-slate-200 shadow-inner">
+                <table className="w-full text-right text-xs">
+                  <thead className="bg-slate-100 text-slate-700 sticky top-0 font-bold border-b border-slate-200">
+                    <tr>
+                      <th className="p-2.5">#</th>
+                      <th className="p-2.5">اسم المحكمة / الجهة</th>
+                      <th className="p-2.5">الإمارة</th>
+                      <th className="p-2.5">القسم / التخصص</th>
+                      <th className="p-2.5">الموظف / المسمى</th>
+                      <th className="p-2.5">الهاتف والتمديدة</th>
+                      <th className="p-2.5">البريد الإلكتروني</th>
+                      <th className="p-2.5 text-center">إجراء</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 bg-white">
+                    {courtImportPreviewList.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50 text-slate-800">
+                        <td className="p-2.5 font-mono text-slate-400">{idx + 1}</td>
+                        <td className="p-2.5 font-bold text-slate-900">{item.courtName}</td>
+                        <td className="p-2.5">
+                          <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-semibold">{item.emirate}</span>
+                        </td>
+                        <td className="p-2.5">{item.department}</td>
+                        <td className="p-2.5 text-slate-600">{item.titleOrEmployee}</td>
+                        <td className="p-2.5 font-mono text-slate-700">
+                          {item.phone} {item.extOrSeal && item.extOrSeal !== "—" ? `(${item.extOrSeal})` : ""}
+                        </td>
+                        <td className="p-2.5 font-mono text-slate-600 text-[11px]">{item.email}</td>
+                        <td className="p-2.5 text-center">
+                          <button
+                            onClick={() => setCourtImportPreviewList(prev => prev.filter((_, i) => i !== idx))}
+                            className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                            title="حذف هذا الصف من المعاينة"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between border-t border-slate-200 pt-3">
+              <button
+                onClick={() => setCourtExcelModalOpen(false)}
+                className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100"
+              >
+                إلغاء الأمر
+              </button>
+              <button
+                onClick={confirmCourtExcelImport}
+                disabled={courtImportPreviewList.length === 0}
+                className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 shadow-md transition disabled:opacity-50"
+              >
+                <CheckCircle2 size={16} /> تأكيد واستيراد ({courtImportPreviewList.length}) جهة إلى الدليل
               </button>
             </div>
           </div>

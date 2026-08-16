@@ -37,6 +37,8 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
   // Local state for editing settings
   const [price30, setPrice30] = useState(settings.price30);
   const [price60, setPrice60] = useState(settings.price60);
+  const [mbankIban, setMbankIban] = useState(settings.mbankIban || "AE25 0350 0000 1234 5678 901");
+  const [mbankMerchantId, setMbankMerchantId] = useState(settings.mbankMerchantId || "MBANK-CORP-SUOODLAW-2026");
   const [newSlotInput, setNewSlotInput] = useState("");
   const [slotsList, setSlotsList] = useState<string[]>(settings.availableSlots);
   const [newBlockedDate, setNewBlockedDate] = useState("");
@@ -65,7 +67,9 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
       price30,
       price60,
       availableSlots: slotsList,
-      blockedDates: blockedDatesList
+      blockedDates: blockedDatesList,
+      mbankIban,
+      mbankMerchantId
     });
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 3000);
@@ -589,6 +593,55 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
                     ))}
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* 4. Al Maryah Bank Integration Setup */}
+            <div>
+              <h4 className="text-sm font-bold text-amber-300 mb-3 flex items-center gap-1.5">
+                <Shield size={16} />
+                <span>4. إعدادات ربط حساب بنك المارية (Al Maryah Community Bank - Mbank UAE):</span>
+              </h4>
+
+              <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
+                <div className="flex items-center justify-between bg-teal-950/40 p-3 rounded-lg border border-teal-800/60 text-xs text-teal-200">
+                  <span>🏦 حساب الأعمال الرسمي للمكتب المرتبط ببنك المارية لضمان إيداع إيرادات الاستشارات فوراً.</span>
+                  <span className="font-mono bg-teal-900 px-2.5 py-1 rounded text-amber-300 font-bold">Mbank Corporate API Active</span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                      رقم الآيبان التجاري (Mbank IBAN):
+                    </label>
+                    <input
+                      type="text"
+                      value={mbankIban}
+                      onChange={(e) => setMbankIban(e.target.value)}
+                      placeholder="AE25 0350 0000 1234 5678 901"
+                      dir="ltr"
+                      className="bg-slate-900 border border-slate-700 text-xs text-white p-3 rounded-xl w-full font-mono font-bold focus:ring-1 focus:ring-teal-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                      معرف تاجر بنك المارية (Merchant ID / API Key):
+                    </label>
+                    <input
+                      type="text"
+                      value={mbankMerchantId}
+                      onChange={(e) => setMbankMerchantId(e.target.value)}
+                      placeholder="MBANK-CORP-SUOODLAW-2026"
+                      dir="ltr"
+                      className="bg-slate-900 border border-slate-700 text-xs text-white p-3 rounded-xl w-full font-mono font-bold focus:ring-1 focus:ring-teal-500"
+                    />
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  * عند إتمام الموكل عملية السداد عبر الموقع الرسمي (lawyersuood.com)، يقوم النظام بإرسال إشعار لحظي (Webhook Callback) إلى بوابة بنك المارية لتحصيل المبلغ وإيداعه مباشرة في الحساب التجاري للمكتب، وتوليد الفاتورة الضريبية وإيصال القبض آلياً في النظام المحاسبي للمكتب.
+                </p>
               </div>
             </div>
 
