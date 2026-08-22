@@ -3,25 +3,29 @@ import Logo from "./components/Logo";
 import BookingConsultationView from "./components/BookingConsultationView";
 import PublicConsultationPage, { BookingRecord, ConsultationSettings } from "./components/PublicConsultationPage";
 import AdminConsultationsView from "./components/AdminConsultationsView";
+import GoogleCalendarSyncModal from "./components/GoogleCalendarSyncModal";
+import { initAuth, createGoogleCalendarEvent, formatCalendarDateTime } from "./googleCalendar";
+import { User as FirebaseUser } from "firebase/auth";
 import { supabase, sendWhatsAppViaEdgeFunction } from "./supabaseClient";
 import {
   Scale, LayoutDashboard, Briefcase, Users, CalendarDays, ListChecks,
-  Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, Building2,
+  Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, BellRing, Building2,
   Gavel, Clock, AlertTriangle, CheckCircle2, ChevronLeft, Trash2, Printer,
-  Phone, Mail, MapPin, TrendingUp, ShieldCheck, Lock, UserCheck, Key,
+  Phone, Mail, MapPin, TrendingUp, ShieldCheck, Shield, Lock, UserCheck, Key,
   Check, Minus, Info, UserPlus, ShieldAlert, Edit2, User, RefreshCw, Smartphone,
   Send, MessageSquare, Share2, ExternalLink, FileText, CheckCheck, SendHorizontal, Filter,
   Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download, Database, Code, LogOut,
   Inbox, Paperclip, RotateCw, QrCode, Settings, History, BookOpen, UploadCloud, Video,
-  Sparkles, Bot, Zap, PlusCircle, Layers
+  Sparkles, Bot, Zap, PlusCircle, Layers, BarChart3, PieChart as LucidePieChart, Activity, CheckSquare, Target, Percent, Menu
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-  PieChart, Pie, Cell, Legend
+  PieChart, Pie, Cell, Legend, RadialBarChart, RadialBar, AreaChart, Area
 } from "recharts";
 import html2pdf from "html2pdf.js";
 import * as XLSX from "xlsx";
 import { uaeTerroristList } from "./data/uaeTerroristListData";
+import { seedCourtContacts } from "./courtContactsData";
 
 /* ============================================================
    نظام إدارة مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية
@@ -98,35 +102,44 @@ const handleDownloadPDF = (elementId: string, filename: string) => {
   });
 };
 
-// ---------- الأنواع والواجهات ----------
+// ---------- الأنواع والواجهات ومصفوفة الصلاحيات الموسعة ----------
 export interface RolePermissions {
-  dashboard: boolean;     // 1. لوحة التحكم
-  cases: boolean;         // 2. القضايا
-  clients: boolean;       // 3. الموكلين
-  calendar: boolean;      // 4. الجلسات والرول
-  email: boolean;         // 5. البريد الإلكتروني المدمج
-  whatsapp: boolean;      // 6. واتساب المكتب المدمج
-  directory: boolean;     // 7. دليل المحاكم والجهات
-  tasks: boolean;         // 8. المهام
-  finance: boolean;       // 9. الفواتير والضريبة
-  agreements: boolean;    // 10. اتفاقية المكتب المعتمدة
-  kyc: boolean;           // 11. اعرف عميلك KYC / الوكالات والمستندات
-  bookingConsultation?: boolean;
-  manageCases?: boolean;
-  deleteCases?: boolean;
-  manageHearings?: boolean;
-  manageTasks?: boolean;
-  viewInvoices?: boolean;
-  manageInvoices?: boolean;
-  manageClients?: boolean;
-  manageDocs?: boolean;
-  manageUsers?: boolean;
-  viewReports?: boolean;
-  precedents?: boolean;
-  hr?: boolean;
-  manageEmployees?: boolean;
-  auditLog?: boolean;
-  managePrecedents?: boolean;
+  // 1. صلاحيات الوصول للأقسام والتبويبات الرئيسية الـ 18 (Module Access)
+  dashboard: boolean;            // 1. لوحة التحكم والأداء
+  cases: boolean;                // 2. القضايا
+  calendar: boolean;             // 3. الجلسات والرول
+  clients: boolean;              // 4. الموكلين والعملاء
+  bookingConsultation?: boolean; // 5. حجز الاستشارات المرئية
+  tasks: boolean;                // 6. المهام والتكليفات
+  whatsapp: boolean;             // 7. واتساب المكتب المدمج
+  email: boolean;                // 8. البريد الإلكتروني المدمج
+  directory: boolean;            // 9. دليل المحاكم والجهات
+  docs?: boolean;                // 10. المستندات والأرشيف الإلكتروني
+  poa?: boolean;                 // 11. الوكالات القانونية
+  agreements: boolean;           // 12. اتفاقيات أتعاب المكتب
+  finance: boolean;              // 13. الفواتير والضريبة والحسابات
+  kyc: boolean;                  // 14. اعرف عميلك (KYC) والامتثال
+  precedents?: boolean;          // 15. المبادئ والأحكام القضائية
+  hr?: boolean;                  // 16. الموظفون والكادر (HR)
+  auditLog?: boolean;            // 17. سجل التدقيق والأنشطة (Audit Log)
+  manageUsers?: boolean;         // 18. إدارة المستخدمين والصلاحيات
+
+  // 2. صلاحيات العمليات والإجراءات الدقيقة والتفويضات (Action Permissions)
+  manageCases?: boolean;         // قيد وتعديل القضايا
+  deleteCases?: boolean;         // حذف القضايا والملفات نهائياً (صلاحية حساسة)
+  manageHearings?: boolean;      // جدولة وتحديث الجلسات والرول
+  manageTasks?: boolean;         // إسناد وتعيين ومتابعة المهام
+  manageClients?: boolean;       // إضافة وتعديل بيانات الموكلين
+  manageDocs?: boolean;          // رفع وإدارة وأرشفة المستندات
+  managePoa?: boolean;           // قيد وتحديث الوكالات القانونية
+  manageAgreements?: boolean;    // صياغة واعتماد اتفاقيات الأتعاب
+  viewInvoices?: boolean;        // الاطلاع على الفواتير والأتعاب
+  manageInvoices?: boolean;      // إصدار وتعديل الفواتير وسندات القبض
+  manageKyc?: boolean;           // مراجعة واعتماد ملفات KYC
+  manageEmployees?: boolean;     // إدارة الكادر الوظيفي والرواتب
+  managePrecedents?: boolean;    // إضافة وتصنيف المبادئ القضائية
+  viewReports?: boolean;         // استخراج ومراجعة التقارير التحليلية
+  exportData?: boolean;          // تصدير واستعادة النسخ الاحتياطية (JSON/PDF)
 }
 
 export interface UserItem {
@@ -210,6 +223,8 @@ export interface Hearing {
   room: string;
   notes: string;
   done: boolean;
+  googleCalendarEventId?: string;
+  googleSyncedAt?: string;
 }
 
 export interface TaskItem {
@@ -570,38 +585,79 @@ export function saveLetterhead(config: { headerImg: string; footerImg: string })
   }
 }
 
-// ---------- وحدات وأقسام النظام الـ 11 الأساسية ----------
-export const PERMISSION_MODULES: Array<{
+// ---------- مصفوفة أقسام وتبويبات النظام الـ 18 المعتمدة ----------
+export interface SystemModuleDef {
   id: keyof RolePermissions;
   label: string;
   desc: string;
+  category: "العمليات القانونية" | "التواصل والمهام" | "المالية والعقود" | "الإدارة والامتثال";
   navTabIds: string[];
+}
+
+export const PERMISSION_MODULES: SystemModuleDef[] = [
+  // 1. العمليات القانونية (5 أقسام)
+  { id: "dashboard", label: "لوحة التحكم والأداء", desc: "الوصول للإحصائيات ونظرة عامة على المكتب ومؤشرات الأداء", category: "العمليات القانونية", navTabIds: ["dashboard"] },
+  { id: "cases", label: "القضايا", desc: "إدارة الملفات والقضايا والدعاوى ومراحل التقاضي", category: "العمليات القانونية", navTabIds: ["cases"] },
+  { id: "calendar", label: "الجلسات والرول", desc: "جدولة ومتابعة جلسات المحاكم وقاعاتها والقرارات", category: "العمليات القانونية", navTabIds: ["hearings"] },
+  { id: "clients", label: "الموكلين والعملاء", desc: "سجل بيانات الموكلين والأفراد والشركات والجهات", category: "العمليات القانونية", navTabIds: ["clients"] },
+  { id: "bookingConsultation", label: "حجز الاستشارات المرئية", desc: "إدارة ومتابعة طلبات الاستشارات المرئية وأرباحها", category: "العمليات القانونية", navTabIds: ["booking_consultation"] },
+
+  // 2. التواصل والمهام (4 أقسام)
+  { id: "tasks", label: "المهام والتكليفات", desc: "إسناد ومتابعة المهام الإدارية والقانونية لفريق العمل", category: "التواصل والمهام", navTabIds: ["tasks"] },
+  { id: "whatsapp", label: "واتساب المكتب المدمج", desc: "المراسلات الفورية وتنبيهات الموكلين المباشرة", category: "التواصل والمهام", navTabIds: ["whatsapp_office"] },
+  { id: "email", label: "البريد الإلكتروني المدمج", desc: "الاطلاع واستخدام البريد الإلكتروني الرسمي للمكتب", category: "التواصل والمهام", navTabIds: ["inapp_email"] },
+  { id: "directory", label: "دليل المحاكم والجهات", desc: "دليل التواصل المباشر مع محاكم ونيابات الدولة", category: "التواصل والمهام", navTabIds: ["courts_directory"] },
+
+  // 3. المالية والعقود والمستندات (4 أقسام)
+  { id: "docs", label: "المستندات والأرشيف الإلكتروني", desc: "أرشفة وتصنيف ملفات القضايا والوثائق الرسمية", category: "المالية والعقود", navTabIds: ["docs"] },
+  { id: "poa", label: "الوكالات القانونية", desc: "متابعة صلاحية وسريان الوكالات وتنبيهات الانتهاء", category: "المالية والعقود", navTabIds: ["poa"] },
+  { id: "agreements", label: "اتفاقيات أتعاب المكتب", desc: "صياغة وإنشاء واعتماد اتفاقيات الأتعاب وجدول الدفعات", category: "المالية والعقود", navTabIds: ["office_agreement"] },
+  { id: "finance", label: "الفواتير والضريبة والحسابات", desc: "إصدار الفواتير الضريبية 5% وسندات القبض ومتابعة الذمم", category: "المالية والعقود", navTabIds: ["invoices"] },
+
+  // 4. الإدارة والامتثال والرقابة (5 أقسام)
+  { id: "kyc", label: "اعرف عميلك (KYC) والامتثال", desc: "مراجعات الفحص والامتثال لمعايير مكافحة غسل الأموال", category: "الإدارة والامتثال", navTabIds: ["kyc"] },
+  { id: "precedents", label: "المبادئ والأحكام القضائية", desc: "مكتبة وسجل المبادئ القانونية وسوابق التمييز والاتحادية", category: "الإدارة والامتثال", navTabIds: ["precedents"] },
+  { id: "hr", label: "الموظفون والكادر (HR)", desc: "إدارة الكادر الوظيفي والرواتب والإجازات والمصروفات", category: "الإدارة والامتثال", navTabIds: ["employees"] },
+  { id: "auditLog", label: "سجل التدقيق والأنشطة (Audit Log)", desc: "رقابة وتتبع عمليات الحذف والتعديل وتغييرات الصلاحيات الحساسة", category: "الإدارة والامتثال", navTabIds: ["audit_log"] },
+  { id: "manageUsers", label: "المستخدمون وإدارة الصلاحيات", desc: "إضافة وتعديل واعتماد حسابات الموظفين وتخصيص الأدوار", category: "الإدارة والامتثال", navTabIds: ["users"] },
+];
+
+// مصفوفة صلاحيات العمليات الإجرائية الدقيقة والتفويضات
+export const DETAILED_ACTION_PERMISSIONS: Array<{
+  id: keyof RolePermissions;
+  label: string;
+  desc: string;
+  category: string;
+  isSensitive?: boolean;
 }> = [
-  { id: "dashboard", label: "لوحة التحكم", desc: "الوصول للإحصائيات ونظرة عامة على المكتب", navTabIds: ["dashboard"] },
-  { id: "cases", label: "القضايا", desc: "إدارة الملفات والقضايا والدعاوى", navTabIds: ["cases"] },
-  { id: "clients", label: "الموكلين", desc: "سجل بيانات الموكلين والأطراف", navTabIds: ["clients"] },
-  { id: "bookingConsultation", label: "حجز استشارة مرئية", desc: "إدارة وحجز الاستشارات المرئية وأرباحها", navTabIds: ["booking_consultation"] },
-  { id: "calendar", label: "الجلسات والرول", desc: "جدولة متابعة جلسات المحاكم", navTabIds: ["hearings"] },
-  { id: "email", label: "البريد الإلكتروني المدمج", desc: "الاطلاع واستخدام البريد الإلكتروني المدمج", navTabIds: ["inapp_email"] },
-  { id: "whatsapp", label: "واتساب المكتب المدمج", desc: "المراسلات الفورية وتنبيهات الموكلين عبر الواتساب", navTabIds: ["whatsapp_office"] },
-  { id: "directory", label: "دليل المحاكم والجهات", desc: "دليل التواصل المباشر مع المحاكم والنيابات", navTabIds: ["courts_directory"] },
-  { id: "tasks", label: "المهام", desc: "إسناد ومتابعة المهام الإدارية والقانونية", navTabIds: ["tasks"] },
-  { id: "finance", label: "الفواتير والضريبة", desc: "الاطلاع والتحكم بالفواتير والحسابات والضريبة", navTabIds: ["invoices"] },
-  { id: "agreements", label: "اتفاقية المكتب المعتمدة", desc: "صياغة وإنشاء اتفاقيات الأتعاب المعتمدة", navTabIds: ["office_agreement"] },
-  { id: "kyc", label: "اعرف عميلك KYC / الوكالات والمستندات", desc: "مراجعات الفحص والأرشيف الإلكتروني والوكالات", navTabIds: ["kyc", "docs", "poa"] },
-  { id: "hr", label: "الموظفون والكادر (HR)", desc: "إدارة بيانات الموظفين والرواتب والإجازات والمصروفات", navTabIds: ["employees"] },
-  { id: "precedents", label: "المبادئ والأحكام القضائية", desc: "مكتبة وسجل المبادئ القانونية والسوابق القضائية", navTabIds: ["precedents"] },
-  { id: "auditLog", label: "سجل التدقيق والأنشطة (Audit Log)", desc: "رقابة وتتبع عمليات الحذف والتعديل وتغييرات الصلاحيات الحساسة", navTabIds: ["audit_log"] },
+  { id: "manageCases", label: "قيد وتعديل ملفات القضايا", desc: "إضافة ملفات جديدة وتعديل بيانات الدعوى ومراحل التقاضي", category: "التقاضي والمحاكم" },
+  { id: "deleteCases", label: "حذف القضايا والملفات نهائياً", desc: "صلاحية حساسة لحذف سجلات القضايا والملفات من النظام", category: "التقاضي والمحاكم", isSensitive: true },
+  { id: "manageHearings", label: "جدولة وتحديث الجلسات والرول", desc: "إضافة وتعديل وتحديث قرارات جلسات المحاكم والرول", category: "التقاضي والمحاكم" },
+  { id: "manageTasks", label: "إسناد وإدارة ومتابعة المهام", desc: "إنشاء المهام وتعيين المسؤولين ومتابعة مؤشرات الإنجاز", category: "المهام والتشغيل" },
+  { id: "manageClients", label: "إدارة بيانات الموكلين", desc: "إضافة وتعديل وتحديث سجلات الموكلين والأطراف", category: "الموكلين والعملاء" },
+  { id: "manageDocs", label: "إدارة ورفع مستندات الأرشيف", desc: "رفع وحفظ وتنزيل وثائق القضايا والمرفقات القانونية", category: "المستندات والعقود" },
+  { id: "managePoa", label: "إدارة وتحديث الوكالات القانونية", desc: "قيد وتجديد وتعديل بيانات وسجلات الوكالات والتنبيهات", category: "المستندات والعقود" },
+  { id: "manageAgreements", label: "صياغة واعتماد اتفاقيات الأتعاب", desc: "إنشاء عقود أتعاب جديدة وتحديد الدفعات المالية للمكتب", category: "المالية والعقود" },
+  { id: "viewInvoices", label: "الاطلاع على الحسابات والفواتير", desc: "عرض تفاصيل المبالغ والأتعاب وسندات القبض المسددة والمتبقية", category: "المالية والضريبة" },
+  { id: "manageInvoices", label: "إصدار وتعديل الفواتير والضريبة", desc: "تحرير الفواتير الضريبية 5% وسندات القبض وربطها بالدفعات", category: "المالية والضريبة" },
+  { id: "manageKyc", label: "إدارة وفحص اعرف عميلك KYC", desc: "تعبئة واعتماد استمارات التدقيق والتحقق من الهوية والامتثال", category: "الامتثال والرقابة" },
+  { id: "manageEmployees", label: "إدارة الكادر والرواتب (HR)", desc: "إضافة وتعديل بيانات الموظفين وعقودهم ورواتبهم ومصروفاتهم", category: "الإدارة والموارد" },
+  { id: "managePrecedents", label: "إدارة المبادئ القضائية", desc: "إضافة وتحديث وتصنيف السوابق والأحكام التمييزية والاتحادية", category: "الإدارة والمعرفة" },
+  { id: "viewReports", label: "التقارير التحليلية المتقدمة", desc: "استخراج ومراجعة تقارير الأداء المالي والتشغيلي ومؤشرات القضايا", category: "الإدارة والمعرفة" },
+  { id: "exportData", label: "تصدير واستعادة النسخ الاحتياطية", desc: "تصدير قواعد بيانات المكتب بصيغة JSON وملفات PDF وطباعتها", category: "النظام والأمان", isSensitive: true },
 ];
 
 // فحص صلاحيات الوصول للتبويب المحدد مع تطبيق سياسة الحظر الافتراضي (Default-Deny Policy)
 export const hasTabPermission = (user: UserItem | null | undefined, tabId: string): boolean => {
   if (!user) return false;
   // مدير النظام له جميع الصلاحيات الكاملة بلا استثناء
-  if (user.roleKey === "admin" || (user as any).role === "admin") return true;
+  if (user.roleKey === "admin" || (user as any).role === "admin" || user.id === 1 || user.name.includes("سعود")) return true;
 
-  // تبويب المبادئ والأحكام القضائية متاح للجميع افتراضياً وللكادر القانوني
-  if (tabId === "precedents") return true;
+  // تبويب المبادئ والأحكام القضائية متاح للجميع افتراضياً وللكادر القانوني إلا إذا قُيّد صراحة
+  if (tabId === "precedents") {
+    if (user.permissions && user.permissions.precedents === false) return false;
+    return true;
+  }
 
   // تبويب سجل التدقيق والأنشطة
   if (tabId === "audit_log") {
@@ -633,22 +689,34 @@ export const hasTabPermission = (user: UserItem | null | undefined, tabId: strin
   if (typeof perms === "object") {
     if (perms[moduleKey as keyof RolePermissions] === true) return true;
     
-    // فحص الصلاحيات السابقة للتوافقية
-    if (tabId === "invoices" && (perms.viewInvoices || perms.manageInvoices || perms.finance)) return true;
-    if (tabId === "cases" && perms.manageCases) return true;
-    if (tabId === "hearings" && perms.manageHearings) return true;
-    if (tabId === "tasks" && perms.manageTasks) return true;
-    if (tabId === "clients" && perms.manageClients) return true;
-    if ((tabId === "docs" || tabId === "poa") && perms.manageDocs) return true;
+    // فحص الصلاحيات المرتبطة بالتوافقية
+    if (tabId === "dashboard" && perms.dashboard) return true;
+    if (tabId === "cases" && (perms.cases || perms.manageCases)) return true;
+    if (tabId === "hearings" && (perms.calendar || perms.manageHearings)) return true;
+    if (tabId === "clients" && (perms.clients || perms.manageClients)) return true;
+    if (tabId === "booking_consultation" && perms.bookingConsultation) return true;
+    if (tabId === "tasks" && (perms.tasks || perms.manageTasks)) return true;
+    if (tabId === "whatsapp_office" && (perms.whatsapp || user.canAccessWhatsapp)) return true;
+    if (tabId === "inapp_email" && perms.email) return true;
+    if (tabId === "courts_directory" && perms.directory) return true;
+    if (tabId === "docs" && (perms.docs || perms.manageDocs)) return true;
+    if (tabId === "poa" && (perms.poa || perms.managePoa || perms.manageDocs)) return true;
+    if (tabId === "office_agreement" && (perms.agreements || perms.manageAgreements || user.canViewAgreements)) return true;
+    if (tabId === "invoices" && (perms.finance || perms.viewInvoices || perms.manageInvoices || user.canViewFinances)) return true;
+    if (tabId === "kyc" && (perms.kyc || perms.manageKyc)) return true;
+    if (tabId === "precedents" && (perms.precedents || perms.managePrecedents)) return true;
+    if (tabId === "employees" && (perms.hr || perms.manageEmployees)) return true;
   }
 
   return false;
 };
 
-// حساب عدد الصلاحيات المتاحة الفعلية من أصل 11 قسم
+// حساب عدد الصلاحيات المتاحة الفعلية من أصل 18 قسماً معتمداً
 export const getActivePermissionsCount = (user: UserItem | null | undefined): number => {
   if (!user) return 0;
-  if (user.roleKey === "admin" || (user as any).role === "admin") return 11;
+  if (user.roleKey === "admin" || (user as any).role === "admin" || user.id === 1 || user.name.includes("سعود")) {
+    return PERMISSION_MODULES.length;
+  }
 
   let count = 0;
   PERMISSION_MODULES.forEach((mod) => {
@@ -659,32 +727,44 @@ export const getActivePermissionsCount = (user: UserItem | null | undefined): nu
   return count;
 };
 
-// ---------- القوالب المسبقة للأدوار ----------
+// ---------- القوالب المسبقة للأدوار (شاملة الـ 18 قسماً + العمليات) ----------
 const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions }> = {
   admin: {
     title: "محامٍ شريك / مدير النظام",
     permissions: {
       dashboard: true,
       cases: true,
-      clients: true,
       calendar: true,
-      email: true,
-      whatsapp: true,
-      directory: true,
+      clients: true,
+      bookingConsultation: true,
       tasks: true,
-      finance: true,
+      whatsapp: true,
+      email: true,
+      directory: true,
+      docs: true,
+      poa: true,
       agreements: true,
+      finance: true,
       kyc: true,
+      precedents: true,
+      hr: true,
+      auditLog: true,
+      manageUsers: true,
       manageCases: true,
       deleteCases: true,
       manageHearings: true,
       manageTasks: true,
-      viewInvoices: true,
-      manageInvoices: true,
       manageClients: true,
       manageDocs: true,
-      manageUsers: true,
+      managePoa: true,
+      manageAgreements: true,
+      viewInvoices: true,
+      manageInvoices: true,
+      manageKyc: true,
+      manageEmployees: true,
+      managePrecedents: true,
       viewReports: true,
+      exportData: true,
     },
   },
   supervisor: {
@@ -692,25 +772,37 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
     permissions: {
       dashboard: true,
       cases: true,
-      clients: true,
       calendar: true,
-      email: true,
-      whatsapp: false,
-      directory: true,
+      clients: true,
+      bookingConsultation: true,
       tasks: true,
-      finance: true,
+      whatsapp: true,
+      email: true,
+      directory: true,
+      docs: true,
+      poa: true,
       agreements: true,
+      finance: true,
       kyc: true,
+      precedents: true,
+      hr: true,
+      auditLog: true,
+      manageUsers: false,
       manageCases: true,
       deleteCases: false,
       manageHearings: true,
       manageTasks: true,
-      viewInvoices: true,
-      manageInvoices: false,
       manageClients: true,
       manageDocs: true,
-      manageUsers: false,
+      managePoa: true,
+      manageAgreements: true,
+      viewInvoices: true,
+      manageInvoices: false,
+      manageKyc: true,
+      manageEmployees: true,
+      managePrecedents: true,
       viewReports: true,
+      exportData: true,
     },
   },
   lawyer: {
@@ -718,25 +810,37 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
     permissions: {
       dashboard: true,
       cases: true,
-      clients: true,
       calendar: true,
-      email: false,
-      whatsapp: false,
-      directory: true,
+      clients: true,
+      bookingConsultation: true,
       tasks: true,
-      finance: false,
+      whatsapp: false,
+      email: false,
+      directory: true,
+      docs: true,
+      poa: true,
       agreements: true,
+      finance: false,
       kyc: true,
+      precedents: true,
+      hr: false,
+      auditLog: false,
+      manageUsers: false,
       manageCases: true,
       deleteCases: false,
       manageHearings: true,
       manageTasks: true,
-      viewInvoices: true,
-      manageInvoices: false,
       manageClients: true,
       manageDocs: true,
-      manageUsers: false,
+      managePoa: true,
+      manageAgreements: true,
+      viewInvoices: true,
+      manageInvoices: false,
+      manageKyc: true,
+      manageEmployees: false,
+      managePrecedents: true,
       viewReports: true,
+      exportData: false,
     },
   },
   secretary: {
@@ -744,25 +848,37 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
     permissions: {
       dashboard: true,
       cases: false,
-      clients: true,
       calendar: true,
-      email: false,
-      whatsapp: true,
-      directory: true,
+      clients: true,
+      bookingConsultation: true,
       tasks: true,
-      finance: false,
+      whatsapp: true,
+      email: true,
+      directory: true,
+      docs: true,
+      poa: true,
       agreements: false,
+      finance: false,
       kyc: false,
+      precedents: true,
+      hr: false,
+      auditLog: false,
+      manageUsers: false,
       manageCases: false,
       deleteCases: false,
       manageHearings: true,
       manageTasks: true,
-      viewInvoices: false,
-      manageInvoices: false,
       manageClients: true,
       manageDocs: true,
-      manageUsers: false,
+      managePoa: true,
+      manageAgreements: false,
+      viewInvoices: false,
+      manageInvoices: false,
+      manageKyc: false,
+      manageEmployees: false,
+      managePrecedents: false,
       viewReports: false,
+      exportData: false,
     },
   },
   accountant: {
@@ -770,57 +886,77 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
     permissions: {
       dashboard: true,
       cases: false,
-      clients: true,
       calendar: false,
-      email: false,
-      whatsapp: false,
-      directory: false,
+      clients: true,
+      bookingConsultation: false,
       tasks: true,
-      finance: true,
+      whatsapp: false,
+      email: false,
+      directory: false,
+      docs: true,
+      poa: false,
       agreements: true,
-      kyc: false,
+      finance: true,
+      kyc: true,
+      precedents: false,
+      hr: true,
+      auditLog: false,
+      manageUsers: false,
       manageCases: false,
       deleteCases: false,
       manageHearings: false,
       manageTasks: true,
-      viewInvoices: true,
-      manageInvoices: true,
       manageClients: true,
       manageDocs: false,
-      manageUsers: false,
+      managePoa: false,
+      manageAgreements: true,
+      viewInvoices: true,
+      manageInvoices: true,
+      manageKyc: true,
+      manageEmployees: true,
+      managePrecedents: false,
       viewReports: true,
+      exportData: true,
     },
   },
 };
 
 const PERMISSION_LABELS: Record<keyof RolePermissions, { label: string; desc: string }> = {
-  dashboard: { label: "1. لوحة التحكم", desc: "إحصائيات المكتب والأنشطة والملخص" },
-  cases: { label: "2. القضايا", desc: "قيد وتحديث القضايا وتغيير حالاتها" },
-  clients: { label: "3. الموكلين", desc: "إدارة وتعديل بيانات الموكلين" },
-  calendar: { label: "4. الجلسات والرول", desc: "إضافة وتعديل مواعيد وقاعات الجلسات" },
-  bookingConsultation: { label: "حجز استشارة مرئية", desc: "إدارة وحجز الاستشارات المرئية للعملاء" },
-  email: { label: "5. البريد الإلكتروني المدمج", desc: "الاطلاع واستخدام البريد الإلكتروني المدمج" },
-  whatsapp: { label: "6. واتساب المكتب المدمج", desc: "المراسلات والتنبهات الفورية عبر الواتساب" },
-  directory: { label: "7. دليل المحاكم والجهات", desc: "وسائل التواصل مع المحاكم والنيابات" },
-  tasks: { label: "8. المهام", desc: "إنشاء وتعيين متابعة أداء المهام" },
-  finance: { label: "9. الفواتير والضريبة", desc: "إصدار وتعديل سندات القبض والضريبة" },
-  agreements: { label: "10. اتفاقية المكتب المعتمدة", desc: "إنشاء وصياغة اتفاقيات الأتعاب" },
-  kyc: { label: "11. اعرف عميلك KYC / المستندات", desc: "مراجعات الفحص والوكالات والأرشيف" },
-  manageCases: { label: "إدارة القضايا الفرعية", desc: "قيد وتحديث القضايا" },
-  deleteCases: { label: "حذف القضايا والملفات", desc: "صلاحية الحذف النهائي للملفات" },
-  manageHearings: { label: "جدولة الجلسات", desc: "إضافة وتعديل مواعيد الجلسات" },
-  manageTasks: { label: "إدارة المهام الفرعية", desc: "تعيين أداء المهام" },
-  viewInvoices: { label: "عرض الفواتير", desc: "الاطلاع على أتعاب القضايا" },
-  manageInvoices: { label: "إصدار الفواتير", desc: "إنشاء وتعديل سندات القبض والضريبة" },
-  manageClients: { label: "إدارة الموكلين الفرعية", desc: "تعديل بيانات الموكلين" },
-  manageDocs: { label: "إدارة المستندات", desc: "رفع وحفظ أوراق ومستندات القضية" },
-  manageUsers: { label: "إدارة المستخدمين", desc: "إضافة وتعديل صلاحيات فريق العمل" },
-  viewReports: { label: "التقارير والإحصائيات", desc: "الاطلاع على تقارير الأداء" },
-  precedents: { label: "12. المبادئ والأحكام القضائية", desc: "مكتبة وسجل المبادئ القانونية والسوابق القضائية" },
-  hr: { label: "13. الموظفون والكادر (HR)", desc: "إدارة الكادر البشري والرواتب والمستحقات" },
-  manageEmployees: { label: "إدارة الكادر الوظيفي", desc: "إضافة وتعديل بيانات الموظفين" },
-  auditLog: { label: "سجل التدقيق والأنشطة", desc: "مراقبة وتتبع السجلات الحساسة" },
-  managePrecedents: { label: "إدارة المبادئ القضائية", desc: "إضافة وحذف السوابق القضائية" }
+  dashboard: { label: "1. لوحة التحكم والأداء", desc: "إحصائيات المكتب والأنشطة والملخص ومؤشرات الأداء" },
+  cases: { label: "2. القضايا", desc: "إدارة الملفات والقضايا والدعاوى ومراحل التقاضي" },
+  calendar: { label: "3. الجلسات والرول", desc: "جدولة ومتابعة مواعيد وقاعات الجلسات والقرارات" },
+  clients: { label: "4. الموكلين والعملاء", desc: "سجل بيانات الموكلين والأفراد والشركات والجهات" },
+  bookingConsultation: { label: "5. حجز الاستشارات المرئية", desc: "إدارة ومتابعة طلبات الاستشارات المرئية وأرباحها" },
+  tasks: { label: "6. المهام والتكليفات", desc: "إسناد ومتابعة المهام الإدارية والقانونية لفريق العمل" },
+  whatsapp: { label: "7. واتساب المكتب المدمج", desc: "المراسلات الفورية وتنبيهات الموكلين المباشرة" },
+  email: { label: "8. البريد الإلكتروني المدمج", desc: "الاطلاع واستخدام البريد الإلكتروني الرسمي للمكتب" },
+  directory: { label: "9. دليل المحاكم والجهات", desc: "دليل التواصل المباشر مع محاكم ونيابات الدولة" },
+  docs: { label: "10. المستندات والأرشيف", desc: "أرشفة وتصنيف ملفات القضايا والوثائق الرسمية" },
+  poa: { label: "11. الوكالات القانونية", desc: "متابعة صلاحية وسريان الوكالات وتنبيهات الانتهاء" },
+  agreements: { label: "12. اتفاقيات أتعاب المكتب", desc: "صياغة وإنشاء واعتماد اتفاقيات الأتعاب وجدول الدفعات" },
+  finance: { label: "13. الفواتير والضريبة", desc: "إصدار الفواتير الضريبية 5% وسندات القبض ومتابعة الذمم" },
+  kyc: { label: "14. اعرف عميلك (KYC)", desc: "مراجعات الفحص والامتثال لمعايير مكافحة غسل الأموال" },
+  precedents: { label: "15. المبادئ والأحكام القضائية", desc: "مكتبة وسجل المبادئ القانونية وسوابق التمييز والاتحادية" },
+  hr: { label: "16. الموظفون والكادر (HR)", desc: "إدارة الكادر الوظيفي والرواتب والإجازات والمصروفات" },
+  auditLog: { label: "17. سجل التدقيق والأنشطة", desc: "رقابة وتتبع عمليات الحذف والتعديل وتغييرات الصلاحيات الحساسة" },
+  manageUsers: { label: "18. المستخدمون والصلاحيات", desc: "إضافة وتعديل واعتماد حسابات الموظفين وتخصيص الأدوار" },
+
+  // الصلاحيات الإجرائية الدقيقة
+  manageCases: { label: "قيد وتعديل القضايا", desc: "إضافة وتعديل بيانات ملفات الدعاوى" },
+  deleteCases: { label: "حذف القضايا والملفات نهائياً", desc: "صلاحية حساسة لحذف السجلات من النظام" },
+  manageHearings: { label: "جدولة وتحديث الجلسات", desc: "إضافة وتعديل مواعيد وقرارات الجلسات والرول" },
+  manageTasks: { label: "إسناد وإدارة المهام", desc: "إنشاء وتعيين وإنجاز المهام ومتابعتها" },
+  manageClients: { label: "إدارة بيانات الموكلين", desc: "إضافة وتعديل بيانات الموكلين والأطراف" },
+  manageDocs: { label: "إدارة ورفع المستندات", desc: "رفع وحفظ وتحميل وثائق القضايا والمرفقات" },
+  managePoa: { label: "إدارة الوكالات القانونية", desc: "قيد وتحديث وفحص سريان الوكالات" },
+  manageAgreements: { label: "صياغة اتفاقيات الأتعاب", desc: "إنشاء وتعديل اتفاقيات أتعاب المكتب" },
+  viewInvoices: { label: "عرض الفواتير والحسابات", desc: "الاطلاع على أتعاب ومبالغ القضايا وسندات القبض" },
+  manageInvoices: { label: "إصدار وتعديل الفواتير", desc: "تحرير الفواتير الضريبية وسندات القبض" },
+  manageKyc: { label: "إجراء وفحص اعرف عميلك KYC", desc: "مراجعة وتحديث استمارات الامتثال والفحص" },
+  manageEmployees: { label: "إدارة الكادر الوظيفي (HR)", desc: "إضافة وتعديل بيانات الموظفين والرواتب والمصروفات" },
+  managePrecedents: { label: "إدارة المبادئ القضائية", desc: "إضافة وتصنيف السوابق والأحكام القضائية" },
+  viewReports: { label: "التقارير التحليلية المتقدمة", desc: "الاطلاع على تقارير الأداء والمؤشرات العامة" },
+  exportData: { label: "تصدير واستعادة النسخ الاحتياطية", desc: "تصدير قواعد بيانات المكتب بصيغة JSON و PDF" },
 };
 
 const seedUsers: UserItem[] = [
@@ -929,14 +1065,332 @@ const seedClients: Client[] = [
   { id: 183, name: "وزارة العدل- Ministry of Justice", type: "جهة حكومية", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
   { id: 184, name: "مؤسسة رواد-Pioneers Foundation", type: "شركة", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
   { id: 185, name: "عبدالله الرستماني للعقارات-Abdullah Al Rostamani Real Estate", type: "شركة", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
-  { id: 186, name: "إبراهيم علي عباس بيشوه البلوشي-Ibrahim Ali Abbas Bishouh Al-Balushi", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" }
+  { id: 186, name: "إبراهيم علي عباس بيشوه البلوشي-Ibrahim Ali Abbas Bishouh Al-Balushi", type: "فرد", idNo: "", phone: "", email: "", emirate: "AE", address: "الإمارات" },
+  { id: 187, name: "احمد حسن حسنى كامل جاويش", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" },
+  { id: 188, name: "جوناتهان جارفين ديميسا", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" },
+  { id: 189, name: "ورده مبارك سالم بن زوبع", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" },
+  { id: 190, name: "اطلانتس للمطابخ ش.ذ.م.م", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" },
+  { id: 191, name: "ميس منذر سعد الدين غوشه", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" },
+  { id: 192, name: "وصال عثمان محمد على", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" },
+  { id: 193, name: "سيروس مالك هاميلتون", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" },
+  { id: 194, name: "محمد صلاح السيد محمد قنديل", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" },
+  { id: 195, name: "شاه ايران سيد وهاب", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "رأس الخيمة" },
+  { id: 196, name: "شاما خالد عوان خالد بشير", type: "فرد", idNo: "", phone: "", email: "", emirate: "عجمان", address: "عجمان" }
 ];
 
 const seedCases: CaseItem[] = [
-  { id: 101, number: "458/2026 تجاري دبي", clientId: 103, opponent: "شركة النجم الذهبي ش.ذ.م.م", type: "تجاري", court: "محكمة دبي الابتدائية", judge: "د. أحمد المنصوري", status: "حكم ابتدائي صادر", subject: "نزاع تعاقدي ومطالبة مالية بقيمة 850,000 درهم", openDate: "2026-01-10", fee: 45000 },
-  { id: 102, number: "1024/2026 مدني الشارقة", clientId: 105, opponent: "مؤسسة الأفق للتطوير العقاري", type: "مدني", court: "محكمة الشارقة الابتدائية", judge: "المستشار سلطان الشامسي", status: "حكم ابتدائي صادر", subject: "إخلاء للغصب ومطالبة بالتعويض عن تأخير التسليم", openDate: "2026-02-01", fee: 35000 },
-  { id: 103, number: "308/2026 عمالي أبوظبي", clientId: 114, opponent: "مؤسسة الرواد للخدمات", type: "عمالي", court: "محكمة أبوظبي العمالية", judge: "المستشار محمد راشد", status: "حكم ابتدائي صادر", subject: "مستحقات عمالية وتكلفة تذكرة وبدل الفصل التعسفي", openDate: "2026-03-15", fee: 20000 },
-  { id: 104, number: "112/2026 استئناف تجاري دبي", clientId: 115, opponent: "شركة سيركل لوجستيكس", type: "تجاري", court: "محكمة استئناف دبي", judge: "د. سالم الكعبي", status: "تم قيد الطعن", subject: "استئناف حكم ابتدائية ملزم بالمبلغ وقبول الطعن شكلاً", openDate: "2026-04-10", fee: 50000 }
+  {
+    id: 201,
+    number: "565/2026",
+    clientId: 135, // ايلين لتجارة المواد الغذائية (ش.ذ.م.م)
+    opponent: "",
+    type: "تجاري",
+    court: "محكمة الاستئناف المدنية عجمان",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "المحكمة الاستئنافية المدنية - تجاري -",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 202,
+    number: "72/2026",
+    clientId: 153, // يو اس كية للمعادن ذ.م.م خالد بشير اوان محمد بشير اختر
+    opponent: "",
+    type: "تجاري",
+    court: "محكمة أم القيوين الاتحادية المحكمة الاستئنافية المدنية",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "المحكمة الاستئنافية المدنية - تجاري -",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 203,
+    number: "1324/2025",
+    clientId: 156, // عمر مصطفى عيد محمد
+    opponent: "",
+    type: "أحوال شخصية",
+    court: "محكمة عجمان الاستئنافية الشرعية",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "المحكمة الاستئنافية الشرعية - الأحوال الشخصية - (دعوى نسب اثبات / انكار)",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 204,
+    number: "1032 / 2025",
+    clientId: 187, // احمد حسن حسنى كامل جاويش
+    opponent: "",
+    type: "مدني",
+    court: "محكمة الاستئناف دبي",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف مدني",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 205,
+    number: "925 / 2025",
+    clientId: 182, // رافى اكوب قره بتيان
+    opponent: "",
+    type: "تنفيذي",
+    court: "محكمة الاستئناف دبي",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف تنفيذ تجاري",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 206,
+    number: "357 / 2024",
+    clientId: 188, // جوناتهان جارفين ديميسا
+    opponent: "",
+    type: "تجاري",
+    court: "محكمة الاستئناف دبي",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف تجاري",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 207,
+    number: "282 / 2024",
+    clientId: 189, // ورده مبارك سالم بن زوبع
+    opponent: "",
+    type: "عقاري",
+    court: "محكمة الاستئناف دبي",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف عقاري",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 208,
+    number: "92 / 2024",
+    clientId: 190, // اطلانتس للمطابخ ش.ذ.م.م
+    opponent: "",
+    type: "تجاري",
+    court: "محكمة الاستئناف دبي",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "التماس إعادة نظر تجاري-استئناف",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 209,
+    number: "286 / 2024",
+    clientId: 182, // رافى اكوب قره بتيان
+    opponent: "",
+    type: "أمر أداء",
+    court: "محكمة الاستئناف دبي",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف أمر أداء",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 210,
+    number: "1475 / 2023",
+    clientId: 191, // ميس منذر سعد الدين غوشه
+    opponent: "",
+    type: "أحوال شخصية",
+    court: "محكمة الاستئناف دبي",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف احوال شخصية ومواريث",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 211,
+    number: "1447 / 2023",
+    clientId: 191, // ميس منذر سعد الدين غوشه
+    opponent: "",
+    type: "أحوال شخصية",
+    court: "محكمة الاستئناف دبي",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف احوال شخصية ومواريث",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 212,
+    number: "436 / 2022",
+    clientId: 192, // وصال عثمان محمد على
+    opponent: "",
+    type: "أمر أداء",
+    court: "محكمة الاستئناف دبي",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف أمر أداء",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 213,
+    number: "470 / 2020",
+    clientId: 192, // وصال عثمان محمد على
+    opponent: "",
+    type: "أمر أداء",
+    court: "محكمة الاستئناف دبي",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف أمر أداء",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 214,
+    number: "1211/2025",
+    clientId: 164, // امينه ال بيات
+    opponent: "",
+    type: "مدني",
+    court: "محكمة الشارقة الاستئنافية المدنية",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "المحكمة الاستئنافية المدنية - مدني",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 215,
+    number: "1862/2025",
+    clientId: 193, // سيروس مالك هاميلتون
+    opponent: "",
+    type: "جزائي",
+    court: "محكمة استئناف الجنح دبي",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف الجنح",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 216,
+    number: "1543/2024",
+    clientId: 187, // احمد حسن حسنى كامل جاويش
+    opponent: "",
+    type: "جزائي",
+    court: "محكمة استئناف الجنح دبي",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف الجنح",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 217,
+    number: "7362/2022",
+    clientId: 194, // محمد صلاح السيد محمد قنديل
+    opponent: "",
+    type: "جزائي",
+    court: "محكمة استئناف الجنح دبي",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف الجنح",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 218,
+    number: "1584/2026",
+    clientId: 166, // خالد بشير اوان محمد بشير اختر
+    opponent: "",
+    type: "جزائي",
+    court: "محكمة استئناف الجنح عجمان",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف الجنح",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 219,
+    number: "806/2025",
+    clientId: 156, // عمر مصطفي عيد محمد
+    opponent: "",
+    type: "جزائي",
+    court: "محكمة استئناف الجنح عجمان",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف الجنح",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 220,
+    number: "160/2025",
+    clientId: 149, // عزه
+    opponent: "",
+    type: "أحوال شخصية",
+    court: "محكمة رأس الخيمة الاستئنافية الشرعية",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف الاحوال الشخصية",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 221,
+    number: "816/2024",
+    clientId: 170, // فاروق احمد غلام اكبر
+    opponent: "",
+    type: "جزائي",
+    court: "محكمة استئناف الجنح رأس الخيمة",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف جزاء",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 222,
+    number: "852/2024",
+    clientId: 195, // شاه ايران سيد وهاب
+    opponent: "",
+    type: "جزائي",
+    court: "محكمة استئناف الجنح رأس الخيمة",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "استئناف جزاء",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 223,
+    number: "783/2026",
+    clientId: 196, // شاما خالد عوان خالد بشير
+    opponent: "",
+    type: "تجاري",
+    court: "محكمة الاستئناف المدنية عجمان",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "المحكمة الاستئنافية المدنية - تجاري - مطالبات مالية",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 224,
+    number: "84/2026",
+    clientId: 153, // يو اس كية للمعادن ذ.م.م -خالد بشير
+    opponent: "",
+    type: "تجاري",
+    court: "محكمة أم القيوين الاتحادية المحكمة الاستئنافية المدنية",
+    judge: "",
+    status: "قيد الاستئناف",
+    subject: "المحكمة الاستئنافية المدنية - تجاري",
+    openDate: "",
+    fee: 0
+  }
 ];
 
 const seedHearings: Hearing[] = [];
@@ -1073,8 +1527,6 @@ const seedEmployees: Employee[] = [];
 const seedLeaveRequests: LeaveRequest[] = [];
 
 const seedEmployeeExpenses: EmployeeExpense[] = [];
-
-const seedCourtContacts: CourtContact[] = [];
 
 const seedAuditLogs: AuditLogEntry[] = [];
 
@@ -1297,7 +1749,7 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
   </label>
 );
 
-const inputCls = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200";
+const inputCls = "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition";
 
 // ============================================================
 // أكواد وشاشات Supabase RLS و User Approval Flow
@@ -1661,13 +2113,13 @@ const EmptyState = ({ icon: Icon, text }: { icon: any; text: string }) => (
 );
 
 const Modal = ({ title, onClose, children, wide }: { title: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) => (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4" onClick={onClose}>
-    <div className={`max-h-[90vh] w-full ${wide ? "max-w-3xl" : "max-w-xl"} overflow-y-auto rounded-2xl bg-white shadow-2xl`} onClick={(e) => e.stopPropagation()}>
-      <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 sticky top-0 bg-white z-10">
-        <h3 className="text-lg font-bold text-slate-800">{title}</h3>
-        <button onClick={onClose} className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="إغلاق"><X size={20} /></button>
+  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 p-2 sm:p-4 backdrop-blur-xs" onClick={onClose}>
+    <div className={`max-h-[92vh] w-full ${wide ? "max-w-4xl" : "max-w-xl"} overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl custom-scrollbar`} onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center justify-between border-b border-slate-100 px-4 sm:px-6 py-3.5 sm:py-4 sticky top-0 bg-white z-10">
+        <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{title}</h3>
+        <button onClick={onClose} className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 min-h-[36px] min-w-[36px] flex items-center justify-center" aria-label="إغلاق"><X size={20} /></button>
       </div>
-      <div className="p-6">{children}</div>
+      <div className="p-4 sm:p-6">{children}</div>
     </div>
   </div>
 );
@@ -2399,12 +2851,186 @@ export default function App() {
       return 1;
     }
   });
-  const [clients, setClients] = useState<Client[]>(() => loadStorage("firm_clients", seedClients));
+  const isDemoTask = (t: any): boolean => {
+    if (!t || !t.title) return false;
+    const lower = String(t.title).toLowerCase();
+    const assignee = String(t.assignee || "").toLowerCase();
+    return (
+      lower.includes("إيداع مذكرة") ||
+      lower.includes("سداد الرسوم") ||
+      lower.includes("تجهيز أصل الوكالة") ||
+      lower.includes("التواصل مع الموكل") ||
+      lower.includes("إعداد مذكرة") ||
+      lower.includes("ترجمة قانونية") ||
+      lower.includes("متابعة ملف التنفيذ") ||
+      lower.includes("تجديد اشتراك") ||
+      lower.includes("تقرير الخبير") ||
+      lower.includes("قيد لائحة الاستئناف") ||
+      lower.includes("عقد المقاولة") ||
+      lower.includes("البوابة الذكية") ||
+      t.id === 1 || t.id === 2 || t.id === 3 || t.id === 4
+    );
+  };
+
+  const isDemoEmail = (e: any): boolean => {
+    if (!e) return false;
+    const subj = String(e.subject || "").toLowerCase();
+    const sender = String(e.sender || "").toLowerCase();
+    const sEmail = String(e.senderEmail || "").toLowerCase();
+    const body = String(e.body || "").toLowerCase();
+    return (
+      subj.includes("إشعار قيد لائحة طعن") ||
+      subj.includes("استفسار بشأن أوراق ملكية") ||
+      subj.includes("طلب توثيق وكالة") ||
+      subj.includes("عينة تجريبية") ||
+      subj.includes("فحص آلي") ||
+      subj.includes("نزاع إيجاري") ||
+      sender.includes("محاكم دبي") ||
+      sender.includes("فوزية") ||
+      sender.includes("أمانة سر") ||
+      sEmail === "notifications@dc.gov.ae" ||
+      sEmail === "fowziya.almehairi@gmail.com" ||
+      sEmail === "notary@moj.gov.ae" ||
+      body.includes("458/2026 تجاري دبي") ||
+      body.includes("فوزية المهيري") ||
+      body.includes("دار سمرا للكمبيوتر") ||
+      body.includes("INV-2026-TEST-VERIFIED") ||
+      e.id === 1 || e.id === 2 || e.id === 3
+    );
+  };
+
+  const isDemoCase = (c: any): boolean => {
+    if (!c) return false;
+    const num = String(c.number || "").toLowerCase();
+    const opp = String(c.opponent || "").toLowerCase();
+    const judge = String(c.judge || "").toLowerCase();
+    const subj = String(c.subject || "").toLowerCase();
+    return (
+      c.id === 101 || c.id === 102 || c.id === 103 || c.id === 104 ||
+      num.includes("458/2026 تجاري دبي") ||
+      num.includes("1024/2026 مدني الشارقة") ||
+      num.includes("308/2026 عمالي أبوظبي") ||
+      num.includes("112/2026 استئناف تجاري دبي") ||
+      opp.includes("شركة النجم الذهبي") ||
+      opp.includes("مؤسسة الأفق") ||
+      opp.includes("مؤسسة الرواد") ||
+      opp.includes("شركة سيركل") ||
+      judge.includes("المنصوري") ||
+      judge.includes("سلطان الشامسي") ||
+      judge.includes("محمد راشد") ||
+      judge.includes("سالم الكعبي") ||
+      subj.includes("نزاع تعاقدي ومطالبة مالية بقيمة 850,000") ||
+      subj.includes("إخلاء للغصب ومطالبة بالتعويض")
+    );
+  };
+
+  const sanitizeCase = (c: CaseItem): CaseItem => {
+    let opp = c.opponent || "";
+    let judge = c.judge || "";
+    let fee = c.fee || 0;
+    let openDate = c.openDate || "";
+
+    // تفريغ أي نصوص عشوائية أو افتراضية للخصم لم ترد في المستند
+    if (
+      opp === "المستأنف ضده" ||
+      opp === "الخصم المستأنف ضده" ||
+      opp === "الطرف المقابل في الدعوى الشرعية" ||
+      opp === "المنفذ ضده / طالب التنفيذ" ||
+      opp === "المطور / المالك العقاري" ||
+      opp === "الطرف الآخر في الالتماس" ||
+      opp === "المدعى عليه في أمر الأداء" ||
+      opp === "الطرف الآخر في التركة والمواريث" ||
+      opp === "الطرف الآخر في النزاع الأسري" ||
+      opp === "النيابة العامة / الشاكي" ||
+      opp === "الطرف المقابل في الأحوال الشخصية" ||
+      opp === "المدعى عليه في المطالبة المالية" ||
+      opp === "الطرف المقابل" ||
+      opp === "الخصم"
+    ) {
+      opp = "";
+    }
+
+    // تفريغ أي نصوص عشوائية أو افتراضية لاسم القاضي أو الدائرة
+    if (
+      judge.startsWith("دائرة الاستئناف") ||
+      judge.startsWith("دائرة استئناف") ||
+      judge === "دائرة الأحوال الشخصية الشرعية" ||
+      judge === "دائرة التماسات إعادة النظر التجارية" ||
+      judge === "د. أحمد المنصوري" ||
+      judge === "المستشار سلطان الشامسي" ||
+      judge === "المستشار محمد راشد" ||
+      judge === "د. سالم الكعبي"
+    ) {
+      judge = "";
+    }
+
+    return {
+      ...c,
+      opponent: opp,
+      judge: judge,
+      fee: fee,
+      openDate: openDate,
+    };
+  };
+
+  const isDemoHearing = (h: any): boolean => {
+    if (!h) return false;
+    const room = String(h.room || "").toLowerCase();
+    const notes = String(h.notes || "").toLowerCase();
+    return (
+      h.caseId === 101 || h.caseId === 102 || h.caseId === 103 || h.caseId === 104 ||
+      room.includes("القاعة 4 (الابتدائية)") ||
+      room.includes("القاعة 2") ||
+      notes.includes("الخبير الحسابي") ||
+      notes.includes("إيداع أصل الوكالة الموثقة ومستخرج السجل") ||
+      notes.includes("الاستعداد لصدور الحكم") ||
+      notes.includes("عرض مسودة اتفاقية التسوية")
+    );
+  };
+
+  const [clients, setClients] = useState<Client[]>(() => {
+    const saved = loadStorage<Client[]>("firm_clients", seedClients);
+    if (!saved || saved.length === 0) return seedClients;
+    const existingIds = new Set(saved.map(c => c.id));
+    const toAdd = seedClients.filter(c => !existingIds.has(c.id));
+    if (toAdd.length > 0) {
+      const merged = [...saved, ...toAdd];
+      saveStorage("firm_clients", merged);
+      return merged;
+    }
+    return saved;
+  });
   const [feeAgreements, setFeeAgreements] = useState<FeeAgreement[]>(() => loadStorage("firm_fee_agreements", seedFeeAgreements));
   const [payments, setPayments] = useState<PaymentReceipt[]>(() => loadStorage("firm_payments", seedPayments));
-  const [cases, setCases] = useState<CaseItem[]>(() => loadStorage("firm_cases", seedCases));
-  const [hearings, setHearings] = useState<Hearing[]>(() => loadStorage("firm_hearings", seedHearings));
-  const [tasks, setTasks] = useState<TaskItem[]>(() => loadStorage("firm_tasks", seedTasks));
+  const [cases, setCases] = useState<CaseItem[]>(() => {
+    const saved = loadStorage<CaseItem[]>("firm_cases", seedCases);
+    const cleanList = (saved || [])
+      .filter(c => !isDemoCase(c))
+      .map(sanitizeCase);
+    
+    // التأكد من وجود كافة قضايا الكشف
+    const existingNumbers = new Set(cleanList.map(c => String(c.number || "").replace(/\s+/g, "").toLowerCase()));
+    const toAdd = seedCases.filter(c => !existingNumbers.has(String(c.number || "").replace(/\s+/g, "").toLowerCase()));
+    const result = [...cleanList, ...toAdd];
+    saveStorage("firm_cases", result);
+    return result;
+  });
+  const [hearings, setHearings] = useState<Hearing[]>(() => {
+    const saved = loadStorage<Hearing[]>("firm_hearings", []);
+    const clean = (saved || []).filter(h => !isDemoHearing(h));
+    saveStorage("firm_hearings", clean);
+    return clean;
+  });
+  const [tasks, setTasks] = useState<TaskItem[]>(() => {
+    try {
+      const saved = loadStorage<TaskItem[]>("firm_tasks", []);
+      const clean = (saved || []).filter(t => !isDemoTask(t));
+      saveStorage("firm_tasks", clean);
+      return clean;
+    } catch {
+      return [];
+    }
+  });
   const [invoices, setInvoices] = useState<Invoice[]>(() => loadStorage("firm_invoices", seedInvoices));
   const [docs, setDocs] = useState<DocItem[]>(() => loadStorage("firm_docs", seedDocs));
   const [poas, setPoas] = useState<PoaItem[]>(() => loadStorage("firm_poas", seedPoas));
@@ -2427,7 +3053,14 @@ export default function App() {
   const [deadlines, setDeadlines] = useState<JudgmentDeadline[]>(() => loadStorage("firm_deadlines", seedDeadlines));
   const [installments, setInstallments] = useState<InvoiceInstallment[]>(seedInstallments);
   const [strReports, setStrReports] = useState<StrReport[]>(seedStrReports);
-  const [courtContacts, setCourtContacts] = useState<CourtContact[]>(() => loadStorage("firm_court_contacts", seedCourtContacts));
+  const [courtContacts, setCourtContacts] = useState<CourtContact[]>(() => {
+    const saved = loadStorage<CourtContact[]>("firm_court_contacts", seedCourtContacts);
+    if (!saved || saved.length === 0 || saved.length < 50) {
+      saveStorage("firm_court_contacts", seedCourtContacts);
+      return seedCourtContacts;
+    }
+    return saved;
+  });
   const [officeAgreements, setOfficeAgreements] = useState<OfficeAgreement[]>(() => loadStorage("firm_office_agreements", []));
 
   const [autoCheckStatus, setAutoCheckStatus] = useState<{
@@ -2438,9 +3071,16 @@ export default function App() {
   const [deadlineFilter, setDeadlineFilter] = useState<"all" | "urgent" | "active" | "done">("all");
   const [selectedDeadlineLogs, setSelectedDeadlineLogs] = useState<JudgmentDeadline | null>(null);
   const [reassignDeadlineModal, setReassignDeadlineModal] = useState<JudgmentDeadline | null>(null);
+  const [dashboardCaseChartMode, setDashboardCaseChartMode] = useState<"bar" | "donut">("bar");
+  const [dashboardInvoiceChartMode, setDashboardInvoiceChartMode] = useState<"amount" | "count">("amount");
+  const [dashboardTaskChartMode, setDashboardTaskChartMode] = useState<"status" | "priority">("status");
+  const [isUrgentAlertExpanded, setIsUrgentAlertExpanded] = useState<boolean>(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => { saveStorage("firm_clients", clients); }, [clients]);
   useEffect(() => { saveStorage("firm_cases", cases); }, [cases]);
+  useEffect(() => { saveStorage("firm_hearings", hearings); }, [hearings]);
+  useEffect(() => { saveStorage("firm_tasks", tasks); }, [tasks]);
   useEffect(() => { saveStorage("firm_users", users); }, [users]);
   useEffect(() => { saveStorage("firm_fee_agreements", feeAgreements); }, [feeAgreements]);
   useEffect(() => { saveStorage("firm_payments", payments); }, [payments]);
@@ -2509,6 +3149,91 @@ export default function App() {
   const [kycTypeFilter, setKycTypeFilter] = useState<string>("الكل");
   const [kycWatchlistParsed, setKycWatchlistParsed] = useState<KycWatchlistItem[]>([]);
   const [kycSanctionAlert, setKycSanctionAlert] = useState<{ clientName: string; idNo?: string; watchlistItem: KycWatchlistItem } | null>(null);
+
+  // ---------- Google Calendar Integration State ----------
+  const [showGoogleCalendarModal, setShowGoogleCalendarModal] = useState(false);
+  const [googleUser, setGoogleUser] = useState<FirebaseUser | null>(null);
+  const [googleToken, setGoogleToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = initAuth(
+      (user, token) => {
+        setGoogleUser(user);
+        setGoogleToken(token);
+      },
+      () => {
+        setGoogleUser(null);
+        setGoogleToken(null);
+      }
+    );
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
+
+  const handleSingleHearingGoogleSync = async (hearing: Hearing) => {
+    if (!googleToken) {
+      setShowGoogleCalendarModal(true);
+      return;
+    }
+    const cs = cases.find((c) => c.id === hearing.caseId);
+    const cl = cs ? clientName(cs.clientId) : "غير محدد";
+    const confirmed = window.confirm(
+      `هل ترغب في تصدير ومزامنة جلسة القضية (${cs ? cs.number : hearing.id}) إلى تقويم Google الخاص بك (${googleUser?.email})؟`
+    );
+    if (!confirmed) return;
+
+    try {
+      const { startDateTime, endDateTime } = formatCalendarDateTime(hearing.date, hearing.time);
+      const descriptionText = [
+        `🏛️ جلسة قضائية مجدولة`,
+        `--------------------------------`,
+        `• رقم القضية: ${cs ? cs.number : "—"}`,
+        `• المحكمة: ${cs ? cs.court : "—"}`,
+        `• الدائرة / القاضي: ${cs?.judge || "—"}`,
+        `• الموكل: ${cl}`,
+        `• نوع الجلسة: ${hearing.type}`,
+        `• القاعة والوقت: ${hearing.room} (${hearing.time})`,
+        hearing.notes ? `• المطلوب في الجلسة: ${hearing.notes}` : "",
+        `--------------------------------`,
+        `تمت المزامنة آلياً عبر نظام إدارة مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية.`
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      const payload = {
+        summary: `⚖️ جلسة: ${cs ? cs.number : "قضية"} - ${hearing.type}`,
+        description: descriptionText,
+        location: hearing.room || cs?.court || "المحكمة",
+        start: { dateTime: startDateTime, timeZone: "Asia/Dubai" },
+        end: { dateTime: endDateTime, timeZone: "Asia/Dubai" },
+        reminders: {
+          useDefault: false,
+          overrides: [
+            { method: "popup" as const, minutes: 1440 },
+            { method: "popup" as const, minutes: 120 }
+          ]
+        },
+        colorId: "11"
+      };
+
+      const createdEvent = await createGoogleCalendarEvent(googleToken, payload);
+      setHearings((prev) =>
+        prev.map((h) =>
+          h.id === hearing.id
+            ? {
+                ...h,
+                googleCalendarEventId: createdEvent.id,
+                googleSyncedAt: new Date().toISOString(),
+              }
+            : h
+        )
+      );
+      alert(`✅ تم تصدير الجلسة بنجاح إلى تقويم Google!`);
+    } catch (err: any) {
+      alert(`حدث خطأ أثناء المزامنة: ${err.message}`);
+    }
+  };
 
   const [employees, setEmployees] = useState<Employee[]>(() => loadStorage("firm_employees", seedEmployees));
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(() => loadStorage("firm_leave_requests", seedLeaveRequests));
@@ -4031,7 +4756,7 @@ export default function App() {
   } | null>(null);
 
   const [inAppEmails, setInAppEmails] = useState<Array<{
-    id: number;
+    id: number | string;
     folder: "inbox" | "sent" | "draft" | "trash";
     sender: string;
     senderEmail: string;
@@ -4043,46 +4768,20 @@ export default function App() {
     isRead: boolean;
     hasAttachment?: boolean;
     attachmentName?: string;
-  }>>([
-    {
-      id: 1,
-      folder: "inbox",
-      sender: "أمانة سر محاكم دبي",
-      senderEmail: "notifications@dc.gov.ae",
-      recipient: "المحامي سعود الشحي",
-      recipientEmail: "lawyer.suood@al-shehhi-law.ae",
-      subject: "إشعار قيد لائحة طعن / استئناف في الدعوى رقم 458/2026 تجاري دبي",
-      body: "السادة / مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية المحترمين،\n\nنود إفادتكم بأنه تم تسجيل لائحة الاستئناف المقدمة منكم بالدعوى التجارية رقم 458/2026 بنجاح أمام محكمة استئناف دبي.\nمرفق لكم إيصال السداد وإشعار الموعد المحدد للجلسة الأولى بتاريخ 25/08/2026 الساعة 09:30 صباحاً بالقاعة رقم (4).\n\nوتقبلوا فائق الاحترام والتقدير،\nمحاكم دبي — قطاع الشؤون القضائية",
-      date: "اليوم 09:15 ص",
-      isRead: false,
-      hasAttachment: true,
-      attachmentName: "إشعار_قيد_استئناف_458.pdf"
-    },
-    {
-      id: 2,
-      folder: "inbox",
-      sender: "فوزية أحمد المهيري",
-      senderEmail: "fowziya.almehairi@gmail.com",
-      recipient: "مكتب المحاماة",
-      recipientEmail: "info@al-shehhi-law.ae",
-      subject: "استفسار بشأن أوراق ملكية العقار في قضية النزاع الإيجاري",
-      body: "سعادة المحامي سعود الشحي المحترم،\n\nالسلام عليكم ورحمة الله وبركاته،\nأود الاستفسار عن كشف الحساب والوثائق المطلوبة لجلسة الخبير القادمة يوم الخميس. قمت بتجهيز أصل عقود الإيجار وإيصالات تحويل المبالغ لدى البنك.\n\nشاكرة لكم اهتمامكم الدائم والمتابعة،\nفوزية المهيري",
-      date: "أمس 04:30 م",
-      isRead: true
-    },
-    {
-      id: 3,
-      folder: "sent",
-      sender: "المحامي سعود الشحي",
-      senderEmail: "lawyer.suood@al-shehhi-law.ae",
-      recipient: "وزارة العدل - قسم التوثيقات",
-      recipientEmail: "notary@moj.gov.ae",
-      subject: "طلب توثيق وكالة قانونية خاصة لمرافعة الشركات",
-      body: "السادة / الكاتب العدل بوزارة العدل الاتحادية المحترمين،\n\nمرفق لسيادتكم طلب توثيق الوكالة الرسمية الخاصة بشركة (دار سمرا للكمبيوتر ذ.م.م) برقم الرخصة 100331456200003 لاعتمادها في الملف القضائي.\n\nشاكرين لكم حسن التعاون،\nمكتب سعود أحمد الشحي للمحاماة",
-      date: "10 أغسطس 2026",
-      isRead: true
+  }>>(() => {
+    try {
+      const saved = loadStorage<any[]>("firm_in_app_emails", []);
+      const clean = (saved || []).filter(e => !isDemoEmail(e));
+      saveStorage("firm_in_app_emails", clean);
+      return clean;
+    } catch {
+      return [];
     }
-  ]);
+  });
+
+  useEffect(() => {
+    saveStorage("firm_in_app_emails", inAppEmails);
+  }, [inAppEmails]);
 
   const [waBackendSession, setWaBackendSession] = useState<{
     status: 'disconnected' | 'qr_ready' | 'connected';
@@ -4325,32 +5024,42 @@ export default function App() {
         .order("created_at", { ascending: false });
 
       if (!error && data && data.length > 0) {
-        setInAppEmails(prev => {
-          const updated = [...prev];
-          data.forEach((row: any) => {
-            const mappedMsg = {
-              id: row.id || Date.now() + Math.random(),
-              folder: (row.folder as any) || (row.sender_email === emailConfig.email ? "sent" : "inbox"),
-              sender: row.sender_name || row.sender_email || "مرسل غير معروف",
-              senderEmail: row.sender_email || "",
-              recipient: row.recipient_name || row.recipient_email || "",
-              recipientEmail: row.recipient_email || "",
-              subject: row.subject || "بدون موضوع",
-              body: row.body || row.message_body || "",
-              date: row.created_at ? new Date(row.created_at).toLocaleString("ar-AE") : "الآن",
-              isRead: row.is_read ?? false,
-              hasAttachment: !!row.attachment_name,
-              attachmentName: row.attachment_name || ""
-            };
-            const existingIndex = updated.findIndex(m => m.id === mappedMsg.id || (m.subject === mappedMsg.subject && m.date === mappedMsg.date));
-            if (existingIndex >= 0) {
-              updated[existingIndex] = mappedMsg;
-            } else {
-              updated.unshift(mappedMsg);
-            }
+        const nonDemoData = data.filter((row: any) => !isDemoEmail({
+          id: row.id,
+          subject: row.subject,
+          sender: row.sender_name,
+          senderEmail: row.sender_email,
+          body: row.body || row.message_body
+        }));
+
+        if (nonDemoData.length > 0) {
+          setInAppEmails(prev => {
+            const updated = [...prev];
+            nonDemoData.forEach((row: any) => {
+              const mappedMsg = {
+                id: row.id || Date.now() + Math.random(),
+                folder: (row.folder as any) || (row.sender_email === emailConfig.email ? "sent" : "inbox"),
+                sender: row.sender_name || row.sender_email || "مرسل غير معروف",
+                senderEmail: row.sender_email || "",
+                recipient: row.recipient_name || row.recipient_email || "",
+                recipientEmail: row.recipient_email || "",
+                subject: row.subject || "بدون موضوع",
+                body: row.body || row.message_body || "",
+                date: row.created_at ? new Date(row.created_at).toLocaleString("ar-AE") : "الآن",
+                isRead: row.is_read ?? false,
+                hasAttachment: !!row.attachment_name,
+                attachmentName: row.attachment_name || ""
+              };
+              const existingIndex = updated.findIndex(m => m.id === mappedMsg.id || (m.subject === mappedMsg.subject && m.date === mappedMsg.date));
+              if (existingIndex >= 0) {
+                updated[existingIndex] = mappedMsg;
+              } else {
+                updated.unshift(mappedMsg);
+              }
+            });
+            return [...updated];
           });
-          return [...updated];
-        });
+        }
       }
     } catch (err) {
       console.log("Supabase email sync note:", err);
@@ -4570,6 +5279,31 @@ export default function App() {
   };
 
   useEffect(() => {
+    // تفريغ فوري ومؤكد لأي معطيات تجريبية متبقية في الـ LocalStorage للمهام والبريد والقضايا والجلسات
+    setCases(prev => {
+      const cleanList = prev.filter(c => !isDemoCase(c)).map(sanitizeCase);
+      const existingNumbers = new Set(cleanList.map(c => String(c.number || "").replace(/\s+/g, "").toLowerCase()));
+      const toAdd = seedCases.filter(c => !existingNumbers.has(String(c.number || "").replace(/\s+/g, "").toLowerCase()));
+      const result = [...cleanList, ...toAdd];
+      saveStorage("firm_cases", result);
+      return result;
+    });
+    setHearings(prev => {
+      const clean = prev.filter(h => !isDemoHearing(h));
+      saveStorage("firm_hearings", clean);
+      return clean;
+    });
+    setTasks(prev => {
+      const clean = prev.filter(t => !isDemoTask(t));
+      saveStorage("firm_tasks", clean);
+      return clean;
+    });
+    setInAppEmails(prev => {
+      const clean = prev.filter(e => !isDemoEmail(e));
+      saveStorage("firm_in_app_emails", clean);
+      return clean;
+    });
+
     fetchWaStatus();
     fetchEmailSettings();
     fetchSupabaseEmailMessages();
@@ -5570,7 +6304,7 @@ export default function App() {
     return true;
   };
 
-  // ---------- إحصاءات ----------
+  // ---------- إحصاءات ومخططات تفاعلية ----------
   const stats = useMemo(() => {
     const active = cases.filter((c) => !["مغلقة", "صدر الحكم"].includes(c.status)).length;
     const weekHearings = hearings.filter((h) => !h.done && daysUntil(h.date) >= 0 && daysUntil(h.date) <= 7).length;
@@ -5579,23 +6313,161 @@ export default function App() {
     return { active, weekHearings, dueAmount, expiringPoa };
   }, [cases, hearings, invoices, poas]);
 
+  const CASE_TYPE_PALETTE: Record<string, string> = {
+    "مدني": "#d97706",
+    "تجاري": "#2563eb",
+    "عمالي": "#059669",
+    "جزائي": "#dc2626",
+    "أحوال شخصية": "#7c3aed",
+    "عقاري": "#0891b2",
+    "إيجاري": "#b45309",
+    "إداري": "#475569",
+    "تنفيذ": "#4f46e5",
+    "تحكيم": "#be185d",
+  };
+
   const casesByType = useMemo(() => {
     const m: Record<string, number> = {};
     cases.forEach((c) => (m[c.type] = (m[c.type] || 0) + 1));
-    return Object.entries(m).map(([name, value]) => ({ name, value }));
+    const total = cases.length || 1;
+    const palette = ["#d97706", "#2563eb", "#059669", "#7c3aed", "#dc2626", "#0891b2", "#b45309", "#475569", "#4f46e5", "#be185d"];
+    return Object.entries(m)
+      .map(([name, value], idx) => ({
+        name,
+        value,
+        percentage: Math.round((value / total) * 100),
+        color: CASE_TYPE_PALETTE[name] || palette[idx % palette.length]
+      }))
+      .sort((a, b) => b.value - a.value);
   }, [cases]);
 
-  const invoiceSummary = useMemo(() => {
-    const m: Record<string, number> = { "مدفوعة": 0, "مرسلة": 0, "متأخرة": 0, "مسودة": 0 };
+  const invoiceMetrics = useMemo(() => {
+    let totalInvoiced = 0;
+    let paidAmount = 0;
+    let sentDueAmount = 0;
+    let overdueAmount = 0;
+    let draftAmount = 0;
+    const countMap: Record<string, number> = { "مدفوعة": 0, "مرسلة": 0, "متأخرة": 0, "مسودة": 0 };
+    const amountMap: Record<string, number> = { "مدفوعة": 0, "مرسلة": 0, "متأخرة": 0, "مسودة": 0 };
+
     invoices.forEach((i) => {
-      if (m[i.status] !== undefined) {
-        m[i.status] += i.amount * (1 + VAT_RATE);
+      const val = i.amount * (1 + VAT_RATE);
+      totalInvoiced += val;
+      if (countMap[i.status] !== undefined) {
+        countMap[i.status] += 1;
+        amountMap[i.status] += val;
       }
+      if (i.status === "مدفوعة") paidAmount += val;
+      else if (i.status === "مرسلة") sentDueAmount += val;
+      else if (i.status === "متأخرة") overdueAmount += val;
+      else if (i.status === "مسودة") draftAmount += val;
     });
-    return Object.entries(m).map(([name, value]) => ({ name, value: Math.round(value) }));
+
+    const collectionRate = totalInvoiced > 0 ? Math.round((paidAmount / totalInvoiced) * 100) : 0;
+    const colors: Record<string, string> = {
+      "مدفوعة": "#059669",
+      "مرسلة": "#0284c7",
+      "متأخرة": "#dc2626",
+      "مسودة": "#94a3b8",
+    };
+
+    const summaryByAmount = Object.entries(amountMap).map(([name, value]) => ({
+      name,
+      value: Math.round(value),
+      count: countMap[name] || 0,
+      color: colors[name] || "#94a3b8",
+      percentage: totalInvoiced > 0 ? Math.round((value / totalInvoiced) * 100) : 0
+    }));
+
+    const summaryByCount = Object.entries(countMap).map(([name, value]) => ({
+      name,
+      value,
+      amount: Math.round(amountMap[name] || 0),
+      color: colors[name] || "#94a3b8",
+      percentage: invoices.length > 0 ? Math.round((value / (invoices.length || 1)) * 100) : 0
+    }));
+
+    return {
+      totalInvoiced,
+      paidAmount,
+      sentDueAmount,
+      overdueAmount,
+      draftAmount,
+      collectionRate,
+      summaryByAmount,
+      summaryByCount,
+      totalCount: invoices.length
+    };
   }, [invoices]);
 
+  const invoiceSummary = useMemo(() => {
+    return invoiceMetrics.summaryByAmount;
+  }, [invoiceMetrics]);
+
   const PIE_COLORS = ["#059669", "#0284c7", "#dc2626", "#94a3b8"];
+
+  const tasksMetrics = useMemo(() => {
+    const total = tasks.length;
+    const completed = tasks.filter((t) => t.done).length;
+    const pending = total - completed;
+    const overdue = tasks.filter((t) => !t.done && daysUntil(t.due) < 0).length;
+    const dueToday = tasks.filter((t) => !t.done && daysUntil(t.due) === 0).length;
+    const inProgress = Math.max(0, pending - overdue - dueToday);
+    const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    const priorityCounts: Record<string, { total: number; done: number }> = {
+      "عالية": { total: 0, done: 0 },
+      "متوسطة": { total: 0, done: 0 },
+      "منخفضة": { total: 0, done: 0 }
+    };
+
+    tasks.forEach((t) => {
+      if (priorityCounts[t.priority]) {
+        priorityCounts[t.priority].total += 1;
+        if (t.done) priorityCounts[t.priority].done += 1;
+      }
+    });
+
+    const statusChartData = [
+      { name: "مهام منجزة", value: completed, color: "#059669", percentage: total > 0 ? Math.round((completed / total) * 100) : 0 },
+      { name: "جارية بالموعد", value: inProgress, color: "#2563eb", percentage: total > 0 ? Math.round((inProgress / total) * 100) : 0 },
+      { name: "مستحقة اليوم", value: dueToday, color: "#d97706", percentage: total > 0 ? Math.round((dueToday / total) * 100) : 0 },
+      { name: "متأخرة", value: overdue, color: "#dc2626", percentage: total > 0 ? Math.round((overdue / total) * 100) : 0 },
+    ].filter(item => item.value > 0);
+
+    const priorityChartData = [
+      {
+        name: "عالية",
+        منجزة: priorityCounts["عالية"].done,
+        معلقة: priorityCounts["عالية"].total - priorityCounts["عالية"].done,
+        total: priorityCounts["عالية"].total
+      },
+      {
+        name: "متوسطة",
+        منجزة: priorityCounts["متوسطة"].done,
+        معلقة: priorityCounts["متوسطة"].total - priorityCounts["متوسطة"].done,
+        total: priorityCounts["متوسطة"].total
+      },
+      {
+        name: "منخفضة",
+        منجزة: priorityCounts["منخفضة"].done,
+        معلقة: priorityCounts["منخفضة"].total - priorityCounts["منخفضة"].done,
+        total: priorityCounts["منخفضة"].total
+      },
+    ];
+
+    return {
+      total,
+      completed,
+      pending,
+      overdue,
+      dueToday,
+      inProgress,
+      completionRate,
+      statusChartData,
+      priorityChartData
+    };
+  }, [tasks]);
 
   // ---------- نماذج الإضافة والحفظ ----------
   const [form, setForm] = useState<Record<string, any>>({});
@@ -6412,7 +7284,7 @@ export default function App() {
   const NAV = [
     // 1. العمليات القانونية الرئيسية
     { id: "dashboard", label: "لوحة التحكم", icon: LayoutDashboard, category: "العمليات القانونية" },
-    { id: "cases", label: "القضايا والترافع", icon: Briefcase, category: "العمليات القانونية" },
+    { id: "cases", label: "القضايا", icon: Briefcase, category: "العمليات القانونية" },
     { id: "hearings", label: "الجلسات والرول", icon: CalendarDays, category: "العمليات القانونية" },
     { id: "clients", label: "الموكلين والعملاء", icon: Users, category: "العمليات القانونية" },
     { id: "booking_consultation", label: "حجز استشارة مرئية", icon: Video, category: "العمليات القانونية" },
@@ -6444,6 +7316,19 @@ export default function App() {
   const overdueTasks = tasks.filter(t => !t.done && daysUntil(t.due) <= 0).length;
   const urgentTodayOrOverdueTasks = useMemo(() => {
     return tasks.filter(t => !t.done && daysUntil(t.due) <= 0);
+  }, [tasks]);
+
+  // المهام العاجلة التي اقترب موعدها خلال أقل من 24 ساعة (أو مستحقة اليوم أو متأخرة)
+  const urgentTasks24h = useMemo(() => {
+    return tasks
+      .filter((t) => !t.done && daysUntil(t.due) <= 1)
+      .sort((a, b) => {
+        const dA = daysUntil(a.due);
+        const dB = daysUntil(b.due);
+        if (dA !== dB) return dA - dB;
+        const pOrder: Record<string, number> = { "عالية": 0, "متوسطة": 1, "منخفضة": 2 };
+        return (pOrder[a.priority] ?? 1) - (pOrder[b.priority] ?? 1);
+      });
   }, [tasks]);
 
   const upcoming = hearings.filter((h) => !h.done && daysUntil(h.date) >= 0).sort((a, b) => a.date.localeCompare(b.date));
@@ -6626,7 +7511,7 @@ export default function App() {
         }
       `}</style>
       <div className="flex min-h-screen">
-        {/* ===== الشريط الجانبي الفخم ===== */}
+        {/* ===== الشريط الجانبي الفخم لسطح المكتب ===== */}
         <aside className="hidden w-64 shrink-0 flex-col bg-white border-l border-slate-200 text-slate-800 md:flex shadow-lg">
           <div className="flex items-center justify-center border-b border-slate-100 px-4 py-5 bg-emerald-50/40">
             <Logo variant="horizontal" mode="light" size="md" />
@@ -6761,88 +7646,344 @@ export default function App() {
           </div>
         </aside>
 
+        {/* ===== القائمة الجانبية المنزلقة الشاملة للجوال (Mobile Drawer) ===== */}
+        {mobileMenuOpen && (
+          <div className="fixed inset-0 z-50 flex md:hidden" dir="rtl">
+            {/* الخلفية المظلمة الشفافة */}
+            <div
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+
+            {/* محتوى القائمة المنزلقة */}
+            <div className="relative flex w-[88vw] max-w-sm flex-1 flex-col bg-white shadow-2xl z-10 overflow-hidden">
+              {/* ترويسة القائمة مع الشعار وزر الإغلاق */}
+              <div className="flex items-center justify-between border-b border-slate-100 px-4 py-4 bg-emerald-50/70">
+                <Logo variant="horizontal" mode="light" size="sm" />
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="rounded-full p-2 text-slate-500 hover:bg-white hover:text-slate-800 transition border border-slate-200 min-h-[38px] min-w-[38px] flex items-center justify-center"
+                  aria-label="إغلاق القائمة"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* بطاقة الحساب النشط وتبديل الحسابات على الجوال */}
+              <div className="m-3 rounded-2xl bg-emerald-50/80 p-3 border border-emerald-900/10">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[11px] font-semibold text-[#0D382B] flex items-center gap-1">
+                    <UserCheck size={13} /> الحساب النشط:
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0D382B] text-white font-mono font-bold">
+                    {currentUser.roleKey.toUpperCase()}
+                  </span>
+                </div>
+                {currentUser.roleKey === "admin" && (currentUser.status === "نشط" || currentUser.status === "approved") ? (
+                  <select
+                    value={currentUserId}
+                    onChange={(e) => setCurrentUserId(+e.target.value)}
+                    className="w-full rounded-xl bg-white border border-slate-200 text-xs font-semibold text-slate-800 px-2 py-1.5 focus:outline-none focus:border-[#0D382B]"
+                  >
+                    {users.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name} ({u.roleTitle})
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-xs font-bold text-slate-900 px-1 py-0.5 truncate">
+                    {currentUser.name} ({currentUser.roleTitle})
+                  </p>
+                )}
+              </div>
+
+              {/* شريط البحث السريع في الجوال */}
+              <div className="px-3 pb-2">
+                <div className="relative">
+                  <Search size={15} className="absolute right-3 top-2.5 text-slate-400" />
+                  <input
+                    value={q}
+                    onChange={(e) => setQ(e.target.value)}
+                    placeholder="بحث سريع في القضايا والموكلين…"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 pr-8 text-xs text-slate-800 focus:bg-white focus:border-amber-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* روابط جميع أقسام النظام الـ 18 مصنفة بالكامل */}
+              <nav className="flex-1 space-y-1 p-3 overflow-y-auto custom-scrollbar">
+                {NAV.filter(({ id }) => hasTabPermission(currentUser, id)).map(({ id, label, icon: Icon, category }, idx, filteredNav) => {
+                  const showCategoryHeader = idx === 0 || category !== filteredNav[idx - 1].category;
+                  return (
+                    <React.Fragment key={`mob-${id}`}>
+                      {showCategoryHeader && category && (
+                        <div className="px-2 pt-3 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[#0D382B] flex items-center gap-1.5 border-b border-slate-100 mb-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-[#C5A059]" />
+                          <span>{category}</span>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => {
+                          setTab(id);
+                          setCaseView(null);
+                          setMobileMenuOpen(false);
+                        }}
+                        className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition ${
+                          tab === id
+                            ? "bg-[#0D382B] text-white font-black shadow-md"
+                            : "text-slate-600 hover:bg-emerald-50 hover:text-[#0D382B]"
+                        }`}
+                      >
+                        <Icon size={18} />
+                        <span className="text-right">{label}</span>
+                        {id === "poa" && stats.expiringPoa > 0 && (
+                          <span className="mr-auto rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white">
+                            {stats.expiringPoa}
+                          </span>
+                        )}
+                        {id === "kyc" && kycDue > 0 && (
+                          <span className="mr-auto rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white">
+                            {kycDue}
+                          </span>
+                        )}
+                        {id === "tasks" && overdueTasks > 0 && (
+                          <span className="mr-auto rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white">
+                            {overdueTasks}
+                          </span>
+                        )}
+                        {id === "employees" && (leaveRequests.filter(l => l.status === "PENDING").length + employeeExpenses.filter(e => e.status === "PENDING").length) > 0 && (
+                          <span className="mr-auto rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-slate-950">
+                            {leaveRequests.filter(l => l.status === "PENDING").length + employeeExpenses.filter(e => e.status === "PENDING").length}
+                          </span>
+                        )}
+                        {id === "booking_consultation" && consultationBookings.filter(b => b.status === "pending_assignment").length > 0 && (
+                          <span className="mr-auto rounded-full bg-amber-400 text-slate-950 px-2 py-0.5 text-[10px] font-black animate-pulse">
+                            {consultationBookings.filter(b => b.status === "pending_assignment").length} جديد
+                          </span>
+                        )}
+                        {id === "users" && pendingUsers.length > 0 && isAdmin ? (
+                          <span className="mr-auto rounded-full bg-amber-500 text-slate-950 px-2 py-0.5 text-[11px] font-bold animate-pulse">
+                            {pendingUsers.length} معلق
+                          </span>
+                        ) : id === "users" ? (
+                          <span className="mr-auto rounded-full bg-emerald-100 border border-emerald-300 text-[10px] px-1.5 py-0.2 text-[#0D382B] font-mono">
+                            {users.length}
+                          </span>
+                        ) : null}
+                      </button>
+                    </React.Fragment>
+                  );
+                })}
+
+                {/* روابط سريعة إضافية داخل قائمة الجوال */}
+                <div className="pt-2 space-y-1.5 border-t border-slate-100 mt-2">
+                  <button
+                    onClick={() => {
+                      setCurrentRoute("public_consultation");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#0D382B] bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Globe size={16} className="text-[#C5A059]" />
+                      <span>صفحة العوام للحجز (/consultation)</span>
+                    </div>
+                    <ChevronLeft size={14} className="text-[#0D382B]" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setClientPortalId(clients[0]?.id || 1);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-bold text-slate-900 bg-amber-50 border border-amber-200 hover:bg-amber-100 transition"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Globe size={16} className="text-amber-700" />
+                      <span>بوابة الموكل الإلكترونية</span>
+                    </div>
+                    <ChevronLeft size={14} className="text-amber-700" />
+                  </button>
+
+                  {isAiAssistantEnabled && (
+                    <button
+                      onClick={() => {
+                        openAiForCurrentSection();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex w-full items-center justify-between rounded-xl px-3.5 py-2.5 text-xs font-black text-white bg-gradient-to-r from-[#0D382B] to-[#124d40] border border-emerald-800 hover:brightness-105 transition shadow-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sparkles size={16} className="text-amber-300 animate-pulse shrink-0" />
+                        <span>المساعد الذكي القانوني (AI)</span>
+                      </div>
+                      <ChevronLeft size={14} className="text-amber-300" />
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => {
+                      setShowBackupModal(true);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center justify-between rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 transition"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Database size={16} className="text-[#0D382B]" />
+                      <span>النسخ الاحتياطي للبيانات</span>
+                    </div>
+                    <Download size={14} className="text-slate-600" />
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setReport("section");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex w-full items-center justify-between rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 transition"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Printer size={16} className="text-slate-600" />
+                      <span>تقرير قابل للطباعة للقسم</span>
+                    </div>
+                    <ChevronLeft size={14} className="text-slate-600" />
+                  </button>
+
+                  {isSuperAdmin && (
+                    <button
+                      onClick={() => {
+                        setShowSupabaseModal(true);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#0D382B] bg-amber-50 border border-amber-200 hover:bg-amber-100 transition"
+                    >
+                      <Code size={16} className="text-[#C5A059] shrink-0" />
+                      <span>الإعدادات الفنية (Supabase RLS)</span>
+                    </button>
+                  )}
+                </div>
+              </nav>
+
+              {/* أسفل القائمة: تسجيل الخروج */}
+              <div className="border-t border-slate-100 p-3 bg-slate-50 space-y-1.5">
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-white py-2.5 px-3 text-xs font-bold text-red-600 hover:bg-red-50 transition border border-red-200 shadow-2xs"
+                >
+                  <LogOut size={15} /> تسجيل الخروج
+                </button>
+                <p className="text-[10px] text-center text-slate-400">ضريبة القيمة المضافة: 5% (UAE VAT)</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ===== المحتوى ===== */}
         <main className="flex-1 min-w-0 max-w-full overflow-x-hidden">
-          {/* الشريط العلوي */}
-          <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-stone-200 bg-white/95 px-4 py-3 backdrop-blur md:px-6 shadow-2xs">
-            <div className="flex items-center gap-2 md:hidden">
+          {/* الشريط العلوي متوافق بالكامل مع الجوال وسطح المكتب */}
+          <header className="sticky top-0 z-20 flex items-center justify-between gap-2 border-b border-stone-200 bg-white/95 px-3 py-2.5 backdrop-blur md:px-6 md:py-3 shadow-2xs">
+            {/* في الجوال: زر القائمة الجانبية والشعار */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-[#0D382B] border border-emerald-200/80 hover:bg-emerald-100 transition md:hidden cursor-pointer relative shrink-0"
+                aria-label="فتح القائمة الرئيسية والأقسام"
+                title="القائمة الرئيسية وجميع الأقسام الـ 18"
+              >
+                <Menu size={20} />
+                {notifCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-black text-white">
+                    {notifCount > 9 ? "9+" : notifCount}
+                  </span>
+                )}
+              </button>
               <Logo variant="horizontal" mode="light" size="sm" />
             </div>
+
+            {/* شريط البحث لسطح المكتب */}
             <div className="relative mr-auto hidden max-w-xs flex-1 md:block">
               <Search size={16} className="absolute right-3 top-2.5 text-slate-400" />
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث في القضايا والموكلين…" className={`${inputCls} pr-9`} />
             </div>
 
-            {/* شريط معلومات المستخدم النشط */}
-            <div className="flex items-center gap-2 border-r border-slate-200 pr-3 mr-2">
-              <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold ${currentUser.avatarBg}`}>
-                {currentUser.avatarText}
+            {/* أزرار الإجراءات السريعة للجوال وسطح المكتب */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {/* شريط معلومات المستخدم النشط */}
+              <div className="flex items-center gap-1.5 sm:gap-2 border-r border-slate-200 pr-2 sm:pr-3 mr-1">
+                <div className={`flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full text-xs font-bold shrink-0 ${currentUser.avatarBg}`}>
+                  {currentUser.avatarText}
+                </div>
+                <div className="hidden sm:block text-xs leading-tight">
+                  <p className="font-bold text-slate-900 truncate max-w-[120px]">{currentUser.name}</p>
+                  <p className="text-[11px] text-[#b89b6a] font-bold">{currentUser.roleTitle}</p>
+                </div>
+                {currentUser.roleKey === "admin" && (currentUser.status === "نشط" || currentUser.status === "approved") && (
+                  <select
+                    value={currentUserId}
+                    onChange={(e) => setCurrentUserId(+e.target.value)}
+                    className="hidden sm:block text-xs bg-stone-100 border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#b89b6a]"
+                    title="اختبار أداء الصلاحيات بأدوار مختلفة (للمدير فقط)"
+                  >
+                    {users.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name} ({u.roleTitle})
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
-              <div className="hidden sm:block text-xs leading-tight">
-                <p className="font-bold text-slate-900">{currentUser.name}</p>
-                <p className="text-[11px] text-[#b89b6a] font-bold">{currentUser.roleTitle}</p>
-              </div>
-              {currentUser.roleKey === "admin" && (currentUser.status === "نشط" || currentUser.status === "approved") && (
-                <select
-                  value={currentUserId}
-                  onChange={(e) => setCurrentUserId(+e.target.value)}
-                  className="text-xs bg-stone-100 border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#b89b6a]"
-                  title="اختبار أداء الصلاحيات بأدوار مختلفة (للمدير فقط)"
+
+              {isAiAssistantEnabled && (
+                <button
+                  onClick={() => openAiForCurrentSection()}
+                  className="flex items-center gap-1 sm:gap-1.5 rounded-xl bg-gradient-to-r from-amber-600 via-teal-800 to-teal-950 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs font-black text-white hover:opacity-95 transition shadow-sm cursor-pointer border border-amber-400/40 shrink-0"
+                  title="المساعد الذكي القانوني لجميع الأقسام (Gemini AI)"
                 >
-                  {users.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} ({u.roleTitle})
-                    </option>
-                  ))}
-                </select>
+                  <Sparkles size={14} className="text-amber-300 animate-pulse" />
+                  <span className="hidden xs:inline sm:inline">المساعد الذكي</span>
+                </button>
               )}
-            </div>
 
-            {isAiAssistantEnabled && (
-              <button
-                onClick={() => openAiForCurrentSection()}
-                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-600 via-teal-800 to-teal-950 px-3.5 py-2 text-xs font-black text-white hover:opacity-95 transition shadow-sm cursor-pointer border border-amber-400/40"
-                title="المساعد الذكي القانوني لجميع الأقسام (Gemini AI)"
-              >
-                <Sparkles size={16} className="text-amber-300 animate-pulse" />
-                <span>المساعد الذكي</span>
+              {/* أزرار سطح المكتب */}
+              <button onClick={() => setClientPortalId(clients[0]?.id || 1)} className="hidden md:flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 shadow-sm" title="معاينة بوابة الموكل الإلكترونية">
+                <Globe size={15} /> <span className="hidden sm:inline">بوابة الموكل</span>
               </button>
-            )}
 
-            <button onClick={() => setClientPortalId(clients[0]?.id || 1)} className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 shadow-sm" title="معاينة بوابة الموكل الإلكترونية">
-              <Globe size={15} /> <span className="hidden sm:inline">بوابة الموكل</span>
-            </button>
+              <button
+                onClick={() => setShowBackupModal(true)}
+                className="hidden md:flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition shadow-2xs"
+                title="تصدير واستعادة نسخة احتياطية لبيانات المكتب"
+              >
+                <Database size={15} className="text-emerald-600" />
+                <span className="hidden sm:inline">النسخ الاحتياطي</span>
+              </button>
 
-            <button
-              onClick={() => setShowBackupModal(true)}
-              className="flex items-center gap-1.5 rounded-xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100 transition shadow-2xs"
-              title="تصدير واستعادة نسخة احتياطية لبيانات المكتب"
-            >
-              <Database size={15} className="text-emerald-600" />
-              <span className="hidden sm:inline">النسخ الاحتياطي</span>
-            </button>
+              <button onClick={() => setReport("section")} className="hidden md:flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100" title="تقرير قابل للطباعة للقسم الحالي">
+                <Printer size={15} /> <span className="hidden sm:inline">تقرير القسم</span>
+              </button>
 
-            <button onClick={() => setReport("section")} className="flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100" title="تقرير قابل للطباعة للقسم الحالي">
-              <Printer size={15} /> <span className="hidden sm:inline">تقرير القسم</span>
-            </button>
+              <button
+                onClick={() => setIsLoggedIn(false)}
+                className="hidden md:flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100 transition shadow-2xs"
+                title="تسجيل الخروج والعودة لشاشة الدخول"
+              >
+                <LogOut size={15} /> <span className="hidden sm:inline">تسجيل الخروج</span>
+              </button>
 
-            <button
-              onClick={() => setIsLoggedIn(false)}
-              className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-100 transition shadow-2xs"
-              title="تسجيل الخروج والعودة لشاشة الدخول"
-            >
-              <LogOut size={15} /> <span className="hidden sm:inline">تسجيل الخروج</span>
-            </button>
-
-            <button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100" aria-label="التنبيهات">
-              <Bell size={20} />
-              {notifCount > 0 && <span className="absolute -left-0.5 -top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">{notifCount}</span>}
-            </button>
+              <button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100" aria-label="التنبيهات">
+                <Bell size={18} />
+                {notifCount > 0 && <span className="absolute -left-0.5 -top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">{notifCount}</span>}
+              </button>
+            </div>
           </header>
 
           {/* تنبيه تقييد الصلاحيات إذا وُجد */}
           {permissionNotice && (
-            <div className="m-4 md:m-6 mb-0 p-4 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 flex items-start justify-between gap-3 shadow-sm">
+            <div className="m-3 sm:m-4 md:m-6 mb-0 p-3 sm:p-4 rounded-xl bg-amber-50 border border-amber-300 text-amber-900 flex items-start justify-between gap-3 shadow-sm">
               <div className="flex items-start gap-2.5">
                 <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                 <p className="text-xs leading-relaxed font-medium">{permissionNotice}</p>
@@ -6856,13 +7997,68 @@ export default function App() {
             </div>
           )}
 
-          {/* تنقّل سفلي للجوال */}
-          <div className="fixed bottom-0 right-0 left-0 z-30 flex justify-around border-t border-slate-200 bg-white py-1.5 md:hidden">
-            {NAV.slice(0, 5).map(({ id, icon: Icon, label }) => (
-              <button key={id} onClick={() => { setTab(id); setCaseView(null); }} className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] ${tab === id ? "text-amber-600 font-bold" : "text-slate-500"}`}>
-                <Icon size={20} /><span>{label}</span>
-              </button>
-            ))}
+          {/* شريط التنقل السفلي الذكي للجوال (Smart Bottom Navigation Bar) */}
+          <div className="fixed bottom-0 right-0 left-0 z-30 flex items-center justify-around border-t border-slate-200 bg-white/95 backdrop-blur-md py-1.5 px-1 sm:px-2 md:hidden shadow-lg" dir="rtl">
+            <button
+              onClick={() => { setTab("dashboard"); setCaseView(null); }}
+              className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-bold transition ${
+                tab === "dashboard" ? "text-[#0D382B] font-extrabold" : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <LayoutDashboard size={20} className={tab === "dashboard" ? "text-[#0D382B]" : "text-slate-400"} />
+              <span>الرئيسية</span>
+            </button>
+
+            <button
+              onClick={() => { setTab("cases"); setCaseView(null); }}
+              className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-bold transition ${
+                tab === "cases" ? "text-[#0D382B] font-extrabold" : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <Briefcase size={20} className={tab === "cases" ? "text-[#0D382B]" : "text-slate-400"} />
+              <span>القضايا</span>
+            </button>
+
+            <button
+              onClick={() => { setTab("hearings"); setCaseView(null); }}
+              className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-bold transition relative ${
+                tab === "hearings" ? "text-[#0D382B] font-extrabold" : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <CalendarDays size={20} className={tab === "hearings" ? "text-[#0D382B]" : "text-slate-400"} />
+              <span>الجلسات</span>
+              {upcoming.filter(h => daysUntil(h.date) <= 2).length > 0 && (
+                <span className="absolute top-0 right-2 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
+              )}
+            </button>
+
+            <button
+              onClick={() => { setTab("tasks"); setCaseView(null); }}
+              className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-bold transition relative ${
+                tab === "tasks" ? "text-[#0D382B] font-extrabold" : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <ListChecks size={20} className={tab === "tasks" ? "text-[#0D382B]" : "text-slate-400"} />
+              <span>المهام</span>
+              {overdueTasks > 0 && (
+                <span className="absolute top-0 right-2 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
+              )}
+            </button>
+
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              className="flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-bold text-[#0D382B] relative transition cursor-pointer"
+            >
+              <div className="flex items-center justify-center w-6 h-6 rounded-lg bg-emerald-50 border border-emerald-200">
+                <Menu size={16} className="text-[#0D382B]" />
+              </div>
+              <span className="text-[#0D382B]">كل الأقسام</span>
+              {notifCount > 0 && (
+                <span className="absolute top-0 right-1.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white">
+                  !
+                </span>
+              )}
+            </button>
           </div>
 
           <div className="mx-auto max-w-7xl w-full min-w-0 overflow-x-hidden space-y-6 p-3 sm:p-4 pb-24 md:p-6 md:pb-8">
@@ -6912,6 +8108,194 @@ export default function App() {
                       </div>
                     )}
 
+                    {/* نظام إشعارات ذكي يبرز المهام التي اقترب موعدها خلال أقل من 24 ساعة */}
+                    {urgentTasks24h.length > 0 ? (
+                      <div className="rounded-2xl border-2 border-amber-400/90 bg-gradient-to-l from-amber-500/10 via-amber-50/60 to-white p-4 sm:p-5 shadow-md relative overflow-hidden transition-all">
+                        {/* شريط الإضاءة العلوي الجمالي */}
+                        <div className="absolute top-0 right-0 left-0 h-1 bg-gradient-to-r from-amber-500 via-red-500 to-amber-600" />
+                        
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-amber-200/80">
+                          <div className="flex items-center gap-3">
+                            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500 text-slate-950 font-bold shadow-sm">
+                              <BellRing size={22} className="animate-bounce text-slate-950" />
+                              <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-red-600 text-[9px] text-white font-bold items-center justify-center">!</span>
+                              </span>
+                            </div>
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="font-bold text-base text-slate-900 flex items-center gap-1.5">
+                                  <span>نظام التنبيه الذكي للمهام العاجلة</span>
+                                  <span className="text-xs font-semibold text-amber-900 bg-amber-200/90 px-2 py-0.5 rounded-md border border-amber-300">
+                                    أقل من 24 ساعة
+                                  </span>
+                                </h3>
+                              </div>
+                              <p className="text-xs text-slate-600 mt-0.5">
+                                يوجد <span className="font-bold text-red-700">{urgentTasks24h.length}</span> مهام تستحق المتابعة والإنجاز الفوري أو قاربت مهلتها على الانتهاء
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 self-end sm:self-center">
+                            <button
+                              onClick={() => setTab("tasks")}
+                              className="px-3.5 py-2 bg-slate-900 text-amber-300 rounded-xl text-xs font-bold hover:bg-slate-800 transition flex items-center gap-1 shadow-xs cursor-pointer"
+                            >
+                              <span>جدول المهام الكامل</span>
+                              <ChevronLeft size={14} />
+                            </button>
+                            <button
+                              onClick={() => openModalWithCheck("task", "manageTasks")}
+                              className="px-3 py-2 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+                            >
+                              <Plus size={14} />
+                              <span>مهمة جديدة</span>
+                            </button>
+                            {urgentTasks24h.length > 3 && (
+                              <button
+                                onClick={() => setIsUrgentAlertExpanded(!isUrgentAlertExpanded)}
+                                className="px-2.5 py-2 bg-white hover:bg-stone-100 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold transition cursor-pointer"
+                                title={isUrgentAlertExpanded ? "طي القائمة" : "توسيع القائمة"}
+                              >
+                                {isUrgentAlertExpanded ? "عرض أقل" : `عرض الكل (${urgentTasks24h.length})`}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* شبكة كروت التنبيه السريع للمهام */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 pt-3.5">
+                          {(isUrgentAlertExpanded ? urgentTasks24h : urgentTasks24h.slice(0, 3)).map((t) => {
+                            const dLeft = daysUntil(t.due);
+                            const isOverdue = dLeft < 0;
+                            const isDueToday = dLeft === 0;
+                            const isDueTomorrow = dLeft === 1;
+                            const relatedCase = t.caseId ? cases.find(c => c.id === t.caseId) : null;
+
+                            return (
+                              <div
+                                key={t.id}
+                                className={`rounded-xl border p-3.5 bg-white transition-all flex flex-col justify-between gap-3 shadow-2xs hover:shadow-sm ${
+                                  isOverdue
+                                    ? "border-red-300 bg-red-50/20 ring-1 ring-red-200"
+                                    : isDueToday
+                                    ? "border-amber-300 bg-amber-50/30 ring-1 ring-amber-200"
+                                    : "border-slate-200"
+                                }`}
+                              >
+                                <div>
+                                  {/* الشريط العلوي للمهمة */}
+                                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                                    <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md border ${
+                                      isOverdue
+                                        ? "bg-red-100 text-red-800 border-red-200"
+                                        : isDueToday
+                                        ? "bg-amber-100 text-amber-900 border-amber-300 animate-pulse"
+                                        : "bg-sky-100 text-sky-800 border-sky-200"
+                                    }`}>
+                                      {isOverdue && <AlertTriangle size={12} />}
+                                      {isDueToday && <Clock size={12} />}
+                                      {isDueTomorrow && <Hourglass size={12} />}
+                                      {isOverdue ? `متأخرة بـ ${Math.abs(dLeft)} يوم` : isDueToday ? "تستحق اليوم (< 12 ساعة)" : "تستحق غداً (< 24 ساعة)"}
+                                    </span>
+
+                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${TASK_PRIORITY[t.priority] || "bg-slate-100 text-slate-700"}`}>
+                                      {t.priority}
+                                    </span>
+                                  </div>
+
+                                  {/* عنوان المهمة */}
+                                  <h4 className="text-sm font-bold text-slate-900 line-clamp-2 leading-snug">
+                                    {t.title}
+                                  </h4>
+
+                                  {/* تفاصيل القضية والمكلف */}
+                                  <div className="mt-2 space-y-1 text-xs text-slate-600">
+                                    {relatedCase && (
+                                      <div className="flex items-center gap-1.5 text-slate-500">
+                                        <Briefcase size={13} className="text-amber-600 shrink-0" />
+                                        <span className="truncate">{relatedCase.number}</span>
+                                      </div>
+                                    )}
+                                    <div className="flex items-center gap-1.5 text-slate-600">
+                                      <User size={13} className="text-slate-400 shrink-0" />
+                                      <span>المكلف: <strong className="text-slate-800">{t.assignee}</strong></span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* الإجراءات السريعة للمهمة */}
+                                <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                                  <button
+                                    onClick={() => {
+                                      if (!checkPerm("manageTasks", "إنجاز مهمة")) return;
+                                      setTasks(tasks.map((x) => x.id === t.id ? { ...x, done: true } : x));
+                                    }}
+                                    className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-bold transition shadow-2xs cursor-pointer"
+                                    title="تحديد المهمة كمنجزة فوراً"
+                                  >
+                                    <CheckCircle2 size={14} />
+                                    <span>تم الإنجاز</span>
+                                  </button>
+
+                                  <button
+                                    onClick={() => {
+                                      const userObj = users.find(u => u.name === t.assignee);
+                                      const phone = userObj?.phone || "";
+                                      const email = userObj?.email || "";
+                                      const msg = `مرحباً ${t.assignee}،\nتنبيه عاجل من نظام المكتب:\nالمهمة: "${t.title}"\nموعد الاستحقاق: ${fmtDate(t.due)} (أقل من 24 ساعة).\nيرجى المتابعة والإنجاز.`;
+                                      setNotifyModal({
+                                        recipientName: t.assignee,
+                                        recipientPhone: phone,
+                                        recipientEmail: email,
+                                        channel: "واتساب",
+                                        type: "رسالة عامة",
+                                        subject: `تنبيه عاجل: مهمة "${t.title}"`,
+                                        message: msg,
+                                        relatedRef: `مهمة #${t.id}`
+                                      });
+                                    }}
+                                    className="flex items-center justify-center p-1.5 rounded-lg bg-stone-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-600 transition text-xs font-semibold cursor-pointer"
+                                    title="إرسال تنبيه وتذكير بالواتساب"
+                                  >
+                                    <Smartphone size={14} />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-3.5 flex flex-wrap items-center justify-between gap-3 text-xs text-emerald-900 shadow-2xs">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-1.5 bg-emerald-500 text-white rounded-lg font-bold">
+                            <CheckCircle2 size={16} />
+                          </div>
+                          <div>
+                            <span className="font-bold">نظام الإشعارات الذكي:</span>
+                            <span className="mr-1 text-slate-700">لا توجد مهام مستحقة خلال الـ 24 ساعة القادمة. جميع المهام ضمن جدولها الطبيعي.</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => openModalWithCheck("task", "manageTasks")}
+                            className="px-2.5 py-1.5 bg-white text-emerald-800 border border-emerald-300 rounded-lg text-xs font-bold hover:bg-emerald-100 transition flex items-center gap-1 cursor-pointer"
+                          >
+                            <Plus size={13} /> إضافة مهمة
+                          </button>
+                          <button
+                            onClick={() => setTab("tasks")}
+                            className="px-2.5 py-1.5 bg-emerald-800 text-white rounded-lg text-xs font-bold hover:bg-emerald-900 transition flex items-center gap-1 cursor-pointer"
+                          >
+                            استعراض المهام
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     {/* بطاقات المؤشرات */}
                     <div className={`grid grid-cols-1 sm:grid-cols-2 ${canViewFinancials ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-3 sm:gap-4`}>
                   {[
@@ -6928,39 +8312,322 @@ export default function App() {
                   ))}
                 </div>
 
-                <div className={`grid gap-4 ${canViewFinancials ? "lg:grid-cols-2" : "grid-cols-1"}`}>
-                  {/* توزيع القضايا */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <h3 className="mb-4 font-bold text-slate-900">القضايا حسب النوع</h3>
-                    <div className="h-56" dir="ltr">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={casesByType}>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                          <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                          <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                          <Tooltip />
-                          <Bar dataKey="value" name="عدد القضايا" fill="#d97706" radius={[6, 6, 0, 0]} />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                  {/* حالة الفواتير - تظهر فقط للمصرح لهم */}
-                  {canViewFinancials && (
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                      <h3 className="mb-4 font-bold text-slate-900">حالة التحصيل المالي (د.إ)</h3>
-                      <div className="h-56" dir="ltr">
+                {/* الرسوم البيانية التفاعلية للوحة التحكم */}
+                <div className={`grid gap-4.5 ${canViewFinancials ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-3" : "grid-cols-1 lg:grid-cols-2"}`}>
+                  {/* 1. توزيع القضايا حسب النوع */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-800">
+                            <Briefcase size={18} />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-slate-900 text-sm">توزيع القضايا حسب النوع</h3>
+                            <p className="text-[11px] text-slate-500">إجمالي {cases.length} قضية مقيدة</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                          <button
+                            onClick={() => setDashboardCaseChartMode("bar")}
+                            className={`px-2 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${dashboardCaseChartMode === "bar" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"}`}
+                            title="عرض أعمدة بيانية"
+                          >
+                            أعمدة
+                          </button>
+                          <button
+                            onClick={() => setDashboardCaseChartMode("donut")}
+                            className={`px-2 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${dashboardCaseChartMode === "donut" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"}`}
+                            title="عرض دائري مجوف"
+                          >
+                            دائري
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="h-52 w-full" dir="ltr">
                         <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie data={invoiceSummary} dataKey="value" nameKey="name" innerRadius={50} outerRadius={80} paddingAngle={3}>
-                              {invoiceSummary.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
-                            </Pie>
-                            <Tooltip formatter={(v: any) => fmtAED(Number(v))} />
-                            <Legend />
-                          </PieChart>
+                          {dashboardCaseChartMode === "bar" ? (
+                            <BarChart data={casesByType} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                              <XAxis
+                                dataKey="name"
+                                tick={{ fontSize: 11, fill: "#475569" }}
+                                interval={0}
+                                angle={-25}
+                                textAnchor="end"
+                              />
+                              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#475569" }} />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "#0f172a",
+                                  borderColor: "#334155",
+                                  borderRadius: "10px",
+                                  color: "#fff",
+                                  fontSize: "12px",
+                                  direction: "rtl",
+                                  textAlign: "right"
+                                }}
+                                formatter={(value: any) => [`${value} قضية (${Math.round((Number(value) / (cases.length || 1)) * 100)}%)`, "عدد القضايا"]}
+                              />
+                              <Bar dataKey="value" name="عدد القضايا" radius={[6, 6, 0, 0]}>
+                                {casesByType.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={entry.color} />
+                                ))}
+                              </Bar>
+                            </BarChart>
+                          ) : (
+                            <PieChart>
+                              <Pie
+                                data={casesByType}
+                                dataKey="value"
+                                nameKey="name"
+                                innerRadius={45}
+                                outerRadius={75}
+                                paddingAngle={3}
+                              >
+                                {casesByType.map((entry, index) => (
+                                  <Cell key={`cell-pie-${index}`} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "#0f172a",
+                                  borderColor: "#334155",
+                                  borderRadius: "10px",
+                                  color: "#fff",
+                                  fontSize: "12px",
+                                  direction: "rtl",
+                                  textAlign: "right"
+                                }}
+                                formatter={(value: any, name: any) => [`${value} قضية (${Math.round((Number(value) / (cases.length || 1)) * 100)}%)`, name]}
+                              />
+                              <Legend
+                                wrapperStyle={{ fontSize: "11px", paddingTop: "6px" }}
+                                formatter={(val) => <span className="text-slate-700 font-medium">{val}</span>}
+                              />
+                            </PieChart>
+                          )}
                         </ResponsiveContainer>
                       </div>
                     </div>
+
+                    {/* تصنيفات سريعة */}
+                    <div className="mt-3 pt-3 border-t border-slate-100 flex flex-wrap gap-1.5 max-h-16 overflow-y-auto">
+                      {casesByType.map((c) => (
+                        <span
+                          key={c.name}
+                          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] bg-slate-50 border border-slate-200 text-slate-700"
+                        >
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: c.color }} />
+                          <span className="font-semibold">{c.name}:</span>
+                          <span className="font-mono font-bold text-slate-900">{c.value}</span>
+                          <span className="text-[10px] text-slate-400">({c.percentage}%)</span>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 2. حالة الفواتير والتحصيل المالي (تظهر للمصرح لهم مالياً) */}
+                  {canViewFinancials && (
+                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-800">
+                              <Receipt size={18} />
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-slate-900 text-sm">حالة الفواتير والتحصيل</h3>
+                              <p className="text-[11px] text-slate-500">
+                                نسبة السداد: <b className="text-emerald-700 font-bold">{invoiceMetrics.collectionRate}%</b>
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                            <button
+                              onClick={() => setDashboardInvoiceChartMode("amount")}
+                              className={`px-2 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${dashboardInvoiceChartMode === "amount" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"}`}
+                              title="عرض بالمبالغ (درهم)"
+                            >
+                              المبالغ
+                            </button>
+                            <button
+                              onClick={() => setDashboardInvoiceChartMode("count")}
+                              className={`px-2 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${dashboardInvoiceChartMode === "count" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"}`}
+                              title="عرض بعدد الفواتير"
+                            >
+                              العدد
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="h-52 w-full" dir="ltr">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                              <Pie
+                                data={dashboardInvoiceChartMode === "amount" ? invoiceMetrics.summaryByAmount : invoiceMetrics.summaryByCount}
+                                dataKey="value"
+                                nameKey="name"
+                                innerRadius={45}
+                                outerRadius={75}
+                                paddingAngle={3}
+                              >
+                                {(dashboardInvoiceChartMode === "amount" ? invoiceMetrics.summaryByAmount : invoiceMetrics.summaryByCount).map((entry, index) => (
+                                  <Cell key={`cell-inv-${index}`} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "#0f172a",
+                                  borderColor: "#334155",
+                                  borderRadius: "10px",
+                                  color: "#fff",
+                                  fontSize: "12px",
+                                  direction: "rtl",
+                                  textAlign: "right"
+                                }}
+                                formatter={(value: any, name: any) => [
+                                  dashboardInvoiceChartMode === "amount"
+                                    ? `${fmtAED(Number(value))} (${Math.round((Number(value) / (invoiceMetrics.totalInvoiced || 1)) * 100)}%)`
+                                    : `${value} فاتورة (${Math.round((Number(value) / (invoiceMetrics.totalCount || 1)) * 100)}%)`,
+                                  name
+                                ]}
+                              />
+                              <Legend
+                                wrapperStyle={{ fontSize: "11px", paddingTop: "6px" }}
+                                formatter={(val) => <span className="text-slate-700 font-medium">{val}</span>}
+                              />
+                            </PieChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+
+                      {/* ملخص مالي سريع */}
+                      <div className="mt-3 pt-3 border-t border-slate-100 grid grid-cols-3 gap-1.5 text-center">
+                        <div className="p-1.5 rounded-lg bg-emerald-50 border border-emerald-200">
+                          <p className="text-[10px] text-emerald-800 font-medium">المحصل</p>
+                          <p className="text-xs font-bold text-emerald-900 truncate">{fmtAED(invoiceMetrics.paidAmount)}</p>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-sky-50 border border-sky-200">
+                          <p className="text-[10px] text-sky-800 font-medium">المستحق</p>
+                          <p className="text-xs font-bold text-sky-900 truncate">{fmtAED(invoiceMetrics.sentDueAmount)}</p>
+                        </div>
+                        <div className="p-1.5 rounded-lg bg-red-50 border border-red-200">
+                          <p className="text-[10px] text-red-800 font-medium">المتأخر</p>
+                          <p className="text-xs font-bold text-red-900 truncate">{fmtAED(invoiceMetrics.overdueAmount)}</p>
+                        </div>
+                      </div>
+                    </div>
                   )}
+
+                  {/* 3. نسبة إنجاز وتوزيع المهام */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-100 text-indigo-800">
+                            <CheckSquare size={18} />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-slate-900 text-sm">نسبة إنجاز المهام</h3>
+                            <p className="text-[11px] text-slate-500">
+                              الإنجاز: <b className="text-indigo-700 font-bold">{tasksMetrics.completionRate}%</b> ({tasksMetrics.completed} من {tasksMetrics.total})
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                          <button
+                            onClick={() => setDashboardTaskChartMode("status")}
+                            className={`px-2 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${dashboardTaskChartMode === "status" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"}`}
+                            title="حسب حالة الإنجاز"
+                          >
+                            الحالة
+                          </button>
+                          <button
+                            onClick={() => setDashboardTaskChartMode("priority")}
+                            className={`px-2 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${dashboardTaskChartMode === "priority" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"}`}
+                            title="حسب مستوى الأولوية"
+                          >
+                            الأولوية
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="h-52 w-full" dir="ltr">
+                        <ResponsiveContainer width="100%" height="100%">
+                          {dashboardTaskChartMode === "status" ? (
+                            <PieChart>
+                              <Pie
+                                data={tasksMetrics.statusChartData}
+                                dataKey="value"
+                                nameKey="name"
+                                innerRadius={45}
+                                outerRadius={75}
+                                paddingAngle={3}
+                              >
+                                {tasksMetrics.statusChartData.map((entry, index) => (
+                                  <Cell key={`cell-task-${index}`} fill={entry.color} />
+                                ))}
+                              </Pie>
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "#0f172a",
+                                  borderColor: "#334155",
+                                  borderRadius: "10px",
+                                  color: "#fff",
+                                  fontSize: "12px",
+                                  direction: "rtl",
+                                  textAlign: "right"
+                                }}
+                                formatter={(value: any, name: any) => [
+                                  `${value} مهمة (${Math.round((Number(value) / (tasksMetrics.total || 1)) * 100)}%)`,
+                                  name
+                                ]}
+                              />
+                              <Legend
+                                wrapperStyle={{ fontSize: "11px", paddingTop: "6px" }}
+                                formatter={(val) => <span className="text-slate-700 font-medium">{val}</span>}
+                              />
+                            </PieChart>
+                          ) : (
+                            <BarChart data={tasksMetrics.priorityChartData} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
+                              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                              <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#475569" }} />
+                              <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#475569" }} />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "#0f172a",
+                                  borderColor: "#334155",
+                                  borderRadius: "10px",
+                                  color: "#fff",
+                                  fontSize: "12px",
+                                  direction: "rtl",
+                                  textAlign: "right"
+                                }}
+                              />
+                              <Legend wrapperStyle={{ fontSize: "11px" }} />
+                              <Bar dataKey="منجزة" fill="#059669" radius={[4, 4, 0, 0]} />
+                              <Bar dataKey="معلقة" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                            </BarChart>
+                          )}
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* شريط مؤشرات المهام */}
+                    <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1 text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                        <CheckCircle2 size={13} /> منجزة: {tasksMetrics.completed}
+                      </span>
+                      <span className="flex items-center gap-1 text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200">
+                        <Clock size={13} /> جارية: {tasksMetrics.inProgress}
+                      </span>
+                      <span className={`flex items-center gap-1 font-bold px-2 py-0.5 rounded-md border ${tasksMetrics.overdue + tasksMetrics.dueToday > 0 ? "text-red-700 bg-red-50 border-red-200 animate-pulse" : "text-slate-600 bg-slate-50 border-slate-200"}`}>
+                        <AlertCircle size={13} /> متأخرة: {tasksMetrics.overdue + tasksMetrics.dueToday}
+                      </span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* لوحة المهام العاجلة التي تنتهي صلاحيتها اليوم أو تجاوزت موعدها */}
@@ -7159,8 +8826,8 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-                  <table className="w-full text-sm">
+                <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200 bg-white shadow-sm">
+                  <table className="w-full min-w-[650px] text-sm">
                     <thead className="bg-stone-50 text-right text-xs text-slate-500">
                       <tr>
                         <th className="px-4 py-3 font-semibold">رقم القضية</th>
@@ -7513,7 +9180,7 @@ export default function App() {
                           className={inputCls}
                         />
                       </Field>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <Field label="الصفة / التصنيف">
                           <select
                             value={editingClient.type}
@@ -7535,7 +9202,7 @@ export default function App() {
                           />
                         </Field>
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <Field label="رقم الهاتف">
                           <input
                             value={editingClient.phone || ""}
@@ -7888,16 +9555,32 @@ export default function App() {
                         <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
                           <CalendarDays className="text-amber-600" /> جدول ورول الجلسات (Court Hearings Roll)
                         </h2>
-                        <p className="text-xs text-slate-500">استخراج وتجهيز رول الجلسات اليومية للطباعة أو التصدير PDF وإرسال التنبيهات</p>
+                        <p className="text-xs text-slate-500">استخراج وتجهيز رول الجلسات اليومية والمزامنة مع تقويم Google Calendar وإرسال التنبيهات</p>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => setShowGoogleCalendarModal(true)}
+                          className="flex items-center gap-2 rounded-xl bg-white border border-slate-300 px-4 py-2.5 text-xs font-bold text-slate-800 hover:bg-amber-50 hover:border-amber-400 shadow-2xs transition cursor-pointer"
+                          title="مزامنة جدول الجلسات مع Google Calendar"
+                        >
+                          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                            <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                          </svg>
+                          <span>مزامنة Google Calendar</span>
+                          {googleUser && (
+                            <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" title={`متصل: ${googleUser.email}`} />
+                          )}
+                        </button>
                         <button
                           onClick={() => setReport({ type: "roll", date: selectedRollDate, court: rollCourtFilter })}
-                          className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-slate-900 hover:bg-amber-400 shadow-sm"
+                          className="flex items-center gap-2 rounded-xl bg-amber-500 px-4 py-2.5 text-xs font-bold text-slate-900 hover:bg-amber-400 shadow-sm transition cursor-pointer"
                         >
                           <Printer size={16} /> عرض وطباعة رول الجلسات (PDF)
                         </button>
-                        <button onClick={() => openModalWithCheck("hearing", "manageHearings")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm">
+                        <button onClick={() => openModalWithCheck("hearing", "manageHearings")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-semibold text-white hover:bg-slate-700 shadow-sm transition cursor-pointer">
                           <Plus size={16} /> إضافة جلسة
                         </button>
                       </div>
@@ -8038,6 +9721,23 @@ export default function App() {
 
                               <div className="flex flex-wrap items-center gap-2">
                                 <button
+                                  onClick={() => handleSingleHearingGoogleSync(h)}
+                                  className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold border transition cursor-pointer ${
+                                    h.googleCalendarEventId
+                                      ? "bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100"
+                                      : "bg-stone-50 text-slate-700 border-slate-200 hover:bg-amber-50 hover:border-amber-300"
+                                  }`}
+                                  title={h.googleCalendarEventId ? "تمت المزامنة مع تقويم Google" : "مزامنة الجلسة مع تقويم Google"}
+                                >
+                                  <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
+                                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+                                    <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+                                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+                                  </svg>
+                                  {h.googleCalendarEventId ? "مزامنة بالتقويم 🟢" : "مزامنة Google"}
+                                </button>
+                                <button
                                   onClick={() => openNotificationComposer("تنبيه جلسة", h)}
                                   className="flex items-center gap-1 rounded-xl bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
                                   title="تنبيه الموكل بالواتساب"
@@ -8086,26 +9786,60 @@ export default function App() {
                     <h2 className="text-2xl font-bold">إدارة المهام وتوزيع العمل</h2>
                     <p className="text-xs text-slate-500">تتبع المهام اليومية لفريق العمل في المكتب</p>
                   </div>
-                  <button onClick={() => openModalWithCheck("task", "manageTasks")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> إضافة مهمة</button>
+                  <div className="flex items-center gap-2">
+                    {tasks.length > 0 && (
+                      <button
+                        onClick={() => {
+                          if (confirm("هل أنت متأكد من تفريغ ومسح كافة المهام والتكليفات الحالية؟")) {
+                            setTasks([]);
+                            saveStorage("firm_tasks", []);
+                            setPermissionNotice("تم تفريغ كافة المهام والتكليفات بنجاح.");
+                          }
+                        }}
+                        className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 px-3.5 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer"
+                      >
+                        <Trash2 size={15} /> تفريغ كافة المهام
+                      </button>
+                    )}
+                    <button onClick={() => openModalWithCheck("task", "manageTasks")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> إضافة مهمة</button>
+                  </div>
                 </div>
                 <div className="space-y-3">
-                  {tasks.map((t) => (
-                    <div key={t.id} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                      <div className="flex items-center gap-3">
-                        <button onClick={() => {
-                          if (!checkPerm("manageTasks", "تحديث المهمة")) return;
-                          setTasks(tasks.map((x) => x.id === t.id ? { ...x, done: !x.done } : x));
-                        }} className={`p-1 rounded-full ${t.done ? "text-emerald-600" : "text-slate-300 hover:text-slate-500"}`}>
-                          <CheckCircle2 size={22} />
-                        </button>
-                        <div>
-                          <p className={`font-semibold text-sm ${t.done ? "line-through text-slate-400" : "text-slate-900"}`}>{t.title}</p>
-                          <p className="text-xs text-slate-500">المكلف: <b>{t.assignee}</b> | تاريخ الاستحقاق: {fmtDate(t.due)}</p>
-                        </div>
+                  {tasks.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-slate-300 bg-white space-y-3">
+                      <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                        <ListChecks size={24} />
                       </div>
-                      <Badge className={TASK_PRIORITY[t.priority]}>{t.priority}</Badge>
+                      <p className="text-sm font-bold text-slate-800">لا توجد مهام أو تكليفات مسجلة حالياً</p>
+                      <p className="text-xs text-slate-500 max-w-sm">
+                        تم إفراغ المهام التجريبية. يمكنك إضافة مهمة جديدة وتكليف أحد المحامين أو الإداريين بالمكتب وربطها بالقضايا والمواعيد.
+                      </p>
+                      <button
+                        onClick={() => openModalWithCheck("task", "manageTasks")}
+                        className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-700 transition cursor-pointer"
+                      >
+                        <Plus size={15} /> إضافة مهمة جديدة
+                      </button>
                     </div>
-                  ))}
+                  ) : (
+                    tasks.map((t) => (
+                      <div key={t.id} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div className="flex items-center gap-3">
+                          <button onClick={() => {
+                            if (!checkPerm("manageTasks", "تحديث المهمة")) return;
+                            setTasks(tasks.map((x) => x.id === t.id ? { ...x, done: !x.done } : x));
+                          }} className={`p-1 rounded-full ${t.done ? "text-emerald-600" : "text-slate-300 hover:text-slate-500"}`}>
+                            <CheckCircle2 size={22} />
+                          </button>
+                          <div>
+                            <p className={`font-semibold text-sm ${t.done ? "line-through text-slate-400" : "text-slate-900"}`}>{t.title}</p>
+                            <p className="text-xs text-slate-500">المكلف: <b>{t.assignee}</b> | تاريخ الاستحقاق: {fmtDate(t.due)}</p>
+                          </div>
+                        </div>
+                        <Badge className={TASK_PRIORITY[t.priority]}>{t.priority}</Badge>
+                      </div>
+                    ))
+                  )}
                 </div>
               </>
             )}
@@ -8135,6 +9869,22 @@ export default function App() {
                     >
                       <Settings size={15} /> إعدادات البريد (SMTP)
                     </button>
+
+                    {inAppEmails.length > 0 && (
+                      <button
+                        onClick={() => {
+                          if (confirm("هل أنت متأكد من تفريغ كافة الرسائل في البريد الإلكتروني؟")) {
+                            setInAppEmails([]);
+                            saveStorage("firm_in_app_emails", []);
+                            setSelectedEmailId(null);
+                            setPermissionNotice("تم تفريغ صندوق البريد الإلكتروني بنجاح.");
+                          }
+                        }}
+                        className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 px-3 py-2 text-xs font-bold transition shadow-xs cursor-pointer"
+                      >
+                        <Trash2 size={14} /> تفريغ البريد
+                      </button>
+                    )}
 
                     <button
                       onClick={() => {
@@ -8242,7 +9992,11 @@ export default function App() {
                           .filter(e => e.folder === emailFolder)
                           .filter(e => !emailSearch || e.subject.includes(emailSearch) || e.sender.includes(emailSearch) || e.senderEmail.includes(emailSearch))
                           .length === 0 ? (
-                            <div className="p-8 text-center text-slate-400 text-xs">لا توجد رسائل في هذا المجلد</div>
+                            <div className="p-8 text-center text-slate-400 text-xs flex flex-col items-center justify-center h-full space-y-2">
+                              <Inbox size={28} className="text-slate-300" />
+                              <p className="font-bold text-slate-600">لا توجد رسائل في {emailFolder === "inbox" ? "صندوق الوارد" : emailFolder === "sent" ? "البريد الصادر" : emailFolder === "draft" ? "المسودات" : "سلة المهملات"}</p>
+                              <p className="text-[11px] text-slate-400">يمكنك إرسال بريد جديد أو تحديث المزامنة مع خادم البريد.</p>
+                            </div>
                           ) : (
                             inAppEmails
                               .filter(e => e.folder === emailFolder)
@@ -9214,8 +10968,8 @@ export default function App() {
                         </div>
 
                         {/* جدول الدفعات */}
-                        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-                          <table className="w-full text-sm">
+                        <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200 bg-white shadow-sm">
+                          <table className="w-full min-w-[700px] text-sm">
                             <thead className="bg-stone-50 text-right text-xs text-slate-500">
                               <tr>
                                 <th className="px-4 py-3 font-semibold">رقم السند / المرجع</th>
@@ -9426,8 +11180,8 @@ export default function App() {
                             <button onClick={() => openModalWithCheck("invoice", "manageInvoices")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> إصدار فاتورة ضريبية</button>
                           </div>
                         </div>
-                        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-                          <table className="w-full text-sm">
+                        <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200 bg-white shadow-sm">
+                          <table className="w-full min-w-[700px] text-sm">
                             <thead className="bg-stone-50 text-right text-xs text-slate-500">
                               <tr>
                                 <th className="px-4 py-3 font-semibold">رقم الفاتورة</th>
@@ -9579,8 +11333,8 @@ export default function App() {
                         </div>
 
                         {/* جدول سجل الأمانات */}
-                        <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-                          <table className="w-full text-sm">
+                        <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200 bg-white shadow-sm">
+                          <table className="w-full min-w-[650px] text-sm">
                             <thead className="bg-stone-50 text-right text-xs text-slate-500">
                               <tr>
                                 <th className="px-4 py-3 font-semibold">السند / التاريخ</th>
@@ -9715,7 +11469,7 @@ export default function App() {
           <Edit2 size={16} className="text-amber-600" /> البيانات المتغيرة للاتفاقية
         </h3>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <Field label="تاريخ إبرام العقد">
             <input type="date" value={agrForm.contractDate} onChange={(e) => setAgr("contractDate", e.target.value)} className={inputCls} />
           </Field>
@@ -9730,7 +11484,7 @@ export default function App() {
 
         {/* اختيار موكل جديد أو موجود */}
         <div className="rounded-xl bg-stone-50 border border-stone-200 p-3.5 space-y-3">
-          <div className="flex items-center gap-4 text-xs font-bold text-slate-700">
+          <div className="flex flex-wrap items-center gap-4 text-xs font-bold text-slate-700">
             <label className="flex items-center gap-1.5 cursor-pointer">
               <input type="radio" name="clientMode" checked={agrForm.clientMode === "new"} onChange={() => setAgr("clientMode", "new")} className="accent-amber-600" />
               موكل جديد (يُضاف تلقائياً لقائمة الموكلين)
@@ -9752,7 +11506,7 @@ export default function App() {
             </Field>
           ) : (
             <>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="اسم الموكل (عربي)">
                   <input value={agrForm.clientNameAr} onChange={(e) => setAgr("clientNameAr", e.target.value)} placeholder="مثال: يو اس كي للمعادن ذ.م.م" className={inputCls} />
                 </Field>
@@ -9760,7 +11514,7 @@ export default function App() {
                   <input dir="ltr" value={agrForm.clientNameEn} onChange={(e) => setAgr("clientNameEn", e.target.value)} placeholder="e.g. U.S.K. Metals L.L.C." className={inputCls} />
                 </Field>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="الصفة">
                   <select value={agrForm.clientType} onChange={(e) => setAgr("clientType", e.target.value)} className={inputCls}>
                     <option>شركة</option>
@@ -9771,7 +11525,7 @@ export default function App() {
                   <input value={agrForm.idNo} onChange={(e) => setAgr("idNo", e.target.value)} placeholder="رقم الهوية أو الرخصة" className={inputCls} />
                 </Field>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="البريد الإلكتروني">
                   <input dir="ltr" value={agrForm.email} onChange={(e) => setAgr("email", e.target.value)} placeholder="client@email.ae" className={inputCls} />
                 </Field>
@@ -9786,7 +11540,7 @@ export default function App() {
             </>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="ويمثلها / يمثله (عربي)">
               <input value={agrForm.representativeAr} onChange={(e) => setAgr("representativeAr", e.target.value)} placeholder="مثال: خالد بشير أوان بن محمد بشير" className={inputCls} />
             </Field>
@@ -10404,8 +12158,8 @@ export default function App() {
                       <EmptyState icon={UserCheck} text="لا توجد سجلات KYC مضافة حتى الآن" />
                     ) : (
                       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-sm">
+                        <div className="overflow-x-auto custom-scrollbar">
+                          <table className="w-full min-w-[750px] text-sm">
                             <thead className="bg-stone-50 text-right text-xs text-slate-500 border-b border-slate-100">
                               <tr>
                                 <th className="px-4 py-3 font-semibold">الموكل</th>
@@ -10630,8 +12384,8 @@ export default function App() {
 
                     {/* جدول السجلات */}
                     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-right text-xs">
+                      <div className="overflow-x-auto custom-scrollbar">
+                        <table className="w-full min-w-[750px] text-right text-xs">
                           <thead className="border-b border-slate-200 bg-slate-900 text-amber-400 font-bold">
                             <tr>
                               <th className="px-4 py-3.5">الوقت والتاريخ</th>
@@ -11069,17 +12823,18 @@ export default function App() {
                   </div>
                   <div className="flex items-center gap-2 text-xs bg-slate-800/80 p-2 rounded-xl border border-slate-700">
                     <Key size={14} className="text-amber-400" />
-                    <span>الصلاحيات المتاحة: <b>{getActivePermissionsCount(currentUser)} من 12</b></span>
+                    <span>الصلاحيات المتاحة: <b>{getActivePermissionsCount(currentUser)} من {PERMISSION_MODULES.length}</b></span>
                   </div>
                 </div>
 
                 {/* دليل أدوار المستخدمين المتاحة */}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {[
-                    { key: "admin", name: "مدير النظام / شريك", icon: ShieldCheck, color: "border-amber-400 bg-amber-50/50 text-amber-800", desc: "كامل الصلاحيات المالية والإدارية وحذف الملفات" },
-                    { key: "lawyer", name: "محامٍ مستشار", icon: Briefcase, color: "border-indigo-400 bg-indigo-50/50 text-indigo-800", desc: "القضايا والجلسات والمهام دون تعديل الميزانية" },
-                    { key: "secretary", name: "سكرتارية وتنسيق", icon: Users, color: "border-purple-400 bg-purple-50/50 text-purple-800", desc: "المواعيد والموكلين دون الاطلاع على الفواتير" },
-                    { key: "accountant", name: "محاسب المكتب", icon: Receipt, color: "border-emerald-400 bg-emerald-50/50 text-emerald-800", desc: "الفواتير والأتعاب والضريبة دون تغيير صياغة القضية" },
+                    { key: "admin", name: "مدير النظام / شريك", icon: ShieldCheck, color: "border-amber-400 bg-amber-50/50 text-amber-800", desc: "كامل الصلاحيات القانونية والمالية والإدارية وحذف الملفات" },
+                    { key: "supervisor", name: "مشرف ومراجع إداري", icon: Shield, color: "border-blue-400 bg-blue-50/50 text-blue-800", desc: "الإشراف الشامل والمراجعة والتدقيق مع حظر حذف الملفات" },
+                    { key: "lawyer", name: "محامٍ مستشار", icon: Briefcase, color: "border-indigo-400 bg-indigo-50/50 text-indigo-800", desc: "القضايا والجلسات والمستندات والمهام دون تعديل الفواتير" },
+                    { key: "secretary", name: "سكرتارية وتنسيق", icon: Users, color: "border-purple-400 bg-purple-50/50 text-purple-800", desc: "المواعيد والجلسات والموكلين دون الاطلاع على الأتعاب" },
+                    { key: "accountant", name: "محاسب المكتب", icon: Receipt, color: "border-emerald-400 bg-emerald-50/50 text-emerald-800", desc: "الفواتير والأتعاب والضريبة والامتثال وإدارة الكادر" },
                   ].map((role) => (
                     <div key={role.key} className={`p-4 rounded-2xl border ${role.color} space-y-1.5`}>
                       <div className="flex items-center gap-2 font-bold text-sm">
@@ -11097,8 +12852,8 @@ export default function App() {
                     <h3 className="font-bold text-slate-900 text-base">سجل أعضاء فريق العمل بالمكتب</h3>
                     <span className="text-xs text-slate-500 font-medium">إجمالي: {users.length} مستخدمين</span>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
+                  <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full min-w-[700px] text-sm">
                       <thead className="bg-stone-50 text-right text-xs text-slate-500 border-b border-slate-100">
                         <tr>
                           <th className="px-4 py-3 font-semibold">المستخدم</th>
@@ -11106,14 +12861,14 @@ export default function App() {
                           <th className="px-4 py-3 font-semibold">البريد والهاتف</th>
                           <th className="px-4 py-3 font-semibold">كلمة المرور</th>
                           <th className="px-4 py-3 font-semibold">الحالة</th>
-                          <th className="px-4 py-3 font-semibold text-center">الصلاحيات المفتوحة</th>
+                          <th className="px-4 py-3 font-semibold text-center">الأقسام المصرح بها</th>
                           <th className="px-4 py-3 font-semibold text-center">إجراءات</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
                         {users.map((u) => {
                           const openCount = getActivePermissionsCount(u);
-                          const totalCount = 12;
+                          const totalCount = PERMISSION_MODULES.length;
                           return (
                             <tr key={u.id} className="hover:bg-amber-50/40">
                               <td className="px-4 py-3 font-semibold">
@@ -11128,7 +12883,7 @@ export default function App() {
                                 </div>
                               </td>
                               <td className="px-4 py-3">
-                                <Badge className={u.roleKey === "admin" ? "bg-amber-100 text-amber-800" : u.roleKey === "lawyer" ? "bg-indigo-100 text-indigo-700" : u.roleKey === "accountant" ? "bg-emerald-100 text-emerald-700" : "bg-purple-100 text-purple-700"}>
+                                <Badge className={u.roleKey === "admin" ? "bg-amber-100 text-amber-800" : u.roleKey === "lawyer" ? "bg-indigo-100 text-indigo-700" : u.roleKey === "accountant" ? "bg-emerald-100 text-emerald-700" : u.roleKey === "supervisor" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"}>
                                   {u.roleTitle}
                                 </Badge>
                               </td>
@@ -11167,7 +12922,7 @@ export default function App() {
                                 )}
                               </td>
                               <td className="px-4 py-3 text-center">
-                                <span className="font-mono text-xs font-bold text-slate-800">
+                                <span className="font-mono text-xs font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
                                   {openCount} / {totalCount}
                                 </span>
                               </td>
@@ -11219,32 +12974,32 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* مصفوفة الصلاحيات التفصيلية التفاعلية للأقسام الـ 12 */}
+                {/* مصفوفة الصلاحيات التفصيلية التفاعلية للأقسام الـ 18 المعتمدة */}
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-                        <ShieldCheck className="text-amber-600" /> مصفوفة التحكم التفاعلية بالأقسام الـ 12 (Permission Matrix)
+                        <ShieldCheck className="text-amber-600" /> مصفوفة التحكم التفاعلية بالأقسام والتبويبات الـ 18 (Permission Matrix)
                       </h3>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        سياسة الحظر الافتراضي (Default-Deny Policy): يمكنك الضغط على خانة أي قسم لتفعيله أو إلغائه فوراً لكل عضو (المزامنة حية ومباشرة مع Supabase Profiles)
+                        سياسة الحظر الافتراضي (Default-Deny Policy): يمكنك النقر على خانة أي قسم لتفعيله أو إلغائه فوراً لكل عضو (المزامنة حية ومباشرة مع الملف التعريفي)
                       </p>
                     </div>
                     <Badge className="bg-amber-100 text-amber-900 font-bold border border-amber-300">
-                      إجمالي الأقسام: 12
+                      إجمالي الأقسام: {PERMISSION_MODULES.length} قسماً معتمداً
                     </Badge>
                   </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
+                  <div className="overflow-x-auto custom-scrollbar">
+                    <table className="w-full min-w-[700px] text-xs">
                       <thead className="bg-slate-900 text-white text-right">
                         <tr>
-                          <th className="p-3 rounded-r-xl">القسم / الموديول (12 قسم)</th>
+                          <th className="p-3 rounded-r-xl">القسم / الموديول ({PERMISSION_MODULES.length} قسماً)</th>
                           {users.map((u) => (
                             <th key={u.id} className="p-3 text-center font-bold">
                               {u.name}
                               <span className="block text-[10px] text-amber-400 font-normal">{u.roleTitle.split("—")[0]}</span>
                               <span className="block text-[10px] font-mono font-normal text-slate-300 mt-0.5">
-                                ({getActivePermissionsCount(u)}/12)
+                                ({getActivePermissionsCount(u)}/{PERMISSION_MODULES.length})
                               </span>
                             </th>
                           ))}
@@ -11254,8 +13009,13 @@ export default function App() {
                         {PERMISSION_MODULES.map((mod) => (
                           <tr key={mod.id} className="hover:bg-slate-50">
                             <td className="p-3 font-semibold text-slate-800">
-                              <p className="font-bold text-slate-900">{mod.label}</p>
-                              <p className="text-[11px] text-slate-400 font-normal">{mod.desc}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] px-2 py-0.5 rounded-md bg-stone-100 text-slate-600 font-normal">
+                                  {mod.category}
+                                </span>
+                                <p className="font-bold text-slate-900">{mod.label}</p>
+                              </div>
+                              <p className="text-[11px] text-slate-400 font-normal mt-0.5">{mod.desc}</p>
                             </td>
                             {users.map((u) => {
                               const hasIt = hasTabPermission(u, mod.navTabIds[0]);
@@ -11263,7 +13023,7 @@ export default function App() {
                                 <td key={u.id} className="p-3 text-center">
                                   <button
                                     onClick={() => toggleUserPermission(u.id, mod.id)}
-                                    className={`w-7 h-7 rounded-lg inline-flex items-center justify-center transition ${hasIt ? "bg-emerald-500 text-white shadow-sm" : "bg-slate-100 text-slate-300 hover:bg-slate-200"}`}
+                                    className={`w-7 h-7 rounded-lg inline-flex items-center justify-center transition cursor-pointer ${hasIt ? "bg-emerald-500 text-white shadow-sm hover:bg-emerald-600" : "bg-slate-100 text-slate-300 hover:bg-slate-200"}`}
                                     title={`انقر لتعديل صلاحية قسم [${mod.label}] لـ ${u.name}`}
                                   >
                                     {hasIt ? <Check size={16} /> : <Minus size={16} />}
@@ -11311,6 +13071,19 @@ export default function App() {
                         className="hidden"
                       />
                     </label>
+
+                    <button
+                      onClick={() => {
+                        if (window.confirm("هل ترغب في إعادة تحميل واستعادة الدليل المعتمد الشامل للمحاكم والجهات (497 جهة وموظف)؟")) {
+                          setCourtContacts(seedCourtContacts);
+                          saveStorage("firm_court_contacts", seedCourtContacts);
+                        }
+                      }}
+                      className="flex items-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-300 px-3.5 py-2.5 text-xs font-bold text-indigo-800 hover:bg-indigo-100 shadow-sm transition"
+                      title="استعادة أو تحديث الدليل الشامل المعتمد بجميع الأرقام والمعلومات الرسمية"
+                    >
+                      <RotateCw size={15} /> استعادة الدليل المعتمد (497 جهة)
+                    </button>
 
                     <button
                       onClick={() => {
@@ -11437,15 +13210,102 @@ export default function App() {
                         onChange={(e) => setCourtCategoryFilter(e.target.value)}
                         className={inputCls}
                       >
-                        <option value="الكل">جميع التخصصات والأقسام</option>
-                        <option value="قيد الدعاوى والمذكرات">قيد الدعاوى والمذكرات</option>
-                        <option value="إدارة التنفيذ والإنابات">إدارة التنفيذ والإنابات</option>
-                        <option value="أمانات الخبراء والتقارير">أمانات الخبراء والتقارير</option>
-                        <option value="الأحوال الشخصية والتركات">الأحوال الشخصية والتركات</option>
-                        <option value="الطعون والاستئناف">الطعون والاستئناف</option>
-                        <option value="الأمور المستعجلة والعرائض">الأمور المستعجلة والعرائض</option>
+                        <option value="الكل">جميع التخصصات والجهات (الكل)</option>
+                        <option value="المؤسسات العقابية والإصلاحية">🔒 المؤسسات العقابية والإصلاحية والسجون</option>
+                        <option value="الكاتب العدل والتوثيقات">⚖️ الكاتب العدل والتوثيقات والمأذونين</option>
+                        <option value="النيابات العامة">🏢 النيابات العامة وأمن الدولة</option>
+                        <option value="التوجيه والإصلاح الأسري">👨‍👩‍👧‍👦 التوجيه والإصلاح الأسري والأحوال الشخصية</option>
+                        <option value="إدارة التنفيذ والإنابات">📋 إدارة التنفيذ والإنابات القضائية</option>
+                        <option value="قيد الدعاوى والمذكرات">📂 قيد الدعاوى ومكاتب إدارة الدعوى</option>
+                        <option value="الطعون والاستئناف">📜 الطعون والاستئناف والتمييز</option>
+                        <option value="أمانات الخبراء والتقارير">📊 أمانات الخبراء والتقارير الحسابية</option>
+                        <option value="الأمور المستعجلة والعرائض">⚡ الأمور المستعجلة والأوامر على العرائض</option>
                       </select>
                     </div>
+                  </div>
+
+                  {/* أزرار التصفية السريعة بالشرائح */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100">
+                    <span className="text-xs font-bold text-slate-500 flex items-center gap-1">
+                      <Filter size={13} /> تصفية سريعة:
+                    </span>
+                    <button
+                      onClick={() => setCourtCategoryFilter("الكل")}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${courtCategoryFilter === "الكل" ? "bg-slate-900 text-white shadow-sm" : "bg-slate-100 text-slate-700 hover:bg-slate-200"}`}
+                    >
+                      <span>الكل</span>
+                      <span className="opacity-80 font-mono text-[11px]">({courtContacts.length})</span>
+                    </button>
+
+                    <button
+                      onClick={() => setCourtCategoryFilter("المؤسسات العقابية والإصلاحية")}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${courtCategoryFilter === "المؤسسات العقابية والإصلاحية" ? "bg-rose-700 text-white shadow-sm" : "bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100"}`}
+                    >
+                      <Lock size={12} className={courtCategoryFilter === "المؤسسات العقابية والإصلاحية" ? "text-white" : "text-rose-600"} />
+                      <span>المؤسسات العقابية والسجون</span>
+                      <span className="opacity-80 font-mono text-[11px]">
+                        ({courtContacts.filter(c => {
+                          const t = `${c.courtName} ${c.department} ${c.titleOrEmployee} ${c.notes}`.toLowerCase();
+                          return t.includes("عقاب") || t.includes("سجن") || t.includes("توقيف") || t.includes("منشآت عقابية") || (t.includes("إصلاح") && !t.includes("أسري"));
+                        }).length})
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => setCourtCategoryFilter("الكاتب العدل والتوثيقات")}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${courtCategoryFilter === "الكاتب العدل والتوثيقات" ? "bg-amber-700 text-white shadow-sm" : "bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100"}`}
+                    >
+                      <FileText size={12} className={courtCategoryFilter === "الكاتب العدل والتوثيقات" ? "text-white" : "text-amber-600"} />
+                      <span>الكاتب العدل</span>
+                      <span className="opacity-80 font-mono text-[11px]">
+                        ({courtContacts.filter(c => {
+                          const t = `${c.courtName} ${c.department} ${c.titleOrEmployee}`.toLowerCase();
+                          return t.includes("كاتب عدل") || t.includes("توثيق") || t.includes("مأذون");
+                        }).length})
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => setCourtCategoryFilter("النيابات العامة")}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${courtCategoryFilter === "النيابات العامة" ? "bg-purple-700 text-white shadow-sm" : "bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100"}`}
+                    >
+                      <Building2 size={12} className={courtCategoryFilter === "النيابات العامة" ? "text-white" : "text-purple-600"} />
+                      <span>النيابات العامة</span>
+                      <span className="opacity-80 font-mono text-[11px]">
+                        ({courtContacts.filter(c => {
+                          const t = `${c.courtName} ${c.department} ${c.titleOrEmployee}`.toLowerCase();
+                          return t.includes("نياب") || t.includes("أمن الدولة");
+                        }).length})
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => setCourtCategoryFilter("التوجيه والإصلاح الأسري")}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${courtCategoryFilter === "التوجيه والإصلاح الأسري" ? "bg-teal-700 text-white shadow-sm" : "bg-teal-50 text-teal-900 border border-teal-200 hover:bg-teal-100"}`}
+                    >
+                      <Users size={12} className={courtCategoryFilter === "التوجيه والإصلاح الأسري" ? "text-white" : "text-teal-600"} />
+                      <span>التوجيه والأسرة</span>
+                      <span className="opacity-80 font-mono text-[11px]">
+                        ({courtContacts.filter(c => {
+                          const t = `${c.courtName} ${c.department} ${c.titleOrEmployee}`.toLowerCase();
+                          return t.includes("أسري") || t.includes("أحوال") || t.includes("تركات") || t.includes("توجيه أسري") || t.includes("إصلاح أسري");
+                        }).length})
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => setCourtCategoryFilter("إدارة التنفيذ والإنابات")}
+                      className={`px-3 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${courtCategoryFilter === "إدارة التنفيذ والإنابات" ? "bg-blue-700 text-white shadow-sm" : "bg-blue-50 text-blue-900 border border-blue-200 hover:bg-blue-100"}`}
+                    >
+                      <Gavel size={12} className={courtCategoryFilter === "إدارة التنفيذ والإنابات" ? "text-white" : "text-blue-600"} />
+                      <span>إدارات التنفيذ</span>
+                      <span className="opacity-80 font-mono text-[11px]">
+                        ({courtContacts.filter(c => {
+                          const t = `${c.courtName} ${c.department} ${c.titleOrEmployee}`.toLowerCase();
+                          return t.includes("تنفيذ") || t.includes("إنابات");
+                        }).length})
+                      </span>
+                    </button>
                   </div>
                 </div>
 
@@ -11463,7 +13323,27 @@ export default function App() {
                       c.notes.includes(courtSearchQuery);
 
                     const matchEmirate = courtEmirateFilter === "الكل" || c.emirate === courtEmirateFilter;
-                    const matchCategory = courtCategoryFilter === "الكل" || c.department.includes(courtCategoryFilter);
+                    
+                    let matchCategory = true;
+                    if (courtCategoryFilter === "المؤسسات العقابية والإصلاحية") {
+                      const t = `${c.courtName} ${c.department} ${c.titleOrEmployee} ${c.notes}`.toLowerCase();
+                      matchCategory = t.includes("عقاب") || t.includes("سجن") || t.includes("توقيف") || t.includes("منشآت عقابية") || (t.includes("إصلاح") && !t.includes("أسري"));
+                    } else if (courtCategoryFilter === "الكاتب العدل والتوثيقات") {
+                      const t = `${c.courtName} ${c.department} ${c.titleOrEmployee}`.toLowerCase();
+                      matchCategory = t.includes("كاتب عدل") || t.includes("توثيق") || t.includes("مأذون");
+                    } else if (courtCategoryFilter === "النيابات العامة") {
+                      const t = `${c.courtName} ${c.department} ${c.titleOrEmployee}`.toLowerCase();
+                      matchCategory = t.includes("نياب") || t.includes("أمن الدولة");
+                    } else if (courtCategoryFilter === "التوجيه والإصلاح الأسري") {
+                      const t = `${c.courtName} ${c.department} ${c.titleOrEmployee}`.toLowerCase();
+                      matchCategory = t.includes("أسري") || t.includes("أحوال") || t.includes("تركات") || t.includes("توجيه أسري") || t.includes("إصلاح أسري");
+                    } else if (courtCategoryFilter === "إدارة التنفيذ والإنابات") {
+                      const t = `${c.courtName} ${c.department} ${c.titleOrEmployee}`.toLowerCase();
+                      matchCategory = t.includes("تنفيذ") || t.includes("إنابات");
+                    } else if (courtCategoryFilter !== "الكل") {
+                      const t = `${c.courtName} ${c.department} ${c.titleOrEmployee}`.toLowerCase();
+                      matchCategory = t.includes(courtCategoryFilter.toLowerCase());
+                    }
 
                     return matchQ && matchEmirate && matchCategory;
                   });
@@ -11472,23 +13352,40 @@ export default function App() {
                     return (
                       <EmptyState
                         icon={Landmark}
-                        text="لم يتم العثور على جهات أو أقسام محاكمة تطابق شروط البحث الحالية"
+                        text="لم يتم العثور على جهات أو أقسام تطابق شروط البحث والفلترة الحالية"
                       />
                     );
                   }
 
                   return (
                     <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-                      {filteredContacts.map((c) => (
-                        <div key={c.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4">
+                      {filteredContacts.map((c) => {
+                        const isPenalRecord = (() => {
+                          const t = `${c.courtName} ${c.department} ${c.titleOrEmployee} ${c.notes}`.toLowerCase();
+                          return t.includes("عقاب") || t.includes("سجن") || t.includes("توقيف") || t.includes("منشآت عقابية") || (t.includes("إصلاح") && !t.includes("أسري"));
+                        })();
+
+                        return (
+                        <div key={c.id} className={`rounded-2xl border bg-white p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between space-y-4 ${isPenalRecord ? "border-rose-200 ring-1 ring-rose-100" : "border-slate-200"}`}>
                           <div className="space-y-3">
                             {/* الرأس: اسم المحكمة والإمارة */}
                             <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
                               <div>
-                                <h3 className="font-bold text-slate-900 text-base flex items-center gap-1.5">
-                                  <Landmark size={18} className="text-amber-600 shrink-0" />
-                                  <span>{c.courtName}</span>
-                                </h3>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <h3 className="font-bold text-slate-900 text-base flex items-center gap-1.5">
+                                    {isPenalRecord ? (
+                                      <Lock size={18} className="text-rose-600 shrink-0" />
+                                    ) : (
+                                      <Landmark size={18} className="text-amber-600 shrink-0" />
+                                    )}
+                                    <span>{c.courtName}</span>
+                                  </h3>
+                                  {isPenalRecord && (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                                      مؤسسة عقابية / سجن
+                                    </span>
+                                  )}
+                                </div>
                                 <p className="text-xs font-semibold text-amber-800 mt-1">{c.department}</p>
                               </div>
                               <Badge className="bg-slate-900 text-amber-400 shrink-0 font-bold">{c.emirate}</Badge>
@@ -11647,7 +13544,7 @@ export default function App() {
                             </div>
                           </div>
                         </div>
-                      ))}
+                      );})}
                     </div>
                   );
                 })()}
@@ -11807,8 +13704,8 @@ export default function App() {
                       </span>
                     </div>
 
-                    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
-                      <table className="w-full text-right text-xs">
+                    <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200 bg-white shadow-xs">
+                      <table className="w-full min-w-[750px] text-right text-xs">
                         <thead className="bg-slate-900 text-white font-bold">
                           <tr>
                             <th className="p-3.5 rounded-r-xl">الموظف والمسمى الوظيفي</th>
@@ -11926,8 +13823,8 @@ export default function App() {
                 {/* SUB TAB 2: LEAVE REQUESTS */}
                 {hrSubTab === "leaves" && (
                   <div className="space-y-4">
-                    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
-                      <table className="w-full text-right text-xs">
+                    <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200 bg-white shadow-xs">
+                      <table className="w-full min-w-[700px] text-right text-xs">
                         <thead className="bg-slate-900 text-white font-bold">
                           <tr>
                             <th className="p-3.5 rounded-r-xl">الموظف</th>
@@ -11998,8 +13895,8 @@ export default function App() {
                 {/* SUB TAB 3: EMPLOYEE EXPENSES */}
                 {hrSubTab === "expenses" && (
                   <div className="space-y-4">
-                    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
-                      <table className="w-full text-right text-xs">
+                    <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200 bg-white shadow-xs">
+                      <table className="w-full min-w-[650px] text-right text-xs">
                         <thead className="bg-slate-900 text-white font-bold">
                           <tr>
                             <th className="p-3.5 rounded-r-xl">الموظف</th>
@@ -12144,7 +14041,7 @@ export default function App() {
             <Field label="الخصم">
               <input onChange={f("opponent")} placeholder="اسم المدعى عليه أو الخصم" className={inputCls} />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="نوع الدعوى">
                 <select onChange={f("type")} className={inputCls}>
                   {CASE_TYPES.map((t) => <option key={t}>{t}</option>)}
@@ -12185,7 +14082,7 @@ export default function App() {
             <Field label="الاسم الكامل / اسم الشركة / الجهة">
               <input onChange={f("name")} placeholder="الاسم الكامل أو اسم الشركة أو الجهة" className={inputCls} />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="الصفة / التصنيف">
                 <select onChange={f("type")} className={inputCls}>
                   <option value="فرد">فرد (شخص)</option>
@@ -12198,7 +14095,7 @@ export default function App() {
                 <input onChange={f("idNo")} placeholder="الهوية الإماراتية أو الرخصة التجارية" className={inputCls} />
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="رقم الهاتف">
                 <input onChange={f("phone")} placeholder="050-XXXXXXX" className={inputCls} />
               </Field>
@@ -12238,7 +14135,7 @@ export default function App() {
                 {cases.map((c) => <option key={c.id} value={c.id}>{c.number} - {clientName(c.clientId)}</option>)}
               </select>
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="تاريخ الجلسة">
                 <input type="date" onChange={f("date")} className={inputCls} />
               </Field>
@@ -12246,7 +14143,7 @@ export default function App() {
                 <input type="time" onChange={f("time")} defaultValue="09:00" className={inputCls} />
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="نوع الجلسة">
                 <select onChange={f("type")} className={inputCls}>
                   {HEARING_TYPES.map((h) => <option key={h}>{h}</option>)}
@@ -12276,7 +14173,7 @@ export default function App() {
                 {cases.map((c) => <option key={c.id} value={c.id}>{c.number}</option>)}
               </select>
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="المكلف بالمهمة">
                 <select onChange={f("assignee")} className={inputCls}>
                   {users.map((u) => <option key={u.id} value={u.name}>{u.name} ({u.roleTitle})</option>)}
@@ -12485,7 +14382,7 @@ export default function App() {
             )}
 
             {/* المبلغ وتاريخ السداد */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="مبلغ الدفعة المقبوضة (د.إ)">
                 <input
                   type="number"
@@ -12506,7 +14403,7 @@ export default function App() {
             </div>
 
             {/* طريقة السداد والاطلاع المالي */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="طريقة السداد">
                 <select
                   onChange={f("paymentMethod")}
@@ -12556,7 +14453,7 @@ export default function App() {
             <Field label="اسم المستند">
               <input onChange={f("name")} placeholder="مثال: صحيفة الدعوى 2026.pdf" className={inputCls} />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="نوع المستند">
                 <select onChange={f("type")} className={inputCls}>
                   {DOC_TYPES.map((t) => <option key={t}>{t}</option>)}
@@ -12586,7 +14483,7 @@ export default function App() {
             <Field label="رقم الوكالة الموثقة">
               <input onChange={f("number")} placeholder="مثال: وكالة 2026/1/4502" className={inputCls} />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="الجهة المصدرة">
                 <input onChange={f("issuer")} placeholder="كاتب العدل - دبي" className={inputCls} />
               </Field>
@@ -12608,7 +14505,7 @@ export default function App() {
             <Field label="الاسم الكامل">
               <input onChange={f("name")} defaultValue={form.name || ""} placeholder="اسم الموظف أو المحامي" className={inputCls} />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="البريد الإلكتروني">
                 <input onChange={f("email")} defaultValue={form.email || ""} placeholder="user@law.ae" className={inputCls} />
               </Field>
@@ -12645,29 +14542,98 @@ export default function App() {
               <input type="password" readOnly disabled value="••••••••" className={`${inputCls} bg-stone-100 text-slate-500 cursor-not-allowed`} />
             </Field>
 
-            {/* تخصيص صلاحيات الوصول للأقسام الـ 12 */}
-            <div className="space-y-2 border-t border-slate-200 pt-3">
+            {/* تخصيص صلاحيات الوصول للأقسام والتبويبات الـ 18 */}
+            <div className="space-y-3 border-t border-slate-200 pt-3">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                   <ShieldCheck size={15} className="text-amber-600" />
-                  تخصيص صلاحيات الأقسام الـ 12 (Comprehensive 12 Modules):
+                  صلاحيات الأقسام والتبويبات الـ 18 (System Modules):
                 </p>
-                <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200 font-mono">
-                  {Object.values(form.permissions || ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions || {}).filter(Boolean).length} / 12
+                <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200 font-mono">
+                  {Object.keys(form.permissions || ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions || {}).filter((k) => PERMISSION_MODULES.some((m) => m.id === k) && Boolean((form.permissions || ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions || {})[k as keyof RolePermissions])).length} / {PERMISSION_MODULES.length}
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 leading-snug">
-                تطبيق حظر افتراضي تلقائي: الأقسام المحددة باللون الأخضر فقط هي ما يستطيع الموظف مشاهدته بالقائمة الجانبية.
+                تطبيق سياسة الحظر الافتراضي: الأقسام المحددة باللون الأخضر فقط هي ما يُصرح للموظف بمشاهدتها والتنقل إليها.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-y-auto p-2 border border-slate-200 rounded-xl bg-slate-50/50">
-                {PERMISSION_MODULES.map((mod) => {
+              
+              <div className="max-h-64 overflow-y-auto p-2 border border-slate-200 rounded-xl bg-slate-50/50 space-y-3">
+                {(["العمليات القانونية", "التواصل والمهام", "المالية والعقود", "الإدارة والامتثال"] as const).map((cat) => {
+                  const catModules = PERMISSION_MODULES.filter((m) => m.category === cat);
+                  return (
+                    <div key={cat} className="space-y-1.5">
+                      <div className="text-[11px] font-bold text-slate-700 flex items-center gap-1 px-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                        {cat} ({catModules.length} أقسام)
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {catModules.map((mod) => {
+                          const activePerms = form.permissions || (editingUser ? editingUser.permissions : ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions) || {};
+                          const isEnabled = Boolean(activePerms[mod.id] || (editingUser && hasTabPermission(editingUser, mod.navTabIds[0])));
+                          return (
+                            <label
+                              key={mod.id}
+                              className={`flex items-start gap-2 p-2 rounded-xl border transition cursor-pointer ${
+                                isEnabled ? "bg-emerald-50 border-emerald-300 text-slate-900" : "bg-white border-slate-200 text-slate-400 hover:bg-slate-100"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={isEnabled}
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  setForm((prev) => {
+                                    const basePerms = prev.permissions || (editingUser ? editingUser.permissions : ROLE_PRESETS[prev.roleKey || "lawyer"]?.permissions) || {};
+                                    return {
+                                      ...prev,
+                                      permissions: {
+                                        ...basePerms,
+                                        [mod.id]: checked
+                                      }
+                                    };
+                                  });
+                                }}
+                                className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                              />
+                              <div className="text-xs">
+                                <span className="font-bold block leading-tight text-slate-900">{mod.label}</span>
+                                <span className="text-[10px] text-slate-500 block mt-0.5 leading-snug">{mod.desc}</span>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* مصفوفة صلاحيات العمليات الدقيقة والتفويضات الإجرائية */}
+            <div className="space-y-3 border-t border-slate-200 pt-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                  <Key size={14} className="text-amber-600" />
+                  صلاحيات العمليات والتقاضي الدقيقة (Granular Action Permissions):
+                </p>
+                <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-semibold">
+                  {DETAILED_ACTION_PERMISSIONS.length} إجراء
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-slate-200 rounded-xl bg-white">
+                {DETAILED_ACTION_PERMISSIONS.map((action) => {
                   const activePerms = form.permissions || (editingUser ? editingUser.permissions : ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions) || {};
-                  const isEnabled = Boolean(activePerms[mod.id] || (editingUser && hasTabPermission(editingUser, mod.navTabIds[0])));
+                  const isEnabled = Boolean(activePerms[action.id]);
                   return (
                     <label
-                      key={mod.id}
-                      className={`flex items-start gap-2 p-2 rounded-xl border transition cursor-pointer ${
-                        isEnabled ? "bg-emerald-50 border-emerald-300 text-slate-900" : "bg-white border-slate-200 text-slate-400 hover:bg-slate-100"
+                      key={action.id}
+                      className={`flex items-start gap-2 p-2 rounded-xl border transition cursor-pointer text-xs ${
+                        isEnabled
+                          ? action.isSensitive
+                            ? "bg-red-50/60 border-red-300 text-red-900"
+                            : "bg-amber-50/60 border-amber-300 text-slate-900"
+                          : "bg-slate-50/60 border-slate-200 text-slate-400 hover:bg-slate-100"
                       }`}
                     >
                       <input
@@ -12681,16 +14647,21 @@ export default function App() {
                               ...prev,
                               permissions: {
                                 ...basePerms,
-                                [mod.id]: checked
+                                [action.id]: checked
                               }
                             };
                           });
                         }}
-                        className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                        className={`mt-0.5 rounded border-slate-300 ${action.isSensitive ? "text-red-600 focus:ring-red-500" : "text-amber-600 focus:ring-amber-500"}`}
                       />
-                      <div className="text-xs">
-                        <span className="font-bold block leading-tight text-slate-900">{mod.label}</span>
-                        <span className="text-[10px] text-slate-500 block mt-0.5 leading-snug">{mod.desc}</span>
+                      <div>
+                        <span className="font-bold block leading-tight text-slate-900 flex items-center gap-1">
+                          {action.label}
+                          {action.isSensitive && (
+                            <span className="text-[9px] px-1 py-0.2 rounded bg-red-100 text-red-700 font-bold">حساس</span>
+                          )}
+                        </span>
+                        <span className="text-[10px] text-slate-500 block mt-0.5 leading-snug">{action.desc}</span>
                       </div>
                     </label>
                   );
@@ -12769,7 +14740,7 @@ export default function App() {
       {(modal === "kyc" || modal === "kyc-edit") && (
         <Modal title={modal === "kyc-edit" ? "تعديل سجل اعرف عميلك (KYC)" : "إضافة سجل اعرف عميلك جديد"} onClose={() => setModal(null)} wide>
           <div className="space-y-4 text-sm">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="الموكل المعني">
                 <select onChange={f("clientId")} value={form.clientId || ""} className={inputCls}>
                   <option value="">إختر الموكل…</option>
@@ -12781,7 +14752,7 @@ export default function App() {
               </Field>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="نوع وثيقة الإثبات">
                 <input onChange={f("idType")} defaultValue={form.idType || "هوية إماراتية"} placeholder="رخصة تجارية / جواز سفر..." className={inputCls} />
               </Field>
@@ -12794,7 +14765,7 @@ export default function App() {
               <textarea onChange={f("ubo")} defaultValue={form.ubo || ""} rows={2} placeholder="أسماء الأشخاص الطبيعيين المالكين لـ 25% أو أكثر من رأس المال أو حق التصويت..." className={inputCls} />
             </Field>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="مصدر الأموال والنشاط الرئيسي">
                 <select onChange={f("sourceOfFunds")} defaultValue={form.sourceOfFunds || FUND_SOURCES[0]} className={inputCls}>
                   {FUND_SOURCES.map((s) => <option key={s}>{s}</option>)}
@@ -12808,7 +14779,7 @@ export default function App() {
               </Field>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Field label="فحص قوائم العقوبات">
                 <select onChange={f("sanctions")} defaultValue={form.sanctions || "سليم"} className={inputCls}>
                   {SANCTIONS_STATES.map((s) => <option key={s}>{s}</option>)}
@@ -12851,7 +14822,7 @@ export default function App() {
                 {cases.map((c) => <option key={c.id} value={c.id}>{c.number} - {clientName(c.clientId)}</option>)}
               </select>
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="عدد الساعات">
                 <input type="number" step="0.5" onChange={f("hours")} placeholder="مثال: 2.5" className={inputCls} />
               </Field>
@@ -12859,7 +14830,7 @@ export default function App() {
                 <input type="number" onChange={f("hourlyRate")} defaultValue="750" className={inputCls} />
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="المحامي / المستشار">
                 <select onChange={f("lawyerName")} defaultValue={currentUser.name} className={inputCls}>
                   {users.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
@@ -12887,7 +14858,7 @@ export default function App() {
                 {cases.map((c) => <option key={c.id} value={c.id}>{c.number} - {clientName(c.clientId)}</option>)}
               </select>
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="تصنيف المصروف">
                 <select onChange={f("category")} className={inputCls}>
                   <option>رسوم قضائية</option>
@@ -12901,7 +14872,7 @@ export default function App() {
                 <input type="number" onChange={f("amount")} placeholder="0.00" className={inputCls} />
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="تاريخ المصروف">
                 <input type="date" onChange={f("date")} defaultValue={todayISO()} className={inputCls} />
               </Field>
@@ -12936,7 +14907,7 @@ export default function App() {
                 {cases.map((c) => <option key={c.id} value={c.id}>{c.number}</option>)}
               </select>
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="نوع المعاملة">
                 <select onChange={f("type")} className={inputCls}>
                   <option value="إيداع أمانة">إيداع أمانة (+)</option>
@@ -12947,7 +14918,7 @@ export default function App() {
                 <input type="number" onChange={f("amount")} placeholder="0.00" className={inputCls} />
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="رقم السند / الشيك">
                 <input onChange={f("refNo")} placeholder="مثال: CHK-9902" className={inputCls} />
               </Field>
@@ -12973,7 +14944,7 @@ export default function App() {
                 {cases.map((c) => <option key={c.id} value={c.id}>{c.number} - {clientName(c.clientId)}</option>)}
               </select>
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="تاريخ صدور الحكم الرسمية">
                 <input type="date" onChange={f("rulingDate")} defaultValue={todayISO()} className={inputCls} />
               </Field>
@@ -12985,7 +14956,7 @@ export default function App() {
                 </select>
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="مهلة الطعن القانونية (أيام)">
                 <input type="number" onChange={f("appealDays")} defaultValue="30" className={inputCls} />
               </Field>
@@ -13105,7 +15076,7 @@ export default function App() {
               </select>
             </Field>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="بريد المحامي لاستلام التنبيهات">
                 <input
                   value={reassignDeadlineModal.assignedLawyerEmail || ""}
@@ -13162,7 +15133,7 @@ export default function App() {
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </Field>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="المبلغ المشتبه به (د.إ)">
                 <input type="number" onChange={f("amountFlagged")} placeholder="0.00" className={inputCls} />
               </Field>
@@ -13191,7 +15162,7 @@ export default function App() {
               <p>يتم توثيق الرسالة تلقائياً في سجل التنبيهات بمجرد الضغط على إرسال.</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="اسم المستلم">
                 <input
                   value={notifyModal.recipientName}
@@ -13212,7 +15183,7 @@ export default function App() {
               </Field>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="رقم الواتساب (+971)">
                 <input
                   value={notifyModal.recipientPhone}
@@ -13276,7 +15247,7 @@ export default function App() {
               />
             </Field>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="الإمارة">
                 <select value={form.emirate || "دبي"} onChange={f("emirate")} className={inputCls}>
                   {["دبي", "أبوظبي", "الشارقة", "عجمان", "رأس الخيمة", "أم القيوين", "الفجيرة"].map((e) => (
@@ -13304,7 +15275,7 @@ export default function App() {
               />
             </Field>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="رقم الهاتف المباشر">
                 <input
                   value={form.phone || ""}
@@ -13333,7 +15304,7 @@ export default function App() {
               />
             </Field>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="مواعيد العمل واستقبال المراجعين">
                 <input
                   value={form.operatingHours || ""}
@@ -13579,7 +15550,7 @@ export default function App() {
               </select>
             </Field>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="تاريخ البداية">
                 <input type="date" onChange={f("startDate")} defaultValue={form.startDate || todayISO()} className={inputCls} />
               </Field>
@@ -13611,7 +15582,7 @@ export default function App() {
               </select>
             </Field>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="بند / نوع المصروف">
                 <select onChange={f("category")} defaultValue={form.category || "COURT_FEES"} className={inputCls}>
                   <option value="COURT_FEES">رسوم محاكم وخدمات قضائية</option>
@@ -14875,8 +16846,8 @@ export default function App() {
             {excelCasesParsed.length > 0 && (
               <div className="space-y-3">
                 <p className="text-xs font-bold text-slate-800">معاينة البيانات المستخرجة ({excelCasesParsed.length} قضية):</p>
-                <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-xl">
-                  <table className="w-full text-xs">
+                <div className="max-h-60 overflow-y-auto overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl">
+                  <table className="w-full min-w-[550px] text-xs">
                     <thead className="bg-stone-50 text-right text-slate-600">
                       <tr>
                         <th className="p-2.5">رقم القضية</th>
@@ -15081,8 +17052,8 @@ export default function App() {
                 {excelInvoicesParsed.length > 0 && (
                   <div className="space-y-3">
                     <p className="text-xs font-bold text-slate-800">الفواتير المستخرجة ({excelInvoicesParsed.length}):</p>
-                    <div className="max-h-52 overflow-y-auto border border-slate-200 rounded-xl">
-                      <table className="w-full text-xs">
+                    <div className="max-h-52 overflow-y-auto overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl">
+                      <table className="w-full min-w-[450px] text-xs">
                         <thead className="bg-stone-50 text-right">
                           <tr>
                             <th className="p-2">رقم الفاتورة</th>
@@ -15167,8 +17138,8 @@ export default function App() {
             {kycWatchlistParsed.length > 0 && (
               <div className="space-y-3">
                 <p className="text-xs font-bold text-slate-800">الأشخاص والجهات المكتشفة ({kycWatchlistParsed.length}):</p>
-                <div className="max-h-56 overflow-y-auto border border-slate-200 rounded-xl">
-                  <table className="w-full text-xs">
+                <div className="max-h-56 overflow-y-auto overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl">
+                  <table className="w-full min-w-[450px] text-xs">
                     <thead className="bg-stone-50 text-right">
                       <tr>
                         <th className="p-2">الاسم</th>
@@ -15228,6 +17199,22 @@ export default function App() {
           </div>
         </Modal>
       )}
+
+      {/* ═══ مودال مزامنة جدول الجلسات مع Google Calendar ═══ */}
+      <GoogleCalendarSyncModal
+        isOpen={showGoogleCalendarModal}
+        onClose={() => setShowGoogleCalendarModal(false)}
+        hearings={hearings}
+        cases={cases}
+        clients={clients}
+        onHearingsUpdated={(updated) => setHearings(updated)}
+        googleUser={googleUser}
+        googleToken={googleToken}
+        onAuthChange={(user, token) => {
+          setGoogleUser(user);
+          setGoogleToken(token);
+        }}
+      />
 
       {/* ═══ مودال أكواد Supabase SQL و RLS ═══ */}
       <SupabaseSqlModal isOpen={showSupabaseModal} onClose={() => setShowSupabaseModal(false)} />

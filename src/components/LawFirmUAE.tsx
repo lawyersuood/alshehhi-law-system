@@ -284,12 +284,7 @@ const seedHearings: Hearing[] = [
   { id: 4, caseId: 4, date: addDays(-3), time: "09:00", type: "جلسة صلح", room: "لجنة التوجيه الأسري", notes: "تعذر الصلح وإحالة الدعوى للمحكمة", done: true },
 ];
 
-const seedTasks: TaskItem[] = [
-  { id: 1, title: "إعداد مذكرة جوابية في القضية 1245/2026", caseId: 1, assignee: "سعود أحمد الشحي", due: addDays(1), priority: "عالية", done: false },
-  { id: 2, title: "ترجمة قانونية لعقد المقاولة وتصديقه", caseId: 1, assignee: "مريم الكعبي", due: addDays(4), priority: "متوسطة", done: false },
-  { id: 3, title: "متابعة ملف التنفيذ وحجز الحسابات", caseId: 5, assignee: "نورة العلي", due: addDays(3), priority: "عالية", done: false },
-  { id: 4, title: "تجديد اشتراك البوابة الذكية لمحاكم دبي", caseId: null, assignee: "عمر الحوسني", due: addDays(14), priority: "منخفضة", done: true },
-];
+const seedTasks: TaskItem[] = [];
 
 const seedInvoices: Invoice[] = [
   { id: 1, number: "INV-2026-041", clientId: 1, caseId: 1, date: "2026-06-01", due: "2026-06-30", amount: 60000, status: "مدفوعة", desc: "دفعة أولى من أتعاب المحاماة" },
