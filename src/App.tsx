@@ -16,7 +16,8 @@ import {
   Send, MessageSquare, Share2, ExternalLink, FileText, CheckCheck, SendHorizontal, Filter,
   Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download, Database, Code, LogOut,
   Inbox, Paperclip, RotateCw, QrCode, Settings, History, BookOpen, UploadCloud, Video,
-  Sparkles, Bot, Zap, PlusCircle, Layers, BarChart3, PieChart as LucidePieChart, Activity, CheckSquare, Target, Percent, Menu
+  Sparkles, Bot, Zap, PlusCircle, Layers, BarChart3, PieChart as LucidePieChart, Activity, CheckSquare, Target, Percent, Menu,
+  SlidersHorizontal, Eye, EyeOff, Hash, ArrowUpDown, RotateCcw, ChevronDown, ChevronUp
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -40,7 +41,8 @@ const COURTS = [
   "مركز فض المنازعات الإيجارية - دبي"
 ];
 const CASE_TYPES = ["تجاري", "مدني", "عمالي", "جزائي", "أحوال شخصية", "إيجاري", "عقاري", "إداري", "تنفيذ"];
-const CASE_STATUS = ["قيد النظر", "متداولة", "محجوزة للحكم", "صدر الحكم", "استئناف", "تمييز/نقض", "تنفيذ", "مغلقة"];
+const CASE_STAGES = ["الابتدائية", "الاستئناف", "التمييز / النقض", "التنفيذ", "لجان فض المنازعات"];
+const CASE_STATUS = ["متداولة", "منتهية", "محكومة", "قيد النظر", "محجوزة للحكم", "مشطوبة", "معلقة"];
 const HEARING_TYPES = ["جلسة مرافعة", "جلسة إدارة دعوى", "جلسة خبرة", "جلسة نطق بالحكم", "جلسة تنفيذ", "جلسة صصلح"];
 const TASK_PRIORITY: Record<string, string> = { "عالية": "bg-red-100 text-red-700", "متوسطة": "bg-amber-100 text-amber-700", "منخفضة": "bg-emerald-100 text-emerald-700" };
 const DOC_TYPES = ["صحيفة دعوى", "مذكرة جوابية", "مذكرة دفاع", "حكم", "عقد", "وكالة", "تقرير خبرة", "إنذار عدلي", "لائحة استئناف", "مستند إثبات"];
@@ -126,7 +128,6 @@ export interface RolePermissions {
 
   // 2. صلاحيات العمليات والإجراءات الدقيقة والتفويضات (Action Permissions)
   manageCases?: boolean;         // قيد وتعديل القضايا
-  deleteCases?: boolean;         // حذف القضايا والملفات نهائياً (صلاحية حساسة)
   manageHearings?: boolean;      // جدولة وتحديث الجلسات والرول
   manageTasks?: boolean;         // إسناد وتعيين ومتابعة المهام
   manageClients?: boolean;       // إضافة وتعديل بيانات الموكلين
@@ -140,6 +141,21 @@ export interface RolePermissions {
   managePrecedents?: boolean;    // إضافة وتصنيف المبادئ القضائية
   viewReports?: boolean;         // استخراج ومراجعة التقارير التحليلية
   exportData?: boolean;          // تصدير واستعادة النسخ الاحتياطية (JSON/PDF)
+
+  // 3. صلاحيات الحذف والرقابة الحساسة لجميع الأقسام (Deletion Permissions)
+  deleteCases?: boolean;         // حذف القضايا والملفات نهائياً
+  deleteClients?: boolean;       // حذف سجلات الموكلين والعملاء
+  deleteHearings?: boolean;      // حذف الجلسات والرول القضائي
+  deleteTasks?: boolean;         // حذف وتفريغ المهام والتكليفات
+  deleteDocs?: boolean;          // حذف مستندات الأرشيف والوثائق
+  deletePoas?: boolean;          // حذف وإلغاء قيود الوكالات القانونية
+  deleteAgreements?: boolean;    // حذف اتفاقيات وعقود أتعاب المكتب
+  deleteInvoices?: boolean;      // حذف الفواتير وسندات القبض والتحصيلات
+  deleteKyc?: boolean;           // حذف سجلات KYC وقوائم الحظر والمتابعة
+  deleteEmployees?: boolean;     // حذف سجلات الكادر والموظفين
+  deletePrecedents?: boolean;    // حذف المبادئ والأحكام القضائية
+  deleteUsers?: boolean;         // حذف حسابات المستخدمين والموظفين
+  deleteContacts?: boolean;      // حذف جهات الاتصال ودليل المحاكم
 }
 
 export interface UserItem {
@@ -208,6 +224,7 @@ export interface CaseItem {
   type: string;
   court: string;
   judge: string;
+  stage?: string;
   status: string;
   subject: string;
   openDate: string;
@@ -622,7 +639,7 @@ export const PERMISSION_MODULES: SystemModuleDef[] = [
   { id: "manageUsers", label: "المستخدمون وإدارة الصلاحيات", desc: "إضافة وتعديل واعتماد حسابات الموظفين وتخصيص الأدوار", category: "الإدارة والامتثال", navTabIds: ["users"] },
 ];
 
-// مصفوفة صلاحيات العمليات الإجرائية الدقيقة والتفويضات
+// مصفوفة صلاحيات العمليات الإجرائية الدقيقة والتفويضات والحذف المقيد
 export const DETAILED_ACTION_PERMISSIONS: Array<{
   id: keyof RolePermissions;
   label: string;
@@ -630,8 +647,8 @@ export const DETAILED_ACTION_PERMISSIONS: Array<{
   category: string;
   isSensitive?: boolean;
 }> = [
+  // 1. عمليات القيد والتعديل
   { id: "manageCases", label: "قيد وتعديل ملفات القضايا", desc: "إضافة ملفات جديدة وتعديل بيانات الدعوى ومراحل التقاضي", category: "التقاضي والمحاكم" },
-  { id: "deleteCases", label: "حذف القضايا والملفات نهائياً", desc: "صلاحية حساسة لحذف سجلات القضايا والملفات من النظام", category: "التقاضي والمحاكم", isSensitive: true },
   { id: "manageHearings", label: "جدولة وتحديث الجلسات والرول", desc: "إضافة وتعديل وتحديث قرارات جلسات المحاكم والرول", category: "التقاضي والمحاكم" },
   { id: "manageTasks", label: "إسناد وإدارة ومتابعة المهام", desc: "إنشاء المهام وتعيين المسؤولين ومتابعة مؤشرات الإنجاز", category: "المهام والتشغيل" },
   { id: "manageClients", label: "إدارة بيانات الموكلين", desc: "إضافة وتعديل وتحديث سجلات الموكلين والأطراف", category: "الموكلين والعملاء" },
@@ -645,6 +662,21 @@ export const DETAILED_ACTION_PERMISSIONS: Array<{
   { id: "managePrecedents", label: "إدارة المبادئ القضائية", desc: "إضافة وتحديث وتصنيف السوابق والأحكام التمييزية والاتحادية", category: "الإدارة والمعرفة" },
   { id: "viewReports", label: "التقارير التحليلية المتقدمة", desc: "استخراج ومراجعة تقارير الأداء المالي والتشغيلي ومؤشرات القضايا", category: "الإدارة والمعرفة" },
   { id: "exportData", label: "تصدير واستعادة النسخ الاحتياطية", desc: "تصدير قواعد بيانات المكتب بصيغة JSON وملفات PDF وطباعتها", category: "النظام والأمان", isSensitive: true },
+
+  // 2. صلاحيات الحذف الصريحة والرقابة الحساسة لجميع الأقسام (تمنع افتراضياً وتشترط إذناً وتأكيداً)
+  { id: "deleteCases", label: "حذف ملفات القضايا", desc: "صلاحية حساسة لحذف سجلات القضايا والدعاوى نهائياً من النظام", category: "صلاحيات الحذف والرقابة", isSensitive: true },
+  { id: "deleteClients", label: "حذف سجلات الموكلين", desc: "صلاحية حساسة لحذف الموكلين والشركات من قاعدة البيانات", category: "صلاحيات الحذف والرقابة", isSensitive: true },
+  { id: "deleteHearings", label: "حذف الجلسات والرول", desc: "صلاحية لحذف مواعيد وجداول جلسات المحاكم المسجلة", category: "صلاحيات الحذف والرقابة", isSensitive: true },
+  { id: "deleteTasks", label: "حذف وتفريغ المهام", desc: "صلاحية لحذف التكليفات والمهام اليومية المسندة لفريق العمل", category: "صلاحيات الحذف والرقابة", isSensitive: true },
+  { id: "deleteDocs", label: "حذف وثائق الأرشيف", desc: "صلاحية لحذف المستندات والمذكرات والملفات المرفوعة", category: "صلاحيات الحذف والرقابة", isSensitive: true },
+  { id: "deletePoas", label: "حذف الوكالات القانونية", desc: "صلاحية لإلغاء وحذف قيود وسجلات الوكالات", category: "صلاحيات الحذف والرقابة", isSensitive: true },
+  { id: "deleteAgreements", label: "حذف اتفاقيات وعقود الأتعاب", desc: "صلاحية حساسة لحذف اتفاقيات الأتعاب وجداول السداد", category: "صلاحيات الحذف والرقابة", isSensitive: true },
+  { id: "deleteInvoices", label: "حذف الفواتير وسندات القبض", desc: "صلاحية حساسة لحذف الفواتير الضريبية وسندات التحصيل", category: "صلاحيات الحذف والرقابة", isSensitive: true },
+  { id: "deleteKyc", label: "حذف سجلات KYC وقوائم الحظر", desc: "صلاحية لحذف استمارات التحقق وقوائم الحظر والامتثال", category: "صلاحيات الحذف والرقابة", isSensitive: true },
+  { id: "deleteEmployees", label: "حذف سجلات الموظفين (HR)", desc: "صلاحية لحذف ملفات الكادر الوظيفي من النظام", category: "صلاحيات الحذف والرقابة", isSensitive: true },
+  { id: "deletePrecedents", label: "حذف المبادئ القضائية", desc: "صلاحية لحذف السوابق والأحكام التمييزية من المكتبة", category: "صلاحيات الحذف والرقابة", isSensitive: true },
+  { id: "deleteUsers", label: "حذف حسابات المستخدمين", desc: "صلاحية إدارية عليا لحذف حسابات الموظفين والمستخدمين", category: "صلاحيات الحذف والرقابة", isSensitive: true },
+  { id: "deleteContacts", label: "حذف جهات الاتصال ودليل المحاكم", desc: "صلاحية لحذف بيانات المحاكم وأرقام التواصل المسجلة", category: "صلاحيات الحذف والرقابة", isSensitive: true },
 ];
 
 // فحص صلاحيات الوصول للتبويب المحدد مع تطبيق سياسة الحظر الافتراضي (Default-Deny Policy)
@@ -751,7 +783,6 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       auditLog: true,
       manageUsers: true,
       manageCases: true,
-      deleteCases: true,
       manageHearings: true,
       manageTasks: true,
       manageClients: true,
@@ -765,6 +796,21 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       managePrecedents: true,
       viewReports: true,
       exportData: true,
+
+      // صلاحيات الحذف للمدير مفعلة
+      deleteCases: true,
+      deleteClients: true,
+      deleteHearings: true,
+      deleteTasks: true,
+      deleteDocs: true,
+      deletePoas: true,
+      deleteAgreements: true,
+      deleteInvoices: true,
+      deleteKyc: true,
+      deleteEmployees: true,
+      deletePrecedents: true,
+      deleteUsers: true,
+      deleteContacts: true,
     },
   },
   supervisor: {
@@ -789,7 +835,6 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       auditLog: true,
       manageUsers: false,
       manageCases: true,
-      deleteCases: false,
       manageHearings: true,
       manageTasks: true,
       manageClients: true,
@@ -803,6 +848,21 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       managePrecedents: true,
       viewReports: true,
       exportData: true,
+
+      // الحذف ممنوع افتراضياً
+      deleteCases: false,
+      deleteClients: false,
+      deleteHearings: false,
+      deleteTasks: false,
+      deleteDocs: false,
+      deletePoas: false,
+      deleteAgreements: false,
+      deleteInvoices: false,
+      deleteKyc: false,
+      deleteEmployees: false,
+      deletePrecedents: false,
+      deleteUsers: false,
+      deleteContacts: false,
     },
   },
   lawyer: {
@@ -827,7 +887,6 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       auditLog: false,
       manageUsers: false,
       manageCases: true,
-      deleteCases: false,
       manageHearings: true,
       manageTasks: true,
       manageClients: true,
@@ -841,6 +900,21 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       managePrecedents: true,
       viewReports: true,
       exportData: false,
+
+      // الحذف ممنوع افتراضياً
+      deleteCases: false,
+      deleteClients: false,
+      deleteHearings: false,
+      deleteTasks: false,
+      deleteDocs: false,
+      deletePoas: false,
+      deleteAgreements: false,
+      deleteInvoices: false,
+      deleteKyc: false,
+      deleteEmployees: false,
+      deletePrecedents: false,
+      deleteUsers: false,
+      deleteContacts: false,
     },
   },
   secretary: {
@@ -865,7 +939,6 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       auditLog: false,
       manageUsers: false,
       manageCases: false,
-      deleteCases: false,
       manageHearings: true,
       manageTasks: true,
       manageClients: true,
@@ -879,6 +952,21 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       managePrecedents: false,
       viewReports: false,
       exportData: false,
+
+      // الحذف ممنوع افتراضياً
+      deleteCases: false,
+      deleteClients: false,
+      deleteHearings: false,
+      deleteTasks: false,
+      deleteDocs: false,
+      deletePoas: false,
+      deleteAgreements: false,
+      deleteInvoices: false,
+      deleteKyc: false,
+      deleteEmployees: false,
+      deletePrecedents: false,
+      deleteUsers: false,
+      deleteContacts: false,
     },
   },
   accountant: {
@@ -903,7 +991,6 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       auditLog: false,
       manageUsers: false,
       manageCases: false,
-      deleteCases: false,
       manageHearings: false,
       manageTasks: true,
       manageClients: true,
@@ -917,6 +1004,21 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       managePrecedents: false,
       viewReports: true,
       exportData: true,
+
+      // الحذف ممنوع افتراضياً
+      deleteCases: false,
+      deleteClients: false,
+      deleteHearings: false,
+      deleteTasks: false,
+      deleteDocs: false,
+      deletePoas: false,
+      deleteAgreements: false,
+      deleteInvoices: false,
+      deleteKyc: false,
+      deleteEmployees: false,
+      deletePrecedents: false,
+      deleteUsers: false,
+      deleteContacts: false,
     },
   },
 };
@@ -942,8 +1044,7 @@ const PERMISSION_LABELS: Record<keyof RolePermissions, { label: string; desc: st
   manageUsers: { label: "18. المستخدمون والصلاحيات", desc: "إضافة وتعديل واعتماد حسابات الموظفين وتخصيص الأدوار" },
 
   // الصلاحيات الإجرائية الدقيقة
-  manageCases: { label: "قيد وتعديل القضايا", desc: "إضافة وتعديل بيانات ملفات الدعاوى" },
-  deleteCases: { label: "حذف القضايا والملفات نهائياً", desc: "صلاحية حساسة لحذف السجلات من النظام" },
+  manageCases: { label: "قيد وتعديل القضايا", desc: "إضافة وتعديل بيانات ملفات الدعاوى ومراحل التقاضي" },
   manageHearings: { label: "جدولة وتحديث الجلسات", desc: "إضافة وتعديل مواعيد وقرارات الجلسات والرول" },
   manageTasks: { label: "إسناد وإدارة المهام", desc: "إنشاء وتعيين وإنجاز المهام ومتابعتها" },
   manageClients: { label: "إدارة بيانات الموكلين", desc: "إضافة وتعديل بيانات الموكلين والأطراف" },
@@ -957,6 +1058,21 @@ const PERMISSION_LABELS: Record<keyof RolePermissions, { label: string; desc: st
   managePrecedents: { label: "إدارة المبادئ القضائية", desc: "إضافة وتصنيف السوابق والأحكام القضائية" },
   viewReports: { label: "التقارير التحليلية المتقدمة", desc: "الاطلاع على تقارير الأداء والمؤشرات العامة" },
   exportData: { label: "تصدير واستعادة النسخ الاحتياطية", desc: "تصدير قواعد بيانات المكتب بصيغة JSON و PDF" },
+
+  // صلاحيات الحذف والرقابة
+  deleteCases: { label: "حذف ملفات القضايا", desc: "حذف وتصفية ملفات وسجلات القضايا نهائياً" },
+  deleteClients: { label: "حذف سجلات الموكلين", desc: "حذف بيانات الموكلين والأطراف من النظام" },
+  deleteHearings: { label: "حذف الجلسات والرول", desc: "حذف مواعيد وجداول الجلسات القضائية" },
+  deleteTasks: { label: "حذف وتفريغ المهام", desc: "حذف وتفريغ التكليفات والمهام" },
+  deleteDocs: { label: "حذف وثائق الأرشيف", desc: "حذف المستندات والمذكرات المرفوعة" },
+  deletePoas: { label: "حذف الوكالات القانونية", desc: "إلغاء وحذف قيود الوكالات القانونية" },
+  deleteAgreements: { label: "حذف اتفاقيات الأتعاب", desc: "حذف اتفاقيات وعقود الأتعاب" },
+  deleteInvoices: { label: "حذف الفواتير وسندات القبض", desc: "حذف الفواتير وسندات التحصيل المالية" },
+  deleteKyc: { label: "حذف سجلات KYC وقوائم الحظر", desc: "حذف سجلات فحص الامتثال وقوائم الحظر" },
+  deleteEmployees: { label: "حذف سجلات الموظفين (HR)", desc: "حذف بيانات الكادر الوظيفي" },
+  deletePrecedents: { label: "حذف المبادئ القضائية", desc: "حذف السوابق والأحكام التمييزية" },
+  deleteUsers: { label: "حذف حسابات المستخدمين", desc: "حذف حسابات المستخدمين والموظفين" },
+  deleteContacts: { label: "حذف جهات الاتصال والدليل", desc: "حذف بيانات دليل المحاكم وجهات التواصل" },
 };
 
 const seedUsers: UserItem[] = [
@@ -1075,7 +1191,22 @@ const seedClients: Client[] = [
   { id: 193, name: "سيروس مالك هاميلتون", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" },
   { id: 194, name: "محمد صلاح السيد محمد قنديل", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" },
   { id: 195, name: "شاه ايران سيد وهاب", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "رأس الخيمة" },
-  { id: 196, name: "شاما خالد عوان خالد بشير", type: "فرد", idNo: "", phone: "", email: "", emirate: "عجمان", address: "عجمان" }
+  { id: 196, name: "شاما خالد عوان خالد بشير", type: "فرد", idNo: "", phone: "", email: "", emirate: "عجمان", address: "عجمان" },
+  { id: 197, name: "شركة بختوار جنرال تريدنج", type: "شركة", idNo: "", phone: "", email: "", emirate: "عجمان", address: "عجمان" },
+  { id: 198, name: "محمد بن حيدر بن حسن الاخضر", type: "فرد", idNo: "", phone: "", email: "", emirate: "عجمان", address: "عجمان" },
+  { id: 199, name: "الشركة العالمية للسيارات والمعدات ايمكو المحدودة", type: "شركة", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "الشارقة" },
+  { id: 200, name: "المامون للاستيراد والتصدير - مؤسسة فردية - يمثلها حسن على حسن يملوه", type: "شركة", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "الشارقة" },
+  { id: 201, name: "عبد العزيز طلحة على محمد", type: "فرد", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "الشارقة" },
+  { id: 202, name: "وفاء اسماعيل مبارك الشريف", type: "فرد", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "كلباء - الشارقة" },
+  { id: 203, name: "عدنان احمد صوفان", type: "فرد", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "الشارقة" },
+  { id: 204, name: "موزه احمد راشد عبدالله الشامسى", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" },
+  { id: 205, name: "مصطفى صالح رزق السبول", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" },
+  { id: 206, name: "بانيبال سارجيزي", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" },
+  { id: 207, name: "محمد احمد لفلاسي", type: "فرد", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "الشارقة" },
+  { id: 208, name: "عمر خالد", type: "فرد", idNo: "", phone: "", email: "", emirate: "رأس الخيمة", address: "رأس الخيمة" },
+  { id: 209, name: "نوف", type: "فرد", idNo: "", phone: "", email: "", emirate: "الشارقة", address: "الشارقة" },
+  { id: 210, name: "دي تي سي للتجارة العامة ش.ذ.م.م", type: "شركة", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" },
+  { id: 211, name: "شهرام عابدى", type: "فرد", idNo: "", phone: "", email: "", emirate: "دبي", address: "دبي" }
 ];
 
 const seedCases: CaseItem[] = [
@@ -1087,7 +1218,7 @@ const seedCases: CaseItem[] = [
     type: "تجاري",
     court: "محكمة الاستئناف المدنية عجمان",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "المحكمة الاستئنافية المدنية - تجاري -",
     openDate: "",
     fee: 0
@@ -1100,7 +1231,7 @@ const seedCases: CaseItem[] = [
     type: "تجاري",
     court: "محكمة أم القيوين الاتحادية المحكمة الاستئنافية المدنية",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "المحكمة الاستئنافية المدنية - تجاري -",
     openDate: "",
     fee: 0
@@ -1113,7 +1244,7 @@ const seedCases: CaseItem[] = [
     type: "أحوال شخصية",
     court: "محكمة عجمان الاستئنافية الشرعية",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "المحكمة الاستئنافية الشرعية - الأحوال الشخصية - (دعوى نسب اثبات / انكار)",
     openDate: "",
     fee: 0
@@ -1126,7 +1257,7 @@ const seedCases: CaseItem[] = [
     type: "مدني",
     court: "محكمة الاستئناف دبي",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف مدني",
     openDate: "",
     fee: 0
@@ -1139,7 +1270,7 @@ const seedCases: CaseItem[] = [
     type: "تنفيذي",
     court: "محكمة الاستئناف دبي",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف تنفيذ تجاري",
     openDate: "",
     fee: 0
@@ -1152,7 +1283,7 @@ const seedCases: CaseItem[] = [
     type: "تجاري",
     court: "محكمة الاستئناف دبي",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف تجاري",
     openDate: "",
     fee: 0
@@ -1165,7 +1296,7 @@ const seedCases: CaseItem[] = [
     type: "عقاري",
     court: "محكمة الاستئناف دبي",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف عقاري",
     openDate: "",
     fee: 0
@@ -1178,7 +1309,7 @@ const seedCases: CaseItem[] = [
     type: "تجاري",
     court: "محكمة الاستئناف دبي",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "التماس إعادة نظر تجاري-استئناف",
     openDate: "",
     fee: 0
@@ -1191,7 +1322,7 @@ const seedCases: CaseItem[] = [
     type: "أمر أداء",
     court: "محكمة الاستئناف دبي",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف أمر أداء",
     openDate: "",
     fee: 0
@@ -1204,7 +1335,7 @@ const seedCases: CaseItem[] = [
     type: "أحوال شخصية",
     court: "محكمة الاستئناف دبي",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف احوال شخصية ومواريث",
     openDate: "",
     fee: 0
@@ -1217,7 +1348,7 @@ const seedCases: CaseItem[] = [
     type: "أحوال شخصية",
     court: "محكمة الاستئناف دبي",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف احوال شخصية ومواريث",
     openDate: "",
     fee: 0
@@ -1230,7 +1361,7 @@ const seedCases: CaseItem[] = [
     type: "أمر أداء",
     court: "محكمة الاستئناف دبي",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف أمر أداء",
     openDate: "",
     fee: 0
@@ -1243,7 +1374,7 @@ const seedCases: CaseItem[] = [
     type: "أمر أداء",
     court: "محكمة الاستئناف دبي",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف أمر أداء",
     openDate: "",
     fee: 0
@@ -1256,7 +1387,7 @@ const seedCases: CaseItem[] = [
     type: "مدني",
     court: "محكمة الشارقة الاستئنافية المدنية",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "المحكمة الاستئنافية المدنية - مدني",
     openDate: "",
     fee: 0
@@ -1269,7 +1400,7 @@ const seedCases: CaseItem[] = [
     type: "جزائي",
     court: "محكمة استئناف الجنح دبي",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف الجنح",
     openDate: "",
     fee: 0
@@ -1282,7 +1413,7 @@ const seedCases: CaseItem[] = [
     type: "جزائي",
     court: "محكمة استئناف الجنح دبي",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف الجنح",
     openDate: "",
     fee: 0
@@ -1295,7 +1426,7 @@ const seedCases: CaseItem[] = [
     type: "جزائي",
     court: "محكمة استئناف الجنح دبي",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف الجنح",
     openDate: "",
     fee: 0
@@ -1308,7 +1439,7 @@ const seedCases: CaseItem[] = [
     type: "جزائي",
     court: "محكمة استئناف الجنح عجمان",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف الجنح",
     openDate: "",
     fee: 0
@@ -1321,7 +1452,7 @@ const seedCases: CaseItem[] = [
     type: "جزائي",
     court: "محكمة استئناف الجنح عجمان",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف الجنح",
     openDate: "",
     fee: 0
@@ -1334,7 +1465,7 @@ const seedCases: CaseItem[] = [
     type: "أحوال شخصية",
     court: "محكمة رأس الخيمة الاستئنافية الشرعية",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف الاحوال الشخصية",
     openDate: "",
     fee: 0
@@ -1347,7 +1478,7 @@ const seedCases: CaseItem[] = [
     type: "جزائي",
     court: "محكمة استئناف الجنح رأس الخيمة",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف جزاء",
     openDate: "",
     fee: 0
@@ -1360,7 +1491,7 @@ const seedCases: CaseItem[] = [
     type: "جزائي",
     court: "محكمة استئناف الجنح رأس الخيمة",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "استئناف جزاء",
     openDate: "",
     fee: 0
@@ -1373,7 +1504,7 @@ const seedCases: CaseItem[] = [
     type: "تجاري",
     court: "محكمة الاستئناف المدنية عجمان",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "المحكمة الاستئنافية المدنية - تجاري - مطالبات مالية",
     openDate: "",
     fee: 0
@@ -1386,8 +1517,853 @@ const seedCases: CaseItem[] = [
     type: "تجاري",
     court: "محكمة أم القيوين الاتحادية المحكمة الاستئنافية المدنية",
     judge: "",
-    status: "قيد الاستئناف",
+    status: "منتهية",
     subject: "المحكمة الاستئنافية المدنية - تجاري",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 301,
+    number: "2026/450",
+    clientId: 197,
+    opponent: "",
+    type: "منازعة التنفيذ الموضوعية",
+    court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
+    judge: "",
+    status: "متداولة",
+    subject: "منازعة التنفيذ الموضوعية",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 302,
+    number: "2026/240",
+    clientId: 153,
+    opponent: "",
+    type: "منازعة التنفيذ الموضوعية",
+    court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
+    judge: "",
+    status: "متداولة",
+    subject: "منازعة التنفيذ الموضوعية",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 303,
+    number: "2026/241",
+    clientId: 153,
+    opponent: "",
+    type: "منازعة التنفيذ الموضوعية",
+    court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
+    judge: "",
+    status: "متداولة",
+    subject: "منازعة التنفيذ الموضوعية",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 304,
+    number: "2026/322",
+    clientId: 197,
+    opponent: "",
+    type: "تجاري - البنوك",
+    court: "محكمة عجمان المدنية الاتحادية",
+    judge: "",
+    status: "متداولة",
+    subject: "تجاري - البنوك",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 305,
+    number: "2025/481",
+    clientId: 153,
+    opponent: "",
+    type: "منازعة التنفيذ الموضوعية",
+    court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
+    judge: "",
+    status: "متداولة",
+    subject: "منازعة التنفيذ الموضوعية",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 306,
+    number: "2025/5881",
+    clientId: 135,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - تجاري - مطالبات مالية",
+    court: "محكمة عجمان الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - تجاري - مطالبات مالية",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 307,
+    number: "2025/881",
+    clientId: 153,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - الشيكات المرتجعة - الوفاء الكلي",
+    court: "محكمة أم القيوين",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - الشيكات المرتجعة - الوفاء الكلي",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 309,
+    number: "2026/242",
+    clientId: 153,
+    opponent: "",
+    type: "منازعة التنفيذ الموضوعية",
+    court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
+    judge: "",
+    status: "متداولة",
+    subject: "منازعة التنفيذ الموضوعية",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 310,
+    number: "2026/514",
+    clientId: 196,
+    opponent: "",
+    type: "المحكمة الابتدائية المدنية - تجاري - البنوك",
+    court: "محكمة عجمان الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "المحكمة الابتدائية المدنية - تجاري - البنوك",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 311,
+    number: "2024/3909",
+    clientId: 160,
+    opponent: "",
+    type: "المحكمة الابتدائية المدنيه - أمر على عريضة",
+    court: "محكمة عجمان الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "المحكمة الابتدائية المدنيه - أمر على عريضة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 312,
+    number: "2025/566",
+    clientId: 198,
+    opponent: "",
+    type: "الدائرة المدنية والتجارية والعمالية",
+    court: "محكمة عجمان الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "الدائرة المدنية والتجارية والعمالية",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 313,
+    number: "2025/569",
+    clientId: 198,
+    opponent: "",
+    type: "الدائرة المدنية والتجارية والعمالية والإدارية ودعاوي الملكية الفكرية",
+    court: "محكمة عجمان الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "الدائرة المدنية والتجارية والعمالية والإدارية ودعاوي الملكية الفكرية",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 314,
+    number: "2025/568",
+    clientId: 198,
+    opponent: "",
+    type: "الدائرة المدنية والتجارية والعمالية والإدارية ودعاوي الملكية الفكرية",
+    court: "محكمة عجمان الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "الدائرة المدنية والتجارية والعمالية والإدارية ودعاوي الملكية الفكرية",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 315,
+    number: "2025/1205",
+    clientId: 156,
+    opponent: "",
+    type: "المحكمة الابتدائية الشرعية - الأحوال الشخصية - دعوى نسب (اثبات / انكار)",
+    court: "محكمة عجمان الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "المحكمة الابتدائية الشرعية - الأحوال الشخصية - دعوى نسب (اثبات / انكار)",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 316,
+    number: "2026/3",
+    clientId: 153,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 317,
+    number: "2024/127",
+    clientId: 153,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 318,
+    number: "2024/2393",
+    clientId: 197,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    court: "محكمة عجمان الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 319,
+    number: "2025/6",
+    clientId: 160,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    court: "محكمة عجمان الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 320,
+    number: "2025/93",
+    clientId: 153,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 321,
+    number: "2024/3911",
+    clientId: 160,
+    opponent: "",
+    type: "دائرة الدعاوي المستعجلة والأوامر على عرائض",
+    court: "محكمة عجمان الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "دائرة الدعاوي المستعجلة والأوامر على عرائض",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 322,
+    number: "2026/38",
+    clientId: 153,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 323,
+    number: "2026/73",
+    clientId: 153,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 324,
+    number: "2026/52",
+    clientId: 153,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 325,
+    number: "2026/1360",
+    clientId: 135,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - منازعة التنفيذ الموضوعية",
+    court: "محكمة عجمان الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - منازعة التنفيذ الموضوعية",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 326,
+    number: "2023/795",
+    clientId: 153,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 327,
+    number: "2024/320",
+    clientId: 197,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    court: "محكمة عجمان الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 328,
+    number: "2026/211",
+    clientId: 153,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 329,
+    number: "2026/219",
+    clientId: 197,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 330,
+    number: "2025/0002112",
+    clientId: 197,
+    opponent: "",
+    type: "الأحوال الشخصية لغير المسلمين - دعوى طلاق (للضرر)",
+    court: "محكمة الشارقة الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "الأحوال الشخصية لغير المسلمين - دعوى طلاق (للضرر)",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 331,
+    number: "2025/0000172",
+    clientId: 197,
+    opponent: "",
+    type: "المحكمة الابتدائية الشرعية - تظلم",
+    court: "محكمة الشارقة الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "المحكمة الابتدائية الشرعية - تظلم",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 332,
+    number: "2025/7445",
+    clientId: 141,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    court: "محكمة الشارقة الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 333,
+    number: "2025/3529",
+    clientId: 199,
+    opponent: "",
+    type: "المحكمة الابتدائية المدنيه - تجاري",
+    court: "دائرة الملكية الفكرية الشارقة",
+    judge: "",
+    status: "متداولة",
+    subject: "المحكمة الابتدائية المدنيه - تجاري",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 334,
+    number: "2025/0001237",
+    clientId: 150,
+    opponent: "",
+    type: "المحكمة الابتدائية الشرعية - الأحوال الشخصية - دعوى طلاق (للضرر)",
+    court: "محكمة الشارقة الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "المحكمة الابتدائية الشرعية - الأحوال الشخصية - دعوى طلاق (للضرر)",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 335,
+    number: "2025/114",
+    clientId: 150,
+    opponent: "",
+    type: "المحكمة الابتدائية الشرعية - تظلم",
+    court: "محكمة الشارقة الابتدائية",
+    judge: "",
+    status: "متداولة",
+    subject: "المحكمة الابتدائية الشرعية - تظلم",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 336,
+    number: "2025/4643",
+    clientId: 164,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - عمالي",
+    court: "دائرة التنفيذ العمالي السابعة الشارقة",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - عمالي",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 337,
+    number: "COM2019/0003542",
+    clientId: 200,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - تجاري (كلي) - مطالبات مالية",
+    court: "دائرة التنفيذ الثانية الشارقة",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - تجاري (كلي) - مطالبات مالية",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 338,
+    number: "2026/3331",
+    clientId: 201,
+    opponent: "",
+    type: "المحكمة الابتدائية المدنيه - منازعة إيجارية - سكني",
+    court: "لجنة فض المنازعات الشارقة",
+    judge: "",
+    status: "متداولة",
+    subject: "المحكمة الابتدائية المدنيه - منازعة إيجارية - سكني",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 339,
+    number: "2023/15",
+    clientId: 202,
+    opponent: "",
+    type: "المحكمة الابتدائية الشرعية - تظلم",
+    court: "كلباء - دائرة الأحوال الشخصية الأولى",
+    judge: "",
+    status: "متداولة",
+    subject: "المحكمة الابتدائية الشرعية - تظلم",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 340,
+    number: "2023/064",
+    clientId: 202,
+    opponent: "",
+    type: "المحكمة الابتدائية الشرعية - أمر على عريضة - الأمور المستعجلة",
+    court: "كلباء - دائرة الأمور المستعجلة",
+    judge: "",
+    status: "متداولة",
+    subject: "المحكمة الابتدائية الشرعية - أمر على عريضة - الأمور المستعجلة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 341,
+    number: "2023/2646",
+    clientId: 203,
+    opponent: "",
+    type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    court: "دائرة التنفيذ الثالثة الشارقة",
+    judge: "",
+    status: "متداولة",
+    subject: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 342,
+    number: "2026/3760",
+    clientId: 204,
+    opponent: "",
+    type: "حالات زوجية مسلمين",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "حالات زوجية مسلمين",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 343,
+    number: "2024/599",
+    clientId: 187,
+    opponent: "",
+    type: "مدنى جزئى",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "مدنى جزئى",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 344,
+    number: "2023/1613",
+    clientId: 205,
+    opponent: "",
+    type: "امر أداء",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "امر أداء",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 345,
+    number: "2023/46",
+    clientId: 192,
+    opponent: "",
+    type: "منازعة موضوعية التنفيذ التجاري",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "منازعة موضوعية التنفيذ التجاري",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 346,
+    number: "2024/984",
+    clientId: 206,
+    opponent: "",
+    type: "عقاري",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "عقاري",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 347,
+    number: "2025/19016",
+    clientId: 147,
+    opponent: "",
+    type: "تنفيذ شيكات",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "تنفيذ شيكات",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 348,
+    number: "2019/268",
+    clientId: 152,
+    opponent: "",
+    type: "تنفيذ شرعي",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "تنفيذ شرعي",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 349,
+    number: "2026/2726",
+    clientId: 207,
+    opponent: "",
+    type: "منازعة ايجارية",
+    court: "محاكم الشارقة",
+    judge: "",
+    status: "متداولة",
+    subject: "منازعة ايجارية",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 350,
+    number: "2026/806",
+    clientId: 208,
+    opponent: "",
+    type: "قضية",
+    court: "محاكم رأس الخيمة",
+    judge: "",
+    status: "متداولة",
+    subject: "دعوى قضائية",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 351,
+    number: "2026/397",
+    clientId: 209,
+    opponent: "",
+    type: "طلاق للضرر",
+    court: "محاكم الشارقة",
+    judge: "",
+    status: "متداولة",
+    subject: "طلاق للضرر",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 352,
+    number: "2026/1062",
+    clientId: 209,
+    opponent: "",
+    type: "طلاق للضرر",
+    court: "محاكم الشارقة",
+    judge: "",
+    status: "متداولة",
+    subject: "طلاق للضرر",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 353,
+    number: "2025/215",
+    clientId: 161,
+    opponent: "",
+    type: "عقاري كلي",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "عقاري كلي",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 354,
+    number: "2025/196",
+    clientId: 157,
+    opponent: "",
+    type: "تظلم شرعي",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "تظلم شرعي",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 355,
+    number: "2025/355",
+    clientId: 121,
+    opponent: "",
+    type: "امر أداء",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "امر أداء ياروسلافا زولينا",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 356,
+    number: "2025/32",
+    clientId: 171,
+    opponent: "",
+    type: "تظلم من أمر أداء",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "تظلم من أمر أداء ياروسلافا زولينا",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 357,
+    number: "2025/1546",
+    clientId: 157,
+    opponent: "",
+    type: "احوال نفس مسلمين",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "احوال نفس مسلمين",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 358,
+    number: "2025/140",
+    clientId: 182,
+    opponent: "",
+    type: "منازعة موضوعية تنفيذ شيكات",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "منازعة موضوعية تنفيذ شيكات",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 359,
+    number: "2023/555",
+    clientId: 189,
+    opponent: "",
+    type: "عقاري",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "عقاري",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 360,
+    number: "",
+    clientId: 188,
+    opponent: "",
+    type: "تجاري",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "تجاري",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 361,
+    number: "2023/1486",
+    clientId: 191,
+    opponent: "",
+    type: "احوال نفس مسلمين",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "احوال نفس مسلمين",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 364,
+    number: "2025/584",
+    clientId: 210,
+    opponent: "",
+    type: "منازعة موضوعية تنفيذ شيكات",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "منازعة موضوعية تنفيذ شيكات",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 365,
+    number: "2024/30121",
+    clientId: 182,
+    opponent: "",
+    type: "تنفيذ شيكات",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "تنفيذ شيكات",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 366,
+    number: "2025/18042",
+    clientId: 211,
+    opponent: "",
+    type: "تنفيذ شيكات",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "تنفيذ شيكات",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 367,
+    number: "2017/19",
+    clientId: 161,
+    opponent: "",
+    type: "عرض وإيداع مدني",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "عرض وإيداع مدني",
+    openDate: "",
+    fee: 0
+  },
+  {
+    id: 368,
+    number: "2019/5820",
+    clientId: 171,
+    opponent: "",
+    type: "تنفيذ تجاري",
+    court: "محاكم دبي",
+    judge: "",
+    status: "متداولة",
+    subject: "تنفيذ تجاري",
     openDate: "",
     fee: 0
   }
@@ -1719,16 +2695,39 @@ const findMatchingClientByName = (clientsList: Client[], searchName: string): Cl
   return undefined;
 };
 
+const getCaseStage = (c: { stage?: string; court?: string; subject?: string; number?: string; type?: string; status?: string }): string => {
+  if (c.stage) return c.stage;
+  const txt = ((c.court || "") + " " + (c.subject || "") + " " + (c.number || "") + " " + (c.type || "")).toLowerCase();
+  if (txt.includes("استئناف") || txt.includes("استئنافية")) return "الاستئناف";
+  if (txt.includes("تمييز") || txt.includes("نقض") || txt.includes("العليا")) return "التمييز / النقض";
+  if (txt.includes("تنفيذ")) return "التنفيذ";
+  if (txt.includes("لجنة") || txt.includes("منازعات") || txt.includes("توفيق") || txt.includes("إيجاري")) return "لجان فض المنازعات";
+  return "الابتدائية";
+};
+
+const stageBadgeColor = (st: string) => ({
+  "الاستئناف": "bg-indigo-100 text-indigo-800 border-indigo-200",
+  "استئناف": "bg-indigo-100 text-indigo-800 border-indigo-200",
+  "الابتدائية": "bg-blue-100 text-blue-800 border-blue-200",
+  "ابتدائي": "bg-blue-100 text-blue-800 border-blue-200",
+  "التمييز / النقض": "bg-purple-100 text-purple-800 border-purple-200",
+  "تمييز/نقض": "bg-purple-100 text-purple-800 border-purple-200",
+  "التنفيذ": "bg-amber-100 text-amber-900 border-amber-300",
+  "تنفيذ": "bg-amber-100 text-amber-900 border-amber-300",
+  "لجان فض المنازعات": "bg-teal-100 text-teal-800 border-teal-200",
+}[st] || "bg-slate-100 text-slate-700 border-slate-200");
+
 const statusColor = (s: string) => ({
-  "قيد النظر": "bg-sky-100 text-sky-700",
-  "متداولة": "bg-indigo-100 text-indigo-700",
-  "محجوزة للحكم": "bg-purple-100 text-purple-700",
-  "صدر الحكم": "bg-teal-100 text-teal-700",
-  "استئناف": "bg-orange-100 text-orange-700",
-  "تمييز/نقض": "bg-rose-100 text-rose-700",
-  "تنفيذ": "bg-amber-100 text-amber-800",
-  "مغلقة": "bg-slate-200 text-slate-600",
-}[s] || "bg-slate-100 text-slate-600");
+  "متداولة": "bg-emerald-100 text-emerald-800 border-emerald-200",
+  "منتهية": "bg-stone-200 text-stone-700 border-stone-300",
+  "محكومة": "bg-teal-100 text-teal-800 border-teal-200",
+  "صدر الحكم": "bg-teal-100 text-teal-800 border-teal-200",
+  "قيد النظر": "bg-sky-100 text-sky-700 border-sky-200",
+  "محجوزة للحكم": "bg-purple-100 text-purple-700 border-purple-200",
+  "مشطوبة": "bg-stone-200 text-stone-700 border-stone-300",
+  "معلقة": "bg-rose-100 text-rose-800 border-rose-200",
+  "مغلقة": "bg-slate-200 text-slate-600 border-slate-300",
+}[s] || "bg-slate-100 text-slate-600 border-slate-200");
 
 const invColor = (s: string) => ({
   "مسودة": "bg-slate-100 text-slate-600",
@@ -2851,6 +3850,77 @@ export default function App() {
       return 1;
     }
   });
+
+  const [permissionNotice, setPermissionNotice] = useState<string | null>(null);
+
+  // المستخدم الحالي والصلاحيات النشطة
+  const currentUser = useMemo(() => users.find((u) => u.id === currentUserId) || users[0], [users, currentUserId]);
+  const userPerms = currentUser.permissions;
+
+  const isAdmin = useMemo(() => {
+    return currentUser?.roleKey === "admin" || (currentUser as any)?.role === "admin";
+  }, [currentUser]);
+
+  // التحقق مما إذا كان المستخدم الحالي هو المدير الأعلى Super Admin (المحامي سعود)
+  const isSuperAdmin = useMemo(() => {
+    return currentUser?.roleKey === "admin" || currentUser?.name?.includes("سعود") || currentUser?.id === 1;
+  }, [currentUser]);
+
+  // التحقق من صلاحية الاطلاع على البيانات والتقارير المالية والأتعاب
+  const canViewFinancials = useMemo(() => {
+    if (!currentUser) return false;
+    if (isSuperAdmin || isAdmin) return true;
+    if (userPerms?.finance || userPerms?.viewInvoices || userPerms?.manageInvoices || userPerms?.agreements) return true;
+    const preset = ROLE_PRESETS[currentUser.roleKey]?.permissions;
+    if (preset?.finance || preset?.viewInvoices || preset?.manageInvoices || preset?.agreements) return true;
+    return false;
+  }, [currentUser, isAdmin, isSuperAdmin, userPerms]);
+
+  // التحقق من الصلاحية مع التنبيه الفوري
+  const checkPerm = (permKey: keyof RolePermissions, actionName: string): boolean => {
+    if (isSuperAdmin) return true;
+    const hasPerm = Boolean(userPerms?.[permKey] ?? (ROLE_PRESETS[currentUser.roleKey]?.permissions?.[permKey] || false));
+    if (!hasPerm) {
+      const label = PERMISSION_LABELS[permKey]?.label || permKey;
+      setPermissionNotice(`🚫 منع إجراء: حساب "${currentUser.name}" دور (${currentUser.roleTitle}) لا يمتلك صلاحية [${label}]. خاصية منع الحذف مفعلة في النظام لجميع الأقسام، ولا يمكن التنفيذ إلا بعد منحك الصلاحية من قبل مدير النظام.`);
+      return false;
+    }
+    return true;
+  };
+
+  // حالة نافذة التحقق الأمني وتأكيد الحذف قبل التنفيذ لجميع الأقسام
+  const [deleteModalState, setDeleteModalState] = useState<{
+    isOpen: boolean;
+    section: string;
+    title: string;
+    details?: string;
+    permKey: keyof RolePermissions;
+    actionName: string;
+    onConfirm: () => void;
+  } | null>(null);
+
+  // دالة طلب الحذف الآمنة المشروطة بالصلاحية والتنبيه المسبق
+  const requestDelete = (opts: {
+    section: string;
+    title: string;
+    details?: string;
+    permKey: keyof RolePermissions;
+    actionName: string;
+    onConfirm: () => void;
+  }) => {
+    if (!checkPerm(opts.permKey, opts.actionName)) {
+      return;
+    }
+    setDeleteModalState({
+      isOpen: true,
+      section: opts.section,
+      title: opts.title,
+      details: opts.details,
+      permKey: opts.permKey,
+      actionName: opts.actionName,
+      onConfirm: opts.onConfirm,
+    });
+  };
   const isDemoTask = (t: any): boolean => {
     if (!t || !t.title) return false;
     const lower = String(t.title).toLowerCase();
@@ -2964,8 +4034,16 @@ export default function App() {
       judge = "";
     }
 
+    let st = c.status || "متداولة";
+    if (st === "قيد الاستئناف") {
+      st = "منتهية";
+    }
+    const stage = c.stage || getCaseStage({ ...c, status: st });
+
     return {
       ...c,
+      stage: stage,
+      status: st,
       opponent: opp,
       judge: judge,
       fee: fee,
@@ -2988,17 +4066,114 @@ export default function App() {
     );
   };
 
+  const normalizeCaseNumberKey = (num: string): string => {
+    if (!num) return "";
+    const digits = String(num)
+      .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+      .replace(/[^\d]/g, "/")
+      .split("/")
+      .filter(Boolean);
+    if (digits.length === 2) {
+      const sorted = [...digits].sort((a, b) => a.length - b.length || a.localeCompare(b));
+      return sorted.join("-");
+    }
+    return String(num)
+      .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+      .replace(/[\s\/\-_\.]/g, "")
+      .toLowerCase();
+  };
+
+  const deduplicateCases = (caseList: CaseItem[]): CaseItem[] => {
+    const seenIds = new Set<number>();
+    const seenNumberKeys = new Map<string, CaseItem>();
+    const seenCompositeKeys = new Set<string>();
+    const result: CaseItem[] = [];
+
+    for (const raw of caseList) {
+      if (!raw) continue;
+      const c = typeof sanitizeCase === "function" ? sanitizeCase(raw) : raw;
+      const normNum = normalizeCaseNumberKey(c.number);
+      const compKey = `${c.clientId}_${String(c.court || "").trim().toLowerCase()}_${String(c.subject || "").trim().toLowerCase()}`;
+
+      if (normNum && seenNumberKeys.has(normNum)) {
+        const existing = seenNumberKeys.get(normNum)!;
+        if (!existing.opponent && c.opponent) existing.opponent = c.opponent;
+        if (!existing.judge && c.judge) existing.judge = c.judge;
+        if ((!existing.court || existing.court === "محاكم دبي") && c.court && c.court !== "محاكم دبي") {
+          existing.court = c.court;
+        }
+        if (!existing.fee && c.fee) existing.fee = c.fee;
+        if (!existing.openDate && c.openDate) existing.openDate = c.openDate;
+        if (existing.status === "متداولة" && c.status && c.status !== "متداولة") {
+          existing.status = c.status;
+        }
+        if (!existing.stage && c.stage) existing.stage = c.stage;
+        continue;
+      }
+
+      if (seenIds.has(c.id)) {
+        continue;
+      }
+
+      if (!normNum && compKey && compKey.length > 10 && seenCompositeKeys.has(compKey)) {
+        continue;
+      }
+
+      let finalId = c.id;
+      if (!finalId || seenIds.has(finalId)) {
+        let maxExisting = 500;
+        if (seenIds.size > 0) {
+          maxExisting = Math.max(...Array.from(seenIds));
+        }
+        finalId = Math.max(maxExisting + 1, 501);
+      }
+      seenIds.add(finalId);
+      if (compKey) seenCompositeKeys.add(compKey);
+
+      const item: CaseItem = { ...c, id: finalId };
+      if (normNum) {
+        seenNumberKeys.set(normNum, item);
+      }
+      result.push(item);
+    }
+
+    return result;
+  };
+
+  const deduplicateClients = (clientList: Client[]): Client[] => {
+    const seenIds = new Set<number>();
+    const seenNames = new Set<string>();
+    const result: Client[] = [];
+
+    for (const c of clientList) {
+      if (!c) continue;
+      const cleanName = String(c.name || "").trim().toLowerCase();
+      if (cleanName && seenNames.has(cleanName)) {
+        continue;
+      }
+      if (cleanName) seenNames.add(cleanName);
+
+      let finalId = c.id;
+      if (!finalId || seenIds.has(finalId)) {
+        let maxExisting = 500;
+        if (seenIds.size > 0) {
+          maxExisting = Math.max(...Array.from(seenIds));
+        }
+        finalId = Math.max(maxExisting + 1, 501);
+      }
+      seenIds.add(finalId);
+      result.push({ ...c, id: finalId });
+    }
+
+    return result;
+  };
+
   const [clients, setClients] = useState<Client[]>(() => {
     const saved = loadStorage<Client[]>("firm_clients", seedClients);
-    if (!saved || saved.length === 0) return seedClients;
-    const existingIds = new Set(saved.map(c => c.id));
-    const toAdd = seedClients.filter(c => !existingIds.has(c.id));
-    if (toAdd.length > 0) {
-      const merged = [...saved, ...toAdd];
-      saveStorage("firm_clients", merged);
-      return merged;
-    }
-    return saved;
+    const combined = (!saved || saved.length === 0) ? seedClients : [...saved, ...seedClients];
+    const unique = deduplicateClients(combined);
+    saveStorage("firm_clients", unique);
+    return unique;
   });
   const [feeAgreements, setFeeAgreements] = useState<FeeAgreement[]>(() => loadStorage("firm_fee_agreements", seedFeeAgreements));
   const [payments, setPayments] = useState<PaymentReceipt[]>(() => loadStorage("firm_payments", seedPayments));
@@ -3008,12 +4183,10 @@ export default function App() {
       .filter(c => !isDemoCase(c))
       .map(sanitizeCase);
     
-    // التأكد من وجود كافة قضايا الكشف
-    const existingNumbers = new Set(cleanList.map(c => String(c.number || "").replace(/\s+/g, "").toLowerCase()));
-    const toAdd = seedCases.filter(c => !existingNumbers.has(String(c.number || "").replace(/\s+/g, "").toLowerCase()));
-    const result = [...cleanList, ...toAdd];
-    saveStorage("firm_cases", result);
-    return result;
+    const combined = [...cleanList, ...seedCases];
+    const unique = deduplicateCases(combined);
+    saveStorage("firm_cases", unique);
+    return unique;
   });
   const [hearings, setHearings] = useState<Hearing[]>(() => {
     const saved = loadStorage<Hearing[]>("firm_hearings", []);
@@ -3507,17 +4680,24 @@ export default function App() {
   };
 
   const deletePrecedent = async (precId: string | number) => {
-    if (!confirm("هل أنت تأكد من حذف هذا المبدأ القضائي من المكتبة؟")) return;
     const target = precedents.find((p) => p.id === precId);
-    setPrecedents((prev) => prev.filter((p) => p.id !== precId));
-    if (target) {
-      logAuditAction("DELETE", "المبادئ والأحكام القضائية", `مبدأ: ${target.title}`, `حذف المبدأ القضائي (${target.court_name} - ${target.appeal_number}) نهائياً`, target.id);
-    }
-    try {
-      await supabase.from("legal_precedents").delete().eq("id", precId);
-    } catch (e) {
-      console.warn("Supabase delete precedent note:", e);
-    }
+    if (!target) return;
+    requestDelete({
+      section: "المبادئ والأحكام القضائية",
+      title: `المبدأ: ${target.title}`,
+      details: `المحكمة: ${target.court_name} | الدائرة: ${target.circuit_name || "—"} | سنة الحكم: ${target.ruling_year} | الطعن: ${target.appeal_number}`,
+      permKey: "deletePrecedents",
+      actionName: "حذف المبدأ القضائي",
+      onConfirm: async () => {
+        setPrecedents((prev) => prev.filter((p) => p.id !== precId));
+        logAuditAction("DELETE", "المبادئ والأحكام القضائية", `مبدأ: ${target.title}`, `حذف المبدأ القضائي (${target.court_name} - ${target.appeal_number}) نهائياً`, target.id);
+        try {
+          await supabase.from("legal_precedents").delete().eq("id", precId);
+        } catch (e) {
+          console.warn("Supabase delete precedent note:", e);
+        }
+      },
+    });
   };
 
   const filteredPrecedents = useMemo(() => {
@@ -3721,7 +4901,7 @@ export default function App() {
 
   const handleExecuteDeleteAgreement = () => {
     if (!deleteAgrConfirm) return;
-    if (!checkPerm("manageInvoices", "حذف اتفاقية الأتعاب")) return;
+    if (!checkPerm("deleteAgreements", "حذف اتفاقية الأتعاب")) return;
     const targetId = deleteAgrConfirm.id;
     const feeAgrId = deleteAgrConfirm.feeAgreementId;
     const cid = deleteAgrConfirm.clientId;
@@ -4380,12 +5560,20 @@ export default function App() {
   const [report, setReport] = useState<any>(null);
   const [modal, setModal] = useState<string | null>(null);
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
-  const [permissionNotice, setPermissionNotice] = useState<string | null>(null);
   const [caseView, setCaseView] = useState<number | null>(null);
   const [q, setQ] = useState("");
+  const [caseStageFilter, setCaseStageFilter] = useState("الكل");
   const [caseFilter, setCaseFilter] = useState("الكل");
   const [caseJudgeFilter, setCaseJudgeFilter] = useState("الكل");
   const [caseCourtFilter, setCaseCourtFilter] = useState("الكل");
+  const [caseTypeFilter, setCaseTypeFilter] = useState("الكل");
+  const [caseEmirateFilter, setCaseEmirateFilter] = useState("الكل");
+  const [caseClientFilter, setCaseClientFilter] = useState("الكل");
+  const [caseClientTypeFilter, setCaseClientTypeFilter] = useState("الكل");
+  const [caseYearFilter, setCaseYearFilter] = useState("الكل");
+  const [caseSortBy, setCaseSortBy] = useState<"default" | "newest" | "oldest" | "number" | "client" | "court">("default");
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [showCaseStatsOnDemand, setShowCaseStatsOnDemand] = useState(false);
 
   // حالات إدارة الموكلين
   const [clientCategoryFilter, setClientCategoryFilter] = useState<string>("الكل");
@@ -4415,25 +5603,35 @@ export default function App() {
 
   // حذف موكل / جهة اتصال يدويًا مع التأكيد ودعم الموكلين المرتبطين بقضايا
   const deleteClient = (clientId: number) => {
-    if (!checkPerm("manageClients", "حذف الموكل")) return;
     const cObj = clients.find((c) => c.id === clientId);
     if (!cObj) return;
     const linkedCases = cases.filter((x) => x.clientId === clientId);
+    const linkedPoas = poas.filter((p) => p.clientId === clientId);
+    const linkedAgreements = officeAgreements.filter((a) => a.clientId === clientId);
+    const linkedInvoices = invoices.filter((i) => i.clientId === clientId);
 
-    let confirmMsg = `هل أنت متأكد من حذف الموكل "${cObj.name}" نهائياً من سجلات المكتب؟`;
-    if (linkedCases.length > 0) {
-      confirmMsg = `تنبيه: الموكل "${cObj.name}" مرتبط بـ ${linkedCases.length} قضية مسجلة بالنظام.\n\nهل ترغب في الحذف النهائي للموكل مع فك ارتباطه من تلك القضايا؟`;
-    }
+    const details = `النوع: ${cObj.type} | الهوية/الرخصة: ${cObj.idNo || "غير محدد"} | الهاتف: ${cObj.phone || "—"}${
+      linkedCases.length > 0 ? `\n⚠️ مرتبط بـ (${linkedCases.length}) قضايا مسجلة بالنظام.` : ""
+    }${linkedPoas.length > 0 ? `\n⚠️ مرتبط بـ (${linkedPoas.length}) وكالات قانونية.` : ""}${
+      linkedAgreements.length > 0 ? `\n⚠️ مرتبط بـ (${linkedAgreements.length}) اتفاقيات أتعاب.` : ""
+    }${linkedInvoices.length > 0 ? `\n⚠️ مرتبط بـ (${linkedInvoices.length}) فواتير مالية.` : ""}`;
 
-    if (confirm(confirmMsg)) {
-      logAuditAction("DELETE", "الموكلين", `الموكل: ${cObj.name}`, `حذف الموكل ${cObj.name} (${cObj.type}) يدويًا من سجلات المكتب`, cObj.id);
-      setClients((prev) => prev.filter((c) => c.id !== clientId));
-      if (editingClient?.id === clientId) {
-        setEditingClient(null);
-      }
-      setClientToast(`تم حذف الموكل "${cObj.name}" بنجاح`);
-      setTimeout(() => setClientToast(null), 4000);
-    }
+    requestDelete({
+      section: "الموكلين والشركات",
+      title: `الموكل: ${cObj.name}`,
+      details,
+      permKey: "deleteClients",
+      actionName: "حذف الموكل",
+      onConfirm: () => {
+        logAuditAction("DELETE", "الموكلين", `الموكل: ${cObj.name}`, `حذف الموكل ${cObj.name} (${cObj.type}) يدويًا من سجلات المكتب`, cObj.id);
+        setClients((prev) => prev.filter((c) => c.id !== clientId));
+        if (editingClient?.id === clientId) {
+          setEditingClient(null);
+        }
+        setClientToast(`تم حذف الموكل "${cObj.name}" بنجاح`);
+        setTimeout(() => setClientToast(null), 4000);
+      },
+    });
   };
 
   // حالة مودال Supabase SQL وتحديد المستخدمين المعلقين
@@ -5282,11 +6480,16 @@ export default function App() {
     // تفريغ فوري ومؤكد لأي معطيات تجريبية متبقية في الـ LocalStorage للمهام والبريد والقضايا والجلسات
     setCases(prev => {
       const cleanList = prev.filter(c => !isDemoCase(c)).map(sanitizeCase);
-      const existingNumbers = new Set(cleanList.map(c => String(c.number || "").replace(/\s+/g, "").toLowerCase()));
-      const toAdd = seedCases.filter(c => !existingNumbers.has(String(c.number || "").replace(/\s+/g, "").toLowerCase()));
-      const result = [...cleanList, ...toAdd];
-      saveStorage("firm_cases", result);
-      return result;
+      const combined = [...cleanList, ...seedCases];
+      const unique = deduplicateCases(combined);
+      saveStorage("firm_cases", unique);
+      return unique;
+    });
+    setClients(prev => {
+      const combined = [...prev, ...seedClients];
+      const unique = deduplicateClients(combined);
+      saveStorage("firm_clients", unique);
+      return unique;
     });
     setHearings(prev => {
       const clean = prev.filter(h => !isDemoHearing(h));
@@ -5734,29 +6937,6 @@ export default function App() {
     return Array.from(map.values()) as UserItem[];
   }, [users]);
 
-  // المستخدم الحالي والصلاحيات النشطة
-  const currentUser = useMemo(() => users.find((u) => u.id === currentUserId) || users[0], [users, currentUserId]);
-  const userPerms = currentUser.permissions;
-
-  const isAdmin = useMemo(() => {
-    return currentUser?.roleKey === "admin" || (currentUser as any)?.role === "admin";
-  }, [currentUser]);
-
-  const canViewFinancials = useMemo(() => {
-    if (!currentUser) return false;
-    if (isAdmin) return true;
-    if (currentUser.canViewFinances) return true;
-    if (hasTabPermission(currentUser, "invoices")) return true;
-    const perms = currentUser.permissions as any;
-    if (perms && typeof perms === "object") {
-      if (perms.viewInvoices || perms.manageInvoices || perms.finance || perms.invoices) return true;
-    }
-    if (Array.isArray(perms)) {
-      if (perms.includes("invoices") || perms.includes("finance") || perms.includes("viewInvoices") || perms.includes("manageInvoices")) return true;
-    }
-    return false;
-  }, [currentUser, isAdmin]);
-
   const openApproveUserModal = (userId: number) => {
     if (!checkPerm("manageUsers", "الموافقة على المستخدمين")) return;
     const target = users.find((u) => u.id === userId);
@@ -5858,7 +7038,6 @@ export default function App() {
   };
 
   const handleDeleteUser = async (userId: number) => {
-    if (!checkPerm("manageUsers", "حذف مستخدم")) return;
     const target = users.find((u) => u.id === userId);
     if (!target) return;
 
@@ -5867,58 +7046,63 @@ export default function App() {
       return;
     }
 
-    if (!confirm(`هل أنت متأكد من حذف حساب "${target.name}" نهائياً من النظام؟`)) {
-      return;
-    }
+    requestDelete({
+      section: "المستخدمون وإدارة النظام",
+      title: `المستخدم: ${target.name}`,
+      details: `البريد الإلكتروني: ${target.email} | الدور الحالي: ${target.roleTitle} (${target.roleKey}) | الحالة: ${target.status || "نشط"}`,
+      permKey: "deleteUsers",
+      actionName: "حذف حساب المستخدم",
+      onConfirm: async () => {
+        // Immediately remove from active state so row disappears
+        logAuditAction("DELETE", "المستخدمون والصلاحيات", `حساب: ${target.name}`, `حذف حساب المستخدم ${target.name} (${target.email}) نهائياً من نظام المكتب`, target.id);
+        setUsers((prev) => prev.filter((u) => u.id !== userId));
 
-    // Immediately remove from active state so row disappears
-    logAuditAction("DELETE", "المستخدمون والصلاحيات", `حساب: ${target.name}`, `حذف حساب المستخدم ${target.name} (${target.email}) نهائياً من نظام المكتب`, target.id);
-    setUsers((prev) => prev.filter((u) => u.id !== userId));
+        const targetUserId = target.supabaseId || target.id;
 
-    const targetUserId = target.supabaseId || target.id;
-
-    try {
-      // 1. Direct deletion query on public.profiles
-      const { error: deleteErr } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", targetUserId);
-
-      if (deleteErr) {
-        // Try direct deletion by email
-        const { error: deleteEmailErr } = await supabase
-          .from("profiles")
-          .delete()
-          .eq("email", target.email.toLowerCase());
-
-        if (deleteEmailErr) {
-          // 2. Fallback soft delete (status = 'rejected') if direct delete restricted by RLS or FK
-          const { error: updateErr } = await supabase
+        try {
+          // 1. Direct deletion query on public.profiles
+          const { error: deleteErr } = await supabase
             .from("profiles")
-            .update({ status: "rejected" })
+            .delete()
             .eq("id", targetUserId);
 
-          if (updateErr) {
+          if (deleteErr) {
+            // Try direct deletion by email
+            const { error: deleteEmailErr } = await supabase
+              .from("profiles")
+              .delete()
+              .eq("email", target.email.toLowerCase());
+
+            if (deleteEmailErr) {
+              // 2. Fallback soft delete (status = 'rejected') if direct delete restricted by RLS or FK
+              const { error: updateErr } = await supabase
+                .from("profiles")
+                .update({ status: "rejected" })
+                .eq("id", targetUserId);
+
+              if (updateErr) {
+                await supabase
+                  .from("profiles")
+                  .update({ status: "rejected" })
+                  .eq("email", target.email.toLowerCase());
+              }
+            }
+          }
+        } catch (e) {
+          console.log("Error during profile deletion:", e);
+          try {
             await supabase
               .from("profiles")
               .update({ status: "rejected" })
               .eq("email", target.email.toLowerCase());
+          } catch (err) {
+            console.log("Fallback soft delete failed:", err);
           }
         }
-      }
-    } catch (e) {
-      console.log("Error during profile deletion:", e);
-      try {
-        await supabase
-          .from("profiles")
-          .update({ status: "rejected" })
-          .eq("email", target.email.toLowerCase());
-      } catch (err) {
-        console.log("Fallback soft delete failed:", err);
-      }
-    }
 
-    setPermissionNotice(`تم حذف واستبعاد حساب "${target.name}" بنجاح.`);
+        setPermissionNotice(`تم حذف واستبعاد حساب "${target.name}" بنجاح.`);
+      },
+    });
   };
 
   const rejectUser = async (userId: number) => {
@@ -6289,21 +7473,6 @@ export default function App() {
     setNotifyModal(null);
   };
 
-  // التحقق مما إذا كان المستخدم الحالي هو المدير الأعلى Super Admin (المحامي سعود)
-  const isSuperAdmin = useMemo(() => {
-    return currentUser.roleKey === "admin" || currentUser.name.includes("سعود") || currentUser.id === 1;
-  }, [currentUser]);
-
-  // التحقق من الصلاحية مع التنبيه
-  const checkPerm = (permKey: keyof RolePermissions, actionName: string): boolean => {
-    if (isSuperAdmin) return true;
-    if (!userPerms[permKey]) {
-      setPermissionNotice(`عذرًا، حساب "${currentUser.name}" دور (${currentUser.roleTitle}) لا يمتلك صلاحية [${PERMISSION_LABELS[permKey].label}]. يُرجى التبديل لحساب المدير لتجربتها.`);
-      return false;
-    }
-    return true;
-  };
-
   // ---------- إحصاءات ومخططات تفاعلية ----------
   const stats = useMemo(() => {
     const active = cases.filter((c) => !["مغلقة", "صدر الحكم"].includes(c.status)).length;
@@ -6479,14 +7648,38 @@ export default function App() {
 
   const f = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setForm((prev) => ({ ...prev, [k]: e.target.value }));
 
+  const handleDeduplicateCasesManual = () => {
+    const beforeCount = cases.length;
+    const cleaned = deduplicateCases(cases);
+    setCases(cleaned);
+    saveStorage("firm_cases", cleaned);
+    const removedCount = beforeCount - cleaned.length;
+    if (removedCount > 0) {
+      alert(`تم بنجاح فحص وتنظيف القضايا المكررة وإزالة ${removedCount} سجل مكرر! العدد الحالي الآن: ${cleaned.length} قضية فريدة وموثقة.`);
+      logAuditAction("DELETE", "القضايا", "إزالة التكرار", `تم حذف ${removedCount} قضية مكررة بنجاح`, 0);
+    } else {
+      alert(`سجلات القضايا سليمة ومدققة تماماً ولا يوجد أي تكرار (${cleaned.length} قضية فريدة ومسجلة).`);
+    }
+  };
+
   const saveCase = () => {
     if (!checkPerm("manageCases", "إضافة قضية")) return;
     if (!form.number || !form.clientId) return;
+
+    const normNum = normalizeCaseNumberKey(form.number);
+    const existing = cases.find(c => normalizeCaseNumberKey(c.number) === normNum);
+    if (existing) {
+      alert(`تنبيه: يوجد قضية مسجلة مسبقاً بنفس رقم الملف/الدعوى (${form.number}) بالرقم التعريفي #${existing.id}. يرجى التحقق من الرقم لمنع تكرار القضايا.`);
+      return;
+    }
     
     const newCaseId = nextId(cases);
     const openDate = form.openDate || todayISO();
     
-    setCases([...cases, { id: newCaseId, number: form.number, clientId: +form.clientId, opponent: form.opponent || "—", type: form.type || CASE_TYPES[0], court: form.court || COURTS[0], judge: form.judge || "", status: form.status || "قيد النظر", subject: form.subject || "", openDate: openDate, fee: +form.fee || 0 }]);
+    const stage = form.stage || "الابتدائية";
+    const status = form.status || "متداولة";
+    
+    setCases(prev => deduplicateCases([...prev, { id: newCaseId, number: form.number, clientId: +form.clientId, opponent: form.opponent || "—", type: form.type || CASE_TYPES[0], court: form.court || COURTS[0], judge: form.judge || "", stage: stage, status: status, subject: form.subject || "", openDate: openDate, fee: +form.fee || 0 }]));
     
     if (form.taskTemplate) {
       const template = TASK_TEMPLATES.find(t => t.id === form.taskTemplate);
@@ -6591,15 +7784,24 @@ export default function App() {
   };
 
   const deleteEmployee = async (empId: string) => {
-    if (!confirm("هل أنت تأكد من حذف بيانات هذا الموظف؟")) return;
     const targetEmp = employees.find((e) => e.id === empId);
-    logAuditAction("DELETE", "الكادر والرواتب HR", `الموظف: ${targetEmp?.name || empId}`, `حذف سجّل الموظف ${targetEmp?.name || empId} (${targetEmp?.jobTitle || ""}) من كادر العمل`, empId);
-    setEmployees(employees.filter(e => e.id !== empId));
-    try {
-      await supabase.from("employees").delete().eq("id", empId);
-    } catch (e) {
-      console.log("Supabase delete employee note:", e);
-    }
+    if (!targetEmp) return;
+    requestDelete({
+      section: "الكادر والموظفون HR",
+      title: `الموظف: ${targetEmp.name || targetEmp.fullName}`,
+      details: `المسمى الوظيفي: ${targetEmp.jobTitle || "—"} | القسم: ${targetEmp.department || "—"} | الراتب الأساسي: ${fmtAED(targetEmp.basicSalary || 0)}`,
+      permKey: "deleteEmployees",
+      actionName: "حذف موظف من الكادر",
+      onConfirm: async () => {
+        logAuditAction("DELETE", "الكادر والرواتب HR", `الموظف: ${targetEmp.name || targetEmp.fullName || empId}`, `حذف سجّل الموظف ${targetEmp.name || targetEmp.fullName || empId} (${targetEmp.jobTitle || ""}) من كادر العمل`, empId);
+        setEmployees(employees.filter(e => e.id !== empId));
+        try {
+          await supabase.from("employees").delete().eq("id", empId);
+        } catch (e) {
+          console.log("Supabase delete employee note:", e);
+        }
+      },
+    });
   };
 
   const saveLeaveRequest = async () => {
@@ -7334,6 +8536,27 @@ export default function App() {
   const upcoming = hearings.filter((h) => !h.done && daysUntil(h.date) >= 0).sort((a, b) => a.date.localeCompare(b.date));
   const notifCount = stats.expiringPoa + invoices.filter((i) => i.status === "متأخرة").length + upcoming.filter((h) => daysUntil(h.date) <= 2).length + kycDue + overdueTasks;
 
+  const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients]);
+
+  const getCaseEmirate = (c: CaseItem): string => {
+    const cObj = clientMap.get(c.clientId);
+    const text = ((c.court || "") + " " + (cObj?.emirate || "") + " " + (cObj?.address || "")).toLowerCase();
+    if (text.includes("دبي")) return "دبي";
+    if (text.includes("عجمان")) return "عجمان";
+    if (text.includes("أم القيوين") || text.includes("ام القيوين")) return "أم القيوين";
+    if (text.includes("الشارقة") || text.includes("كلباء") || text.includes("خورفكان")) return "الشارقة";
+    if (text.includes("رأس الخيمة") || text.includes("راس الخيمة")) return "رأس الخيمة";
+    if (text.includes("أبوظبي") || text.includes("ابوظبي")) return "أبوظبي";
+    if (text.includes("الفجيرة")) return "الفجيرة";
+    return "الإمارات";
+  };
+
+  const getCaseYear = (num: string): string => {
+    if (!num) return "";
+    const m = num.match(/\b(20\d{2}|19\d{2})\b/);
+    return m ? m[1] : "";
+  };
+
   const uniqueJudges = useMemo(() => {
     const list: string[] = [];
     cases.forEach((c) => {
@@ -7356,25 +8579,277 @@ export default function App() {
     return list.sort();
   }, [cases]);
 
-  const filteredCases = cases.filter((c) => {
-    const matchStatus = caseFilter === "الكل" || c.status === caseFilter;
-    const matchCourt = caseCourtFilter === "الكل" || c.court === caseCourtFilter;
-    const matchJudge =
-      caseJudgeFilter === "الكل" ||
-      (c.judge && c.judge.toLowerCase().includes(caseJudgeFilter.toLowerCase()));
+  const uniqueCaseTypes = useMemo(() => {
+    const set = new Set<string>();
+    cases.forEach((c) => {
+      if (c.type && c.type.trim()) set.add(c.type.trim());
+    });
+    CASE_TYPES.forEach((t) => set.add(t));
+    return Array.from(set).sort();
+  }, [cases]);
 
+  const uniqueEmirates = ["دبي", "عجمان", "أم القيوين", "الشارقة", "رأس الخيمة", "أبوظبي", "الفجيرة"];
+
+  const uniqueCaseYears = useMemo(() => {
+    const set = new Set<string>();
+    cases.forEach((c) => {
+      const yr = getCaseYear(c.number);
+      if (yr) set.add(yr);
+    });
+    return Array.from(set).sort((a, b) => b.localeCompare(a));
+  }, [cases]);
+
+  const uniqueCaseClients = useMemo(() => {
+    const clientIdsWithCases = new Set(cases.map((c) => c.clientId));
+    return clients.filter((cl) => clientIdsWithCases.has(cl.id)).sort((a, b) => a.name.localeCompare(b.name, "ar"));
+  }, [cases, clients]);
+
+  const isCaseMatchingStatus = (c: CaseItem, filter: string): boolean => {
+    if (!filter || filter === "الكل") return true;
+    if (filter === "متداولة") {
+      return c.status === "متداولة" || c.status === "قيد النظر";
+    }
+    if (filter === "منتهية") {
+      return c.status === "منتهية" || c.status === "مغلقة" || c.status === "مشطوبة";
+    }
+    if (filter === "محكومة" || filter === "صدر الحكم") {
+      return c.status === "محكومة" || c.status === "صدر الحكم";
+    }
+    if (filter === "مشطوبة") {
+      return c.status === "مشطوبة";
+    }
+    if (filter === "قيد النظر") {
+      return c.status === "قيد النظر";
+    }
+    if (filter === "محجوزة للحكم") {
+      return c.status === "محجوزة للحكم";
+    }
+    if (filter === "معلقة") {
+      return c.status === "معلقة";
+    }
+    return c.status === filter;
+  };
+
+  const isCaseMatchingStage = (c: CaseItem, stageFilter: string): boolean => {
+    if (!stageFilter || stageFilter === "الكل") return true;
+    const currentStage = getCaseStage(c);
+    if (stageFilter === "الاستئناف" || stageFilter === "استئناف") {
+      return currentStage === "الاستئناف";
+    }
+    if (stageFilter === "الابتدائية" || stageFilter === "ابتدائي") {
+      return currentStage === "الابتدائية";
+    }
+    if (stageFilter === "التمييز / النقض" || stageFilter === "تمييز" || stageFilter === "نقض") {
+      return currentStage === "التمييز / النقض";
+    }
+    if (stageFilter === "التنفيذ" || stageFilter === "تنفيذ") {
+      return currentStage === "التنفيذ";
+    }
+    if (stageFilter === "لجان فض المنازعات") {
+      return currentStage === "لجان فض المنازعات";
+    }
+    return currentStage === stageFilter;
+  };
+
+  const filteredCases = useMemo(() => {
     const query = q.trim().toLowerCase();
-    const matchQuery =
-      !query ||
-      c.number.toLowerCase().includes(query) ||
-      clientName(c.clientId).toLowerCase().includes(query) ||
-      c.subject.toLowerCase().includes(query) ||
-      c.opponent.toLowerCase().includes(query) ||
-      (c.court && c.court.toLowerCase().includes(query)) ||
-      (c.judge && c.judge.toLowerCase().includes(query));
+    const result = cases.filter((c) => {
+      const matchStage = isCaseMatchingStage(c, caseStageFilter);
+      const matchStatus = isCaseMatchingStatus(c, caseFilter);
+      const matchCourt = caseCourtFilter === "الكل" || c.court === caseCourtFilter;
+      const matchJudge =
+        caseJudgeFilter === "الكل" ||
+        (c.judge && c.judge.toLowerCase().includes(caseJudgeFilter.toLowerCase()));
+      const matchType =
+        caseTypeFilter === "الكل" ||
+        c.type === caseTypeFilter ||
+        (c.subject && c.subject.includes(caseTypeFilter));
+      const matchEmirate =
+        caseEmirateFilter === "الكل" || getCaseEmirate(c) === caseEmirateFilter;
+      const matchClient =
+        caseClientFilter === "الكل" || String(c.clientId) === caseClientFilter;
+      const clientObj = clientMap.get(c.clientId);
+      const matchClientType =
+        caseClientTypeFilter === "الكل" || (clientObj && clientObj.type === caseClientTypeFilter);
+      const matchYear =
+        caseYearFilter === "الكل" || getCaseYear(c.number) === caseYearFilter;
 
-    return matchStatus && matchCourt && matchJudge && matchQuery;
-  });
+      const matchQuery =
+        !query ||
+        c.number.toLowerCase().includes(query) ||
+        clientName(c.clientId).toLowerCase().includes(query) ||
+        c.subject.toLowerCase().includes(query) ||
+        c.opponent.toLowerCase().includes(query) ||
+        (c.court && c.court.toLowerCase().includes(query)) ||
+        (c.judge && c.judge.toLowerCase().includes(query)) ||
+        (c.type && c.type.toLowerCase().includes(query)) ||
+        getCaseStage(c).toLowerCase().includes(query) ||
+        c.status.toLowerCase().includes(query);
+
+      return (
+        matchStage &&
+        matchStatus &&
+        matchCourt &&
+        matchJudge &&
+        matchType &&
+        matchEmirate &&
+        matchClient &&
+        matchClientType &&
+        matchYear &&
+        matchQuery
+      );
+    });
+
+    if (caseSortBy === "newest") {
+      return [...result].sort((a, b) => b.id - a.id);
+    } else if (caseSortBy === "oldest") {
+      return [...result].sort((a, b) => a.id - b.id);
+    } else if (caseSortBy === "number") {
+      return [...result].sort((a, b) => a.number.localeCompare(b.number, "ar", { numeric: true }));
+    } else if (caseSortBy === "client") {
+      return [...result].sort((a, b) => clientName(a.clientId).localeCompare(clientName(b.clientId), "ar"));
+    } else if (caseSortBy === "court") {
+      return [...result].sort((a, b) => (a.court || "").localeCompare(b.court || "", "ar"));
+    }
+
+    return result;
+  }, [
+    cases,
+    caseStageFilter,
+    caseFilter,
+    caseCourtFilter,
+    caseJudgeFilter,
+    caseTypeFilter,
+    caseEmirateFilter,
+    caseClientFilter,
+    caseClientTypeFilter,
+    caseYearFilter,
+    caseSortBy,
+    q,
+    clientMap
+  ]);
+
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (caseStageFilter !== "الكل") count++;
+    if (caseFilter !== "الكل") count++;
+    if (caseJudgeFilter !== "الكل") count++;
+    if (caseCourtFilter !== "الكل") count++;
+    if (caseTypeFilter !== "الكل") count++;
+    if (caseEmirateFilter !== "الكل") count++;
+    if (caseClientFilter !== "الكل") count++;
+    if (caseClientTypeFilter !== "الكل") count++;
+    if (caseYearFilter !== "الكل") count++;
+    if (caseSortBy !== "default") count++;
+    if (q.trim() !== "") count++;
+    return count;
+  }, [
+    caseStageFilter,
+    caseFilter,
+    caseJudgeFilter,
+    caseCourtFilter,
+    caseTypeFilter,
+    caseEmirateFilter,
+    caseClientFilter,
+    caseClientTypeFilter,
+    caseYearFilter,
+    caseSortBy,
+    q
+  ]);
+
+  const resetAllCaseFilters = () => {
+    setCaseStageFilter("الكل");
+    setCaseFilter("الكل");
+    setCaseJudgeFilter("الكل");
+    setCaseCourtFilter("الكل");
+    setCaseTypeFilter("الكل");
+    setCaseEmirateFilter("الكل");
+    setCaseClientFilter("الكل");
+    setCaseClientTypeFilter("الكل");
+    setCaseYearFilter("الكل");
+    setCaseSortBy("default");
+    setQ("");
+  };
+
+  const caseStatsBreakdown = useMemo(() => {
+    const statusMap: Record<string, number> = {
+      "الكل": cases.length,
+      "متداولة": 0,
+      "منتهية": 0,
+      "محكومة": 0,
+      "صدر الحكم": 0,
+      "قيد النظر": 0,
+      "محجوزة للحكم": 0,
+      "مشطوبة": 0,
+      "معلقة": 0,
+      "مغلقة": 0,
+    };
+    const stageMap: Record<string, number> = {
+      "الكل": cases.length,
+      "الابتدائية": 0,
+      "الاستئناف": 0,
+      "التمييز / النقض": 0,
+      "التنفيذ": 0,
+      "لجان فض المنازعات": 0,
+    };
+    const stageStatusMap: Record<string, { total: number; ongoing: number; finished: number }> = {
+      "الابتدائية": { total: 0, ongoing: 0, finished: 0 },
+      "الاستئناف": { total: 0, ongoing: 0, finished: 0 },
+      "التمييز / النقض": { total: 0, ongoing: 0, finished: 0 },
+      "التنفيذ": { total: 0, ongoing: 0, finished: 0 },
+      "لجان فض المنازعات": { total: 0, ongoing: 0, finished: 0 },
+    };
+    const emirateMap: Record<string, number> = {};
+    const clientTypeMap: Record<string, number> = { "شركة": 0, "فرد": 0 };
+    const typeMap: Record<string, number> = {};
+
+    cases.forEach((c) => {
+      const st = c.status || "متداولة";
+      const stage = getCaseStage(c);
+
+      // Status aggregation
+      if (st === "متداولة") statusMap["متداولة"] = (statusMap["متداولة"] || 0) + 1;
+      else if (st === "منتهية" || st === "مغلقة") statusMap["منتهية"] = (statusMap["منتهية"] || 0) + 1;
+      else if (st === "محكومة" || st === "صدر الحكم") {
+        statusMap["محكومة"] = (statusMap["محكومة"] || 0) + 1;
+        statusMap["صدر الحكم"] = (statusMap["صدر الحكم"] || 0) + 1;
+      } else if (st === "قيد النظر") statusMap["قيد النظر"] = (statusMap["قيد النظر"] || 0) + 1;
+      else if (st === "محجوزة للحكم") statusMap["محجوزة للحكم"] = (statusMap["محجوزة للحكم"] || 0) + 1;
+      else if (st === "مشطوبة") statusMap["مشطوبة"] = (statusMap["مشطوبة"] || 0) + 1;
+      else if (st === "معلقة") statusMap["معلقة"] = (statusMap["معلقة"] || 0) + 1;
+
+      // Stage aggregation
+      stageMap[stage] = (stageMap[stage] || 0) + 1;
+      if (!stageStatusMap[stage]) {
+        stageStatusMap[stage] = { total: 0, ongoing: 0, finished: 0 };
+      }
+      stageStatusMap[stage].total += 1;
+      if (st === "متداولة" || st === "قيد النظر" || st === "محجوزة للحكم") {
+        stageStatusMap[stage].ongoing += 1;
+      } else {
+        stageStatusMap[stage].finished += 1;
+      }
+
+      const em = getCaseEmirate(c);
+      emirateMap[em] = (emirateMap[em] || 0) + 1;
+
+      const cl = clientMap.get(c.clientId);
+      if (cl?.type === "شركة") clientTypeMap["شركة"] = (clientTypeMap["شركة"] || 0) + 1;
+      else clientTypeMap["فرد"] = (clientTypeMap["فرد"] || 0) + 1;
+
+      const tp = c.type || "أخرى";
+      typeMap[tp] = (typeMap[tp] || 0) + 1;
+    });
+
+    return {
+      statusMap,
+      stageMap,
+      stageStatusMap,
+      emirateMap,
+      clientTypeMap,
+      typeMap
+    };
+  }, [cases, clientMap]);
 
   const selectedCase = cases.find((c) => c.id === caseView);
 
@@ -8739,31 +10214,673 @@ export default function App() {
               <>
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <h2 className="text-2xl font-bold">إدارة القضايا والرول</h2>
-                    <p className="text-xs text-slate-500">قيد ومتابعة ملفات القضايا وتوزيعها حسب المحاكم والدوار والقضاة</p>
+                    <div className="flex items-center gap-2.5">
+                      <h2 className="text-2xl font-bold">إدارة القضايا والرول</h2>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 text-xs font-black">
+                        <Hash size={13} /> {filteredCases.length} قضية
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500">قيد ومتابعة ملفات القضايا وتوزيعها حسب المحاكم والدوائر والقضاة مع محرك فلترة متقدم وإحصاء فوري</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
+                    {/* زر إظهار / إخفاء عدد وإحصائيات القضايا عند الطلب */}
+                    <button
+                      onClick={() => setShowCaseStatsOnDemand(!showCaseStatsOnDemand)}
+                      className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-bold border transition shadow-xs ${
+                        showCaseStatsOnDemand
+                          ? "bg-amber-600 text-white border-amber-600 ring-2 ring-amber-300"
+                          : "bg-white text-slate-700 border-slate-300 hover:bg-amber-50 hover:border-amber-400"
+                      }`}
+                      title="إظهار أو إخفاء بطاقات الإحصاء وتحليل الأعداد"
+                    >
+                      {showCaseStatsOnDemand ? <EyeOff size={16} /> : <Eye size={16} />}
+                      <span>{showCaseStatsOnDemand ? "إخفاء إحصائيات الأعداد" : "إظهار أعداد وإحصائيات القضايا"}</span>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-black ${showCaseStatsOnDemand ? "bg-white/20 text-white" : "bg-amber-100 text-amber-900"}`}>
+                        {filteredCases.length}
+                      </span>
+                    </button>
+
+                    {/* زر الفلترة المتقدمة */}
+                    <button
+                      onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                      className={`flex items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-bold border transition shadow-xs ${
+                        showAdvancedFilters
+                          ? "bg-slate-900 text-white border-slate-900 ring-2 ring-slate-400"
+                          : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50 hover:border-slate-400"
+                      }`}
+                      title="فتح / إغلاق محرك الفلترة المتقدمة"
+                    >
+                      <SlidersHorizontal size={16} />
+                      <span>فلتر متقدم</span>
+                      {activeFiltersCount > 0 && (
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[11px] font-black text-white">
+                          {activeFiltersCount}
+                        </span>
+                      )}
+                    </button>
+
+                    {/* زر فحص وتدقيق التكرارات */}
+                    <button
+                      onClick={handleDeduplicateCasesManual}
+                      className="flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-400 shadow-xs transition"
+                      title="فحص شامل وتدقيق فوري لمنع وإزالة أي قضايا مكررة"
+                    >
+                      <Sparkles size={14} className="text-amber-600" />
+                      <span>تدقيق التكرار</span>
+                    </button>
+
                     <button
                       onClick={() => setShowCasesExcelModal(true)}
                       className="flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-800 shadow-sm transition"
                     >
-                      <FileSpreadsheet size={16} /> رفع ملف Excel القضايا السابقة
+                      <FileSpreadsheet size={16} /> رفع ملف Excel
                     </button>
-                    <button onClick={() => openModalWithCheck("case", "manageCases")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> قضية جديدة</button>
+
+                    <button
+                      onClick={() => openModalWithCheck("case", "manageCases")}
+                      className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"
+                    >
+                      <Plus size={16} /> قضية جديدة
+                    </button>
                   </div>
                 </div>
 
-                {/* أزرار الحالة السريعة */}
-                <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs">
+                {/* ===== لوحة إظهار عدد وإحصائيات القضايا عند الطلب ===== */}
+                {showCaseStatsOnDemand && (
+                  <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50/90 via-white to-stone-50 p-4 shadow-sm space-y-4 animate-in fade-in duration-200">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200/80 pb-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-600 text-white shadow-xs">
+                          <Hash size={18} />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-900 text-sm">لوحة تفصيل أعداد القضايا والإحصاء الفوري (عند الطلب)</h3>
+                          <p className="text-xs text-slate-500">انقر على أي بطاقة أو تصنيف لتطبيق الفلترة السريعة مباشرة</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-700 bg-amber-100/90 border border-amber-300 px-3 py-1.5 rounded-xl">
+                          إجمالي السجلات: <strong className="text-amber-950 text-sm font-black">{filteredCases.length}</strong> / {cases.length} قضية
+                        </span>
+                        <button
+                          onClick={() => setShowCaseStatsOnDemand(false)}
+                          className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-900 p-1.5 rounded-lg hover:bg-amber-100 transition"
+                          title="إخفاء لوحة الأعداد"
+                        >
+                          <EyeOff size={14} /> إخفاء
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* بطاقات الإحصاءات السريعة لحالة القضايا ومراحل التقاضي */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-center">
+                      <div
+                        onClick={() => { setCaseFilter("الكل"); setCaseStageFilter("الكل"); }}
+                        className={`cursor-pointer rounded-xl p-3 border transition ${
+                          caseFilter === "الكل" && caseStageFilter === "الكل"
+                            ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-400"
+                            : "bg-white border-slate-200 hover:border-slate-400 hover:bg-slate-50"
+                        }`}
+                      >
+                        <p className="text-[11px] font-bold opacity-80">إجمالي القضايا</p>
+                        <p className="text-2xl font-black mt-0.5">{cases.length}</p>
+                        <span className="text-[10px] opacity-70">100% من السجلات</span>
+                      </div>
+
+                      <div
+                        onClick={() => setCaseFilter(caseFilter === "متداولة" ? "الكل" : "متداولة")}
+                        className={`cursor-pointer rounded-xl p-3 border transition ${
+                          caseFilter === "متداولة"
+                            ? "bg-emerald-700 text-white border-emerald-700 shadow-md ring-2 ring-emerald-400"
+                            : "bg-white border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/40"
+                        }`}
+                      >
+                        <p className={`text-[11px] font-bold ${caseFilter === "متداولة" ? "text-white" : "text-emerald-800"}`}>قضايا متداولة</p>
+                        <p className={`text-2xl font-black mt-0.5 ${caseFilter === "متداولة" ? "text-white" : "text-emerald-950"}`}>{caseStatsBreakdown.statusMap["متداولة"] || 0}</p>
+                        <span className={`text-[10px] font-semibold ${caseFilter === "متداولة" ? "text-emerald-100" : "text-emerald-700"}`}>جلسات نشطة</span>
+                      </div>
+
+                      <div
+                        onClick={() => setCaseFilter(caseFilter === "منتهية" ? "الكل" : "منتهية")}
+                        className={`cursor-pointer rounded-xl p-3 border transition ${
+                          caseFilter === "منتهية"
+                            ? "bg-stone-700 text-white border-stone-700 shadow-md ring-2 ring-stone-400"
+                            : "bg-white border-slate-200 hover:border-stone-400 hover:bg-stone-50"
+                        }`}
+                      >
+                        <p className={`text-[11px] font-bold ${caseFilter === "منتهية" ? "text-white" : "text-stone-800"}`}>قضايا منتهية</p>
+                        <p className={`text-2xl font-black mt-0.5 ${caseFilter === "منتهية" ? "text-white" : "text-stone-950"}`}>{caseStatsBreakdown.statusMap["منتهية"] || 0}</p>
+                        <span className={`text-[10px] font-semibold ${caseFilter === "منتهية" ? "text-stone-100" : "text-stone-600"}`}>ملفات محسومة ومغلقة</span>
+                      </div>
+
+                      <div
+                        onClick={() => setCaseFilter(caseFilter === "محكومة" ? "الكل" : "محكومة")}
+                        className={`cursor-pointer rounded-xl p-3 border transition ${
+                          caseFilter === "محكومة"
+                            ? "bg-purple-700 text-white border-purple-700 shadow-md ring-2 ring-purple-400"
+                            : "bg-white border-slate-200 hover:border-purple-400 hover:bg-purple-50/40"
+                        }`}
+                      >
+                        <p className={`text-[11px] font-bold ${caseFilter === "محكومة" ? "text-white" : "text-purple-800"}`}>قضايا محكومة</p>
+                        <p className={`text-2xl font-black mt-0.5 ${caseFilter === "محكومة" ? "text-white" : "text-purple-950"}`}>{caseStatsBreakdown.statusMap["محكومة"] || 0}</p>
+                        <span className={`text-[10px] font-semibold ${caseFilter === "محكومة" ? "text-purple-100" : "text-purple-700"}`}>أحكام صدرت</span>
+                      </div>
+
+                      <div
+                        onClick={() => setCaseFilter(caseFilter === "قيد النظر" ? "الكل" : "قيد النظر")}
+                        className={`cursor-pointer rounded-xl p-3 border transition ${
+                          caseFilter === "قيد النظر"
+                            ? "bg-amber-700 text-white border-amber-700 shadow-md ring-2 ring-amber-400"
+                            : "bg-white border-slate-200 hover:border-amber-400 hover:bg-amber-50/40"
+                        }`}
+                      >
+                        <p className={`text-[11px] font-bold ${caseFilter === "قيد النظر" ? "text-white" : "text-amber-800"}`}>قيد النظر</p>
+                        <p className={`text-2xl font-black mt-0.5 ${caseFilter === "قيد النظر" ? "text-white" : "text-amber-950"}`}>{caseStatsBreakdown.statusMap["قيد النظر"] || 0}</p>
+                        <span className={`text-[10px] font-semibold ${caseFilter === "قيد النظر" ? "text-amber-100" : "text-amber-700"}`}>بانتظار الفصل</span>
+                      </div>
+
+                      <div
+                        onClick={() => setCaseFilter(caseFilter === "مشطوبة" ? "الكل" : "مشطوبة")}
+                        className={`cursor-pointer rounded-xl p-3 border transition ${
+                          caseFilter === "مشطوبة"
+                            ? "bg-red-700 text-white border-red-700 shadow-md ring-2 ring-red-400"
+                            : "bg-white border-slate-200 hover:border-red-400 hover:bg-red-50/40"
+                        }`}
+                      >
+                        <p className={`text-[11px] font-bold ${caseFilter === "مشطوبة" ? "text-white" : "text-red-800"}`}>مشطوبة / معلقة</p>
+                        <p className={`text-2xl font-black mt-0.5 ${caseFilter === "مشطوبة" ? "text-white" : "text-red-950"}`}>
+                          {(caseStatsBreakdown.statusMap["مشطوبة"] || 0) + (caseStatsBreakdown.statusMap["معلقة"] || 0)}
+                        </p>
+                        <span className={`text-[10px] font-semibold ${caseFilter === "مشطوبة" ? "text-red-100" : "text-red-600"}`}>مشطوبة أو موقوفة</span>
+                      </div>
+                    </div>
+
+                    {/* تصنيف مراحل ودرجات التقاضي مع حالة كل مرحلة (متداولة / منتهية) */}
+                    <div className="bg-white p-3.5 rounded-xl border border-amber-200/80 shadow-2xs space-y-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                        <span className="font-bold text-xs text-slate-800 flex items-center gap-1.5">
+                          <Layers size={14} className="text-amber-600" />
+                          <span>توزيع مراحل ودرجات التقاضي (الاستئناف، الابتدائي، التمييز، التنفيذ) مع حالة التداول والإنجاز:</span>
+                        </span>
+                        {caseStageFilter !== "الكل" && (
+                          <button
+                            onClick={() => setCaseStageFilter("الكل")}
+                            className="text-[11px] font-bold text-amber-700 hover:underline bg-amber-50 px-2 py-0.5 rounded-md"
+                          >
+                            عرض جميع المراحل (إلغاء فلتر المرحلة)
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
+                        {CASE_STAGES.map((stg) => {
+                          const totalForStage = caseStatsBreakdown.stageMap[stg] || 0;
+                          const stgStats = caseStatsBreakdown.stageStatusMap[stg] || { ongoing: 0, finished: 0 };
+                          const isSelected = caseStageFilter === stg;
+                          return (
+                            <button
+                              key={stg}
+                              onClick={() => setCaseStageFilter(isSelected ? "الكل" : stg)}
+                              className={`p-2.5 rounded-xl border text-right transition flex flex-col justify-between ${
+                                isSelected
+                                  ? "bg-amber-500 text-white border-amber-600 shadow-sm ring-2 ring-amber-300"
+                                  : "bg-slate-50 text-slate-800 border-slate-200 hover:bg-amber-50/60 hover:border-amber-300"
+                              }`}
+                            >
+                              <div className="flex items-center justify-between w-full">
+                                <span className={`text-xs font-bold ${isSelected ? "text-white" : "text-slate-900"}`}>{stg}</span>
+                                <span className={`text-xs font-black px-2 py-0.5 rounded-full ${isSelected ? "bg-white text-amber-900" : "bg-amber-100 text-amber-950"}`}>
+                                  {totalForStage}
+                                </span>
+                              </div>
+                              <div className="mt-2 flex items-center justify-between text-[10px] pt-1.5 border-t border-slate-200/60 font-semibold w-full">
+                                <span className={isSelected ? "text-white/90" : "text-emerald-700"}>
+                                  متداولة: {stgStats.ongoing}
+                                </span>
+                                <span className={isSelected ? "text-white/90" : "text-slate-500"}>
+                                  منتهية: {stgStats.finished}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* شريط توزيع الإمارات والمحاكم وتصنيف الموكلين */}
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1 text-xs">
+                      <div className="bg-white p-3 rounded-xl border border-amber-100 shadow-2xs">
+                        <span className="font-bold text-slate-800 mb-2 flex items-center justify-between">
+                          <span className="flex items-center gap-1">
+                            <Building2 size={13} className="text-amber-600" /> توزيع القضايا حسب الإمارات:
+                          </span>
+                          {caseEmirateFilter !== "الكل" && (
+                            <button onClick={() => setCaseEmirateFilter("الكل")} className="text-[10px] text-amber-700 font-bold hover:underline">
+                              إلغاء التحديد
+                            </button>
+                          )}
+                        </span>
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {uniqueEmirates.map((em) => {
+                            const count = caseStatsBreakdown.emirateMap[em] || 0;
+                            if (count === 0) return null;
+                            const isSelected = caseEmirateFilter === em;
+                            return (
+                              <button
+                                key={em}
+                                onClick={() => setCaseEmirateFilter(isSelected ? "الكل" : em)}
+                                className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5 ${
+                                  isSelected
+                                    ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                                    : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-amber-50 hover:border-amber-300"
+                                }`}
+                              >
+                                <span>{em}</span>
+                                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${isSelected ? "bg-white text-amber-900" : "bg-amber-100 text-amber-900"}`}>
+                                  {count}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-3 rounded-xl border border-amber-100 shadow-2xs">
+                        <span className="font-bold text-slate-800 mb-2 flex items-center justify-between">
+                          <span className="flex items-center gap-1">
+                            <Users size={13} className="text-amber-600" /> توزيع الموكلين وصفاتهم:
+                          </span>
+                          {caseClientTypeFilter !== "الكل" && (
+                            <button onClick={() => setCaseClientTypeFilter("الكل")} className="text-[10px] text-amber-700 font-bold hover:underline">
+                              إلغاء التحديد
+                            </button>
+                          )}
+                        </span>
+                        <div className="flex items-center gap-2 mt-2">
+                          <button
+                            onClick={() => setCaseClientTypeFilter(caseClientTypeFilter === "شركة" ? "الكل" : "شركة")}
+                            className={`flex-1 p-2 rounded-lg border text-center transition ${
+                              caseClientTypeFilter === "شركة"
+                                ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                                : "bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100"
+                            }`}
+                          >
+                            <p className="text-[10px] font-bold opacity-90">شركات ومؤسسات</p>
+                            <p className="text-base font-black mt-0.5">{caseStatsBreakdown.clientTypeMap["شركة"] || 0} قضية</p>
+                          </button>
+                          <button
+                            onClick={() => setCaseClientTypeFilter(caseClientTypeFilter === "فرد" ? "الكل" : "فرد")}
+                            className={`flex-1 p-2 rounded-lg border text-center transition ${
+                              caseClientTypeFilter === "فرد"
+                                ? "bg-amber-600 text-white border-amber-600 shadow-xs"
+                                : "bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100"
+                            }`}
+                          >
+                            <p className="text-[10px] font-bold opacity-90">أفراد وأشخاص</p>
+                            <p className="text-base font-black mt-0.5">{caseStatsBreakdown.clientTypeMap["فرد"] || 0} قضية</p>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-3 rounded-xl border border-amber-100 shadow-2xs sm:col-span-2 lg:col-span-1">
+                        <span className="font-bold text-slate-800 mb-2 flex items-center justify-between">
+                          <span className="flex items-center gap-1">
+                            <Scale size={13} className="text-amber-600" /> أكثر التخصصات القضائية:
+                          </span>
+                          {caseTypeFilter !== "الكل" && (
+                            <button onClick={() => setCaseTypeFilter("الكل")} className="text-[10px] text-amber-700 font-bold hover:underline">
+                              إلغاء التحديد
+                            </button>
+                          )}
+                        </span>
+                        <div className="flex flex-wrap gap-1.5 mt-1.5">
+                          {Object.entries(caseStatsBreakdown.typeMap)
+                            .sort((a, b) => (Number(b[1]) || 0) - (Number(a[1]) || 0))
+                            .slice(0, 6)
+                            .map(([tp, count]) => {
+                              const isSelected = caseTypeFilter === tp;
+                              return (
+                                <button
+                                  key={tp}
+                                  onClick={() => setCaseTypeFilter(isSelected ? "الكل" : tp)}
+                                  className={`px-2 py-1 rounded-lg text-[11px] font-medium border transition flex items-center gap-1 ${
+                                    isSelected
+                                      ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                                      : "bg-stone-50 text-slate-700 border-slate-200 hover:bg-stone-100"
+                                  }`}
+                                >
+                                  <span>{tp}</span>
+                                  <span className={`font-bold ${isSelected ? "text-amber-300" : "text-slate-500"}`}>({count})</span>
+                                </button>
+                              );
+                            })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* ===== محرك الفلترة المتقدمة والتصنيف (Advanced Filters) ===== */}
+                {showAdvancedFilters && (
+                  <div className="rounded-2xl border border-slate-300 bg-white p-4 shadow-sm space-y-3.5 animate-in fade-in duration-200">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <SlidersHorizontal size={16} className="text-amber-600" />
+                        <span className="font-bold text-sm text-slate-900">محرك الفلترة المتقدمة وتخصيص رول القضايا</span>
+                        {activeFiltersCount > 0 && (
+                          <span className="rounded-full bg-amber-100 text-amber-900 border border-amber-200 px-2 py-0.5 text-xs font-bold">
+                            {activeFiltersCount} فلتر مطبق
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {activeFiltersCount > 0 && (
+                          <button
+                            onClick={resetAllCaseFilters}
+                            className="flex items-center gap-1 text-xs font-bold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition"
+                          >
+                            <RotateCcw size={13} /> تفريغ كافة الفلاتر
+                          </button>
+                        )}
+                        <button
+                          onClick={() => setShowAdvancedFilters(false)}
+                          className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition"
+                          title="إغلاق الفلتر المتقدم"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                      {/* مرحلة الدعوى / درجة التقاضي */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                          <Layers size={13} className="text-amber-600" /> مرحلة الدعوى (درجة التقاضي)
+                        </label>
+                        <select
+                          value={caseStageFilter}
+                          onChange={(e) => setCaseStageFilter(e.target.value)}
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                        >
+                          <option value="الكل">🏛️ جميع المراحل ودرجات التقاضي ({cases.length})</option>
+                          {CASE_STAGES.map((stg) => (
+                            <option key={stg} value={stg}>{stg} ({caseStatsBreakdown.stageMap[stg] || 0})</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* حالة القضية */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                          <CheckCircle2 size={13} className="text-amber-600" /> حالة القضية
+                        </label>
+                        <select
+                          value={caseFilter}
+                          onChange={(e) => setCaseFilter(e.target.value)}
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                        >
+                          <option value="الكل">📋 جميع الحالات ({cases.length})</option>
+                          {CASE_STATUS.map((st) => (
+                            <option key={st} value={st}>{st} ({caseStatsBreakdown.statusMap[st] || 0})</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* نوع القضية / التخصص */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                          <Scale size={13} className="text-amber-600" /> نوع القضية / التخصص
+                        </label>
+                        <select
+                          value={caseTypeFilter}
+                          onChange={(e) => setCaseTypeFilter(e.target.value)}
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                        >
+                          <option value="الكل">⚖️ جميع الأنواع والتخصصات ({uniqueCaseTypes.length})</option>
+                          {uniqueCaseTypes.map((t) => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* الإمارة */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                          <MapPin size={13} className="text-amber-600" /> الإمارة المختصة
+                        </label>
+                        <select
+                          value={caseEmirateFilter}
+                          onChange={(e) => setCaseEmirateFilter(e.target.value)}
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                        >
+                          <option value="الكل">📍 جميع الإمارات ({uniqueEmirates.length})</option>
+                          {uniqueEmirates.map((em) => (
+                            <option key={em} value={em}>{em}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* الموكل المحدد */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                          <User size={13} className="text-amber-600" /> تصفية حسب الموكل
+                        </label>
+                        <select
+                          value={caseClientFilter}
+                          onChange={(e) => setCaseClientFilter(e.target.value)}
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                        >
+                          <option value="الكل">👥 جميع الموكلين ({uniqueCaseClients.length})</option>
+                          {uniqueCaseClients.map((cl) => (
+                            <option key={cl.id} value={String(cl.id)}>{cl.name} ({cl.type})</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* تصنيف صفة الموكل */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                          <Users size={13} className="text-amber-600" /> صفة الموكل
+                        </label>
+                        <select
+                          value={caseClientTypeFilter}
+                          onChange={(e) => setCaseClientTypeFilter(e.target.value)}
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                        >
+                          <option value="الكل">🏢👤 أفراد وشركات (الكل)</option>
+                          <option value="شركة">🏢 شركات ومؤسسات تجارية</option>
+                          <option value="فرد">👤 أفراد وأشخاص طبيعيين</option>
+                        </select>
+                      </div>
+
+                      {/* سنة الدعوى */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                          <CalendarDays size={13} className="text-amber-600" /> سنة القيد / الدعوى
+                        </label>
+                        <select
+                          value={caseYearFilter}
+                          onChange={(e) => setCaseYearFilter(e.target.value)}
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                        >
+                          <option value="الكل">📅 جميع السنوات ({uniqueCaseYears.length})</option>
+                          {uniqueCaseYears.map((yr) => (
+                            <option key={yr} value={yr}>سنة {yr}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* ترتيب النتائج */}
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                          <ArrowUpDown size={13} className="text-amber-600" /> ترتيب النتائج
+                        </label>
+                        <select
+                          value={caseSortBy}
+                          onChange={(e: any) => setCaseSortBy(e.target.value)}
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                        >
+                          <option value="default">الترتيب الافتراضي</option>
+                          <option value="newest">الأحدث قيداً (تنازلي)</option>
+                          <option value="oldest">الأقدم قيداً (تصاعدي)</option>
+                          <option value="number">حسب رقم القضية</option>
+                          <option value="client">اسم الموكل (أبجدياً)</option>
+                          <option value="court">المحكمة المختصة</option>
+                        </select>
+                      </div>
+
+                      {/* المحكمة المختصة */}
+                      <div className="space-y-1 sm:col-span-2 lg:col-span-4">
+                        <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                          <Building2 size={13} className="text-amber-600" /> المحكمة المختصة
+                        </label>
+                        <select
+                          value={caseCourtFilter}
+                          onChange={(e) => setCaseCourtFilter(e.target.value)}
+                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                        >
+                          <option value="الكل">🏢 جميع المحاكم ({uniqueCourts.length})</option>
+                          {uniqueCourts.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* شارات الفلاتر المطبقة Active Filter Chips */}
+                    {activeFiltersCount > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100">
+                        <span className="text-xs font-bold text-slate-400">الفلاتر المطبقة:</span>
+                        {caseStageFilter !== "الكل" && (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-300 px-2.5 py-0.5 text-xs text-amber-950 font-bold">
+                            درجة التقاضي: {caseStageFilter}
+                            <button onClick={() => setCaseStageFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                          </span>
+                        )}
+                        {caseFilter !== "الكل" && (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
+                            الحالة: {caseFilter}
+                            <button onClick={() => setCaseFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                          </span>
+                        )}
+                        {caseJudgeFilter !== "الكل" && (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
+                            القاضي/الدائرة: {caseJudgeFilter}
+                            <button onClick={() => setCaseJudgeFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                          </span>
+                        )}
+                        {caseCourtFilter !== "الكل" && (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
+                            المحكمة: {caseCourtFilter}
+                            <button onClick={() => setCaseCourtFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                          </span>
+                        )}
+                        {caseTypeFilter !== "الكل" && (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
+                            النوع: {caseTypeFilter}
+                            <button onClick={() => setCaseTypeFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                          </span>
+                        )}
+                        {caseEmirateFilter !== "الكل" && (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
+                            الإمارة: {caseEmirateFilter}
+                            <button onClick={() => setCaseEmirateFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                          </span>
+                        )}
+                        {caseClientFilter !== "الكل" && (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
+                            الموكل: {clientName(Number(caseClientFilter))}
+                            <button onClick={() => setCaseClientFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                          </span>
+                        )}
+                        {caseClientTypeFilter !== "الكل" && (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
+                            صفة الموكل: {caseClientTypeFilter}
+                            <button onClick={() => setCaseClientTypeFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                          </span>
+                        )}
+                        {caseYearFilter !== "الكل" && (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
+                            السنة: {caseYearFilter}
+                            <button onClick={() => setCaseYearFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                          </span>
+                        )}
+                        {caseSortBy !== "default" && (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
+                            الترتيب: {caseSortBy}
+                            <button onClick={() => setCaseSortBy("default")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                          </span>
+                        )}
+                        {q.trim() !== "" && (
+                          <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
+                            بحث: "{q}"
+                            <button onClick={() => setQ("")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* أشرطة التصفية السريعة لمرحلة الدعوى وحالة القضية */}
+                <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs space-y-2.5">
+                  {/* شريط فلترة مرحلة الدعوى (درجة التقاضي) */}
+                  <div className="flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-2.5">
+                    <span className="text-xs font-bold text-amber-800 flex items-center gap-1 pl-1">
+                      <Layers size={13} /> مرحلة الدعوى:
+                    </span>
+                    {["الكل", ...CASE_STAGES].map((stg) => {
+                      const isSelected = caseStageFilter === stg;
+                      const count = stg === "الكل" ? cases.length : caseStatsBreakdown.stageMap[stg] || 0;
+                      return (
+                        <button
+                          key={stg}
+                          onClick={() => setCaseStageFilter(stg)}
+                          className={`rounded-full px-3 py-1 text-xs font-semibold transition flex items-center gap-1.5 ${
+                            isSelected
+                              ? "bg-amber-600 text-white shadow-xs"
+                              : "bg-amber-50/70 text-amber-950 hover:bg-amber-100 border border-amber-200/60"
+                          }`}
+                        >
+                          <span>{stg}</span>
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${isSelected ? "bg-white text-amber-900" : "bg-amber-200/80 text-amber-950"}`}>
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* شريط فلترة حالة القضية الإجرائية */}
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-xs font-bold text-slate-400 pl-1">حالة القضية:</span>
-                    {["الكل", ...CASE_STATUS].map((s) => (
-                      <button key={s} onClick={() => setCaseFilter(s)} className={`rounded-full px-3 py-1 text-xs font-semibold transition ${caseFilter === s ? "bg-slate-900 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>{s}</button>
-                    ))}
+                    <span className="text-xs font-bold text-slate-500 flex items-center gap-1 pl-1">
+                      <CheckCircle2 size={13} /> حالة القضية:
+                    </span>
+                    {["الكل", ...CASE_STATUS].map((s) => {
+                      const isSelected = caseFilter === s;
+                      const count = s === "الكل" ? cases.length : caseStatsBreakdown.statusMap[s] || 0;
+                      return (
+                        <button
+                          key={s}
+                          onClick={() => setCaseFilter(s)}
+                          className={`rounded-full px-3 py-1 text-xs font-semibold transition flex items-center gap-1 ${
+                            isSelected
+                              ? "bg-slate-900 text-white shadow-xs"
+                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                          }`}
+                        >
+                          <span>{s}</span>
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                            {count}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* شريط التصنيف والفلترة حسب القاضي / الدائرة القضائية والمحكمة */}
+                {/* شريط البحث والفلترة السريعة */}
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 bg-amber-50/50 p-4 rounded-2xl border border-amber-200/80 shadow-xs">
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
@@ -8799,7 +10916,7 @@ export default function App() {
 
                   <div className="space-y-1 sm:col-span-2 lg:col-span-2">
                     <label className="text-xs font-bold text-slate-700 flex items-center gap-1">
-                      <Search size={14} className="text-amber-600" /> البحث في السجل ورول القضايا
+                      <Search size={14} className="text-amber-600" /> البحث الشامل في السجل ورول القضايا
                     </label>
                     <div className="flex items-center gap-2">
                       <input
@@ -8809,25 +10926,43 @@ export default function App() {
                         placeholder="ابحث برقم القضية، الموكل، الخصم، القاضي، أو موضوع الدعوى..."
                         className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
                       />
-                      {(caseFilter !== "الكل" || caseJudgeFilter !== "الكل" || caseCourtFilter !== "الكل" || q !== "") && (
+                      {activeFiltersCount > 0 && (
                         <button
-                          onClick={() => {
-                            setCaseFilter("الكل");
-                            setCaseJudgeFilter("الكل");
-                            setCaseCourtFilter("الكل");
-                            setQ("");
-                          }}
-                          className="shrink-0 rounded-xl bg-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-300 transition"
+                          onClick={resetAllCaseFilters}
+                          className="shrink-0 rounded-xl bg-slate-200 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-300 transition flex items-center gap-1"
                         >
-                          إعادة ضبط
+                          <RotateCcw size={12} /> إعادة ضبط
                         </button>
                       )}
                     </div>
                   </div>
                 </div>
 
+                {/* جدول القضايا مع شريط العداد عند الطلب */}
                 <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200 bg-white shadow-sm">
-                  <table className="w-full min-w-[650px] text-sm">
+                  {/* شريط العداد الإحصائي العلوي للجدول */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5 bg-stone-50 border-b border-slate-200 text-xs">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-600">القضايا المعروضة حالياً:</span>
+                      <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-950 font-black text-xs px-2.5 py-0.5 rounded-full border border-amber-300">
+                        <Hash size={12} /> {filteredCases.length} من أصل {cases.length} قضية
+                      </span>
+                      {filteredCases.length !== cases.length && (
+                        <span className="text-[11px] text-slate-400">
+                          (تم استبعاد {cases.length - filteredCases.length} قضية بواسطة الفلاتر المطبقة)
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setShowCaseStatsOnDemand(!showCaseStatsOnDemand)}
+                      className="flex items-center gap-1 font-bold text-amber-800 hover:text-amber-950 hover:underline transition"
+                    >
+                      {showCaseStatsOnDemand ? <EyeOff size={13} /> : <Eye size={13} />}
+                      <span>{showCaseStatsOnDemand ? "إخفاء التفصيل الإحصائي" : "عرض التفصيل الإحصائي للأعداد"}</span>
+                    </button>
+                  </div>
+
+                  <table className="w-full min-w-[750px] text-sm">
                     <thead className="bg-stone-50 text-right text-xs text-slate-500">
                       <tr>
                         <th className="px-4 py-3 font-semibold">رقم القضية</th>
@@ -8836,6 +10971,7 @@ export default function App() {
                         <th className="hidden px-4 py-3 font-semibold lg:table-cell">المحكمة</th>
                         <th className="hidden px-4 py-3 font-semibold md:table-cell">الدائرة / القاضي</th>
                         <th className="px-4 py-3 font-semibold">النوع</th>
+                        <th className="px-4 py-3 font-semibold">مرحلة الدعوى</th>
                         <th className="px-4 py-3 font-semibold">الحالة</th>
                         <th className="px-4 py-3 font-semibold text-center">إجراءات</th>
                       </tr>
@@ -8857,24 +10993,50 @@ export default function App() {
                             )}
                           </td>
                           <td className="px-4 py-3"><Badge className="bg-slate-100 text-slate-600">{c.type}</Badge></td>
+                          <td className="px-4 py-3"><Badge className={stageBadgeColor(getCaseStage(c))}>{getCaseStage(c)}</Badge></td>
                           <td className="px-4 py-3"><Badge className={statusColor(c.status)}>{c.status}</Badge></td>
                           <td className="px-4 py-3 text-center">
                             <div className="flex items-center justify-center gap-2">
                               <button onClick={() => setCaseView(c.id)} className="text-xs font-semibold text-amber-700 hover:underline">عرض التفاصيل</button>
-                              {userPerms.deleteCases && (
-                                <button onClick={() => {
-                                  if (confirm("هل أنت تأكد من مسح هذه القضية من القيد؟")) {
-                                    setCases(cases.filter((x) => x.id !== c.id));
-                                  }
-                                }} className="text-slate-400 hover:text-red-600 p-1" title="حذف القضية"><Trash2 size={15} /></button>
-                              )}
+                              <button
+                                onClick={() => {
+                                  requestDelete({
+                                    section: "إدارة القضايا والملفات",
+                                    title: `القضية رقم: ${c.number}`,
+                                    details: `الموكل: ${clientName(c.clientId)} | الخصم: ${c.opponent} | المحكمة: ${c.court} | المرحلة: ${getCaseStage(c)}`,
+                                    permKey: "deleteCases",
+                                    actionName: "حذف ملف القضية",
+                                    onConfirm: () => {
+                                      logAuditAction("DELETE", "إدارة القضايا", `قضية: ${c.number}`, `حذف القضية رقم ${c.number} الخاصة بالموكل ${clientName(c.clientId)}`, c.id);
+                                      setCases((prev) => prev.filter((x) => x.id !== c.id));
+                                    },
+                                  });
+                                }}
+                                className="text-slate-400 hover:text-red-600 p-1 transition"
+                                title="حذف القضية"
+                              >
+                                <Trash2 size={15} />
+                              </button>
                             </div>
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
-                  {filteredCases.length === 0 && <p className="py-10 text-center text-sm text-slate-400">لا توجد قضايا مطابقة لخيارات الفلترة المحددة</p>}
+                  {filteredCases.length === 0 && (
+                    <div className="py-12 text-center text-sm text-slate-500 space-y-2">
+                      <p className="font-semibold text-slate-600">لا توجد قضايا مطابقة لخيارات الفلترة المحددة</p>
+                      <p className="text-xs text-slate-400">جرب تعديل خيارات الفلترة أو تفريغ معايير البحث</p>
+                      {activeFiltersCount > 0 && (
+                        <button
+                          onClick={resetAllCaseFilters}
+                          className="inline-flex items-center gap-1 rounded-xl bg-amber-600 px-4 py-1.5 text-xs font-bold text-white hover:bg-amber-700 transition mt-2 shadow-xs"
+                        >
+                          <RotateCcw size={12} /> إعادة ضبط جميع الفلاتر
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </>
             )}
@@ -8888,26 +11050,52 @@ export default function App() {
                 <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex flex-wrap items-center gap-2.5">
                         <h2 className="text-xl font-bold">{selectedCase.number}</h2>
+                        <Badge className={stageBadgeColor(getCaseStage(selectedCase))}>{getCaseStage(selectedCase)}</Badge>
                         <Badge className={statusColor(selectedCase.status)}>{selectedCase.status}</Badge>
                       </div>
                       <p className="mt-1 text-sm text-slate-500">{selectedCase.subject}</p>
                     </div>
                     {userPerms.manageCases ? (
-                      <select value={selectedCase.status} onChange={(e) => {
-                        const newStatus = e.target.value;
-                        logAuditAction("STATUS_CHANGE", "القضايا", `قضية رقم ${selectedCase.number}`, `تعديل حالة القضية رقم ${selectedCase.number} من (${selectedCase.status}) إلى (${newStatus})`, selectedCase.id);
-                        setCases(cases.map((c) => c.id === selectedCase.id ? { ...c, status: newStatus } : c));
-                      }} className={`${inputCls} w-auto`}>
-                        {CASE_STATUS.map((s) => <option key={s}>{s}</option>)}
-                      </select>
+                      <div className="flex items-center gap-2">
+                        <div className="space-y-0.5">
+                          <span className="text-[10px] font-bold text-slate-400 block">مرحلة الدعوى:</span>
+                          <select
+                            value={selectedCase.stage || getCaseStage(selectedCase)}
+                            onChange={(e) => {
+                              const newStage = e.target.value;
+                              logAuditAction("UPDATE", "القضايا", `قضية رقم ${selectedCase.number}`, `تعديل مرحلة القضية رقم ${selectedCase.number} إلى (${newStage})`, selectedCase.id);
+                              setCases(cases.map((c) => c.id === selectedCase.id ? { ...c, stage: newStage } : c));
+                            }}
+                            className={`${inputCls} w-auto text-xs py-1.5`}
+                          >
+                            {CASE_STAGES.map((stg) => <option key={stg} value={stg}>{stg}</option>)}
+                          </select>
+                        </div>
+                        <div className="space-y-0.5">
+                          <span className="text-[10px] font-bold text-slate-400 block">حالة القضية:</span>
+                          <select
+                            value={selectedCase.status}
+                            onChange={(e) => {
+                              const newStatus = e.target.value;
+                              logAuditAction("STATUS_CHANGE", "القضايا", `قضية رقم ${selectedCase.number}`, `تعديل حالة القضية رقم ${selectedCase.number} من (${selectedCase.status}) إلى (${newStatus})`, selectedCase.id);
+                              setCases(cases.map((c) => c.id === selectedCase.id ? { ...c, status: newStatus } : c));
+                            }}
+                            className={`${inputCls} w-auto text-xs py-1.5`}
+                          >
+                            {CASE_STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
+                          </select>
+                        </div>
+                      </div>
                     ) : (
                       <Badge className="bg-slate-100 text-slate-600">غير مصرح بالتعديل</Badge>
                     )}
                   </div>
-                  <div className="mt-5 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="mt-5 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
                     {[
+                      ["مرحلة الدعوى (درجة التقاضي)", getCaseStage(selectedCase)],
+                      ["حالة القضية الإجرائية", selectedCase.status],
                       ["الموكل", clientName(selectedCase.clientId)],
                       ["الخصم", selectedCase.opponent],
                       ["المحكمة", selectedCase.court],
@@ -9768,6 +11956,26 @@ export default function App() {
                                     تعليم كمنتهية
                                   </button>
                                 )}
+
+                                <button
+                                  onClick={() => {
+                                    requestDelete({
+                                      section: "جدول الجلسات والرول القضائي",
+                                      title: `جلسة القضية: ${caseNo(h.caseId)}`,
+                                      details: `نوع الجلسة: ${h.type} | التاريخ: ${fmtDate(h.date)} الساعة ${h.time} | القاعة: ${h.room || "—"} | الموكل: ${cs ? clientName(cs.clientId) : "—"}`,
+                                      permKey: "deleteHearings",
+                                      actionName: "حذف الجلسة",
+                                      onConfirm: () => {
+                                        logAuditAction("DELETE", "الجلسات", `جلسة قضية: ${caseNo(h.caseId)}`, `حذف جلسة ${h.type} بتأريخ ${h.date} للقضية ${caseNo(h.caseId)}`, h.id);
+                                        setHearings((prev) => prev.filter((x) => x.id !== h.id));
+                                      },
+                                    });
+                                  }}
+                                  className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition cursor-pointer"
+                                  title="حذف الجلسة"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
                               </div>
                             </div>
                           );
@@ -9790,11 +11998,18 @@ export default function App() {
                     {tasks.length > 0 && (
                       <button
                         onClick={() => {
-                          if (confirm("هل أنت متأكد من تفريغ ومسح كافة المهام والتكليفات الحالية؟")) {
-                            setTasks([]);
-                            saveStorage("firm_tasks", []);
-                            setPermissionNotice("تم تفريغ كافة المهام والتكليفات بنجاح.");
-                          }
+                          requestDelete({
+                            section: "إدارة المهام والتكليفات",
+                            title: `تفريغ كافة المهام المسجلة (${tasks.length} مهمة)`,
+                            details: "سيتم حذف ومسح جميع التكليفات والمهام الموزعة على أعضاء الفريق بشكل نهائي.",
+                            permKey: "deleteTasks",
+                            actionName: "تفريغ كافة المهام",
+                            onConfirm: () => {
+                              setTasks([]);
+                              saveStorage("firm_tasks", []);
+                              setPermissionNotice("تم تفريغ كافة المهام والتكليفات بنجاح.");
+                            },
+                          });
                         }}
                         className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 px-3.5 py-2.5 text-xs font-bold transition shadow-xs cursor-pointer"
                       >
@@ -9836,7 +12051,28 @@ export default function App() {
                             <p className="text-xs text-slate-500">المكلف: <b>{t.assignee}</b> | تاريخ الاستحقاق: {fmtDate(t.due)}</p>
                           </div>
                         </div>
-                        <Badge className={TASK_PRIORITY[t.priority]}>{t.priority}</Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge className={TASK_PRIORITY[t.priority]}>{t.priority}</Badge>
+                          <button
+                            onClick={() => {
+                              requestDelete({
+                                section: "إدارة المهام والتكليفات",
+                                title: `المهمة: ${t.title}`,
+                                details: `المكلف بها: ${t.assignee} | تاريخ الاستحقاق: ${fmtDate(t.due)} | الأولوية: ${t.priority}`,
+                                permKey: "deleteTasks",
+                                actionName: "حذف المهمة",
+                                onConfirm: () => {
+                                  logAuditAction("DELETE", "المهام", `مهمة: ${t.title}`, `حذف المهمة "${t.title}" المكلف بها ${t.assignee}`, t.id);
+                                  setTasks((prev) => prev.filter((x) => x.id !== t.id));
+                                },
+                              });
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition cursor-pointer"
+                            title="حذف المهمة"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
                       </div>
                     ))
                   )}
@@ -9873,12 +12109,19 @@ export default function App() {
                     {inAppEmails.length > 0 && (
                       <button
                         onClick={() => {
-                          if (confirm("هل أنت متأكد من تفريغ كافة الرسائل في البريد الإلكتروني؟")) {
-                            setInAppEmails([]);
-                            saveStorage("firm_in_app_emails", []);
-                            setSelectedEmailId(null);
-                            setPermissionNotice("تم تفريغ صندوق البريد الإلكتروني بنجاح.");
-                          }
+                          requestDelete({
+                            section: "البريد والمراسلات",
+                            title: `تفريغ صندوق البريد (${inAppEmails.length} رسالة)`,
+                            details: "سيتم حذف وتفريغ جميع الرسائل والمراسلات في البريد الإلكتروني الداخلي نهائياً.",
+                            permKey: "deleteDocs",
+                            actionName: "تفريغ البريد",
+                            onConfirm: () => {
+                              setInAppEmails([]);
+                              saveStorage("firm_in_app_emails", []);
+                              setSelectedEmailId(null);
+                              setPermissionNotice("تم تفريغ صندوق البريد الإلكتروني بنجاح.");
+                            },
+                          });
                         }}
                         className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 px-3 py-2 text-xs font-bold transition shadow-xs cursor-pointer"
                       >
@@ -10979,6 +13222,7 @@ export default function App() {
                                 <th className="px-4 py-3 font-semibold">طريقة السداد</th>
                                 <th className="px-4 py-3 font-semibold">المبلغ المقبوض</th>
                                 <th className="px-4 py-3 font-semibold">البيان والملاحظات</th>
+                                <th className="px-4 py-3 font-semibold text-center">إجراءات</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -11010,6 +13254,27 @@ export default function App() {
                                       +{fmtAED(p.amount)}
                                     </td>
                                     <td className="px-4 py-3 text-xs text-slate-600">{p.notes || "—"}</td>
+                                    <td className="px-4 py-3 text-center">
+                                      <button
+                                        onClick={() => {
+                                          requestDelete({
+                                            section: "سندات القبض والدفعات المالية",
+                                            title: `سند القبض: ${p.referenceNo}`,
+                                            details: `الموكل: ${client?.name || "—"} | المبلغ: ${fmtAED(p.amount)} | طريقة السداد: ${p.paymentMethod} | التاريخ: ${fmtDate(p.date)}`,
+                                            permKey: "deleteInvoices",
+                                            actionName: "حذف سند القبض",
+                                            onConfirm: () => {
+                                              logAuditAction("DELETE", "المالية والمقبوضات", `سند قبض: ${p.referenceNo}`, `حذف سند القبض ${p.referenceNo} بمبلغ ${p.amount} درهم للموكل ${client?.name || ""}`, p.id);
+                                              setPayments((prev) => prev.filter((x) => x.id !== p.id));
+                                            },
+                                          });
+                                        }}
+                                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                                        title="حذف سند القبض"
+                                      >
+                                        <Trash2 size={15} />
+                                      </button>
+                                    </td>
                                   </tr>
                                 );
                               })}
@@ -11101,11 +13366,12 @@ export default function App() {
                                     )}
                                     <button
                                       onClick={() => {
-                                        const matchingOA = officeAgreements.find((oa) => oa.feeAgreementId === agr.id || oa.agreementNumber === agr.agreementNumber);
-                                        if (matchingOA) {
-                                          setDeleteAgrConfirm(matchingOA);
-                                        } else {
-                                          setDeleteAgrConfirm({
+    if (!checkPerm("deleteAgreements", "حذف اتفاقية الأتعاب")) return;
+    const matchingOA = officeAgreements.find((oa) => oa.feeAgreementId === agr.id || oa.agreementNumber === agr.agreementNumber);
+    if (matchingOA) {
+      setDeleteAgrConfirm(matchingOA);
+    } else {
+      setDeleteAgrConfirm({
                                             id: agr.id,
                                             agreementNumber: agr.agreementNumber,
                                             feeAgreementId: agr.id,
@@ -11212,6 +13478,25 @@ export default function App() {
                                         </button>
                                         <button onClick={() => setReport({ type: "tax-invoice", invoiceId: inv.id })} className="p-1.5 text-amber-700 hover:text-amber-900 rounded-lg hover:bg-amber-50 flex items-center gap-1 text-xs font-bold" title="عرض وطباعة فاتورة FTA الرسمية">
                                           <Printer size={15} /> فاتورة FTA (PDF)
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            requestDelete({
+                                              section: "الفواتير والمطالبات الضريبية",
+                                              title: `الفاتورة رقم: ${inv.number}`,
+                                              details: `الموكل: ${clientName(inv.clientId)} | المبلغ الإجمالي: ${fmtAED(total)} | الحالة: ${inv.status}`,
+                                              permKey: "deleteInvoices",
+                                              actionName: "حذف الفاتورة الضريبية",
+                                              onConfirm: () => {
+                                                logAuditAction("DELETE", "الفواتير", `فاتورة: ${inv.number}`, `حذف الفاتورة ${inv.number} للموكل ${clientName(inv.clientId)} بمبلغ ${total} درهم`, inv.id);
+                                                setInvoices((prev) => prev.filter((x) => x.id !== inv.id));
+                                              },
+                                            });
+                                          }}
+                                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                                          title="حذف الفاتورة"
+                                        >
+                                          <Trash2 size={15} />
                                         </button>
                                       </div>
                                     </td>
@@ -11637,9 +13922,10 @@ export default function App() {
                 </button>
                 <button
                   onClick={(e) => {
-                    e.stopPropagation();
-                    setDeleteAgrConfirm(a);
-                  }}
+    e.stopPropagation();
+    if (!checkPerm("deleteAgreements", "حذف اتفاقية الأتعاب")) return;
+    setDeleteAgrConfirm(a);
+  }}
                   className="rounded-lg p-2 text-slate-400 hover:bg-red-100 hover:text-red-600 transition"
                   title="حذف الاتفاقية"
                 >
@@ -11794,13 +14080,34 @@ export default function App() {
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {docs.map((d) => (
-                        <div key={d.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex items-start gap-3">
-                          <div className="p-3 bg-sky-50 text-sky-600 rounded-xl"><FolderOpen size={20} /></div>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-semibold text-sm truncate">{d.name}</p>
-                            <p className="text-xs text-slate-500 mt-1">{d.type} • {fmtDate(d.date)}</p>
-                            <p className="text-[11px] text-slate-400 mt-0.5">بواسطة: {d.by}</p>
+                        <div key={d.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex items-start justify-between gap-3">
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <div className="p-3 bg-sky-50 text-sky-600 rounded-xl"><FolderOpen size={20} /></div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-sm truncate">{d.name}</p>
+                              <p className="text-xs text-slate-500 mt-1">{d.type} • {fmtDate(d.date)}</p>
+                              <p className="text-[11px] text-slate-400 mt-0.5">بواسطة: {d.by}</p>
+                            </div>
                           </div>
+                          <button
+                            onClick={() => {
+                              requestDelete({
+                                section: "الأرشيف والمستندات",
+                                title: `المستند: ${d.name}`,
+                                details: `النوع: ${d.type} | التاريخ: ${fmtDate(d.date)} | المضاف بواسطة: ${d.by}`,
+                                permKey: "deleteDocs",
+                                actionName: "حذف المستند من الأرشيف",
+                                onConfirm: () => {
+                                  logAuditAction("DELETE", "الأرشيف", `مستند: ${d.name}`, `حذف المستند ${d.name} من الأرشيف`, d.id);
+                                  setDocs((prev) => prev.filter((x) => x.id !== d.id));
+                                },
+                              });
+                            }}
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition cursor-pointer shrink-0"
+                            title="حذف المستند"
+                          >
+                            <Trash2 size={15} />
+                          </button>
                         </div>
                       ))}
                     </div>
@@ -11913,6 +14220,25 @@ export default function App() {
                             >
                               <Send size={14} /> تنبيه التجديد
                             </button>
+                            <button
+                              onClick={() => {
+                                requestDelete({
+                                  section: "الوكالات القانونية والتوكيلات",
+                                  title: `الوكالة رقم: ${p.number} — ${clientName(p.clientId)}`,
+                                  details: `الجهة المصدرة: ${p.issuer} | تاريخ الإصدار: ${fmtDate(p.issue)} | تاريخ الانتهاء: ${fmtDate(p.expiry)}`,
+                                  permKey: "deletePoas",
+                                  actionName: "حذف الوكالة",
+                                  onConfirm: () => {
+                                    logAuditAction("DELETE", "الوكالات", `وكالة: ${p.number}`, `حذف الوكالة رقم ${p.number} للموكل ${clientName(p.clientId)}`, p.id);
+                                    setPoas((prev) => prev.filter((x) => x.id !== p.id));
+                                  },
+                                });
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition cursor-pointer"
+                              title="حذف الوكالة"
+                            >
+                              <Trash2 size={15} />
+                            </button>
                           </div>
                         </div>
                         <p className="text-xs text-slate-700 bg-stone-50 p-2 rounded-lg border border-stone-200 font-medium">صلاحيات الوكالة: {p.scope}</p>
@@ -11961,10 +14287,17 @@ export default function App() {
                       <div className="flex flex-wrap items-center gap-2">
                         <button
                           onClick={() => {
-                            if (confirm(`هل تؤكد تفريغ القائمة الحالية وإعادة تحميل قائمة الإرهاب المحلية الإماراتية بالكامل (${uaeTerroristList.length} سجل)؟`)) {
-                              setKycWatchlist(uaeTerroristList);
-                              saveStorage("firm_kyc_watchlist", uaeTerroristList);
-                            }
+                            requestDelete({
+    section: "قوائم الامتثال والحظر KYC",
+    title: "إعادة تحميل وتحديث قائمة الإرهاب المحلية الإماراتية",
+    details: `سيتم استبدال القائمة الحالية وتحميل كافة السجلات الرسمية المعتمدة (${uaeTerroristList.length} شخص وكيان).`,
+    permKey: "deleteKyc",
+    actionName: "إعادة ضبط قائمة الحظر",
+    onConfirm: () => {
+      setKycWatchlist(uaeTerroristList);
+      saveStorage("firm_kyc_watchlist", uaeTerroristList);
+    },
+  })
                           }}
                           className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-amber-400 hover:bg-slate-800 shadow-sm transition"
                         >
@@ -12064,11 +14397,18 @@ export default function App() {
                                     <td className="px-4 py-3 text-center">
                                       <button
                                         onClick={() => {
-                                          if (confirm(`هل ترغب بمسح "${item.fullName}" من قائمة الحظر؟`)) {
-                                            setKycWatchlist((prev) => prev.filter((w) => w.id !== item.id));
-                                          }
+                                          requestDelete({
+                                            section: "قوائم الامتثال والحظر KYC",
+                                            title: `الاسم: ${item.fullName}`,
+                                            details: `الجهة: ${item.source} | الجنسية: ${item.nationality || "—"} | سبب الإدراج: ${item.reason}`,
+                                            permKey: "deleteKyc",
+                                            actionName: "حذف من قائمة الحظر",
+                                            onConfirm: () => {
+                                              setKycWatchlist((prev) => prev.filter((w) => w.id !== item.id));
+                                            },
+                                          });
                                         }}
-                                        className="text-slate-400 hover:text-red-600 p-1"
+                                        className="text-slate-400 hover:text-red-600 p-1 hover:bg-red-50 rounded transition cursor-pointer"
                                         title="حذف من القائمة"
                                       >
                                         <Trash2 size={15} />
@@ -12230,6 +14570,25 @@ export default function App() {
                                           title="طباعة نموذج العناية الواجبة KYC"
                                         >
                                           <Printer size={15} />
+                                        </button>
+                                        <button
+                                          onClick={() => {
+                                            requestDelete({
+                                              section: "ملفات اعرف عميلك KYC والامتثال",
+                                              title: `ملف العميل: ${clientName(k.clientId)}`,
+                                              details: `الجنسية: ${k.nationality} | درجة المخاطر: ${k.risk} | حالة الامتثال: ${k.sanctions} | الحالة: ${k.status}`,
+                                              permKey: "deleteKyc",
+                                              actionName: "حذف ملف KYC",
+                                              onConfirm: () => {
+                                                logAuditAction("DELETE", "KYC والامتثال", `ملف KYC: ${clientName(k.clientId)}`, `حذف ملف KYC للموكل ${clientName(k.clientId)}`, k.id);
+                                                setKyc((prev) => prev.filter((x) => x.id !== k.id));
+                                              },
+                                            });
+                                          }}
+                                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                                          title="حذف ملف KYC"
+                                        >
+                                          <Trash2 size={15} />
                                         </button>
                                       </div>
                                     </td>
@@ -13074,10 +15433,17 @@ export default function App() {
 
                     <button
                       onClick={() => {
-                        if (window.confirm("هل ترغب في إعادة تحميل واستعادة الدليل المعتمد الشامل للمحاكم والجهات (497 جهة وموظف)؟")) {
-                          setCourtContacts(seedCourtContacts);
-                          saveStorage("firm_court_contacts", seedCourtContacts);
-                        }
+                        requestDelete({
+                          section: "دليل المحاكم والجهات القضائية",
+                          title: "استعادة الدليل الشامل المعتمد للمحاكم",
+                          details: "سيتم إعادة ضبط وتحديث الدليل الشامل المعتمد بجميع الأرقام والمعلومات الرسمية (497 جهة وموظف قضائي).",
+                          permKey: "deleteContacts",
+                          actionName: "استعادة الدليل المعتمد",
+                          onConfirm: () => {
+                            setCourtContacts(seedCourtContacts);
+                            saveStorage("firm_court_contacts", seedCourtContacts);
+                          },
+                        });
                       }}
                       className="flex items-center gap-1.5 rounded-xl bg-indigo-50 border border-indigo-300 px-3.5 py-2.5 text-xs font-bold text-indigo-800 hover:bg-indigo-100 shadow-sm transition"
                       title="استعادة أو تحديث الدليل الشامل المعتمد بجميع الأرقام والمعلومات الرسمية"
@@ -13532,11 +15898,18 @@ export default function App() {
                               </button>
                               <button
                                 onClick={() => {
-                                  if (confirm(`هل أنت تأكد من حذف بيانات تواصل ${c.courtName} - ${c.department}؟`)) {
-                                    setCourtContacts(courtContacts.filter((item) => item.id !== c.id));
-                                  }
+                                  requestDelete({
+                                    section: "دليل المحاكم والجهات القضائية",
+                                    title: `${c.courtName} - ${c.department}`,
+                                    details: `الإمارة: ${c.emirate} | المسؤول: ${c.contactPerson || "غير محدد"} | الهاتف: ${c.phone || "—"}`,
+                                    permKey: "deleteContacts",
+                                    actionName: "حذف جهة الاتصال",
+                                    onConfirm: () => {
+                                      setCourtContacts((prev) => prev.filter((item) => item.id !== c.id));
+                                    },
+                                  });
                                 }}
-                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-slate-100 rounded-lg"
+                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
                                 title="حذف السجل"
                               >
                                 <Trash2 size={15} />
@@ -14041,6 +16414,18 @@ export default function App() {
             <Field label="الخصم">
               <input onChange={f("opponent")} placeholder="اسم المدعى عليه أو الخصم" className={inputCls} />
             </Field>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="مرحلة الدعوى (درجة التقاضي)">
+                <select onChange={f("stage")} defaultValue="الابتدائية" className={inputCls}>
+                  {CASE_STAGES.map((st) => <option key={st} value={st}>{st}</option>)}
+                </select>
+              </Field>
+              <Field label="حالة القضية">
+                <select onChange={f("status")} defaultValue="متداولة" className={inputCls}>
+                  {CASE_STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Field>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="نوع الدعوى">
                 <select onChange={f("type")} className={inputCls}>
@@ -15631,7 +18016,10 @@ export default function App() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setDeleteAgrConfirm(oa)}
+              onClick={() => {
+    if (!checkPerm("deleteAgreements", "حذف اتفاقية الأتعاب")) return;
+    setDeleteAgrConfirm(oa);
+  }}
               className="flex items-center gap-1.5 rounded-xl bg-red-50 text-red-600 border border-red-200 px-3.5 py-2 text-xs font-bold hover:bg-red-100 transition"
               title="حذف هذه الاتفاقية"
             >
@@ -16070,6 +18458,69 @@ export default function App() {
           </div>
         );
       })()}
+
+      
+      {/* ═══ نافذة تأكيد الحذف الموحدة لجميع الأقسام مع الصلاحيات ═══ */}
+      {deleteModalState && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm no-print animate-in fade-in duration-200">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-red-200 space-y-4 text-slate-900">
+            <div className="flex items-center gap-3 text-red-600">
+              <div className="rounded-2xl bg-red-100 p-3 flex items-center justify-center shrink-0">
+                <AlertTriangle size={24} />
+              </div>
+              <div>
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                  {deleteModalState.section}
+                </span>
+                <h3 className="text-lg font-black text-slate-900 leading-snug">
+                  تأكيد الحذف النهائي
+                </h3>
+              </div>
+            </div>
+
+            <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+              <p className="text-sm font-bold text-slate-900">
+                {deleteModalState.title}
+              </p>
+              {deleteModalState.details && (
+                <p className="text-xs text-slate-600 whitespace-pre-line leading-relaxed">
+                  {deleteModalState.details}
+                </p>
+              )}
+            </div>
+
+            <div className="text-xs text-red-700 bg-red-50/90 p-3.5 rounded-xl border border-red-200 leading-relaxed space-y-1">
+              <p className="font-bold flex items-center gap-1">
+                ⚠️ تحذير: هذا الإجراء نهائي ولا يمكن التراجع عنه.
+              </p>
+              <p className="text-[11px] text-red-600">
+                سيتم مسح هذا السجل وحفظ العملية في سجل التدقيق الأمني والرقابة.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setDeleteModalState(null)}
+                className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+              >
+                إلغاء الأمر
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const onConf = deleteModalState.onConfirm;
+                  setDeleteModalState(null);
+                  if (onConf) onConf();
+                }}
+                className="flex items-center gap-1.5 rounded-xl bg-red-600 hover:bg-red-700 px-5 py-2.5 text-xs font-bold text-white shadow-md transition cursor-pointer"
+              >
+                <Trash2 size={15} /> نعم، تأكيد الحذف
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ═══ نافذة تأكيد حذف الاتفاقية ═══ */}
       {deleteAgrConfirm && (() => {
