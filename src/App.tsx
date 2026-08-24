@@ -4609,13 +4609,13 @@ export default function App() {
       const matchesModule = auditModuleFilter === "الكل" || log.targetModule === auditModuleFilter;
       const q = auditSearchTerm.trim().toLowerCase();
       const matchesQuery = !q ||
-        log.userName.toLowerCase().includes(q) ||
-        log.userEmail.toLowerCase().includes(q) ||
-        log.userRole.toLowerCase().includes(q) ||
-        String(log.userId).toLowerCase().includes(q) ||
-        log.targetTitle.toLowerCase().includes(q) ||
-        log.targetModule.toLowerCase().includes(q) ||
-        log.details.toLowerCase().includes(q) ||
+        (log.userName && log.userName.toLowerCase().includes(q)) ||
+        (log.userEmail && log.userEmail.toLowerCase().includes(q)) ||
+        (log.userRole && log.userRole.toLowerCase().includes(q)) ||
+        (String(log.userId) && String(log.userId).toLowerCase().includes(q)) ||
+        (log.targetTitle && log.targetTitle.toLowerCase().includes(q)) ||
+        (log.targetModule && log.targetModule.toLowerCase().includes(q)) ||
+        (log.details && log.details.toLowerCase().includes(q)) ||
         (log.status && log.status.toLowerCase().includes(q)) ||
         (log.formattedTimestamp && log.formattedTimestamp.toLowerCase().includes(q)) ||
         (log.targetId && String(log.targetId).toLowerCase().includes(q));
@@ -4857,9 +4857,9 @@ export default function App() {
       const matchesYear = precedentYearFilter === "الكل" || String(p.ruling_year) === precedentYearFilter;
       const q = precedentSearch.trim().toLowerCase();
       const matchesQuery = !q ||
-        p.title.toLowerCase().includes(q) ||
-        p.summary_text.toLowerCase().includes(q) ||
-        p.appeal_number.toLowerCase().includes(q) ||
+        (p.title && p.title.toLowerCase().includes(q)) ||
+        (p.summary_text && p.summary_text.toLowerCase().includes(q)) ||
+        (p.appeal_number && p.appeal_number.toLowerCase().includes(q)) ||
         (p.circuit_name && p.circuit_name.toLowerCase().includes(q));
       return matchesCourt && matchesCategory && matchesYear && matchesQuery;
     });
@@ -7664,10 +7664,14 @@ export default function App() {
 
   const casesByType = useMemo(() => {
     const m: Record<string, number> = {};
-    cases.forEach((c) => (m[c.type] = (m[c.type] || 0) + 1));
+    cases.forEach((c) => {
+      const typeName = c.type || "غير محدد";
+      m[typeName] = (m[typeName] || 0) + 1;
+    });
     const total = cases.length || 1;
     const palette = ["#d97706", "#2563eb", "#059669", "#7c3aed", "#dc2626", "#0891b2", "#b45309", "#475569", "#4f46e5", "#be185d"];
-    return Object.entries(m)
+    
+    const allItems = Object.entries(m)
       .map(([name, value], idx) => ({
         name,
         value,
@@ -7675,6 +7679,21 @@ export default function App() {
         color: CASE_TYPE_PALETTE[name] || palette[idx % palette.length]
       }))
       .sort((a, b) => b.value - a.value);
+
+    // Group small slices into 'أخرى' (Others) to prevent chart clutter
+    if (allItems.length > 7) {
+      const top = allItems.slice(0, 6);
+      const rest = allItems.slice(6);
+      const restValue = rest.reduce((sum, item) => sum + item.value, 0);
+      top.push({
+        name: "أخرى",
+        value: restValue,
+        percentage: Math.round((restValue / total) * 100),
+        color: "#94a3b8"
+      });
+      return top;
+    }
+    return allItems;
   }, [cases]);
 
   const invoiceMetrics = useMemo(() => {
@@ -8843,15 +8862,15 @@ export default function App() {
 
       const matchQuery =
         !query ||
-        c.number.toLowerCase().includes(query) ||
+        (c.number && c.number.toLowerCase().includes(query)) ||
         clientName(c.clientId).toLowerCase().includes(query) ||
-        c.subject.toLowerCase().includes(query) ||
-        c.opponent.toLowerCase().includes(query) ||
+        (c.subject && c.subject.toLowerCase().includes(query)) ||
+        (c.opponent && c.opponent.toLowerCase().includes(query)) ||
         (c.court && c.court.toLowerCase().includes(query)) ||
         (c.judge && c.judge.toLowerCase().includes(query)) ||
         (c.type && c.type.toLowerCase().includes(query)) ||
-        getCaseStage(c).toLowerCase().includes(query) ||
-        c.status.toLowerCase().includes(query);
+        (getCaseStage(c) && getCaseStage(c).toLowerCase().includes(query)) ||
+        (c.status && c.status.toLowerCase().includes(query));
 
       return (
         matchStage &&
@@ -8974,16 +8993,22 @@ export default function App() {
       const st = c.status || "متداولة";
       const stage = getCaseStage(c);
 
-      // Status aggregation
-      if (st === "متداولة") statusMap["متداولة"] = (statusMap["متداولة"] || 0) + 1;
-      else if (st === "منتهية" || st === "مغلقة") statusMap["منتهية"] = (statusMap["منتهية"] || 0) + 1;
-      else if (st === "محكومة" || st === "صدر الحكم") {
+      // Status aggregation (align with isCaseMatchingStatus)
+      if (st === "متداولة" || st === "قيد النظر") {
+        statusMap["متداولة"] = (statusMap["متداولة"] || 0) + 1;
+      }
+      if (st === "منتهية" || st === "مغلقة" || st === "مشطوبة") {
+        statusMap["منتهية"] = (statusMap["منتهية"] || 0) + 1;
+      }
+      if (st === "محكومة" || st === "صدر الحكم") {
         statusMap["محكومة"] = (statusMap["محكومة"] || 0) + 1;
         statusMap["صدر الحكم"] = (statusMap["صدر الحكم"] || 0) + 1;
-      } else if (st === "قيد النظر") statusMap["قيد النظر"] = (statusMap["قيد النظر"] || 0) + 1;
-      else if (st === "محجوزة للحكم") statusMap["محجوزة للحكم"] = (statusMap["محجوزة للحكم"] || 0) + 1;
-      else if (st === "مشطوبة") statusMap["مشطوبة"] = (statusMap["مشطوبة"] || 0) + 1;
-      else if (st === "معلقة") statusMap["معلقة"] = (statusMap["معلقة"] || 0) + 1;
+      }
+      if (st === "قيد النظر") statusMap["قيد النظر"] = (statusMap["قيد النظر"] || 0) + 1;
+      if (st === "محجوزة للحكم") statusMap["محجوزة للحكم"] = (statusMap["محجوزة للحكم"] || 0) + 1;
+      if (st === "مشطوبة") statusMap["مشطوبة"] = (statusMap["مشطوبة"] || 0) + 1;
+      if (st === "معلقة") statusMap["معلقة"] = (statusMap["معلقة"] || 0) + 1;
+
 
       // Stage aggregation
       stageMap[stage] = (stageMap[stage] || 0) + 1;
@@ -9988,16 +10013,15 @@ export default function App() {
                       </div>
 
                       <div className="h-52 w-full" dir="ltr">
-                        <ResponsiveContainer width="100%" height="100%">
-                          {dashboardCaseChartMode === "bar" ? (
+                        {cases.length > 0 ? (
+                          <ResponsiveContainer width="100%" height="100%">
+                            {dashboardCaseChartMode === "bar" ? (
                             <BarChart data={casesByType} margin={{ top: 10, right: 10, left: -20, bottom: 20 }}>
                               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                               <XAxis
                                 dataKey="name"
-                                tick={{ fontSize: 11, fill: "#475569" }}
-                                interval={0}
-                                angle={-25}
-                                textAnchor="end"
+                                tick={{ fontSize: 10, fill: "#475569" }}
+                                tickFormatter={(val) => val.length > 12 ? val.substring(0, 12) + ".." : val}
                               />
                               <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "#475569" }} />
                               <Tooltip
@@ -10051,6 +10075,12 @@ export default function App() {
                             </PieChart>
                           )}
                         </ResponsiveContainer>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-2 pb-4">
+                            <Briefcase size={32} className="opacity-20" />
+                            <p className="text-xs font-semibold">لا توجد قضايا لعرضها</p>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -10105,43 +10135,50 @@ export default function App() {
                         </div>
 
                         <div className="h-52 w-full" dir="ltr">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                              <Pie
-                                data={dashboardInvoiceChartMode === "amount" ? invoiceMetrics.summaryByAmount : invoiceMetrics.summaryByCount}
-                                dataKey="value"
-                                nameKey="name"
-                                innerRadius={45}
-                                outerRadius={75}
-                                paddingAngle={3}
-                              >
-                                {(dashboardInvoiceChartMode === "amount" ? invoiceMetrics.summaryByAmount : invoiceMetrics.summaryByCount).map((entry, index) => (
-                                  <Cell key={`cell-inv-${index}`} fill={entry.color} />
-                                ))}
-                              </Pie>
-                              <Tooltip
-                                contentStyle={{
-                                  backgroundColor: "#0f172a",
-                                  borderColor: "#334155",
-                                  borderRadius: "10px",
-                                  color: "#fff",
-                                  fontSize: "12px",
-                                  direction: "rtl",
-                                  textAlign: "right"
-                                }}
-                                formatter={(value: any, name: any) => [
-                                  dashboardInvoiceChartMode === "amount"
-                                    ? `${fmtAED(Number(value))} (${Math.round((Number(value) / (invoiceMetrics.totalInvoiced || 1)) * 100)}%)`
-                                    : `${value} فاتورة (${Math.round((Number(value) / (invoiceMetrics.totalCount || 1)) * 100)}%)`,
-                                  name
-                                ]}
-                              />
-                              <Legend
-                                wrapperStyle={{ fontSize: "11px", paddingTop: "6px" }}
-                                formatter={(val) => <span className="text-slate-700 font-medium">{val}</span>}
-                              />
-                            </PieChart>
-                          </ResponsiveContainer>
+                          {invoiceMetrics.totalCount > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie
+                                  data={dashboardInvoiceChartMode === "amount" ? invoiceMetrics.summaryByAmount : invoiceMetrics.summaryByCount}
+                                  dataKey="value"
+                                  nameKey="name"
+                                  innerRadius={45}
+                                  outerRadius={75}
+                                  paddingAngle={3}
+                                >
+                                  {(dashboardInvoiceChartMode === "amount" ? invoiceMetrics.summaryByAmount : invoiceMetrics.summaryByCount).map((entry, index) => (
+                                    <Cell key={`cell-inv-${index}`} fill={entry.color} />
+                                  ))}
+                                </Pie>
+                                <Tooltip
+                                  contentStyle={{
+                                    backgroundColor: "#0f172a",
+                                    borderColor: "#334155",
+                                    borderRadius: "10px",
+                                    color: "#fff",
+                                    fontSize: "12px",
+                                    direction: "rtl",
+                                    textAlign: "right"
+                                  }}
+                                  formatter={(value: any, name: any) => [
+                                    dashboardInvoiceChartMode === "amount"
+                                      ? `${fmtAED(Number(value))} (${Math.round((Number(value) / (invoiceMetrics.totalInvoiced || 1)) * 100)}%)`
+                                      : `${value} فاتورة (${Math.round((Number(value) / (invoiceMetrics.totalCount || 1)) * 100)}%)`,
+                                    name
+                                  ]}
+                                />
+                                <Legend
+                                  wrapperStyle={{ fontSize: "11px", paddingTop: "6px" }}
+                                  formatter={(val) => <span className="text-slate-700 font-medium">{val}</span>}
+                                />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-2 pb-4">
+                              <Receipt size={32} className="opacity-20" />
+                              <p className="text-xs font-semibold">لا توجد فواتير لعرضها</p>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -10197,8 +10234,9 @@ export default function App() {
                       </div>
 
                       <div className="h-52 w-full" dir="ltr">
-                        <ResponsiveContainer width="100%" height="100%">
-                          {dashboardTaskChartMode === "status" ? (
+                        {tasksMetrics.total > 0 ? (
+                          <ResponsiveContainer width="100%" height="100%">
+                            {dashboardTaskChartMode === "status" ? (
                             <PieChart>
                               <Pie
                                 data={tasksMetrics.statusChartData}
@@ -10254,6 +10292,12 @@ export default function App() {
                             </BarChart>
                           )}
                         </ResponsiveContainer>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center h-full text-slate-400 space-y-2 pb-4">
+                            <CheckSquare size={32} className="opacity-20" />
+                            <p className="text-xs font-semibold">لا توجد مهام لعرضها</p>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -11470,7 +11514,7 @@ export default function App() {
                     const query = clientSearch.trim().toLowerCase();
                     const matchesSearch =
                       !query ||
-                      c.name.toLowerCase().includes(query) ||
+                      (c.name && c.name.toLowerCase().includes(query)) ||
                       (c.idNo && c.idNo.toLowerCase().includes(query)) ||
                       (c.phone && c.phone.includes(query)) ||
                       (c.email && c.email.toLowerCase().includes(query)) ||
@@ -15685,9 +15729,9 @@ export default function App() {
               // دالة مطابقة نوع الدعوى الفرعي والتخصص القضائي
               const matchCourtCategory = (c: CourtContact, category: string) => {
                 if (!category || category === "الكل") return true;
-                const norm = normalizeArabicSearch(`${c.courtName} ${c.department} ${c.titleOrEmployee} ${c.notes}`);
-                const deptNorm = normalizeArabicSearch(`${c.department} ${c.titleOrEmployee}`);
-                const courtNorm = normalizeArabicSearch(c.courtName);
+                const norm = normalizeArabicSearch(`${c.courtName || ""} ${c.department || ""} ${c.titleOrEmployee || ""} ${c.notes || ""}`);
+                const deptNorm = normalizeArabicSearch(`${c.department || ""} ${c.titleOrEmployee || ""}`);
+                const courtNorm = normalizeArabicSearch(c.courtName || "");
 
                 if (category === "الدوائر القضائية وأمناء السر") {
                   return (
@@ -15761,8 +15805,8 @@ export default function App() {
               // دالة مطابقة المحكمة الفرعية أو المقر القضائي داخل الإمارة
               const matchCourtBranch = (c: CourtContact, branch: string) => {
                 if (!branch || branch === "الكل") return true;
-                const norm = normalizeArabicSearch(`${c.courtName} ${c.location} ${c.department} ${c.notes}`);
-                const courtNorm = normalizeArabicSearch(c.courtName);
+                const norm = normalizeArabicSearch(`${c.courtName || ""} ${c.location || ""} ${c.department || ""} ${c.notes || ""}`);
+                const courtNorm = normalizeArabicSearch(c.courtName || "");
 
                 // فروع إمارة الشارقة
                 if (branch === "الذيد") return norm.includes("ذيد");
@@ -15903,9 +15947,9 @@ export default function App() {
               };
 
               const getCourtContactCircuitBadge = (c: CourtContact) => {
-                const norm = normalizeArabicSearch(`${c.courtName} ${c.department} ${c.titleOrEmployee} ${c.notes}`);
-                const deptNorm = normalizeArabicSearch(`${c.department} ${c.titleOrEmployee}`);
-                const courtNorm = normalizeArabicSearch(c.courtName);
+                const norm = normalizeArabicSearch(`${c.courtName || ""} ${c.department || ""} ${c.titleOrEmployee || ""} ${c.notes || ""}`);
+                const deptNorm = normalizeArabicSearch(`${c.department || ""} ${c.titleOrEmployee || ""}`);
+                const courtNorm = normalizeArabicSearch(c.courtName || "");
 
                 if (norm.includes("عقاب") || norm.includes("سجن") || norm.includes("توقيف") || norm.includes("منشات عقابيه") || (norm.includes("اصلاح") && !norm.includes("اسري") && !norm.includes("توجيه"))) {
                   return { label: "مؤسسة عقابية وسجن", icon: "🔒", bg: "bg-rose-50 text-rose-800 border-rose-200" };
@@ -16321,7 +16365,7 @@ export default function App() {
                     let matchQ = true;
                     if (searchTokens.length > 0) {
                       const fullNormalizedText = normalizeArabicSearch(
-                        `${c.courtName} ${c.emirate} ${c.department} ${c.titleOrEmployee} ${c.extOrSeal} ${c.location} ${c.notes} ${c.email}`
+                        `${c.courtName || ""} ${c.emirate || ""} ${c.department || ""} ${c.titleOrEmployee || ""} ${c.extOrSeal || ""} ${c.location || ""} ${c.notes || ""} ${c.email || ""}`
                       );
                       const phoneDigits = normalizePhoneDigits(c.phone);
 
