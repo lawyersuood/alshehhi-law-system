@@ -251,6 +251,7 @@ export interface CaseItem {
   subject: string;
   openDate: string;
   fee: number;
+  emirate?: string;
 }
 
 export interface Hearing {
@@ -7865,7 +7866,7 @@ export default function App() {
     const stage = form.stage || "الابتدائية";
     const status = form.status || "متداولة";
     
-    setCases(prev => deduplicateCases([...prev, { id: newCaseId, number: form.number, clientId: +form.clientId, opponent: form.opponent || "—", type: form.type || CASE_TYPES[0], court: form.court || COURTS[0], judge: form.judge || "", stage: stage, status: status, subject: form.subject || "", openDate: openDate, fee: +form.fee || 0 }]));
+    setCases(prev => deduplicateCases([...prev, { id: newCaseId, number: form.number, clientId: +form.clientId, opponent: form.opponent || "—", type: form.type || CASE_TYPES[0], court: form.court || COURTS[0], judge: form.judge || "", stage: stage, status: status, subject: form.subject || "", openDate: openDate, fee: +form.fee || 0, emirate: form.emirate || "" }]));
     
     if (form.taskTemplate) {
       const template = TASK_TEMPLATES.find(t => t.id === form.taskTemplate);
@@ -8725,6 +8726,7 @@ export default function App() {
   const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients]);
 
   const getCaseEmirate = (c: CaseItem): string => {
+    if (c.emirate) return c.emirate;
     const cObj = clientMap.get(c.clientId);
     const text = ((c.court || "") + " " + (cObj?.emirate || "") + " " + (cObj?.address || "")).toLowerCase();
     if (text.includes("دبي")) return "دبي";
@@ -10658,43 +10660,42 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* شريط توزيع الإمارات والمحاكم وتصنيف الموكلين */}
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1 text-xs">
-                      <div className="bg-white p-3 rounded-xl border border-amber-100 shadow-2xs">
-                        <span className="font-bold text-slate-800 mb-2 flex items-center justify-between">
-                          <span className="flex items-center gap-1">
-                            <Building2 size={13} className="text-amber-600" /> توزيع القضايا حسب الإمارات:
-                          </span>
-                          {caseEmirateFilter !== "الكل" && (
-                            <button onClick={() => setCaseEmirateFilter("الكل")} className="text-[10px] text-amber-700 font-bold hover:underline">
-                              إلغاء التحديد
-                            </button>
-                          )}
-                        </span>
-                        <div className="flex flex-wrap gap-1.5 mt-1.5">
-                          {uniqueEmirates.map((em) => {
-                            const count = caseStatsBreakdown.emirateMap[em] || 0;
-                            if (count === 0) return null;
-                            const isSelected = caseEmirateFilter === em;
-                            return (
-                              <button
-                                key={em}
-                                onClick={() => setCaseEmirateFilter(isSelected ? "الكل" : em)}
-                                className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5 ${
-                                  isSelected
-                                    ? "bg-amber-600 text-white border-amber-600 shadow-xs"
-                                    : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-amber-50 hover:border-amber-300"
-                                }`}
-                              >
-                                <span>{em}</span>
-                                <span className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${isSelected ? "bg-white text-amber-900" : "bg-amber-100 text-amber-900"}`}>
-                                  {count}
-                                </span>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
+                    {/* فلتر الإمارات (تصميم دليل المحاكم) */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1.5 pt-2">
+                      {[
+                        { id: "الكل", name: "جميع الإمارات", icon: "🌍" },
+                        { id: "أبوظبي", name: "أبوظبي", icon: "🏢" },
+                        { id: "دبي", name: "دبي", icon: "🌆" },
+                        { id: "الشارقة", name: "الشارقة", icon: "🏛️" },
+                        { id: "عجمان", name: "عجمان", icon: "🌴" },
+                        { id: "رأس الخيمة", name: "رأس الخيمة", icon: "⛰️" },
+                        { id: "أم القيوين", name: "أم القيوين", icon: "⛵" },
+                        { id: "الفجيرة", name: "الفجيرة", icon: "🌊" },
+                      ].map((em) => {
+                        const count = em.id === "الكل" ? cases.length : (caseStatsBreakdown.emirateMap[em.id] || 0);
+                        const isSelected = caseEmirateFilter === em.id;
+                        return (
+                          <button
+                            key={em.id}
+                            onClick={() => setCaseEmirateFilter(em.id)}
+                            className={`p-2 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center gap-1 border text-center cursor-pointer ${
+                              isSelected
+                                ? "bg-slate-900 text-white border-slate-900 shadow-sm ring-2 ring-amber-500/50"
+                                : "bg-white text-slate-700 border-slate-200 hover:bg-amber-50 hover:border-amber-300 shadow-2xs"
+                            }`}
+                          >
+                            <span className="text-base">{em.icon}</span>
+                            <span className="leading-tight truncate w-full">{em.name}</span>
+                            <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${isSelected ? "bg-amber-500 text-slate-950 font-bold" : "bg-slate-100 text-slate-600"}`}>
+                              {count}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* شريط توزيع المحاكم وتصنيف الموكلين */}
+                    <div className="grid sm:grid-cols-2 gap-3 pt-3 text-xs">
 
                       <div className="bg-white p-3 rounded-xl border border-amber-100 shadow-2xs">
                         <span className="font-bold text-slate-800 mb-2 flex items-center justify-between">
@@ -17191,10 +17192,18 @@ export default function App() {
                 </select>
               </Field>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Field label="نوع الدعوى">
                 <select onChange={f("type")} className={inputCls}>
                   {CASE_TYPES.map((t) => <option key={t}>{t}</option>)}
+                </select>
+              </Field>
+              <Field label="الإمارة">
+                <select onChange={f("emirate")} className={inputCls} defaultValue="">
+                  <option value="">اختر الإمارة...</option>
+                  {["أبوظبي", "دبي", "الشارقة", "عجمان", "أم القيوين", "رأس الخيمة", "الفجيرة"].map((e) => (
+                    <option key={e} value={e}>{e}</option>
+                  ))}
                 </select>
               </Field>
               <Field label="المحكمة المختصة">
