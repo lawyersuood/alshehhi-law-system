@@ -1,0 +1,50 @@
+import React, { useState, useMemo, useEffect } from "react";
+import Logo from "./components/Logo";
+import BookingConsultationView from "./components/BookingConsultationView";
+import PublicConsultationPage, { BookingRecord, ConsultationSettings } from "./components/PublicConsultationPage";
+import AdminConsultationsView from "./components/AdminConsultationsView";
+import GoogleCalendarSyncModal from "./components/GoogleCalendarSyncModal";
+import { initAuth, createGoogleCalendarEvent, formatCalendarDateTime } from "./googleCalendar";
+import { User as FirebaseUser } from "firebase/auth";
+import { supabase, sendWhatsAppViaEdgeFunction } from "./supabaseClient";
+import {
+  Scale, LayoutDashboard, Briefcase, BriefcaseBusiness, FileBadge,  Users, CalendarDays, ListChecks,
+  Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, BellRing, Building2,
+  Gavel, Clock, AlertTriangle, CheckCircle2, ChevronLeft, Trash2, Printer,
+  Phone, Mail, MapPin, TrendingUp, ShieldCheck, Shield, Lock, UserCheck, Key, Stamp,
+  Check, Minus, Info, UserPlus, ShieldAlert, Edit2, Edit3, User, RefreshCw, Smartphone,
+  Send, MessageSquare, Share2, ExternalLink, FileText, CheckCheck, SendHorizontal, Filter,
+  Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download, Database, Code, LogOut,
+  Inbox, Paperclip, RotateCw, QrCode, Settings, History, BookOpen, UploadCloud, Video,
+  Sparkles, Bot, Zap, PlusCircle, Layers, BarChart3, PieChart as LucidePieChart, Activity, CheckSquare, Target, Percent, Menu,
+  SlidersHorizontal, Eye, EyeOff, Hash, ArrowUpDown, RotateCcw, ChevronDown, ChevronUp
+} from "lucide-react";
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
+  PieChart, Pie, Cell, Legend, RadialBarChart, RadialBar, AreaChart, Area
+} from "recharts";
+import * as XLSX from "xlsx";
+import { uaeTerroristList } from "./data/uaeTerroristListData";
+import { seedCourtContacts } from "./courtContactsData";
+
+/* ============================================================
+   نظام إدارة مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية
+   الإمارات العربية المتحدة — شامل مع نظام إدارة المستخدمين والصلاحيات
+   ============================================================ */
+
+// ---------- بيانات مرجعية إماراتية ----------
+const COURTS = [
+  "محاكم دبي", "دائرة القضاء - أبوظبي", "محاكم رأس الخيمة",
+  "محكمة الشارقة الاتحادية", "محكمة عجمان الاتحادية",
+  "المحكمة الاتحادية العليا", "محاكم مركز دبي المالي العالمي DIFC",
+  "مركز فض المنازعات الإيجارية - دبي"
+];
+const CASE_TYPES = ["تجاري", "مدني", "عمالي", "جزائي", "أحوال شخصية", "إيجاري", "عقاري", "إداري", "تنفيذ"];
+const CASE_STAGES = ["الابتدائية", "الاستئناف", "التمييز / النقض", "التنفيذ", "لجان فض المنازعات"];
+const CASE_STATUS = ["متداولة", "منتهية", "محكومة", "قيد النظر", "محجوزة للحكم", "مشطوبة", "معلقة"];
+const HEARING_TYPES = ["جلسة مرافعة", "جلسة إدارة دعوى", "جلسة خبرة", "جلسة نطق بالحكم", "جلسة تنفيذ", "جلسة صصلح"];
+const TASK_PRIORITY: Record<string, string> = { "عالية": "bg-red-100 text-red-700", "متوسطة": "bg-amber-100 text-amber-700", "منخفضة": "bg-emerald-100 text-emerald-700" };
+const DOC_TYPES = ["صحيفة دعوى", "مذكرة جوابية", "مذكرة دفاع", "حكم", "عقد", "وكالة", "تقرير خبرة", "إنذار عدلي", "لائحة استئناف", "مستند إثبات"];
+const VAT_RATE = 0.05; // ضريبة القيمة المضافة في الإمارات 5%
+
+// ---------- دوال معالجة وتطبيع النصوص العربية والأرقام للبحث الذكي ----------
