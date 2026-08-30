@@ -8,8 +8,35 @@ import {
   PenLine,
   ImageIcon,
 } from "lucide-react";
-import ReactQuill from "react-quill-new";
+import ReactQuill, { Quill } from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
+
+// معالج لصق إضافي يلتقط التنسيق (عريض/مائل/تسطير/شطب/محاذاة) من محتوى HTML
+// الملصق من Word أو Google Docs عندما يكون هذا التنسيق معتمداً على style مضمّن
+// في span/p/div (نمط شائع جداً عند اللصق من Google Docs) بدلاً من وسوم دلالية
+// مثل b/i/u التي يتعرف عليها المحرر تلقائياً فقط. يعمل هذا كطبقة احتياطية إضافية
+// إلى جانب معالجة Quill الداخلية، ولا يُغيّر أي سلوك عند غياب أنماط مضمّنة.
+function matchPastedInlineStyle(node: unknown, delta: any) {
+  try {
+    const el = node as HTMLElement;
+    const style = (el?.getAttribute && el.getAttribute("style")) || "";
+    if (!style) return delta;
+    const DeltaCtor = (Quill as any).import("delta");
+    if (!DeltaCtor) return delta;
+    const formats: Record<string, unknown> = {};
+    if (/font-weight\s*:\s*(bold|[6-9]00)/i.test(style)) formats.bold = true;
+    if (/font-style\s*:\s*italic/i.test(style)) formats.italic = true;
+    if (/text-decoration[a-z-]*\s*:\s*[^;]*underline/i.test(style)) formats.underline = true;
+    if (/text-decoration[a-z-]*\s*:\s*[^;]*line-through/i.test(style)) formats.strike = true;
+    const alignMatch = style.match(/text-align\s*:\s*(right|left|center|justify)/i);
+    if (alignMatch) formats.align = alignMatch[1].toLowerCase();
+    if (Object.keys(formats).length === 0) return delta;
+    return delta.compose(new DeltaCtor().retain(delta.length(), formats));
+  } catch {
+    // في حال أي خطأ غير متوقع، لا نُفسد اللصق — نُعيد المحتوى كما وصل افتراضياً
+    return delta;
+  }
+}
 
 const LETTERHEAD_LAYOUT = {
   headerMm: 46,
@@ -159,14 +186,64 @@ export async function printOfficialLetter(
   doc.write(buildPrintDocument(data, headerImg, footerImg, signatureImg, stampImg));
   doc.close();
 
-  setTimeout(() => {
+  // ننتظر اكتمال تحميل صور الترويسة/التذييل/التوقيع والختم فعلياً (بدل مهلة
+  // ثابتة قد تسبق اكتمال التحميل) حتى لا تُطبع الصفحة قبل استقرار تخطيطها —
+  // هذا هو سبب ظهور صورة الترويسة "عائمة" في منتصف الصفحة الأولى سابقاً.
+  const waitForImages = () => {
+    const imgs = Array.from(doc.images || []);
+    return Promise.all(
+      imgs.map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            if (img.complete) {
+              resolve();
+              return;
+            }
+            img.addEventListener("load", () => resolve(), { once: true });
+            img.addEventListener("error", () => resolve(), { once: true });
+          })
+      )
+    );
+  };
+
+  // ننتظر أيضاً اكتمال تحميل خط "Amiri" الخارجي حتى لا يتغيّر ارتفاع/التفاف
+  // النص بعد حساب المتصفح لتقسيم الصفحات في نافذة الطباعة.
+  const waitForFonts = async () => {
     try {
-      iframe.contentWindow?.focus();
-      iframe.contentWindow?.print();
-    } finally {
-      setTimeout(() => iframe.remove(), 60000);
+      const fontsApi = (doc as unknown as { fonts?: { ready?: Promise<unknown> } }).fonts;
+      if (fontsApi?.ready) {
+        await fontsApi.ready;
+      }
+    } catch {
+      // تجاهل — بعض المتصفحات القديمة لا تدعم واجهة document.fonts
     }
-  }, 700);
+  };
+
+  const waitForLayoutSettle = () =>
+    new Promise<void>((resolve) => {
+      const win = iframe.contentWindow;
+      if (win?.requestAnimationFrame) {
+        win.requestAnimationFrame(() => win.requestAnimationFrame(() => resolve()));
+      } else {
+        setTimeout(resolve, 60);
+      }
+    });
+
+  await Promise.race([
+    Promise.all([waitForImages(), waitForFonts()]),
+    // سقف أمان أقصى: لا ننتظر إلى ما لا نهاية إن تعذّر تحميل عنصر ما
+    new Promise((resolve) => setTimeout(resolve, 4000)),
+  ]);
+  await waitForLayoutSettle();
+  // مهلة صغيرة إضافية لضمان استقرار التخطيط النهائي قبل استدعاء الطباعة
+  await new Promise((resolve) => setTimeout(resolve, 150));
+
+  try {
+    iframe.contentWindow?.focus();
+    iframe.contentWindow?.print();
+  } finally {
+    setTimeout(() => iframe.remove(), 60000);
+  }
 }
 
 const COURT_MEMO_TEMPLATE = `
@@ -194,6 +271,16 @@ const COURT_MEMO_TEMPLATE = `
 `;
 
 const DEFAULT_BODY_HTML = "<p>تحية طيبة وبعد،</p>\n<p>بالإشارة إلى الموضوع أعلاه، نود إحاطتكم علماً بأن ...</p>\n<p>وتفضلوا بقبول فائق الاحترام والتقدير،</p>";
+
+/** تمثّل صفحة واحدة ضمن معاينة الخطاب متعددة الصفحات: هل تظهر بها ترويسة
+ * المعلومات (الرقم المرجعي/المرسل إليه/الموضوع) — تظهر فقط في الصفحة الأولى،
+ * جزء من نص الخطاب المخصّص لهذه الصفحة تحديداً، وهل تظهر بها كتلة التوقيع —
+ * تظهر فقط في آخر صفحة يتّسع لها التوقيع. */
+interface LetterPage {
+  showHeading: boolean;
+  bodyHtml: string;
+  showSignature: boolean;
+}
 
 interface Props {
   defaultSignName?: string;
@@ -291,6 +378,114 @@ export default function OfficialLetterComposer({
 
   const { headerMm, footerMm, sideMm } = LETTERHEAD_LAYOUT;
   const mmToPx = (mm: number) => (mm / 210) * A4_PX_WIDTH;
+
+  // ---------- معاينة متعددة الصفحات ----------
+  // المعاينة السابقة كانت تعرض صفحة واحدة بارتفاع ثابت مع overflow-hidden،
+  // ما كان "يقصّ" أي محتوى يتجاوز صفحة واحدة دون أي إشارة للمستخدم. الحل هنا:
+  // نقيس محتوى الخطاب الفعلي في حاوية مخفية بنفس عرض/خط/تباعد المعاينة، ثم
+  // نوزّعه على صفحات وفق المساحة المتاحة الحقيقية بين الترويسة والتذييل،
+  // ونعرض صفحة واحدة في كل مرة مع أزرار تنقّل بين الصفحات.
+  const contentWidthPx = A4_PX_WIDTH - 2 * mmToPx(sideMm);
+  const availableContentHeightPx =
+    A4_PX_WIDTH * (297 / 210) - mmToPx(headerMm) - mmToPx(footerMm);
+
+  const headingMeasureRef = useRef<HTMLDivElement>(null);
+  const bodyMeasureRef = useRef<HTMLDivElement>(null);
+  const signatureMeasureRef = useRef<HTMLDivElement>(null);
+
+  const [letterPages, setLetterPages] = useState<LetterPage[]>([
+    { showHeading: true, bodyHtml, showSignature: true },
+  ]);
+  const [currentPageIndex, setCurrentPageIndex] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const paginate = async () => {
+      try {
+        const fontsApi = (document as unknown as { fonts?: { ready?: Promise<unknown> } }).fonts;
+        if (fontsApi?.ready) {
+          await fontsApi.ready;
+        }
+      } catch {
+        // تجاهل — بعض المتصفحات القديمة لا تدعم واجهة document.fonts
+      }
+      // إطار إضافي لضمان اكتمال التخطيط بعد أي تغيّر بالخط أو المحتوى
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      if (cancelled) return;
+
+      const headingEl = headingMeasureRef.current;
+      const bodyEl = bodyMeasureRef.current;
+      const signatureEl = signatureMeasureRef.current;
+      if (!headingEl || !bodyEl || !signatureEl) return;
+
+      const headingHeight = headingEl.getBoundingClientRect().height;
+      const signatureHeight = signatureEl.getBoundingClientRect().height;
+      const available = availableContentHeightPx;
+
+      const children = Array.from(bodyEl.children) as HTMLElement[];
+
+      const heightOf = (el: HTMLElement) => {
+        const style = window.getComputedStyle(el);
+        const marginBottom = parseFloat(style.marginBottom || "0") || 0;
+        return el.getBoundingClientRect().height + marginBottom;
+      };
+
+      if (children.length === 0) {
+        if (!cancelled) {
+          setLetterPages([{ showHeading: true, bodyHtml: "", showSignature: true }]);
+        }
+        return;
+      }
+
+      const chunks: string[][] = [];
+      let current: string[] = [];
+      let usedHeight = headingHeight;
+
+      children.forEach((child) => {
+        const childHeight = heightOf(child);
+        if (current.length > 0 && usedHeight + childHeight > available) {
+          chunks.push(current);
+          current = [];
+          usedHeight = 0;
+        }
+        current.push(child.outerHTML);
+        usedHeight += childHeight;
+      });
+      if (current.length > 0 || chunks.length === 0) chunks.push(current);
+
+      // نتحقق إن كانت آخر صفحة تتّسع أيضاً لكتلة التوقيع، وإلا نضيف صفحة أخيرة له
+      const lastChunkCount = chunks[chunks.length - 1].length;
+      const lastPageChildEls = children.slice(children.length - lastChunkCount);
+      let lastUsed = lastPageChildEls.reduce((sum, el) => sum + heightOf(el), 0);
+      if (chunks.length === 1) lastUsed += headingHeight;
+      const fitsSignatureOnLastPage = available - lastUsed >= signatureHeight;
+
+      const pages: LetterPage[] = chunks.map((chunkHtmls, idx) => ({
+        showHeading: idx === 0,
+        bodyHtml: chunkHtmls.join(""),
+        showSignature: false,
+      }));
+
+      if (fitsSignatureOnLastPage) {
+        pages[pages.length - 1].showSignature = true;
+      } else {
+        pages.push({ showHeading: false, bodyHtml: "", showSignature: true });
+      }
+
+      if (!cancelled) setLetterPages(pages);
+    };
+
+    paginate();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bodyHtml, refNo, date, recipient, subject, includeSigStamp, signatureImg, stampImg, signName, signTitle]);
+
+  useEffect(() => {
+    setCurrentPageIndex((idx) => Math.min(idx, Math.max(0, letterPages.length - 1)));
+  }, [letterPages.length]);
 
   const inputCls =
     "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition";
@@ -427,6 +622,15 @@ export default function OfficialLetterComposer({
                     [{ 'color': [] }, { 'background': [] }],
                     ['clean']
                   ],
+                  clipboard: {
+                    matchVisual: true,
+                    matchers: [
+                      ['span', matchPastedInlineStyle],
+                      ['p', matchPastedInlineStyle],
+                      ['div', matchPastedInlineStyle],
+                      ['li', matchPastedInlineStyle],
+                    ],
+                  },
                 }}
                 formats={[
                   'size',
@@ -479,10 +683,43 @@ export default function OfficialLetterComposer({
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-stone-100 p-4 shadow-sm">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-600">
-            <Eye size={16} className="text-amber-600" /> معاينة حية (مطابقة
-            للناتج النهائي)
-          </h3>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="flex items-center gap-2 text-sm font-bold text-slate-600">
+              <Eye size={16} className="text-amber-600" /> معاينة حية (مطابقة
+              للناتج النهائي)
+            </h3>
+            {letterPages.length > 1 && (
+              <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPageIndex((i) => Math.max(0, i - 1))}
+                  disabled={currentPageIndex === 0}
+                  className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  ‹ السابقة
+                </button>
+                <span className="tabular-nums">
+                  صفحة {currentPageIndex + 1} من {letterPages.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCurrentPageIndex((i) => Math.min(letterPages.length - 1, i + 1))
+                  }
+                  disabled={currentPageIndex === letterPages.length - 1}
+                  className="rounded-lg border border-slate-300 bg-white px-2.5 py-1 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  التالية ›
+                </button>
+              </div>
+            )}
+          </div>
+          {letterPages.length > 1 && (
+            <p className="mb-2 text-[11px] font-semibold text-amber-700">
+              ⚠️ يتكوّن هذا الخطاب من {letterPages.length} صفحات — يرجى تصفّح
+              جميع الصفحات قبل التصدير أو الاعتماد النهائي.
+            </p>
+          )}
           <div ref={previewWrapRef} className="overflow-hidden">
             <div
               style={{
@@ -535,38 +772,103 @@ export default function OfficialLetterComposer({
                   color: "#1a1a1a",
                 }}
               >
-                <div className="mb-4 flex justify-between text-[14px] font-bold">
-                  <span>الرقم المرجعي: {refNo}</span>
-                  <span>التاريخ: {date}</span>
-                </div>
-                {recipient && (
-                  <p className="mb-3 font-bold">
-                    {recipient}
-                    <span className="inline-block w-10" />
-                    المحترمون
-                  </p>
-                )}
-                {subject && (
-                  <p className="mb-4 font-bold underline underline-offset-4">
-                    الموضوع: {subject}
-                  </p>
-                )}
-                <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
-                <div className="mt-8 pl-6 text-left">
-                  {includeSigStamp && (
-                    <div className="relative inline-block h-16 w-36 mb-1">
-                      {stampImg && (
-                        <img src={stampImg} alt="ختم" className="absolute top-0 right-2 h-16 w-16 object-contain opacity-90 -rotate-6" />
-                      )}
-                      {signatureImg && (
-                        <img src={signatureImg} alt="توقيع" className="absolute bottom-0 left-0 h-10 object-contain" />
-                      )}
+                {letterPages[currentPageIndex]?.showHeading && (
+                  <>
+                    <div className="mb-4 flex justify-between text-[14px] font-bold">
+                      <span>الرقم المرجعي: {refNo}</span>
+                      <span>التاريخ: {date}</span>
                     </div>
-                  )}
-                  <p className="font-bold">{signName}</p>
-                  <p>{signTitle}</p>
-                </div>
+                    {recipient && (
+                      <p className="mb-3 font-bold">
+                        {recipient}
+                        <span className="inline-block w-10" />
+                        المحترمون
+                      </p>
+                    )}
+                    {subject && (
+                      <p className="mb-4 font-bold underline underline-offset-4">
+                        الموضوع: {subject}
+                      </p>
+                    )}
+                  </>
+                )}
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: letterPages[currentPageIndex]?.bodyHtml || "",
+                  }}
+                />
+                {letterPages[currentPageIndex]?.showSignature && (
+                  <div className="mt-8 pl-6 text-left">
+                    {includeSigStamp && (
+                      <div className="relative inline-block h-16 w-36 mb-1">
+                        {stampImg && (
+                          <img src={stampImg} alt="ختم" className="absolute top-0 right-2 h-16 w-16 object-contain opacity-90 -rotate-6" />
+                        )}
+                        {signatureImg && (
+                          <img src={signatureImg} alt="توقيع" className="absolute bottom-0 left-0 h-10 object-contain" />
+                        )}
+                      </div>
+                    )}
+                    <p className="font-bold">{signName}</p>
+                    <p>{signTitle}</p>
+                  </div>
+                )}
               </div>
+            </div>
+          </div>
+
+          {/* حاوية قياس مخفية تُستخدم فقط لحساب توزيع الصفحات (لا تظهر للمستخدم) */}
+          <div
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              visibility: "hidden",
+              pointerEvents: "none",
+              top: 0,
+              left: -99999,
+              width: contentWidthPx,
+              fontFamily: LETTER_FONT_STACK,
+              fontSize: 15.5,
+              lineHeight: 2,
+              color: "#1a1a1a",
+            }}
+          >
+            <div ref={headingMeasureRef} className="text-justify">
+              <div className="mb-4 flex justify-between text-[14px] font-bold">
+                <span>الرقم المرجعي: {refNo}</span>
+                <span>التاريخ: {date}</span>
+              </div>
+              {recipient && (
+                <p className="mb-3 font-bold">
+                  {recipient}
+                  <span className="inline-block w-10" />
+                  المحترمون
+                </p>
+              )}
+              {subject && (
+                <p className="mb-4 font-bold underline underline-offset-4">
+                  الموضوع: {subject}
+                </p>
+              )}
+            </div>
+            <div
+              ref={bodyMeasureRef}
+              className="text-justify"
+              dangerouslySetInnerHTML={{ __html: bodyHtml }}
+            />
+            <div ref={signatureMeasureRef} className="mt-8 pl-6 text-left">
+              {includeSigStamp && (
+                <div className="relative inline-block h-16 w-36 mb-1">
+                  {stampImg && (
+                    <img src={stampImg} alt="" className="absolute top-0 right-2 h-16 w-16 object-contain opacity-90 -rotate-6" />
+                  )}
+                  {signatureImg && (
+                    <img src={signatureImg} alt="" className="absolute bottom-0 left-0 h-10 object-contain" />
+                  )}
+                </div>
+              )}
+              <p className="font-bold">{signName}</p>
+              <p>{signTitle}</p>
             </div>
           </div>
         </div>
