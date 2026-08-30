@@ -761,8 +761,8 @@ export const DETAILED_ACTION_PERMISSIONS: Array<{
 // فحص صلاحيات الوصول للتبويب المحدد مع تطبيق سياسة الحظر الافتراضي (Default-Deny Policy)
 export const hasTabPermission = (user: UserItem | null | undefined, tabId: string): boolean => {
   if (!user) return false;
-  // مدير النظام له جميع الصلاحيات الكاملة بلا استثناء
-  if (user.roleKey === "admin" || (user as any).role === "admin" || user.id === 1 || user.name.includes("سعود")) return true;
+  // مدير النظام له جميع الصلاحيات الكاملة بلا استثناء (اعتماداً على الدور الوظيفي المخصص فقط)
+  if (user.roleKey === "admin" || (user as any).role === "admin") return true;
 
   // تبويب المبادئ والأحكام القضائية متاح للجميع افتراضياً وللكادر القانوني إلا إذا قُيّد صراحة
   if (tabId === "precedents") {
@@ -827,10 +827,10 @@ export const hasTabPermission = (user: UserItem | null | undefined, tabId: strin
   return false;
 };
 
-// حساب عدد الصلاحيات المتاحة الفعلية من أصل 18 قسماً معتمداً
+// حساب عدد الصلاحيات المتاحة الفعلية من أصل الأقسام المعتمدة في PERMISSION_MODULES
 export const getActivePermissionsCount = (user: UserItem | null | undefined): number => {
   if (!user) return 0;
-  if (user.roleKey === "admin" || (user as any).role === "admin" || user.id === 1 || user.name.includes("سعود")) {
+  if (user.roleKey === "admin" || (user as any).role === "admin") {
     return PERMISSION_MODULES.length;
   }
 
@@ -2769,17 +2769,17 @@ const sendWhatsAppMsg = (phone: string, text: string) => {
 
 const sendEmailMsg = (email: string, subject: string, body: string) => {
   if (email && email.includes("@")) {
-    fetch('/api/email/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    supabase.functions.invoke("send-email", {
+      body: {
         to: email,
         subject: subject,
-        body: body
-      })
-    }).then(res => res.json()).then(data => {
-      if (data.success) {
-        console.log("Email dispatched via server SMTP successfully:", data);
+        html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${body}</div>`
+      }
+    }).then(({ error }) => {
+      if (!error) {
+        console.log("Email dispatched via send-email Edge Function successfully");
+      } else {
+        console.warn("send-email Edge Function returned an error:", error);
       }
     }).catch(err => {
       console.warn("Server email dispatch fallback to mailto:", err);
@@ -4005,7 +4005,8 @@ export default function App() {
     const loaded = loadStorage<UserItem[]>("firm_users", seedUsers);
     const initial = (!loaded || loaded.length === 0) ? seedUsers : loaded;
     return initial.map((u) => {
-      if (u.id === 1 || u.roleKey === "admin" || u.name.includes("سعود")) {
+      // تصحيح البريد الإلكتروني لحساب المالك الأساسي المزروع (id=1) فقط دون سواه
+      if (u.id === 1) {
         return { ...u, email: "info@lawyersuood.com" };
       }
       return u;
@@ -4037,9 +4038,9 @@ export default function App() {
     return currentUser?.roleKey === "admin" || (currentUser as any)?.role === "admin";
   }, [currentUser]);
 
-  // التحقق مما إذا كان المستخدم الحالي هو المدير الأعلى Super Admin (المحامي سعود)
+  // التحقق مما إذا كان المستخدم الحالي هو مدير النظام (بالاعتماد على الدور الوظيفي المخصص فقط، وليس الاسم أو رقم الحساب)
   const isSuperAdmin = useMemo(() => {
-    return currentUser?.roleKey === "admin" || currentUser?.name?.includes("سعود") || currentUser?.id === 1;
+    return currentUser?.roleKey === "admin" || (currentUser as any)?.role === "admin";
   }, [currentUser]);
 
   // التحقق من صلاحية الاطلاع على البيانات والتقارير المالية والأتعاب
@@ -6371,10 +6372,10 @@ export default function App() {
           const dbIds = new Set(uniqueProfiles.map((p: any) => p.id).filter(Boolean));
           const dbEmails = new Set(uniqueProfiles.map((p: any) => p.email?.trim().toLowerCase()).filter(Boolean));
 
-          // Filter out users that were removed from Supabase profiles (unless primary local admin)
+          // Filter out users that were removed from Supabase profiles (unless primary local admin, id=1)
           const initialLen = updated.length;
           updated = updated.filter((u) => {
-            if (u.id === 1 || u.name.includes("سعود")) return true;
+            if (u.id === 1) return true;
             if (u.supabaseId && !dbIds.has(u.supabaseId) && !dbEmails.has(u.email.toLowerCase())) return false;
             return true;
           });
@@ -6599,42 +6600,29 @@ export default function App() {
     setTestInvoiceResult(null);
 
     try {
-      const res = await fetch('/api/email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { error } = await supabase.functions.invoke("send-email", {
+        body: {
           to: targetEmail,
           subject: `📄 [فحص تسليم فاتورة ضريبية] - مكتب سعود أحمد الشحي للمحاماة (${emailConfig.protocol.toUpperCase()})`,
-          body: `الموكل الفاضل / المستلم المحترم،\n\nتحية طيبة وبعد،\n\nهذا بريد فحص آلي صادر من نظام الفواتير والمراسلات الموحد بمكتب المحاماة للتأكد من وصول الفواتير الضريبية والإشعارات القانونية بنجاح إلى صندوق البريد الوارد الخاص بكم.\n\nتفاصيل العينة التجريبية للفاتورة:\n• رقم الفاتورة: INV-2026-TEST-VERIFIED\n• بيان الخدمة: أتعاب استشارة واستحقاق قضائي تجريبي\n• المبلغ الأولي: 5,000 درهم إماراتي\n• ضريبة القيمة المضافة VAT (5%): 250 درهم إماراتي\n• الإجمالي المستحق: 5,250 درهم إماراتي\n• بروتوكول التشفير المعتمد: ${emailConfig.protocol.toUpperCase()} (${emailConfig.smtpHost}:${emailConfig.smtpPort})\n\nتاريخ وساعة الإرسال: ${new Date().toLocaleString("ar-AE")}\n\nمع تحيات،\nمكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية`,
-          smtp: {
-            email: emailConfig.email,
-            senderName: emailConfig.senderName,
-            password: emailConfig.appPassword,
-            host: emailConfig.smtpHost,
-            port: emailConfig.smtpPort,
-            protocol: emailConfig.protocol,
-            rejectUnauthorized: emailConfig.rejectUnauthorized
-          },
-          isInvoiceTest: true
-        })
+          html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">الموكل الفاضل / المستلم المحترم،\n\nتحية طيبة وبعد،\n\nهذا بريد فحص آلي صادر من نظام الفواتير والمراسلات الموحد بمكتب المحاماة للتأكد من وصول الفواتير الضريبية والإشعارات القانونية بنجاح إلى صندوق البريد الوارد الخاص بكم.\n\nتفاصيل العينة التجريبية للفاتورة:\n• رقم الفاتورة: INV-2026-TEST-VERIFIED\n• بيان الخدمة: أتعاب استشارة واستحقاق قضائي تجريبي\n• المبلغ الأولي: 5,000 درهم إماراتي\n• ضريبة القيمة المضافة VAT (5%): 250 درهم إماراتي\n• الإجمالي المستحق: 5,250 درهم إماراتي\n\nتاريخ وساعة الإرسال: ${new Date().toLocaleString("ar-AE")}\n\nمع تحيات،\nمكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية</div>`
+        }
       });
 
-      const data = await res.json();
-      if (data.success) {
+      if (!error) {
         setTestInvoiceResult({
           success: true,
-          message: `تم إرسال الفاتورة التجريبية بنجاح إلى البريد (${targetEmail}) عبر بروتوكول (${emailConfig.protocol.toUpperCase()})!`
+          message: `تم إرسال الفاتورة التجريبية بنجاح إلى البريد (${targetEmail})!`
         });
       } else {
         setTestInvoiceResult({
           success: false,
-          message: `تعذر إرسال البريد: ${data.note || data.error || "تأكد من كلمة مرور التطبيق"}`
+          message: `تعذر إرسال البريد: ${error.message || "تعذر الاتصال بخادم البريد — راجع إعدادات الخادم"}`
         });
       }
     } catch (err: any) {
       setTestInvoiceResult({
         success: false,
-        message: "فشل في إرسال طلب الفاتورة التجريبية."
+        message: `فشل في إرسال طلب الفاتورة التجريبية: ${err?.message || ""}`
       });
     } finally {
       setTestInvoiceLoading(false);
@@ -6697,19 +6685,22 @@ export default function App() {
     setEmailFolder("sent");
     setSelectedEmailId(newSentMail.id);
 
+    // الإرسال الفعلي عبر Edge Function المسماة send-email (وليس عبر مسار محلي غير موجود)
+    let sendSucceeded = false;
+    let sendErrorMessage = "";
     try {
-      await fetch('/api/email/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const { error } = await supabase.functions.invoke("send-email", {
+        body: {
           to: composeTo,
           subject: composeSubject,
-          body: composeBody,
-          smtp: emailConfig
-        })
+          html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${composeBody}</div>`
+        }
       });
-    } catch (e) {
-      console.log("Server send email note:", e);
+      if (error) throw error;
+      sendSucceeded = true;
+    } catch (e: any) {
+      console.log("Send email via Edge Function note:", e);
+      sendErrorMessage = e?.message || "تعذر الاتصال بخادم إرسال البريد";
     }
 
     try {
@@ -6728,7 +6719,11 @@ export default function App() {
       console.log("Supabase insert email note:", err);
     }
 
-    setPermissionNotice("تم توجيه وإرسال الرسالة الإلكترونية بنجاح وتوثيقها في جدول Supabase!");
+    if (sendSucceeded) {
+      setPermissionNotice("تم إرسال الرسالة الإلكترونية فعلياً وتوثيقها في جدول Supabase!");
+    } else {
+      setPermissionNotice(`تنبيه: تعذر إرسال الرسالة فعلياً عبر الخادم (${sendErrorMessage}) — تم حفظ نسخة منها في السجل فقط دون إرسالها. يرجى مراجعة إعدادات خادم البريد أو التواصل مع الدعم الفني.`);
+    }
     setComposeTo("");
     setComposeSubject("");
     setComposeBody("");
@@ -7446,24 +7441,15 @@ export default function App() {
           const emailContent = `سعادة المحامي / ${lawyerName} المحترم،\n\nتحية طيبة وبعد،\n\nنود لفت عنايتكم العاجلة والشديدة بأنه متبقي (${daysLeft}) أيام فقط على انقضاء المهلة القانونية المقررة للطعن/الاستئناف في الحكم القضائي الصادر بالقضية التالية:\n\n• رقم القضية: ${caseNum}\n• اسم الموكل: ${clientNm}\n• المحكمة: ${cs ? cs.court : "—"}\n• نوع الحكم: ${item.rulingType}\n• تاريخ الحكم: ${fmtDate(item.rulingDate)}\n• آخر موعد قاطع للطعن: ${fmtDate(item.appealDeadlineDate)}\n• منطوق الحكم: ${item.rulingSummary}\n\nيرجى المبادرة المباشرة بإعداد وقيد صحيفة الطعن قبل سقوط الحق القانوني للموكل وتأكيد قيد الطعن بالنظام.\n\nنظام الإشعارات الآلي الموحد\nمكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية`;
 
           try {
-            fetch('/api/email/send', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
+            supabase.functions.invoke("send-email", {
+              body: {
                 to: lawyerEmail,
                 subject,
-                body: emailContent,
-                smtp: {
-                  email: emailConfig.email,
-                  senderName: emailConfig.senderName,
-                  password: emailConfig.appPassword,
-                  host: emailConfig.smtpHost,
-                  port: emailConfig.smtpPort,
-                  protocol: emailConfig.protocol,
-                  rejectUnauthorized: emailConfig.rejectUnauthorized
-                }
-              })
-            }).catch(console.error);
+                html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${emailContent}</div>`
+              }
+            }).then(({ error }) => {
+              if (error) console.warn("SMTP Auto Dispatch Error (3-day alert):", error);
+            }).catch(e => console.warn("SMTP Auto Dispatch Error (3-day alert):", e));
           } catch (e) {
             console.warn("SMTP Auto Dispatch Error:", e);
           }
@@ -7505,24 +7491,15 @@ export default function App() {
           const emailContent = `سعادة المحامي / ${lawyerName} المحترم،\n\nتحية طيبة وبعد،\n\nنود تذكيركم بموعد قرب انقضاء المهلة القانونية للطعن/الاستئناف في الحكم الصادر في القضية التالية (متبقي 7 أيام):\n\n• رقم القضية: ${caseNum}\n• اسم الموكل: ${clientNm}\n• المحكمة: ${cs ? cs.court : "—"}\n• نوع الحكم: ${item.rulingType}\n• تاريخ الحكم: ${fmtDate(item.rulingDate)}\n• آخر موعد للطعن: ${fmtDate(item.appealDeadlineDate)}\n• منطوق الحكم: ${item.rulingSummary}\n\nنرجو مراجعة ملف القضية وتجهيز لائحة الطعن والتنسيق مع الموكل.\n\nنظام الإشعارات الآلي الموحد\nمكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية`;
 
           try {
-            fetch('/api/email/send', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
+            supabase.functions.invoke("send-email", {
+              body: {
                 to: lawyerEmail,
                 subject,
-                body: emailContent,
-                smtp: {
-                  email: emailConfig.email,
-                  senderName: emailConfig.senderName,
-                  password: emailConfig.appPassword,
-                  host: emailConfig.smtpHost,
-                  port: emailConfig.smtpPort,
-                  protocol: emailConfig.protocol,
-                  rejectUnauthorized: emailConfig.rejectUnauthorized
-                }
-              })
-            }).catch(console.error);
+                html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${emailContent}</div>`
+              }
+            }).then(({ error }) => {
+              if (error) console.warn("SMTP Auto Dispatch Error (7-day alert):", error);
+            }).catch(e => console.warn("SMTP Auto Dispatch Error (7-day alert):", e));
           } catch (e) {
             console.warn("SMTP Auto Dispatch Error:", e);
           }
