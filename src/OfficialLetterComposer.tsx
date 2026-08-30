@@ -51,6 +51,37 @@ const LETTER_FONT_STACK =
 const AMIRI_FONT_LINK =
   "https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap";
 
+// أصناف Quill (ql-align-*, ql-size-*, ql-indent-*) لا تُنسّق تلقائياً إلا داخل
+// محرر Quill نفسه، لأن ورقة أنماط المحرر (quill.snow.css) تشترط وجود صنف الأب
+// ql-editor في كل قواعدها (مثال: ".ql-editor .ql-align-center"). هذا يعني أن نفس
+// النص المنسَّق (توسيط/محاذاة/حجم خط/مسافة بادئة) كان يظهر بشكل صحيح داخل مربع
+// التحرير نفسه، لكنه يفقد تنسيقه في "المعاينة الحية" لأنها تُعرض خارج محرر Quill.
+// نعيد تعريف هذه الأصناف هنا صراحةً (مطابقةً لما هو مُعرَّف بالفعل في مستند
+// الطباعة) ليتطابق ما يظهر في المعاينة مع ما يظهر عند التصدير فعلياً.
+const RICH_TEXT_DISPLAY_CSS = `
+.ollc-rich-body p { margin-bottom: 15.12px; }
+.ollc-rich-body strong, .ollc-rich-body b { font-weight: bold; }
+.ollc-rich-body em, .ollc-rich-body i { font-style: italic; }
+.ollc-rich-body u { text-decoration: underline; }
+.ollc-rich-body s, .ollc-rich-body strike { text-decoration: line-through; }
+.ollc-rich-body .ql-align-center { text-align: center; }
+.ollc-rich-body .ql-align-right { text-align: right; }
+.ollc-rich-body .ql-align-left { text-align: left; }
+.ollc-rich-body .ql-align-justify { text-align: justify; }
+.ollc-rich-body .ql-direction-rtl { direction: rtl; text-align: inherit; }
+.ollc-rich-body .ql-size-small { font-size: 0.75em; }
+.ollc-rich-body .ql-size-large { font-size: 1.5em; }
+.ollc-rich-body .ql-size-huge { font-size: 2.5em; }
+.ollc-rich-body .ql-indent-1 { padding-inline-start: 3em; }
+.ollc-rich-body .ql-indent-2 { padding-inline-start: 6em; }
+.ollc-rich-body .ql-indent-3 { padding-inline-start: 9em; }
+.ollc-rich-body .ql-indent-4 { padding-inline-start: 12em; }
+.ollc-rich-body .ql-indent-5 { padding-inline-start: 15em; }
+.ollc-rich-body .ql-indent-6 { padding-inline-start: 18em; }
+.ollc-rich-body .ql-indent-7 { padding-inline-start: 21em; }
+.ollc-rich-body .ql-indent-8 { padding-inline-start: 24em; }
+`;
+
 const todayArabic = () =>
   new Date().toLocaleDateString("ar-AE", {
     year: "numeric",
@@ -131,10 +162,26 @@ function buildPrintDocument(
     "  .ql-align-right { text-align: right; }\n" +
     "  .ql-align-justify { text-align: justify; }\n" +
     "  .ql-align-left { text-align: left; }\n" +
-    "  .ql-direction-rtl { direction: rtl; }\n" +
+    "  .ql-direction-rtl { direction: rtl; text-align: inherit; }\n" +
+    // ملاحظة: أصناف Quill هذه (ql-size-*, ql-indent-*) لا تُنسّق تلقائياً إلا داخل
+    // محرر Quill نفسه (تتطلب أصلاً بصنف ql-editor)، لذا نُعيد تعريفها هنا صراحةً
+    // ليعمل حجم الخط والمسافة البادئة (indent) بشكل صحيح في الملف المطبوع أيضاً.
+    "  .ql-size-small { font-size: 0.75em; }\n" +
+    "  .ql-size-large { font-size: 1.5em; }\n" +
+    "  .ql-size-huge { font-size: 2.5em; }\n" +
+    "  .ql-indent-1 { padding-inline-start: 3em; }\n" +
+    "  .ql-indent-2 { padding-inline-start: 6em; }\n" +
+    "  .ql-indent-3 { padding-inline-start: 9em; }\n" +
+    "  .ql-indent-4 { padding-inline-start: 12em; }\n" +
+    "  .ql-indent-5 { padding-inline-start: 15em; }\n" +
+    "  .ql-indent-6 { padding-inline-start: 18em; }\n" +
+    "  .ql-indent-7 { padding-inline-start: 21em; }\n" +
+    "  .ql-indent-8 { padding-inline-start: 24em; }\n" +
     "  .letter-body p { margin-bottom: 4mm; }\n" +
     "  .letter-body strong { font-weight: bold; }\n" +
     "  .letter-body u { text-decoration: underline; }\n" +
+    "  .letter-body em { font-style: italic; }\n" +
+    "  .letter-body s { text-decoration: line-through; }\n" +
     "</style>\n" +
     "</head>\n" +
     "<body>\n" +
@@ -492,6 +539,7 @@ export default function OfficialLetterComposer({
 
   return (
     <div dir="rtl" className="space-y-5">
+      <style>{RICH_TEXT_DISPLAY_CSS}</style>
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
@@ -793,6 +841,7 @@ export default function OfficialLetterComposer({
                   </>
                 )}
                 <div
+                  className="ollc-rich-body"
                   dangerouslySetInnerHTML={{
                     __html: letterPages[currentPageIndex]?.bodyHtml || "",
                   }}
@@ -853,7 +902,7 @@ export default function OfficialLetterComposer({
             </div>
             <div
               ref={bodyMeasureRef}
-              className="text-justify"
+              className="text-justify ollc-rich-body"
               dangerouslySetInnerHTML={{ __html: bodyHtml }}
             />
             <div ref={signatureMeasureRef} className="mt-8 pl-6 text-left">
