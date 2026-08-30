@@ -99,9 +99,17 @@ function cropImageDataUrl(
 function buildPrintDocument(
   data: OfficialLetterData,
   headerStripImg: string,
-  footerStripImg: string
+  footerStripImg: string,
+  signatureImg?: string | null,
+  stampImg?: string | null
 ): string {
   const { headerMm, footerMm, sideMm, pageWidthMm } = LETTERHEAD_LAYOUT;
+  const sigStampHtml = (signatureImg || stampImg)
+    ? "<div class=\"sig-stamp-wrap\">" +
+      (stampImg ? "<img class=\"stamp-img\" src=\"" + stampImg + "\" />" : "") +
+      (signatureImg ? "<img class=\"signature-img\" src=\"" + signatureImg + "\" />" : "") +
+      "</div>"
+    : "";
   return "<!DOCTYPE html>\n" +
     "<html dir=\"rtl\" lang=\"ar\">\n" +
     "<head>\n" +
@@ -138,6 +146,9 @@ function buildPrintDocument(
     "    padding-left: 8mm; page-break-inside: avoid;\n" +
     "  }\n" +
     "  .signature .sig-name { font-weight: 700; font-size: 13.5pt; }\n" +
+    "  .sig-stamp-wrap { position: relative; height: 26mm; width: 55mm; margin-bottom: 2mm; }\n" +
+    "  .stamp-img { position: absolute; top: 0; right: 6mm; height: 26mm; width: 26mm; object-fit: contain; opacity: 0.9; transform: rotate(-6deg); }\n" +
+    "  .signature-img { position: absolute; bottom: 1mm; left: 0; height: 16mm; object-fit: contain; }\n" +
     "  .ql-align-center { text-align: center; }\n" +
     "  .ql-align-right { text-align: right; }\n" +
     "  .ql-align-justify { text-align: justify; }\n" +
@@ -161,6 +172,7 @@ function buildPrintDocument(
     "        " + (data.subject ? "<p class=\"subject-line\">الموضوع: " + data.subject + "</p>" : "") + "\n" +
     "        <div class=\"letter-body\">" + data.bodyHtml + "</div>\n" +
     "        <div class=\"signature\">\n" +
+    "          " + sigStampHtml + "\n" +
     "          <p class=\"sig-name\">" + data.signName + "</p>\n" +
     "          <p>" + data.signTitle + "</p>\n" +
     "        </div>\n" +
@@ -172,7 +184,11 @@ function buildPrintDocument(
     "</html>";
 }
 
-export async function printOfficialLetter(data: OfficialLetterData) {
+export async function printOfficialLetter(
+  data: OfficialLetterData,
+  signatureImg?: string | null,
+  stampImg?: string | null
+) {
   const letterheadImg = loadLetterheadImage();
   if (!letterheadImg) {
     alert("يرجى أولاً رفع صورة الورق الرسمي من شاشة الخطابات الرسمية.");
@@ -198,7 +214,7 @@ export async function printOfficialLetter(data: OfficialLetterData) {
 
   const doc = iframe.contentDocument!;
   doc.open();
-  doc.write(buildPrintDocument(data, headerStripImg, footerStripImg));
+  doc.write(buildPrintDocument(data, headerStripImg, footerStripImg, signatureImg, stampImg));
   doc.close();
 
   setTimeout(() => {
@@ -242,6 +258,12 @@ interface Props {
   defaultSignTitle?: string;
   /** هل يملك المستخدم الحالي صلاحية تعديل الورق الرسمي (رفع/حذف الصورة)؟ افتراضياً true للتوافق مع الاستخدام المستقل لهذا المكوّن. */
   canManageAssets?: boolean;
+  /** هل يملك المستخدم الحالي صلاحية إدراج التوقيع والختم المعتمدين عند تصدير الخطاب؟ */
+  canUseSignatureStamp?: boolean;
+  /** صورة التوقيع المعتمدة من قسم الهوية الرسمية المحمي (اختيارية). */
+  signatureImg?: string | null;
+  /** صورة الختم المعتمدة من قسم الهوية الرسمية المحمي (اختيارية). */
+  stampImg?: string | null;
   /** استدعاء اختياري لتسجيل عمليات تغيير الورق الرسمي أو طباعة/تصدير خطاب في سجل التدقيق. */
   onUsageLog?: (action: string, details: string) => void;
 }
@@ -250,6 +272,9 @@ export default function OfficialLetterComposer({
   defaultSignName = "مكتب سعود أحمد الشحي",
   defaultSignTitle = "للمحاماة والاستشارات القانونية",
   canManageAssets = true,
+  canUseSignatureStamp = false,
+  signatureImg = null,
+  stampImg = null,
   onUsageLog,
 }: Props) {
   const [letterheadImg, setLetterheadImg] = useState<string | null>(
@@ -309,17 +334,26 @@ export default function OfficialLetterComposer({
     onUsageLog?.("حذف صورة الورق الرسمي (A4)", "بحذف صورة الورق الرسمي الكاملة (A4) من محرر الخطابات");
   };
 
+  const includeSigStamp = canUseSignatureStamp && Boolean(signatureImg || stampImg);
+
   const handleExport = () => {
-    onUsageLog?.(`طباعة/تصدير خطاب رقم ${refNo}`, `باستخدام الورق الرسمي لطباعة أو تصدير الخطاب رقم ${refNo}${subject ? ` (الموضوع: ${subject})` : ""}`);
-    printOfficialLetter({
-      refNo,
-      date,
-      recipient,
-      subject,
-      bodyHtml: bodyHtml,
-      signName,
-      signTitle,
-    });
+    onUsageLog?.(
+      `طباعة/تصدير خطاب رقم ${refNo}`,
+      `باستخدام الورق الرسمي${includeSigStamp ? " والتوقيع والختم المعتمدين" : ""} لطباعة أو تصدير الخطاب رقم ${refNo}${subject ? ` (الموضوع: ${subject})` : ""}`
+    );
+    printOfficialLetter(
+      {
+        refNo,
+        date,
+        recipient,
+        subject,
+        bodyHtml: bodyHtml,
+        signName,
+        signTitle,
+      },
+      includeSigStamp ? signatureImg : null,
+      includeSigStamp ? stampImg : null
+    );
   };
 
   const handleReset = () => {
@@ -388,6 +422,15 @@ export default function OfficialLetterComposer({
             </span>
           )}
         </div>
+        <p className="mt-3 text-[11px] font-semibold flex items-center gap-1.5">
+          {includeSigStamp ? (
+            <span className="text-emerald-700">✅ سيتم إدراج التوقيع والختم الرسمي المعتمد تلقائياً عند التصدير</span>
+          ) : canUseSignatureStamp ? (
+            <span className="text-slate-400">لم يتم اعتماد صورة توقيع أو ختم بعد — راجع قسم "الهوية الرسمية والأختام"</span>
+          ) : (
+            <span className="text-slate-400">لا تملك صلاحية إدراج التوقيع والختم — راجع مدير النظام إذا لزم الأمر</span>
+          )}
+        </p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
@@ -593,6 +636,16 @@ export default function OfficialLetterComposer({
                 )}
                 <div dangerouslySetInnerHTML={{ __html: bodyHtml }} />
                 <div className="mt-8 pl-6 text-left">
+                  {includeSigStamp && (
+                    <div className="relative inline-block h-16 w-36 mb-1">
+                      {stampImg && (
+                        <img src={stampImg} alt="ختم" className="absolute top-0 right-2 h-16 w-16 object-contain opacity-90 -rotate-6" />
+                      )}
+                      {signatureImg && (
+                        <img src={signatureImg} alt="توقيع" className="absolute bottom-0 left-0 h-10 object-contain" />
+                      )}
+                    </div>
+                  )}
                   <p className="font-bold">{signName}</p>
                   <p>{signTitle}</p>
                 </div>
