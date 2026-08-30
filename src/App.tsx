@@ -5512,8 +5512,11 @@ export default function App() {
   };
 
   // ---------- 7. تأكيد وحفظ الاتفاقية المستخرجة بالذكاء الاصطناعي ----------
+  // ملاحظة: هذا المسار الآن يُنشئ نفس مخرجات نموذج "اتفاقية أتعاب المكتب" الرسمي بالكامل
+  // (عقد رسمي + اتفاقية أتعاب مالية + جدول أقساط) حتى تتطابق النتيجة بين الطريقتين ولا تبقى سجلات ناقصة.
   const handleSaveExtractedAgreement = () => {
     if (!agreementAiExtracted) return;
+    if (!checkPerm("manageInvoices", "إنشاء اتفاقية أتعاب")) return;
 
     let clientId: number;
     const extractedName = (agreementAiExtracted.clientName || "موكل اتفاقية جديد").trim();
@@ -5539,20 +5542,64 @@ export default function App() {
       clientId = newC.id;
     }
 
+    const clientNameArFinal = clients.find((c) => c.id === clientId)?.name || extractedName;
+    const clientPhoneFinal = clients.find((c) => c.id === clientId)?.phone || "";
+
+    // (1) اتفاقية الأتعاب المالية + قسط إجمالي واحد (الاستخراج الآلي لا يوفر تفصيلاً بالأقساط)
+    const feeAgrId = nextId(feeAgreements);
+    const agreementNumber = agreementAiExtracted.agreementNumber || `AGR-2026-${Math.floor(100 + Math.random() * 900)}`;
+    const totalAmount = Number(agreementAiExtracted.totalAmount || 25000);
+    const contractDate = agreementAiExtracted.date || todayISO();
+    const insts: OfficeAgreementInstallment[] = [{ amount: totalAmount, dueDate: contractDate, paidOnSigning: false }];
+    let maxInstId = feeAgreements.flatMap((a) => a.installments || []).reduce((m, i) => Math.max(m, i.id), 0);
+    const feeInstallments: FeeAgreementInstallment[] = insts.map((i, idx) => ({
+      id: ++maxInstId,
+      feeAgreementId: feeAgrId,
+      installmentNo: idx + 1,
+      amount: i.amount,
+      dueDate: i.dueDate,
+      status: "مستحق",
+    }));
     const newFeeAgr: FeeAgreement = {
-      id: nextId(feeAgreements),
-      agreementNumber: agreementAiExtracted.agreementNumber || `AGR-2026-${Math.floor(100 + Math.random() * 900)}`,
+      id: feeAgrId,
       clientId,
+      caseId: null,
+      agreementNumber,
       title: "اتفاقية أتعاب قانونية مستخرجة آلياً",
-      totalAmount: Number(agreementAiExtracted.totalAmount || 25000),
-      date: agreementAiExtracted.date || todayISO(),
+      totalAmount,
+      date: contractDate,
       status: "نشطة",
+      installments: feeInstallments,
       notes: agreementAiExtracted.installmentsNotes || agreementAiExtracted.notes || "اتفاقية أتعاب سابقة مستخرجة آلياً"
     };
-
     setFeeAgreements((prev) => [newFeeAgr, ...prev]);
-    logAuditAction("CREATE", "اتفاقيات الأتعاب", `اتفاقية رقم ${newFeeAgr.agreementNumber}`, "إدراج اتفاقية أتعاب عبر الذكاء الاصطناعي", newFeeAgr.id);
-    alert("تم حفظ اتفاقية الأتعاب وربطها بالموكل بنجاح!");
+
+    // (2) العقد الرسمي المقابل — بنفس منطق تبويب "اتفاقية أتعاب المكتب" حتى تظهر الاتفاقية بشكل كامل ومتطابق في الأرشيفين
+    const terms = buildPaymentTerms(insts, totalAmount);
+    const oa: OfficeAgreement = {
+      id: nextId(officeAgreements),
+      agreementNumber,
+      feeAgreementId: feeAgrId,
+      clientId,
+      contractDate,
+      contractCity: "الشارقة",
+      clientNameAr: clientNameArFinal,
+      clientNameEn: "",
+      representativeAr: "",
+      representativeEn: "",
+      phone: clientPhoneFinal,
+      caseDetailsAr: agreementAiExtracted.installmentsNotes || agreementAiExtracted.notes || "اتفاقية أتعاب سابقة مستخرجة آلياً من مستند مرفق (PDF)، تم إدراجها عبر الذكاء الاصطناعي.",
+      caseDetailsEn: "",
+      totalAmount,
+      paymentTermsAr: terms.ar,
+      paymentTermsEn: terms.en,
+      installments: insts,
+      createdAt: todayISO(),
+    };
+    setOfficeAgreements((prev) => [...prev, oa]);
+
+    logAuditAction("CREATE", "اتفاقيات الأتعاب", `اتفاقية رقم ${agreementNumber}`, "إدراج اتفاقية أتعاب عبر الذكاء الاصطناعي (مع إنشاء العقد الرسمي المقابل تلقائياً)", feeAgrId);
+    alert("تم حفظ اتفاقية الأتعاب وربطها بالموكل بنجاح، وأُنشئ لها تلقائياً العقد الرسمي المقابل في أرشيف اتفاقية أتعاب المكتب.");
     setShowAgreementAiUploadModal(false);
     setAgreementAiExtracted(null);
   };
