@@ -14451,6 +14451,8 @@ export default function App() {
                   <OfficialLetterComposer
                     canManageAssets={canManageLetterhead}
                     canUseSignatureStamp={canUseSignatureStamp}
+                    headerImg={letterhead.headerImg}
+                    footerImg={letterhead.footerImg}
                     signatureImg={letterhead.signatureImg}
                     stampImg={letterhead.stampImg}
                     onUsageLog={(action, details) => logAuditAction("UPDATE", "الورق الرسمي", action, `قام المستخدم "${currentUser.name}" ${details}`)}
