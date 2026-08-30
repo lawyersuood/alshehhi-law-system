@@ -240,11 +240,17 @@ const DEFAULT_BODY_HTML = "<p>تحية طيبة وبعد،</p>\n<p>بالإشا�
 interface Props {
   defaultSignName?: string;
   defaultSignTitle?: string;
+  /** هل يملك المستخدم الحالي صلاحية تعديل الورق الرسمي (رفع/حذف الصورة)؟ افتراضياً true للتوافق مع الاستخدام المستقل لهذا المكوّن. */
+  canManageAssets?: boolean;
+  /** استدعاء اختياري لتسجيل عمليات تغيير الورق الرسمي أو طباعة/تصدير خطاب في سجل التدقيق. */
+  onUsageLog?: (action: string, details: string) => void;
 }
 
 export default function OfficialLetterComposer({
   defaultSignName = "مكتب سعود أحمد الشحي",
   defaultSignTitle = "للمحاماة والاستشارات القانونية",
+  canManageAssets = true,
+  onUsageLog,
 }: Props) {
   const [letterheadImg, setLetterheadImg] = useState<string | null>(
     loadLetterheadImage
@@ -281,6 +287,7 @@ export default function OfficialLetterComposer({
   }, []);
 
   const handleUploadLetterhead = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!canManageAssets) return;
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
@@ -288,18 +295,22 @@ export default function OfficialLetterComposer({
       const dataUrl = ev.target?.result as string;
       saveLetterheadImage(dataUrl);
       setLetterheadImg(dataUrl);
+      onUsageLog?.("رفع/تغيير صورة الورق الرسمي (A4)", "برفع أو تغيير صورة الورق الرسمي الكاملة (A4) في محرر الخطابات");
     };
     reader.readAsDataURL(file);
   };
 
   const handleRemoveLetterhead = () => {
+    if (!canManageAssets) return;
     try {
       localStorage.removeItem(LETTERHEAD_STORAGE_KEY);
     } catch (e) {}
     setLetterheadImg(null);
+    onUsageLog?.("حذف صورة الورق الرسمي (A4)", "بحذف صورة الورق الرسمي الكاملة (A4) من محرر الخطابات");
   };
 
   const handleExport = () => {
+    onUsageLog?.(`طباعة/تصدير خطاب رقم ${refNo}`, `باستخدام الورق الرسمي لطباعة أو تصدير الخطاب رقم ${refNo}${subject ? ` (الموضوع: ${subject})` : ""}`);
     printOfficialLetter({
       refNo,
       date,
@@ -350,26 +361,32 @@ export default function OfficialLetterComposer({
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <label className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#0c4a47] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#073331] transition">
-              <UploadCloud size={15} />
-              {letterheadImg ? "استبدال الصورة" : "رفع الورق الرسمي"}
-              <input
-                type="file"
-                accept="image/jpeg,image/png"
-                className="hidden"
-                onChange={handleUploadLetterhead}
-              />
-            </label>
-            {letterheadImg && (
-              <button
-                onClick={handleRemoveLetterhead}
-                className="flex items-center gap-1 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs font-bold text-red-600 hover:bg-red-100"
-              >
-                <Trash2 size={14} /> حذف
-              </button>
-            )}
-          </div>
+          {canManageAssets ? (
+            <div className="flex items-center gap-2">
+              <label className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#0c4a47] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#073331] transition">
+                <UploadCloud size={15} />
+                {letterheadImg ? "استبدال الصورة" : "رفع الورق الرسمي"}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  className="hidden"
+                  onChange={handleUploadLetterhead}
+                />
+              </label>
+              {letterheadImg && (
+                <button
+                  onClick={handleRemoveLetterhead}
+                  className="flex items-center gap-1 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs font-bold text-red-600 hover:bg-red-100"
+                >
+                  <Trash2 size={14} /> حذف
+                </button>
+              )}
+            </div>
+          ) : (
+            <span className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-2 text-[11px] font-semibold text-slate-500">
+              🔒 محمي — للمدير أو المصرح له فقط
+            </span>
+          )}
         </div>
       </div>
 

@@ -18,7 +18,8 @@ import {
   Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download, Database, Code, LogOut,
   Inbox, Paperclip, RotateCw, QrCode, Settings, History, BookOpen, UploadCloud, Video,
   Sparkles, Bot, Zap, PlusCircle, Layers, BarChart3, PieChart as LucidePieChart, Activity, CheckSquare, Target, Percent, Menu,
-  SlidersHorizontal, Eye, EyeOff, Hash, ArrowUpDown, RotateCcw, ChevronDown, ChevronUp
+  SlidersHorizontal, Eye, EyeOff, Hash, ArrowUpDown, RotateCcw, ChevronDown, ChevronUp,
+  Handshake, UserCog, Stamp
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -148,6 +149,7 @@ export interface RolePermissions {
   hr?: boolean;                  // 16. الموظفون والكادر (HR)
   auditLog?: boolean;            // 17. سجل التدقيق والأنشطة (Audit Log)
   manageUsers?: boolean;         // 18. إدارة المستخدمين والصلاحيات
+  colleagues?: boolean;          // 19. الزملاء والإنابات
 
   // 2. صلاحيات العمليات والإجراءات الدقيقة والتفويضات (Action Permissions)
   manageCases?: boolean;         // قيد وتعديل القضايا
@@ -164,6 +166,8 @@ export interface RolePermissions {
   managePrecedents?: boolean;    // إضافة وتصنيف المبادئ القضائية
   viewReports?: boolean;         // استخراج ومراجعة التقارير التحليلية
   exportData?: boolean;          // تصدير واستعادة النسخ الاحتياطية (JSON/PDF)
+  manageColleagues?: boolean;    // إضافة وتعديل بيانات الزملاء وإصدار الإنابات
+  manageLetterheadAssets?: boolean; // تعديل الورق الرسمي والتوقيع والختم (صلاحية حساسة)
 
   // 3. صلاحيات الحذف والرقابة الحساسة لجميع الأقسام (Deletion Permissions)
   deleteCases?: boolean;         // حذف القضايا والملفات نهائياً
@@ -179,6 +183,7 @@ export interface RolePermissions {
   deletePrecedents?: boolean;    // حذف المبادئ والأحكام القضائية
   deleteUsers?: boolean;         // حذف حسابات المستخدمين والموظفين
   deleteContacts?: boolean;      // حذف جهات الاتصال ودليل المحاكم
+  deleteColleagues?: boolean;    // حذف بيانات الزملاء والإنابات الصادرة
 }
 
 export interface UserItem {
@@ -266,6 +271,33 @@ export interface Hearing {
   done: boolean;
   googleCalendarEventId?: string;
   googleSyncedAt?: string;
+}
+
+// ---------- الزملاء المتعاونون وإنابات الحضور ----------
+export interface Colleague {
+  id: number;
+  name: string;
+  phone: string;
+  email?: string;
+  specialization?: string; // التخصص القانوني
+  coverageArea?: string;   // الإمارة / المحكمة التي يغطيها
+  notes?: string;
+  status: "متاح" | "غير متاح";
+  addedBy?: string;
+  createdAt: string; // ISO
+}
+
+export interface ColleagueDelegation {
+  id: number;
+  refNo: string;
+  colleagueId: number;
+  caseId?: number;
+  hearingId?: number;
+  caseTitleSnapshot?: string; // نص حر عند عدم ربطها بقضية مسجلة
+  purpose: string;            // الغرض من الإنابة (حضور جلسة / متابعة إجراء...)
+  issuedByName: string;
+  issuedAt: string; // ISO
+  status: "صادرة" | "مستخدمة" | "ملغاة";
 }
 
 export interface TaskItem {
@@ -651,6 +683,7 @@ export const PERMISSION_MODULES: SystemModuleDef[] = [
   { id: "whatsapp", label: "واتساب المكتب المدمج", desc: "المراسلات الفورية وتنبيهات الموكلين المباشرة", category: "التواصل والمهام", navTabIds: ["whatsapp_office"] },
   { id: "email", label: "البريد الإلكتروني المدمج", desc: "الاطلاع واستخدام البريد الإلكتروني الرسمي للمكتب", category: "التواصل والمهام", navTabIds: ["inapp_email"] },
   { id: "directory", label: "دليل المحاكم والجهات", desc: "دليل التواصل المباشر مع محاكم ونيابات الدولة", category: "التواصل والمهام", navTabIds: ["courts_directory"] },
+  { id: "colleagues", label: "الزملاء والإنابات", desc: "دليل المحامين المتعاونين وإصدار إنابات الحضور بالجلسات", category: "التواصل والمهام", navTabIds: ["colleagues"] },
 
   // 3. المالية والعقود والمستندات (4 أقسام)
   { id: "docs", label: "المستندات والأرشيف الإلكتروني", desc: "أرشفة وتصنيف ملفات القضايا والوثائق الرسمية", category: "المالية والعقود", navTabIds: ["docs"] },
@@ -689,6 +722,8 @@ export const DETAILED_ACTION_PERMISSIONS: Array<{
   { id: "managePrecedents", label: "إدارة المبادئ القضائية", desc: "إضافة وتحديث وتصنيف السوابق والأحكام التمييزية والاتحادية", category: "الإدارة والمعرفة" },
   { id: "viewReports", label: "التقارير التحليلية المتقدمة", desc: "استخراج ومراجعة تقارير الأداء المالي والتشغيلي ومؤشرات القضايا", category: "الإدارة والمعرفة" },
   { id: "exportData", label: "تصدير واستعادة النسخ الاحتياطية", desc: "تصدير قواعد بيانات المكتب بصيغة JSON وملفات PDF وطباعتها", category: "النظام والأمان", isSensitive: true },
+  { id: "manageColleagues", label: "إدارة الزملاء وإصدار الإنابات", desc: "إضافة وتعديل بيانات المحامين المتعاونين وإصدار إنابات الحضور", category: "الزملاء والإنابات" },
+  { id: "manageLetterheadAssets", label: "تعديل الورق الرسمي والتوقيع والختم", desc: "صلاحية حساسة لرفع أو تغيير صورة الورق الرسمي والتوقيع والختم المعتمدة في جميع المستندات", category: "النظام والأمان", isSensitive: true },
 
   // 2. صلاحيات الحذف الصريحة والرقابة الحساسة لجميع الأقسام (تمنع افتراضياً وتشترط إذناً وتأكيداً)
   { id: "deleteCases", label: "حذف ملفات القضايا", desc: "صلاحية حساسة لحذف سجلات القضايا والدعاوى نهائياً من النظام", category: "صلاحيات الحذف والرقابة", isSensitive: true },
@@ -704,6 +739,7 @@ export const DETAILED_ACTION_PERMISSIONS: Array<{
   { id: "deletePrecedents", label: "حذف المبادئ القضائية", desc: "صلاحية لحذف السوابق والأحكام التمييزية من المكتبة", category: "صلاحيات الحذف والرقابة", isSensitive: true },
   { id: "deleteUsers", label: "حذف حسابات المستخدمين", desc: "صلاحية إدارية عليا لحذف حسابات الموظفين والمستخدمين", category: "صلاحيات الحذف والرقابة", isSensitive: true },
   { id: "deleteContacts", label: "حذف جهات الاتصال ودليل المحاكم", desc: "صلاحية لحذف بيانات المحاكم وأرقام التواصل المسجلة", category: "صلاحيات الحذف والرقابة", isSensitive: true },
+  { id: "deleteColleagues", label: "حذف بيانات الزملاء والإنابات", desc: "صلاحية لحذف سجلات الزملاء المتعاونين والإنابات الصادرة", category: "صلاحيات الحذف والرقابة", isSensitive: true },
 ];
 
 // فحص صلاحيات الوصول للتبويب المحدد مع تطبيق سياسة الحظر الافتراضي (Default-Deny Policy)
@@ -809,6 +845,7 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       hr: true,
       auditLog: true,
       manageUsers: true,
+      colleagues: true,
       manageCases: true,
       manageHearings: true,
       manageTasks: true,
@@ -823,6 +860,8 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       managePrecedents: true,
       viewReports: true,
       exportData: true,
+      manageColleagues: true,
+      manageLetterheadAssets: true,
 
       // صلاحيات الحذف للمدير مفعلة
       deleteCases: true,
@@ -838,6 +877,7 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       deletePrecedents: true,
       deleteUsers: true,
       deleteContacts: true,
+      deleteColleagues: true,
     },
   },
   supervisor: {
@@ -861,6 +901,7 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       hr: true,
       auditLog: true,
       manageUsers: false,
+      colleagues: true,
       manageCases: true,
       manageHearings: true,
       manageTasks: true,
@@ -875,6 +916,8 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       managePrecedents: true,
       viewReports: true,
       exportData: true,
+      manageColleagues: true,
+      manageLetterheadAssets: false,
 
       // الحذف ممنوع افتراضياً
       deleteCases: false,
@@ -890,6 +933,7 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       deletePrecedents: false,
       deleteUsers: false,
       deleteContacts: false,
+      deleteColleagues: false,
     },
   },
   lawyer: {
@@ -913,6 +957,7 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       hr: false,
       auditLog: false,
       manageUsers: false,
+      colleagues: true,
       manageCases: true,
       manageHearings: true,
       manageTasks: true,
@@ -927,6 +972,8 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       managePrecedents: true,
       viewReports: true,
       exportData: false,
+      manageColleagues: true,
+      manageLetterheadAssets: false,
 
       // الحذف ممنوع افتراضياً
       deleteCases: false,
@@ -942,6 +989,7 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       deletePrecedents: false,
       deleteUsers: false,
       deleteContacts: false,
+      deleteColleagues: false,
     },
   },
   secretary: {
@@ -965,6 +1013,7 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       hr: false,
       auditLog: false,
       manageUsers: false,
+      colleagues: true,
       manageCases: false,
       manageHearings: true,
       manageTasks: true,
@@ -979,6 +1028,8 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       managePrecedents: false,
       viewReports: false,
       exportData: false,
+      manageColleagues: true,
+      manageLetterheadAssets: false,
 
       // الحذف ممنوع افتراضياً
       deleteCases: false,
@@ -994,6 +1045,7 @@ const ROLE_PRESETS: Record<string, { title: string; permissions: RolePermissions
       deletePrecedents: false,
       deleteUsers: false,
       deleteContacts: false,
+      deleteColleagues: false,
     },
   },
   accountant: {
@@ -3974,6 +4026,13 @@ export default function App() {
     return false;
   }, [currentUser, isAdmin, isSuperAdmin, userPerms]);
 
+  // التحقق من صلاحية تعديل الورق الرسمي والتوقيع والختم (صلاحية حساسة ومحمية)
+  const canManageLetterhead = useMemo(() => {
+    if (!currentUser) return false;
+    if (isSuperAdmin || isAdmin) return true;
+    return Boolean(userPerms?.manageLetterheadAssets);
+  }, [currentUser, isAdmin, isSuperAdmin, userPerms]);
+
   // ---------- سجل التدقيق والأنشطة الأمني (Audit Log) ----------
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(() => loadStorage("firm_audit_logs", seedAuditLogs));
   useEffect(() => { saveStorage("firm_audit_logs", auditLogs); }, [auditLogs]);
@@ -4376,6 +4435,12 @@ export default function App() {
   const [invoices, setInvoices] = useState<Invoice[]>(() => loadStorage("firm_invoices", seedInvoices));
   const [docs, setDocs] = useState<DocItem[]>(() => loadStorage("firm_docs", seedDocs));
   const [poas, setPoas] = useState<PoaItem[]>(() => loadStorage("firm_poas", seedPoas));
+  const [colleagues, setColleagues] = useState<Colleague[]>(() => loadStorage<Colleague[]>("firm_colleagues", []));
+  useEffect(() => { saveStorage("firm_colleagues", colleagues); }, [colleagues]);
+  const [colleagueDelegations, setColleagueDelegations] = useState<ColleagueDelegation[]>(() => loadStorage<ColleagueDelegation[]>("firm_colleague_delegations", []));
+  useEffect(() => { saveStorage("firm_colleague_delegations", colleagueDelegations); }, [colleagueDelegations]);
+  const [colleagueSubTab, setColleagueSubTab] = useState<"directory" | "delegations">("directory");
+  const [editingColleagueId, setEditingColleagueId] = useState<number | null>(null);
   const [kyc, setKyc] = useState<KycItem[]>(() => {
     const saved = loadStorage<KycItem[]>("firm_kyc", seedKyc);
     return saved || [];
@@ -4867,6 +4932,7 @@ export default function App() {
     });
   }, [precedents, precedentCourtFilter, precedentCategoryFilter, precedentYearFilter, precedentSearch]);
   const [agrPreviewId, setAgrPreviewId] = useState<number | null>(null);
+  const [delegationPreviewId, setDelegationPreviewId] = useState<number | null>(null);
   const [deleteAgrConfirm, setDeleteAgrConfirm] = useState<OfficeAgreement | null>(null);
   const emptyAgrForm = () => ({
     contractDate: todayISO(),
@@ -8229,6 +8295,117 @@ export default function App() {
     setModal(null);
   };
 
+  // ---------- الزملاء المتعاونون وإنابات الحضور ----------
+  const openColleagueModal = (c?: Colleague) => {
+    if (!checkPerm("manageColleagues", c ? "تعديل بيانات زميل" : "إضافة زميل")) return;
+    if (c) {
+      setEditingColleagueId(c.id);
+      setForm({ ...c });
+    } else {
+      setEditingColleagueId(null);
+      setForm({ status: "متاح" });
+    }
+    setModal("colleague");
+  };
+
+  const saveColleague = () => {
+    if (!checkPerm("manageColleagues", "حفظ بيانات الزميل")) return;
+    if (!form.name || !form.phone) return;
+
+    if (editingColleagueId) {
+      setColleagues((prev) => prev.map((c) => c.id === editingColleagueId ? {
+        ...c,
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email?.trim() || undefined,
+        specialization: form.specialization?.trim() || undefined,
+        coverageArea: form.coverageArea?.trim() || undefined,
+        notes: form.notes?.trim() || undefined,
+        status: (form.status === "غير متاح" ? "غير متاح" : "متاح"),
+      } : c));
+      logAuditAction("UPDATE", "الزملاء والإنابات", `الزميل: ${form.name}`, `تعديل بيانات الزميل المتعاون ${form.name}`);
+    } else {
+      const newColleague: Colleague = {
+        id: nextId(colleagues),
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email?.trim() || undefined,
+        specialization: form.specialization?.trim() || undefined,
+        coverageArea: form.coverageArea?.trim() || undefined,
+        notes: form.notes?.trim() || undefined,
+        status: (form.status === "غير متاح" ? "غير متاح" : "متاح"),
+        addedBy: currentUser?.name,
+        createdAt: new Date().toISOString(),
+      };
+      setColleagues((prev) => [...prev, newColleague]);
+      logAuditAction("CREATE", "الزملاء والإنابات", `الزميل: ${newColleague.name}`, `إضافة زميل متعاون جديد: ${newColleague.name} (${newColleague.phone})`);
+    }
+    setModal(null);
+    setEditingColleagueId(null);
+  };
+
+  const deleteColleagueHandler = (c: Colleague) => {
+    requestDelete({
+      section: "الزملاء والإنابات",
+      title: `الزميل: ${c.name}`,
+      details: `الهاتف: ${c.phone}${c.specialization ? " | التخصص: " + c.specialization : ""}`,
+      permKey: "deleteColleagues",
+      actionName: "حذف بيانات الزميل",
+      onConfirm: () => {
+        logAuditAction("DELETE", "الزملاء والإنابات", `الزميل: ${c.name}`, `حذف بيانات الزميل المتعاون ${c.name}`, c.id);
+        setColleagues((prev) => prev.filter((x) => x.id !== c.id));
+      },
+    });
+  };
+
+  const openIssueDelegationModal = (c: Colleague) => {
+    if (!checkPerm("manageColleagues", "إصدار إنابة حضور")) return;
+    setForm({ colleagueId: c.id });
+    setModal("issueDelegation");
+  };
+
+  const issueDelegation = () => {
+    if (!checkPerm("manageColleagues", "إصدار إنابة حضور")) return;
+    if (!form.colleagueId || !form.purpose) return;
+
+    const year = new Date().getFullYear();
+    const seq = colleagueDelegations.filter((d) => d.refNo.includes(String(year))).length + 1;
+    const refNo = `INB-${year}-${String(seq).padStart(3, "0")}`;
+    const colleague = colleagues.find((c) => c.id === +form.colleagueId);
+
+    const newDelegation: ColleagueDelegation = {
+      id: nextId(colleagueDelegations),
+      refNo,
+      colleagueId: +form.colleagueId,
+      caseId: form.caseId ? +form.caseId : undefined,
+      hearingId: form.hearingId ? +form.hearingId : undefined,
+      caseTitleSnapshot: form.caseTitleSnapshot?.trim() || undefined,
+      purpose: form.purpose.trim(),
+      issuedByName: currentUser?.name || "مكتب سعود أحمد الشحي",
+      issuedAt: new Date().toISOString(),
+      status: "صادرة",
+    };
+    setColleagueDelegations((prev) => [newDelegation, ...prev]);
+    logAuditAction("CREATE", "الزملاء والإنابات", `إنابة رقم: ${refNo}`, `إصدار إنابة حضور رقم ${refNo} للزميل ${colleague?.name || "—"}`, newDelegation.id);
+    setModal(null);
+    setDelegationPreviewId(newDelegation.id);
+  };
+
+  const deleteDelegationHandler = (d: ColleagueDelegation) => {
+    const colleague = colleagues.find((c) => c.id === d.colleagueId);
+    requestDelete({
+      section: "الزملاء والإنابات",
+      title: `الإنابة رقم: ${d.refNo}`,
+      details: `الزميل: ${colleague?.name || "—"} | الغرض: ${d.purpose}`,
+      permKey: "deleteColleagues",
+      actionName: "حذف الإنابة الصادرة",
+      onConfirm: () => {
+        logAuditAction("DELETE", "الزملاء والإنابات", `إنابة رقم: ${d.refNo}`, `حذف الإنابة الصادرة رقم ${d.refNo}`, d.id);
+        setColleagueDelegations((prev) => prev.filter((x) => x.id !== d.id));
+      },
+    });
+  };
+
   const saveUser = () => {
     if (!checkPerm("manageUsers", "إدارة المستخدمين")) return;
     if (!form.name || !form.email) return;
@@ -8684,6 +8861,7 @@ export default function App() {
     { id: "whatsapp_office", label: "واتساب المكتب المدمج", icon: MessageSquare, category: "التواصل والمهام" },
     { id: "inapp_email", label: "البريد الإلكتروني المدمج", icon: Mail, category: "التواصل والمهام" },
     { id: "courts_directory", label: "دليل المحاكم والجهات", icon: PhoneCall, category: "التواصل والمهام" },
+    { id: "colleagues", label: "الزملاء والإنابات", icon: Handshake, category: "التواصل والمهام" },
 
     // 3. المستندات والمالية والتوثيق
     { id: "docs", label: "المستندات والأرشيف", icon: FolderOpen, category: "المالية والعقود" },
@@ -14257,7 +14435,10 @@ export default function App() {
                 </div>
 
                 {docSubTab === "officialLetters" ? (
-                  <OfficialLetterComposer />
+                  <OfficialLetterComposer
+                    canManageAssets={canManageLetterhead}
+                    onUsageLog={(action, details) => logAuditAction("UPDATE", "الورق الرسمي", action, `قام المستخدم "${currentUser.name}" ${details}`)}
+                  />
                 ) : docSubTab === "generator" ? (
                   <div className="space-y-6">
                     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -14409,6 +14590,12 @@ export default function App() {
                       </div>
                     </div>
 
+                    {!canManageLetterhead && (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 flex items-center gap-2">
+                        <Lock size={14} /> هذا القسم محمي — تعديل الورق الرسمي متاح فقط لمدير النظام أو من يملك صلاحية "تعديل الورق الرسمي والتوقيع والختم"
+                      </div>
+                    )}
+
                     <div className="grid gap-6 md:grid-cols-2">
                       {/* ترويسة الرأس Header */}
                       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
@@ -14424,14 +14611,39 @@ export default function App() {
                             لا توجد ترويسة علوية مخصصة
                           </div>
                         )}
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => updateLetterhead({ headerImg: OFFICE_HEADER_IMG })}
-                            className="w-full rounded-xl bg-slate-100 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"
-                          >
-                            استعادة الترويسة الرسمية
-                          </button>
-                        </div>
+                        {canManageLetterhead && (
+                          <div className="flex gap-2">
+                            <label className="flex-1 flex items-center justify-center gap-1.5 cursor-pointer rounded-xl bg-[#0c4a47] py-2 text-xs font-bold text-white hover:bg-[#073331] transition">
+                              <UploadCloud size={14} /> رفع صورة جديدة
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => {
+                                    const dataUrl = ev.target?.result as string;
+                                    updateLetterhead({ headerImg: dataUrl });
+                                    logAuditAction("UPDATE", "الورق الرسمي", "الترويسة العلوية (Header)", `قام المستخدم "${currentUser.name}" برفع/تغيير صورة الترويسة العلوية للورق الرسمي`);
+                                  };
+                                  reader.readAsDataURL(file);
+                                }}
+                              />
+                            </label>
+                            <button
+                              onClick={() => {
+                                updateLetterhead({ headerImg: OFFICE_HEADER_IMG });
+                                logAuditAction("UPDATE", "الورق الرسمي", "الترويسة العلوية (Header)", `قام المستخدم "${currentUser.name}" باستعادة الترويسة الرسمية الافتراضية`);
+                              }}
+                              className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                              title="استعادة الترويسة الافتراضية"
+                            >
+                              استعادة
+                            </button>
+                          </div>
+                        )}
                       </div>
 
                       {/* التذييل السفلي Footer */}
@@ -14448,14 +14660,39 @@ export default function App() {
                             لا يوجد تذييل سفلي مخصص
                           </div>
                         )}
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => updateLetterhead({ footerImg: OFFICE_FOOTER_IMG })}
-                            className="w-full rounded-xl bg-slate-100 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"
-                          >
-                            استعادة الترويسة الرسمية
-                          </button>
-                        </div>
+                        {canManageLetterhead && (
+                          <div className="flex gap-2">
+                            <label className="flex-1 flex items-center justify-center gap-1.5 cursor-pointer rounded-xl bg-[#0c4a47] py-2 text-xs font-bold text-white hover:bg-[#073331] transition">
+                              <UploadCloud size={14} /> رفع صورة جديدة
+                              <input
+                                type="file"
+                                accept="image/jpeg,image/png"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  const reader = new FileReader();
+                                  reader.onload = (ev) => {
+                                    const dataUrl = ev.target?.result as string;
+                                    updateLetterhead({ footerImg: dataUrl });
+                                    logAuditAction("UPDATE", "الورق الرسمي", "التذييل السفلي (Footer)", `قام المستخدم "${currentUser.name}" برفع/تغيير صورة التذييل السفلي للورق الرسمي`);
+                                  };
+                                  reader.readAsDataURL(file);
+                                }}
+                              />
+                            </label>
+                            <button
+                              onClick={() => {
+                                updateLetterhead({ footerImg: OFFICE_FOOTER_IMG });
+                                logAuditAction("UPDATE", "الورق الرسمي", "التذييل السفلي (Footer)", `قام المستخدم "${currentUser.name}" باستعادة التذييل الرسمي الافتراضي`);
+                              }}
+                              className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                              title="استعادة التذييل الافتراضي"
+                            >
+                              استعادة
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -14533,6 +14770,103 @@ export default function App() {
                   })}
                 </div>
               </>
+            )}
+
+            {/* ================= الزملاء المتعاونون وإنابات الحضور ================= */}
+            {tab === "colleagues" && (
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-2xl font-bold flex items-center gap-2"><Handshake className="text-amber-600" /> الزملاء والإنابات</h2>
+                    <p className="text-xs text-slate-500">دليل المحامين المتعاونين للاستعانة بهم في الجلسات، وإصدار إنابات الحضور الرسمية</p>
+                  </div>
+                  {colleagueSubTab === "directory" ? (
+                    <button onClick={() => openColleagueModal()} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm">
+                      <Plus size={16} /> إضافة زميل
+                    </button>
+                  ) : null}
+                </div>
+
+                <div className="flex border-b border-slate-200">
+                  <button
+                    onClick={() => setColleagueSubTab("directory")}
+                    className={`px-4 py-3 text-sm font-bold border-b-2 transition flex items-center gap-2 ${colleagueSubTab === "directory" ? "border-amber-500 text-amber-700 bg-amber-50/50" : "border-transparent text-slate-500 hover:text-slate-800"}`}
+                  >
+                    <Handshake size={18} /> دليل الزملاء ({colleagues.length})
+                  </button>
+                  <button
+                    onClick={() => setColleagueSubTab("delegations")}
+                    className={`px-4 py-3 text-sm font-bold border-b-2 transition flex items-center gap-2 ${colleagueSubTab === "delegations" ? "border-amber-500 text-amber-700 bg-amber-50/50" : "border-transparent text-slate-500 hover:text-slate-800"}`}
+                  >
+                    <FileSignature size={18} /> الإنابات الصادرة ({colleagueDelegations.length})
+                  </button>
+                </div>
+
+                {colleagueSubTab === "directory" ? (
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {colleagues.length === 0 && (
+                      <p className="col-span-full text-center text-sm text-slate-400 py-10 rounded-2xl border border-dashed border-slate-200">
+                        لا يوجد زملاء مسجلون بعد. اضغط "إضافة زميل" لبدء بناء دليل التعاون.
+                      </p>
+                    )}
+                    {colleagues.map((c) => (
+                      <div key={c.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h3 className="font-bold text-slate-900 text-sm">{c.name}</h3>
+                            {c.specialization && <p className="text-[11px] text-slate-500">{c.specialization}</p>}
+                          </div>
+                          <Badge className={c.status === "متاح" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-600"}>{c.status}</Badge>
+                        </div>
+                        <div className="text-xs text-slate-600 space-y-1">
+                          <a href={`tel:${c.phone}`} className="flex items-center gap-1.5 hover:text-amber-700"><Phone size={13} /> {c.phone}</a>
+                          {c.email && <a href={`mailto:${c.email}`} className="flex items-center gap-1.5 hover:text-amber-700"><Mail size={13} /> {c.email}</a>}
+                          {c.coverageArea && <p className="flex items-center gap-1.5"><MapPin size={13} /> {c.coverageArea}</p>}
+                        </div>
+                        {c.notes && <p className="text-[11px] text-slate-500 bg-stone-50 p-2 rounded-lg border border-stone-200">{c.notes}</p>}
+                        <div className="flex items-center gap-2 pt-1.5 border-t border-slate-100">
+                          <button onClick={() => openIssueDelegationModal(c)} className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-amber-50 border border-amber-200 py-2 text-xs font-bold text-amber-800 hover:bg-amber-100 transition">
+                            <FileSignature size={14} /> إصدار إنابة
+                          </button>
+                          <button onClick={() => openColleagueModal(c)} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition" title="تعديل"><Edit2 size={15} /></button>
+                          <button onClick={() => deleteColleagueHandler(c)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition" title="حذف"><Trash2 size={15} /></button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {colleagueDelegations.length === 0 && (
+                      <p className="text-center text-sm text-slate-400 py-10 rounded-2xl border border-dashed border-slate-200">
+                        لم تُصدر أي إنابة بعد.
+                      </p>
+                    )}
+                    {colleagueDelegations.map((d) => {
+                      const colleague = colleagues.find((c) => c.id === d.colleagueId);
+                      const linkedCase = d.caseId ? cases.find((c) => c.id === d.caseId) : undefined;
+                      return (
+                        <div key={d.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">{d.refNo}</span>
+                              <Badge className={d.status === "صادرة" ? "bg-emerald-100 text-emerald-700" : d.status === "مستخدمة" ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-500"}>{d.status}</Badge>
+                            </div>
+                            <p className="font-bold text-sm text-slate-900 mt-1">{colleague?.name || "زميل محذوف"}</p>
+                            <p className="text-xs text-slate-500">{linkedCase ? `القضية: ${linkedCase.number}` : (d.caseTitleSnapshot || "—")} • {fmtDate(d.issuedAt.slice(0, 10))}</p>
+                            <p className="text-xs text-slate-600 mt-1">{d.purpose}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => setDelegationPreviewId(d.id)} className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition">
+                              <Printer size={14} /> طباعة
+                            </button>
+                            <button onClick={() => deleteDelegationHandler(d)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition" title="حذف"><Trash2 size={15} /></button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             )}
 
             {/* ================= اعرف عميلك KYC وعناية AML ================= */}
@@ -17667,6 +18001,68 @@ export default function App() {
         </Modal>
       )}
 
+      {modal === "colleague" && (
+        <Modal title={editingColleagueId ? "تعديل بيانات الزميل" : "إضافة زميل متعاون"} onClose={() => { setModal(null); setEditingColleagueId(null); }}>
+          <div className="space-y-4 text-sm">
+            <Field label="الاسم الكامل">
+              <input onChange={f("name")} defaultValue={form.name || ""} placeholder="اسم المحامي الزميل" className={inputCls} />
+            </Field>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="رقم الهاتف">
+                <input onChange={f("phone")} defaultValue={form.phone || ""} placeholder="050-XXXXXXX" className={inputCls} />
+              </Field>
+              <Field label="البريد الإلكتروني (اختياري)">
+                <input onChange={f("email")} defaultValue={form.email || ""} placeholder="lawyer@example.com" className={inputCls} />
+              </Field>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="التخصص">
+                <input onChange={f("specialization")} defaultValue={form.specialization || ""} placeholder="مثال: جزائي، عمالي، عقاري..." className={inputCls} />
+              </Field>
+              <Field label="الإمارة / المحكمة التي يغطيها">
+                <input onChange={f("coverageArea")} defaultValue={form.coverageArea || ""} placeholder="مثال: محاكم دبي" className={inputCls} />
+              </Field>
+            </div>
+            <Field label="الحالة">
+              <select onChange={f("status")} defaultValue={form.status || "متاح"} className={inputCls}>
+                <option value="متاح">متاح</option>
+                <option value="غير متاح">غير متاح</option>
+              </select>
+            </Field>
+            <Field label="ملاحظات">
+              <textarea onChange={f("notes")} defaultValue={form.notes || ""} rows={2} placeholder="ملاحظات حول الموثوقية والتجارب السابقة..." className={inputCls} />
+            </Field>
+            <button onClick={saveColleague} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">حفظ بيانات الزميل</button>
+          </div>
+        </Modal>
+      )}
+
+      {modal === "issueDelegation" && (
+        <Modal title="إصدار إنابة حضور" onClose={() => setModal(null)}>
+          <div className="space-y-4 text-sm">
+            <Field label="الزميل المُنَاب">
+              <select onChange={f("colleagueId")} defaultValue={form.colleagueId || ""} className={inputCls}>
+                <option value="">اختر الزميل…</option>
+                {colleagues.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </Field>
+            <Field label="القضية (اختياري)">
+              <select onChange={f("caseId")} defaultValue={form.caseId || ""} className={inputCls}>
+                <option value="">بدون ربط بقضية مسجلة…</option>
+                {cases.map((c) => <option key={c.id} value={c.id}>{c.number} — {c.subject}</option>)}
+              </select>
+            </Field>
+            <Field label="وصف القضية/الجلسة (إن لم تُربط بقضية مسجلة)">
+              <input onChange={f("caseTitleSnapshot")} defaultValue={form.caseTitleSnapshot || ""} placeholder="مثال: جلسة محكمة الشارقة الابتدائية - دائرة مدنية" className={inputCls} />
+            </Field>
+            <Field label="الغرض من الإنابة">
+              <textarea onChange={f("purpose")} defaultValue={form.purpose || ""} rows={3} placeholder="حضور الجلسة المحددة نيابة عن المكتب وتقديم المذكرات والمرافعة..." className={inputCls} />
+            </Field>
+            <button onClick={issueDelegation} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">إصدار الإنابة</button>
+          </div>
+        </Modal>
+      )}
+
       {modal === "user" && (
         <Modal title={editingUser ? `تعديل بيانات: ${editingUser.name}` : "إضافة مستخدم جديد بالفريق"} onClose={() => setModal(null)}>
           <div className="space-y-4 text-sm">
@@ -18937,6 +19333,76 @@ export default function App() {
           {/* تذييل الورقة الرسمية */}
           {letterhead.footerImg && (
             <div className="pt-2">
+              <img src={letterhead.footerImg} alt="تذييل المكتب" className="w-full max-h-24 object-contain mx-auto" />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+})()}
+
+{delegationPreviewId !== null && (() => {
+  const d = colleagueDelegations.find((x) => x.id === delegationPreviewId);
+  if (!d) return null;
+  const colleague = colleagues.find((c) => c.id === d.colleagueId);
+  const linkedCase = d.caseId ? cases.find((c) => c.id === d.caseId) : undefined;
+  const logDelegationUsage = () => {
+    logAuditAction("UPDATE", "الورق الرسمي", `طباعة إنابة رقم: ${d.refNo}`, `استخدم المستخدم "${currentUser.name}" الورق الرسمي لطباعة/تصدير الإنابة رقم ${d.refNo} الخاصة بالزميل ${colleague?.name || "—"}`, d.id);
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 overflow-y-auto">
+      <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl print-area">
+        <div className="no-print flex items-center justify-between border-b border-slate-200 px-6 py-4 sticky top-0 bg-white z-10">
+          <div className="flex items-center gap-2">
+            <FileSignature size={18} className="text-amber-600" />
+            <h3 className="font-bold text-slate-800">معاينة الإنابة {d.refNo}</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { logDelegationUsage(); handleDownloadPDF("printable-delegation", `إنابة_${d.refNo}.pdf`); }}
+              className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
+            >
+              <Download size={15} /> تحميل PDF
+            </button>
+            <button onClick={() => { logDelegationUsage(); window.print(); }} className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400">
+              <Printer size={15} /> طباعة
+            </button>
+            <button onClick={() => setDelegationPreviewId(null)} className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="إغلاق"><X size={20} /></button>
+          </div>
+        </div>
+
+        <div id="printable-delegation" className="p-8 space-y-5 text-slate-900 leading-relaxed bg-white">
+          {letterhead.headerImg && (
+            <div className="mb-4">
+              <img src={letterhead.headerImg} alt="ترويسة المكتب" className="w-full max-h-40 object-contain mx-auto" />
+            </div>
+          )}
+          <div className="flex items-center justify-between text-xs text-slate-600 border-b border-slate-200 pb-3">
+            <span>الرقم المرجعي: <b className="font-mono">{d.refNo}</b></span>
+            <span>التاريخ: {fmtDate(d.issuedAt.slice(0, 10))}</span>
+          </div>
+          <h2 className="text-xl font-bold text-center">إنابة حضور</h2>
+          <p className="text-sm">
+            بموجب هذه الإنابة، يُفوَّض السيد/ة <b>{colleague?.name || "—"}</b> {colleague?.specialization ? `(${colleague.specialization})` : ""} بالحضور والترافع نيابة عن مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية
+            {linkedCase ? ` في القضية رقم ${linkedCase.number}` : (d.caseTitleSnapshot ? ` بخصوص: ${d.caseTitleSnapshot}` : "")}.
+          </p>
+          <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 text-sm">
+            <p className="font-bold mb-1">الغرض من الإنابة:</p>
+            <p className="whitespace-pre-line">{d.purpose}</p>
+          </div>
+          <p className="text-sm">وتفضلوا بقبول فائق الاحترام والتقدير.</p>
+          <div className="pt-8 flex justify-between text-sm">
+            <div>
+              <p className="border-t border-slate-400 pt-1 mx-2">التوقيع والختم</p>
+            </div>
+            <div className="text-left">
+              <p className="font-bold">{d.issuedByName}</p>
+              <p className="text-xs text-slate-500">مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية</p>
+            </div>
+          </div>
+          {letterhead.footerImg && (
+            <div className="pt-6">
               <img src={letterhead.footerImg} alt="تذييل المكتب" className="w-full max-h-24 object-contain mx-auto" />
             </div>
           )}
