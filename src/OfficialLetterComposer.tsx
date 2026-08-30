@@ -6,9 +6,7 @@ import {
   RotateCcw,
   Eye,
   PenLine,
-  UploadCloud,
   ImageIcon,
-  Trash2,
 } from "lucide-react";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
@@ -20,8 +18,6 @@ const LETTERHEAD_LAYOUT = {
   pageWidthMm: 210,
   pageHeightMm: 297,
 };
-
-const LETTERHEAD_STORAGE_KEY = "official_letterhead_a4_full";
 
 const LETTER_FONT_STACK =
   "'Amiri', 'Traditional Arabic', 'Sakkal Majalla', 'Times New Roman', serif";
@@ -41,22 +37,6 @@ const autoRefNo = () => {
   return "REF-" + year + "-" + rnd;
 };
 
-function loadLetterheadImage(): string | null {
-  try {
-    return localStorage.getItem(LETTERHEAD_STORAGE_KEY);
-  } catch (e) {
-    return null;
-  }
-}
-
-function saveLetterheadImage(dataUrl: string) {
-  try {
-    localStorage.setItem(LETTERHEAD_STORAGE_KEY, dataUrl);
-  } catch (e) {
-    console.error("Letterhead save error:", e);
-  }
-}
-
 export interface OfficialLetterData {
   refNo: string;
   date: string;
@@ -65,35 +45,6 @@ export interface OfficialLetterData {
   bodyHtml: string;
   signName: string;
   signTitle: string;
-}
-
-function cropImageDataUrl(
-  dataUrl: string,
-  cropTopMm: number,
-  cropBottomMm: number,
-  pageHeightMm: number
-): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      const scale = img.naturalHeight / pageHeightMm; // بكسل لكل مليمتر
-      const cropTopPx = Math.round(cropTopMm * scale);
-      const cropHeightPx = Math.round((cropBottomMm - cropTopMm) * scale);
-      const canvas = document.createElement("canvas");
-      canvas.width = img.naturalWidth;
-      canvas.height = cropHeightPx;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) { reject(new Error("no ctx")); return; }
-      ctx.drawImage(
-        img,
-        0, cropTopPx, img.naturalWidth, cropHeightPx,
-        0, 0, img.naturalWidth, cropHeightPx
-      );
-      resolve(canvas.toDataURL("image/jpeg", 0.95));
-    };
-    img.onerror = () => reject(new Error("image load failed"));
-    img.src = dataUrl;
-  });
 }
 
 function buildPrintDocument(
@@ -186,24 +137,15 @@ function buildPrintDocument(
 
 export async function printOfficialLetter(
   data: OfficialLetterData,
+  headerImg?: string | null,
+  footerImg?: string | null,
   signatureImg?: string | null,
   stampImg?: string | null
 ) {
-  const letterheadImg = loadLetterheadImage();
-  if (!letterheadImg) {
-    alert("يرجى أولاً رفع صورة الورق الرسمي من شاشة الخطابات الرسمية.");
-    return;
-  }
-
-  const { headerMm, footerMm, pageHeightMm } = LETTERHEAD_LAYOUT;
-  let headerStripImg: string;
-  let footerStripImg: string;
-  try {
-    headerStripImg = await cropImageDataUrl(letterheadImg, 0, headerMm, pageHeightMm);
-    footerStripImg = await cropImageDataUrl(letterheadImg, pageHeightMm - footerMm, pageHeightMm, pageHeightMm);
-  } catch (e) {
-    console.error("Letterhead crop error:", e);
-    alert("تعذّر تجهيز صورة الورق الرسمي للطباعة. حاول رفعها من جديد.");
+  if (!headerImg || !footerImg) {
+    alert(
+      "يرجى أولاً اعتماد صورتي ترويسة وتذييل الورق الرسمي من قسم \"الهوية الرسمية والأختام\" المحمي في القائمة الجانبية."
+    );
     return;
   }
 
@@ -214,7 +156,7 @@ export async function printOfficialLetter(
 
   const doc = iframe.contentDocument!;
   doc.open();
-  doc.write(buildPrintDocument(data, headerStripImg, footerStripImg, signatureImg, stampImg));
+  doc.write(buildPrintDocument(data, headerImg, footerImg, signatureImg, stampImg));
   doc.close();
 
   setTimeout(() => {
@@ -256,15 +198,19 @@ const DEFAULT_BODY_HTML = "<p>تحية طيبة وبعد،</p>\n<p>بالإشا�
 interface Props {
   defaultSignName?: string;
   defaultSignTitle?: string;
-  /** هل يملك المستخدم الحالي صلاحية تعديل الورق الرسمي (رفع/حذف الصورة)؟ افتراضياً true للتوافق مع الاستخدام المستقل لهذا المكوّن. */
+  /** هل يملك المستخدم الحالي صلاحية إدارة الورق الرسمي (تُستخدم فقط لتخصيص رسالة الإرشاد هنا؛ الرفع والحذف الفعلي يتمّان حصراً من قسم "الهوية الرسمية والأختام" المحمي). */
   canManageAssets?: boolean;
   /** هل يملك المستخدم الحالي صلاحية إدراج التوقيع والختم المعتمدين عند تصدير الخطاب؟ */
   canUseSignatureStamp?: boolean;
+  /** صورة ترويسة الورق الرسمي المعتمدة من قسم الهوية الرسمية المحمي (مصدر موحّد لكل النظام). */
+  headerImg?: string | null;
+  /** صورة تذييل الورق الرسمي المعتمدة من قسم الهوية الرسمية المحمي (مصدر موحّد لكل النظام). */
+  footerImg?: string | null;
   /** صورة التوقيع المعتمدة من قسم الهوية الرسمية المحمي (اختيارية). */
   signatureImg?: string | null;
   /** صورة الختم المعتمدة من قسم الهوية الرسمية المحمي (اختيارية). */
   stampImg?: string | null;
-  /** استدعاء اختياري لتسجيل عمليات تغيير الورق الرسمي أو طباعة/تصدير خطاب في سجل التدقيق. */
+  /** استدعاء اختياري لتسجيل عمليات طباعة/تصدير خطاب في سجل التدقيق. */
   onUsageLog?: (action: string, details: string) => void;
 }
 
@@ -273,13 +219,13 @@ export default function OfficialLetterComposer({
   defaultSignTitle = "للمحاماة والاستشارات القانونية",
   canManageAssets = true,
   canUseSignatureStamp = false,
+  headerImg = null,
+  footerImg = null,
   signatureImg = null,
   stampImg = null,
   onUsageLog,
 }: Props) {
-  const [letterheadImg, setLetterheadImg] = useState<string | null>(
-    loadLetterheadImage
-  );
+  const hasLetterhead = Boolean(headerImg && footerImg);
   const [refNo, setRefNo] = useState(autoRefNo);
   const [date, setDate] = useState(todayArabic());
   const [recipient, setRecipient] = useState("");
@@ -311,29 +257,6 @@ export default function OfficialLetterComposer({
     document.head.appendChild(link);
   }, []);
 
-  const handleUploadLetterhead = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!canManageAssets) return;
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const dataUrl = ev.target?.result as string;
-      saveLetterheadImage(dataUrl);
-      setLetterheadImg(dataUrl);
-      onUsageLog?.("رفع/تغيير صورة الورق الرسمي (A4)", "برفع أو تغيير صورة الورق الرسمي الكاملة (A4) في محرر الخطابات");
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleRemoveLetterhead = () => {
-    if (!canManageAssets) return;
-    try {
-      localStorage.removeItem(LETTERHEAD_STORAGE_KEY);
-    } catch (e) {}
-    setLetterheadImg(null);
-    onUsageLog?.("حذف صورة الورق الرسمي (A4)", "بحذف صورة الورق الرسمي الكاملة (A4) من محرر الخطابات");
-  };
-
   const includeSigStamp = canUseSignatureStamp && Boolean(signatureImg || stampImg);
 
   const handleExport = () => {
@@ -351,6 +274,8 @@ export default function OfficialLetterComposer({
         signName,
         signTitle,
       },
+      headerImg,
+      footerImg,
       includeSigStamp ? signatureImg : null,
       includeSigStamp ? stampImg : null
     );
@@ -377,7 +302,7 @@ export default function OfficialLetterComposer({
           <div className="flex items-center gap-2.5">
             <div
               className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                letterheadImg
+                hasLetterhead
                   ? "bg-emerald-100 text-emerald-700"
                   : "bg-amber-100 text-amber-700"
               }`}
@@ -386,41 +311,20 @@ export default function OfficialLetterComposer({
             </div>
             <div>
               <p className="text-sm font-bold text-slate-800">
-                صورة الورق الرسمي (صفحة A4 كاملة)
+                ترويسة وتذييل الورق الرسمي
               </p>
               <p className="text-xs text-slate-500">
-                {letterheadImg
-                  ? "✅ الورق الرسمي مرفوع ومحفوظ — جاهز للاستخدام"
-                  : "ارفع ملف الورق الرسمي بصيغة JPG أو PNG (مرة واحدة فقط)"}
+                {hasLetterhead
+                  ? "✅ الورق الرسمي المعتمد جاهز للاستخدام في هذا الخطاب"
+                  : "لم يتم اعتماد صورتي الترويسة والتذييل بعد"}
               </p>
             </div>
           </div>
-          {canManageAssets ? (
-            <div className="flex items-center gap-2">
-              <label className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-[#0c4a47] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#073331] transition">
-                <UploadCloud size={15} />
-                {letterheadImg ? "استبدال الصورة" : "رفع الورق الرسمي"}
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png"
-                  className="hidden"
-                  onChange={handleUploadLetterhead}
-                />
-              </label>
-              {letterheadImg && (
-                <button
-                  onClick={handleRemoveLetterhead}
-                  className="flex items-center gap-1 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs font-bold text-red-600 hover:bg-red-100"
-                >
-                  <Trash2 size={14} /> حذف
-                </button>
-              )}
-            </div>
-          ) : (
-            <span className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-2 text-[11px] font-semibold text-slate-500">
-              🔒 محمي — للمدير أو المصرح له فقط
-            </span>
-          )}
+          <span className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-2 text-[11px] font-semibold text-slate-500">
+            🔒 {canManageAssets
+              ? "تُدار صور الورق الرسمي حصراً من قسم \"الهوية الرسمية والأختام\""
+              : "محمي — راجع قسم \"الهوية الرسمية والأختام\" أو مدير النظام"}
+          </span>
         </div>
         <p className="mt-3 text-[11px] font-semibold flex items-center gap-1.5">
           {includeSigStamp ? (
@@ -561,7 +465,7 @@ export default function OfficialLetterComposer({
 
           <button
             onClick={handleExport}
-            disabled={!letterheadImg}
+            disabled={!hasLetterhead}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#0c4a47] py-3.5 text-sm font-black text-white shadow-md transition hover:bg-[#073331] disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <Printer size={17} />
@@ -589,18 +493,31 @@ export default function OfficialLetterComposer({
               }}
               className="relative bg-white shadow-lg"
             >
-              {letterheadImg ? (
-                <img
-                  src={letterheadImg}
-                  alt=""
-                  className="absolute inset-0 h-full w-full"
-                  draggable={false}
-                />
+              {hasLetterhead ? (
+                <>
+                  <img
+                    src={headerImg!}
+                    alt="ترويسة"
+                    className="absolute inset-x-0 top-0 w-full object-contain"
+                    style={{ height: mmToPx(headerMm) }}
+                    draggable={false}
+                  />
+                  <img
+                    src={footerImg!}
+                    alt="تذييل"
+                    className="absolute inset-x-0 bottom-0 w-full object-contain"
+                    style={{ height: mmToPx(footerMm) }}
+                    draggable={false}
+                  />
+                </>
               ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-300">
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-300 text-center px-6">
                   <ImageIcon size={60} />
                   <p className="text-lg font-bold">
-                    ارفع صورة الورق الرسمي أولاً
+                    لم يتم اعتماد صورتي الترويسة والتذييل بعد
+                  </p>
+                  <p className="text-xs font-semibold text-slate-400">
+                    راجع قسم "الهوية الرسمية والأختام" المحمي في القائمة الجانبية
                   </p>
                 </div>
               )}
