@@ -8875,11 +8875,13 @@ export default function App() {
     { id: "courts_directory", label: "دليل المحاكم والجهات", icon: PhoneCall, category: "التواصل والمهام" },
     { id: "colleagues", label: "الزملاء والإنابات", icon: Handshake, category: "التواصل والمهام" },
 
-    // 3. المستندات والمالية والتوثيق
-    { id: "docs", label: "المستندات والأرشيف", icon: FolderOpen, category: "المالية والعقود" },
-    { id: "poa", label: "الوكالات القانونية", icon: FileSignature, category: "المالية والعقود" },
-    { id: "office_agreement", label: "اتفاقية أتعاب المكتب", icon: FileCheck, category: "المالية والعقود" },
-    { id: "invoices", label: "الفواتير والضريبة", icon: Receipt, category: "المالية والعقود" },
+    // 3. المستندات والعقود والتوثيق
+    { id: "docs", label: "المستندات والأرشيف", icon: FolderOpen, category: "المستندات والعقود" },
+    { id: "poa", label: "الوكالات القانونية", icon: FileSignature, category: "المستندات والعقود" },
+    { id: "office_agreement", label: "اتفاقية أتعاب المكتب", icon: FileCheck, category: "المستندات والعقود" },
+
+    // 3.5 الفواتير والضريبة (تصنيف مستقل)
+    { id: "invoices", label: "الفواتير والضريبة", icon: Receipt, category: "الفواتير والضريبة" },
 
     // 4. الامتثال والإدارة
     { id: "kyc", label: "اعرف عميلك (KYC)", icon: ShieldCheck, category: "الإدارة والامتثال" },
