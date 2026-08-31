@@ -38,7 +38,7 @@ function matchPastedInlineStyle(node: unknown, delta: any) {
   }
 }
 
-const LETTERHEAD_LAYOUT = {
+export const LETTERHEAD_LAYOUT = {
   headerMm: 46,
   footerMm: 20,
   sideMm: 18,

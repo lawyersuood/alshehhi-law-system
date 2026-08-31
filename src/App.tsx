@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import OfficialLetterComposer from "./OfficialLetterComposer";
+import OfficialLetterComposer, { LETTERHEAD_LAYOUT as LETTERHEAD_PAGE_LAYOUT } from "./OfficialLetterComposer";
 import Logo from "./components/Logo";
 import BookingConsultationView from "./components/BookingConsultationView";
 import PublicConsultationPage, { BookingRecord, ConsultationSettings } from "./components/PublicConsultationPage";
@@ -643,6 +643,12 @@ export interface LetterheadConfig {
   footerImg: string;
   signatureImg: string;
   stampImg: string;
+  /** صورة واحدة كاملة لكامل صفحة A4 (بدون نص) — المصدر الأساسي الحديث للورق
+   * الرسمي. عند رفعها من قسم "الهوية الرسمية والأختام"، يتم اشتقاق headerImg
+   * وfooterImg تلقائياً منها (اقتصاص الجزء العلوي والسفلي) حتى تستمر جميع
+   * أماكن استخدام الورق الرسمي في النظام بالعمل دون أي تعديل إضافي. تبقى
+   * فارغة للحسابات القديمة التي لم تُحدَّث بعد إلى الصورة الكاملة الواحدة. */
+  fullPageImg: string;
 }
 
 export function loadLetterhead(): LetterheadConfig {
@@ -655,6 +661,7 @@ export function loadLetterhead(): LetterheadConfig {
         footerImg: parsed.footerImg || OFFICE_FOOTER_IMG,
         signatureImg: parsed.signatureImg || OFFICE_SIGNATURE_IMG,
         stampImg: parsed.stampImg || OFFICE_STAMP_IMG,
+        fullPageImg: parsed.fullPageImg || "",
       };
     }
   } catch (e) {
@@ -665,6 +672,7 @@ export function loadLetterhead(): LetterheadConfig {
     footerImg: OFFICE_FOOTER_IMG,
     signatureImg: OFFICE_SIGNATURE_IMG,
     stampImg: OFFICE_STAMP_IMG,
+    fullPageImg: "",
   };
 }
 
@@ -5849,9 +5857,48 @@ export default function App() {
         footerImg: partial.footerImg !== undefined ? partial.footerImg : prev.footerImg,
         signatureImg: partial.signatureImg !== undefined ? partial.signatureImg : prev.signatureImg,
         stampImg: partial.stampImg !== undefined ? partial.stampImg : prev.stampImg,
+        fullPageImg: partial.fullPageImg !== undefined ? partial.fullPageImg : prev.fullPageImg,
       };
       saveLetterhead(next);
       return next;
+    });
+  };
+
+  // اقتصاص صورة الورق الرسمي الكاملة (A4 بأكملها) إلى شريطي الترويسة
+  // والتذييل تلقائياً عبر canvas، حتى تستمر جميع أماكن استخدام الورق الرسمي
+  // في النظام (محرر الخطابات، معاينة اتفاقية أتعاب المكتب، ...) بالعمل دون أي
+  // تعديل إضافي — فهي تستهلك headerImg/footerImg كما هي تماماً كالسابق.
+  const deriveHeaderFooterFromFullPage = (fullPageDataUrl: string): Promise<{ headerImg: string; footerImg: string }> => {
+    return new Promise((resolve, reject) => {
+      const img = new (window as any).Image();
+      img.onload = () => {
+        try {
+          const naturalW = img.naturalWidth || img.width;
+          const naturalH = img.naturalHeight || img.height;
+          const headerFrac = LETTERHEAD_PAGE_LAYOUT.headerMm / LETTERHEAD_PAGE_LAYOUT.pageHeightMm;
+          const footerFrac = LETTERHEAD_PAGE_LAYOUT.footerMm / LETTERHEAD_PAGE_LAYOUT.pageHeightMm;
+          const headerPx = Math.max(1, Math.round(naturalH * headerFrac));
+          const footerPx = Math.max(1, Math.round(naturalH * footerFrac));
+
+          const cropToDataUrl = (sy: number, sh: number) => {
+            const canvas = document.createElement("canvas");
+            canvas.width = naturalW;
+            canvas.height = sh;
+            const ctx = canvas.getContext("2d");
+            if (!ctx) throw new Error("canvas context unavailable");
+            ctx.drawImage(img, 0, sy, naturalW, sh, 0, 0, naturalW, sh);
+            return canvas.toDataURL("image/png");
+          };
+
+          const headerImg = cropToDataUrl(0, headerPx);
+          const footerImg = cropToDataUrl(naturalH - footerPx, footerPx);
+          resolve({ headerImg, footerImg });
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.onerror = () => reject(new Error("تعذّر تحميل الصورة"));
+      img.src = fullPageDataUrl;
     });
   };
   const [hearingSubTab, setHearingSubTab] = useState<"hearings" | "deadlines">("hearings");
@@ -14684,24 +14731,28 @@ export default function App() {
                 </div>
 
                 <div className="grid gap-6 md:grid-cols-2">
-                  {/* ترويسة الرأس Header */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+                  {/* الورق الرسمي الكامل — صورة واحدة لكامل صفحة A4 (تُشتق منها الترويسة والتذييل تلقائياً) */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 md:col-span-2">
                     <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                      الترويسة العلوية (Header Image)
+                      الورق الرسمي الكامل (صفحة A4 واحدة)
                     </h3>
-                    {letterhead.headerImg ? (
+                    <p className="text-[11px] text-slate-500 -mt-2">
+                      ارفعي صورة واحدة عالية الدقة لكامل صفحة الورق الرسمي الفارغة (بدون نص، بمقاس A4 كامل). يستخرج النظام منها تلقائياً شريطي الترويسة العلوية والتذييل السفلي المستخدمَين في جميع الخطابات والاتفاقيات، دون الحاجة لرفع صورتين منفصلتين.
+                    </p>
+                    {letterhead.fullPageImg ? (
                       <div className="border border-slate-200 rounded-xl p-2 bg-slate-50 text-center">
-                        <img src={letterhead.headerImg} alt="Header" className="max-h-32 mx-auto object-contain" />
+                        <img src={letterhead.fullPageImg} alt="الورق الرسمي الكامل" className="max-h-[420px] mx-auto object-contain" style={{ aspectRatio: "210 / 297" }} />
                       </div>
                     ) : (
-                      <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center text-slate-400 text-xs">
-                        لا توجد ترويسة علوية مخصصة
+                      <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center text-slate-400 text-xs space-y-1">
+                        <p>لم يتم رفع صورة الورق الرسمي الكاملة بعد.</p>
+                        <p>النظام يستخدم حالياً الترويسة والتذييل السابقين (المنفصلين) إلى حين رفعها.</p>
                       </div>
                     )}
                     {canManageLetterhead && (
                       <div className="flex gap-2">
                         <label className="flex-1 flex items-center justify-center gap-1.5 cursor-pointer rounded-xl bg-[#0c4a47] py-2 text-xs font-bold text-white hover:bg-[#073331] transition">
-                          <UploadCloud size={14} /> رفع صورة جديدة
+                          <UploadCloud size={14} /> رفع صورة الورق الرسمي الكاملة
                           <input
                             type="file"
                             accept="image/jpeg,image/png"
@@ -14710,74 +14761,32 @@ export default function App() {
                               const file = e.target.files?.[0];
                               if (!file) return;
                               const reader = new FileReader();
-                              reader.onload = (ev) => {
+                              reader.onload = async (ev) => {
                                 const dataUrl = ev.target?.result as string;
-                                updateLetterhead({ headerImg: dataUrl });
-                                logAuditAction("UPDATE", "الورق الرسمي", "الترويسة العلوية (Header)", `قام المستخدم "${currentUser.name}" برفع/تغيير صورة الترويسة العلوية للورق الرسمي`);
+                                try {
+                                  const { headerImg, footerImg } = await deriveHeaderFooterFromFullPage(dataUrl);
+                                  updateLetterhead({ fullPageImg: dataUrl, headerImg, footerImg });
+                                  logAuditAction("UPDATE", "الورق الرسمي", "الورق الرسمي الكامل (A4)", `قام المستخدم "${currentUser.name}" برفع صورة واحدة كاملة للورق الرسمي، واستُخرجت منها الترويسة والتذييل تلقائياً`);
+                                } catch (err) {
+                                  alert("تعذّر معالجة الصورة المرفوعة. يرجى التأكد من أنها ملف صورة صالح (JPEG أو PNG) والمحاولة مجدداً.");
+                                }
                               };
                               reader.readAsDataURL(file);
                             }}
                           />
                         </label>
-                        <button
-                          onClick={() => {
-                            updateLetterhead({ headerImg: OFFICE_HEADER_IMG });
-                            logAuditAction("UPDATE", "الورق الرسمي", "الترويسة العلوية (Header)", `قام المستخدم "${currentUser.name}" باستعادة الترويسة الرسمية الافتراضية`);
-                          }}
-                          className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"
-                          title="استعادة الترويسة الافتراضية"
-                        >
-                          استعادة
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* التذييل السفلي Footer */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
-                    <h3 className="font-bold text-slate-900 flex items-center gap-2">
-                      التذييل السفلي (Footer Image)
-                    </h3>
-                    {letterhead.footerImg ? (
-                      <div className="border border-slate-200 rounded-xl p-2 bg-slate-50 text-center">
-                        <img src={letterhead.footerImg} alt="Footer" className="max-h-32 mx-auto object-contain" />
-                      </div>
-                    ) : (
-                      <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center text-slate-400 text-xs">
-                        لا يوجد تذييل سفلي مخصص
-                      </div>
-                    )}
-                    {canManageLetterhead && (
-                      <div className="flex gap-2">
-                        <label className="flex-1 flex items-center justify-center gap-1.5 cursor-pointer rounded-xl bg-[#0c4a47] py-2 text-xs font-bold text-white hover:bg-[#073331] transition">
-                          <UploadCloud size={14} /> رفع صورة جديدة
-                          <input
-                            type="file"
-                            accept="image/jpeg,image/png"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              const reader = new FileReader();
-                              reader.onload = (ev) => {
-                                const dataUrl = ev.target?.result as string;
-                                updateLetterhead({ footerImg: dataUrl });
-                                logAuditAction("UPDATE", "الورق الرسمي", "التذييل السفلي (Footer)", `قام المستخدم "${currentUser.name}" برفع/تغيير صورة التذييل السفلي للورق الرسمي`);
-                              };
-                              reader.readAsDataURL(file);
+                        {letterhead.fullPageImg && (
+                          <button
+                            onClick={() => {
+                              updateLetterhead({ fullPageImg: "", headerImg: OFFICE_HEADER_IMG, footerImg: OFFICE_FOOTER_IMG });
+                              logAuditAction("UPDATE", "الورق الرسمي", "الورق الرسمي الكامل (A4)", `قام المستخدم "${currentUser.name}" باستعادة الورق الرسمي الافتراضي`);
                             }}
-                          />
-                        </label>
-                        <button
-                          onClick={() => {
-                            updateLetterhead({ footerImg: OFFICE_FOOTER_IMG });
-                            logAuditAction("UPDATE", "الورق الرسمي", "التذييل السفلي (Footer)", `قام المستخدم "${currentUser.name}" باستعادة التذييل الرسمي الافتراضي`);
-                          }}
-                          className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"
-                          title="استعادة التذييل الافتراضي"
-                        >
-                          استعادة
-                        </button>
+                            className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                            title="استعادة الورق الرسمي الافتراضي"
+                          >
+                            استعادة
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
