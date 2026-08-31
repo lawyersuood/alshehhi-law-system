@@ -80,6 +80,13 @@ const RICH_TEXT_DISPLAY_CSS = `
 .ollc-rich-body .ql-indent-6 { padding-inline-start: 18em; }
 .ollc-rich-body .ql-indent-7 { padding-inline-start: 21em; }
 .ollc-rich-body .ql-indent-8 { padding-inline-start: 24em; }
+/* نفس شبكة الأمان المطبَّقة في مستند الطباعة (buildPrintDocument) لمنع أي
+   عنصر ملصوق بعرض ثابت أو صورة بأبعادها الأصلية من توسيع المعاينة الحية
+   خارج حدودها — حتى تُطابق المعاينة تماماً ما يُطبع فعلياً. */
+.ollc-rich-body { max-width: 100%; overflow-wrap: break-word; word-break: break-word; }
+.ollc-rich-body * { max-width: 100% !important; }
+.ollc-rich-body img { height: auto; display: block; margin: 8px auto; }
+.ollc-rich-body table { width: 100% !important; table-layout: fixed; }
 `;
 
 const todayArabic = () =>
@@ -135,7 +142,7 @@ function buildPrintDocument(
     "    line-height: 2;\n" +
     "    color: #1a1a1a;\n" +
     "  }\n" +
-    "  table.page-frame { width: 100%; border-collapse: collapse; }\n" +
+    "  table.page-frame { width: 100%; table-layout: fixed; border-collapse: collapse; }\n" +
     "  thead td, tfoot td { padding: 0; }\n" +
     "  .header-strip-img { display: block; width: " + pageWidthMm + "mm; height: " + headerMm + "mm; }\n" +
     "  .footer-strip-img { display: block; width: " + pageWidthMm + "mm; height: " + footerMm + "mm; }\n" +
@@ -182,6 +189,16 @@ function buildPrintDocument(
     "  .letter-body u { text-decoration: underline; }\n" +
     "  .letter-body em { font-style: italic; }\n" +
     "  .letter-body s { text-decoration: line-through; }\n" +
+    // شبكة أمان صارمة ضد تجاوز العرض: أي عنصر يصل ضمن نص لصق من Word/جوجل
+    // دوكس ويحمل عرضاً ثابتاً بالبكسل/الإنش (شائع جداً في HTML الملصوق من
+    // Word)، أو صورة بأبعادها الأصلية الكبيرة، كان يوسّع عمود الجدول الوحيد
+    // بأكمله فيقصّ كل سطر لاحق من جانبي الصفحة عند الطباعة — وهو ما كان يظهر
+    // كـ"تنسيق يقطع من الجوانب". هذه القاعدة تمنع أي عنصر ابن من تجاوز عرض
+    // حاويته مهما كان الأسلوب المضمّن القادم من المصدر الملصوق.
+    "  .letter-content, .letter-body { max-width: 100%; overflow-wrap: break-word; word-break: break-word; }\n" +
+    "  .letter-body * { max-width: 100% !important; }\n" +
+    "  .letter-body img { height: auto; display: block; margin: 3mm auto; }\n" +
+    "  .letter-body table { width: 100% !important; table-layout: fixed; }\n" +
     "</style>\n" +
     "</head>\n" +
     "<body>\n" +
@@ -457,14 +474,43 @@ export default function OfficialLetterComposer({
       } catch {
         // تجاهل — بعض المتصفحات القديمة لا تدعم واجهة document.fonts
       }
-      // إطار إضافي لضمان اكتمال التخطيط بعد أي تغيّر بالخط أو المحتوى
-      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
-      if (cancelled) return;
-
       const headingEl = headingMeasureRef.current;
       const bodyEl = bodyMeasureRef.current;
       const signatureEl = signatureMeasureRef.current;
       if (!headingEl || !bodyEl || !signatureEl) return;
+
+      // ننتظر اكتمال تحميل أي صور داخل نص الخطاب (كصورة ملصوقة من Word) قبل
+      // قياس ارتفاع كل فقرة — وإلا فإن الصورة تُقاس بارتفاع صفر قبل تحميلها
+      // فيحتسب الترقيم مساحة أقل من الحقيقية وقد يضغط محتوى أكثر مما يتّسع
+      // له فعلياً في الصفحة، فيظهر وكأن آخر جزء من المذكرة "اختفى".
+      const waitForMeasureImages = () => {
+        const imgs = ([] as HTMLImageElement[]).concat(
+          Array.prototype.slice.call(headingEl.querySelectorAll("img")),
+          Array.prototype.slice.call(bodyEl.querySelectorAll("img"))
+        );
+        return Promise.all(
+          imgs.map(
+            (img) =>
+              new Promise<void>((resolve) => {
+                if (img.complete) {
+                  resolve();
+                  return;
+                }
+                img.addEventListener("load", () => resolve(), { once: true });
+                img.addEventListener("error", () => resolve(), { once: true });
+              })
+          )
+        );
+      };
+      await Promise.race([
+        waitForMeasureImages(),
+        new Promise((resolve) => setTimeout(resolve, 3000)),
+      ]);
+      if (cancelled) return;
+
+      // إطار إضافي لضمان اكتمال التخطيط بعد أي تغيّر بالخط أو المحتوى أو الصور
+      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      if (cancelled) return;
 
       const headingHeight = headingEl.getBoundingClientRect().height;
       const signatureHeight = signatureEl.getBoundingClientRect().height;
@@ -668,6 +714,7 @@ export default function OfficialLetterComposer({
                     [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                     [{ 'indent': '-1'}, { 'indent': '+1' }],
                     [{ 'color': [] }, { 'background': [] }],
+                    ['image'],
                     ['clean']
                   ],
                   clipboard: {
@@ -685,7 +732,13 @@ export default function OfficialLetterComposer({
                   'bold', 'italic', 'underline', 'strike',
                   'align', 'direction',
                   'list', 'bullet', 'indent',
-                  'color', 'background'
+                  'color', 'background',
+                  // 'image' كان غائباً عن هذه القائمة، وQuill يتجاهل صامتاً أي صيغة
+                  // (بما فيها الصور الملصوقة من Word/الجوال) غير مدرجة هنا — وهو
+                  // السبب الحقيقي وراء اختفاء الصور الموجودة داخل المذكرات الملصوقة
+                  // دون أي رسالة خطأ. إضافتها تسمح للصور بالبقاء في المحتوى المحرَّر
+                  // والظهور في المعاينة والطباعة كليهما.
+                  'image'
                 ]}
                 style={{ height: '350px', direction: 'rtl', textAlign: 'right' }}
               />
