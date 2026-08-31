@@ -11,31 +11,129 @@ import {
 import ReactQuill, { Quill } from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 
+// يقرأ نص تنسيق (سواء من style مضمّن أو من محتوى قاعدة CSS) ويحوّله لصيغ Quill
+// (bold/italic/underline/strike/align). يُستخدم من كلا مصدري التنسيق أدناه.
+function extractFormatsFromDeclarationText(
+  style: string,
+  formats: Record<string, unknown>
+) {
+  if (/font-weight\s*:\s*(bold|[6-9]00)/i.test(style)) formats.bold = true;
+  if (/font-style\s*:\s*italic/i.test(style)) formats.italic = true;
+  if (/text-decoration[a-z-]*\s*:\s*[^;]*underline/i.test(style)) formats.underline = true;
+  if (/text-decoration[a-z-]*\s*:\s*[^;]*line-through/i.test(style)) formats.strike = true;
+  const alignMatch = style.match(/text-align\s*:\s*(right|left|center|justify)/i);
+  if (alignMatch) formats.align = alignMatch[1].toLowerCase();
+}
+
+// وورد (خصوصاً عند النسخ من تطبيق سطح المكتب مباشرة، لا من Google Docs) غالباً
+// لا يكتب تنسيق الفقرة (توسيط/عريض) كـ style مضمّن على الفقرة نفسها، بل يشير
+// إليه عبر صنف نمط مُسمّى (مثل class="MsoTitle" أو "MsoNormal") مُعرَّف داخل
+// وسم <style> ضمن HTML الملصوق نفسه. لا معالج Quill الداخلي ولا الفحص أعلاه
+// يقرأ قواعد <style> هذه — فيختفي التوسيط والخط العريض الملصوقان من وورد رغم
+// نجاح الحالات الأخرى (Google Docs، B/I الدلالية). هذه الدالة تحلّل وسوم
+// <style> في مستند اللصق مرة واحدة (وتخزّنها مؤقتاً) وتُعيد قائمة قواعد، كل
+// قاعدة بصيغة "مجموعة الأصناف المطلوبة معاً + نص التنسيق" — وليس خريطة صنف
+// مفرد، لأن محدد CSS المركّب مثل ".MsoNormal.underlinedNote" يجب أن يُطابَق
+// فقط عند وجود كِلا الصنفين معاً على نفس العنصر؛ خريطة صنف-مفرد كانت ستُطبّق
+// خطأً تنسيق "underlinedNote" على أي فقرة أخرى تحمل صنف "MsoNormal" وحده.
+type PastedClassRule = { classes: string[]; declarations: string };
+const pastedStyleRuleCache = new WeakMap<Document, PastedClassRule[]>();
+function getPastedClassRules(doc: Document): PastedClassRule[] {
+  const cached = pastedStyleRuleCache.get(doc);
+  if (cached) return cached;
+  const rules: PastedClassRule[] = [];
+  try {
+    const cssText = Array.from(doc.querySelectorAll("style"))
+      .map((s) => s.textContent || "")
+      .join("\n");
+    const ruleRe = /([^{}]+)\{([^{}]*)\}/g;
+    let match: RegExpExecArray | null;
+    while ((match = ruleRe.exec(cssText))) {
+      const declarations = match[2];
+      // قد يحتوي المحدد على عدة محددات مفصولة بفواصل (مثال:
+      // "p.MsoNormal, li.MsoNormal, div.MsoNormal") — كل واحد منها قاعدة
+      // مستقلة بأصنافها الخاصة، فنُقسّم على الفاصلة أولاً.
+      match[1].split(",").forEach((selectorPart) => {
+        const classes = selectorPart.match(/\.[a-zA-Z0-9_-]+/g);
+        if (classes && classes.length > 0) {
+          rules.push({
+            classes: classes.map((c) => c.slice(1)),
+            declarations,
+          });
+        }
+      });
+    }
+  } catch {
+    // تجاهل أي خطأ في تحليل CSS — لا نُفسد اللصق
+  }
+  pastedStyleRuleCache.set(doc, rules);
+  return rules;
+}
+
 // معالج لصق إضافي يلتقط التنسيق (عريض/مائل/تسطير/شطب/محاذاة) من محتوى HTML
 // الملصق من Word أو Google Docs عندما يكون هذا التنسيق معتمداً على style مضمّن
-// في span/p/div (نمط شائع جداً عند اللصق من Google Docs) بدلاً من وسوم دلالية
-// مثل b/i/u التي يتعرف عليها المحرر تلقائياً فقط. يعمل هذا كطبقة احتياطية إضافية
-// إلى جانب معالجة Quill الداخلية، ولا يُغيّر أي سلوك عند غياب أنماط مضمّنة.
+// في span/p/div (نمط شائع جداً عند اللصق من Google Docs)، أو على صنف نمط مُسمّى
+// معرَّف في <style> (نمط شائع جداً عند اللصق من تطبيق Word لسطح المكتب مباشرة)،
+// بدلاً من وسوم دلالية مثل b/i/u التي يتعرف عليها المحرر تلقائياً فقط. يعمل هذا
+// كطبقة احتياطية إضافية إلى جانب معالجة Quill الداخلية، ولا يُغيّر أي سلوك عند
+// غياب كلا مصدري التنسيق.
 function matchPastedInlineStyle(node: unknown, delta: any) {
   try {
     const el = node as HTMLElement;
-    const style = (el?.getAttribute && el.getAttribute("style")) || "";
-    if (!style) return delta;
+    const formats: Record<string, unknown> = {};
+
+    const inlineStyle = (el?.getAttribute && el.getAttribute("style")) || "";
+    if (inlineStyle) extractFormatsFromDeclarationText(inlineStyle, formats);
+
+    const className = (el?.getAttribute && el.getAttribute("class")) || "";
+    if (className && el.ownerDocument) {
+      const elementClasses = className.split(/\s+/).filter(Boolean);
+      const rules = getPastedClassRules(el.ownerDocument);
+      rules.forEach((rule) => {
+        const allClassesPresent = rule.classes.every((c) =>
+          elementClasses.includes(c)
+        );
+        if (allClassesPresent) {
+          extractFormatsFromDeclarationText(rule.declarations, formats);
+        }
+      });
+    }
+
+    if (Object.keys(formats).length === 0) return delta;
     const DeltaCtor = (Quill as any).import("delta");
     if (!DeltaCtor) return delta;
-    const formats: Record<string, unknown> = {};
-    if (/font-weight\s*:\s*(bold|[6-9]00)/i.test(style)) formats.bold = true;
-    if (/font-style\s*:\s*italic/i.test(style)) formats.italic = true;
-    if (/text-decoration[a-z-]*\s*:\s*[^;]*underline/i.test(style)) formats.underline = true;
-    if (/text-decoration[a-z-]*\s*:\s*[^;]*line-through/i.test(style)) formats.strike = true;
-    const alignMatch = style.match(/text-align\s*:\s*(right|left|center|justify)/i);
-    if (alignMatch) formats.align = alignMatch[1].toLowerCase();
-    if (Object.keys(formats).length === 0) return delta;
     return delta.compose(new DeltaCtor().retain(delta.length(), formats));
   } catch {
     // في حال أي خطأ غير متوقع، لا نُفسد اللصق — نُعيد المحتوى كما وصل افتراضياً
     return delta;
   }
+}
+
+// ---------- فاصل صفحة يدوي ----------
+// كتلة Quill مخصّصة (BlockEmbed) غير قابلة للتحرير، يُدرجها المستخدم بنفسه عند
+// نقطة معيّنة في نص الخطاب لإجبار بدء صفحة جديدة عندها في الورق الرسمي —
+// بصرف النظر عمّا إذا كانت المساحة المتبقية في الصفحة الحالية تتّسع للمزيد أم
+// لا. تُخفى تماماً في المعاينة والطباعة (لا تترك أي أثر مرئي أو مسافة)، وتبقى
+// ظاهرة فقط داخل مربع التحرير نفسه كعلامة يمكن تحديدها وحذفها كأي محتوى عادي.
+const MANUAL_PAGE_BREAK_CLASS = "ollc-manual-page-break";
+try {
+  const BlockEmbed = (Quill as any).import("blots/block/embed");
+  if (BlockEmbed && !(Quill as any).imports["formats/pageBreak"]) {
+    class ManualPageBreakBlot extends BlockEmbed {
+      static blotName = "pageBreak";
+      static tagName = "div";
+      static className = MANUAL_PAGE_BREAK_CLASS;
+      static create() {
+        const node = super.create();
+        node.setAttribute("contenteditable", "false");
+        return node;
+      }
+    }
+    (Quill as any).register(ManualPageBreakBlot, true);
+  }
+} catch {
+  // تجاهل — في حال تعذّر التسجيل (مثلاً بيئة اختبار لا تدعم Parchment) يبقى
+  // باقي المحرر يعمل بشكل طبيعي دون خاصية الفاصل اليدوي فقط
 }
 
 export const LETTERHEAD_LAYOUT = {
@@ -87,6 +185,55 @@ const RICH_TEXT_DISPLAY_CSS = `
 .ollc-rich-body * { max-width: 100% !important; }
 .ollc-rich-body img { height: auto; display: block; margin: 8px auto; }
 .ollc-rich-body table { width: 100% !important; table-layout: fixed; }
+/* لا أثر مرئي لعلامة الفاصل اليدوي في المعاينة الحية — دورها الوحيد هناك هو
+   إجبار خوارزمية الترقيم على بدء صفحة جديدة، وهي مُستبعدة أصلاً من HTML كل
+   صفحة، وهذه قاعدة احتياطية إضافية فقط. */
+.ollc-rich-body .ollc-manual-page-break { display: none; }
+
+/* ---------- مؤشرات الصفحات داخل مربع التحرير نفسه ---------- */
+/* علامة الفاصل اليدوي: تظهر داخل صندوق التحرير فقط كشريط واضح قابل للتحديد
+   والحذف كأي سطر عادي، ولا تظهر إطلاقاً في المعاينة أو المطبوع (مخفاة هناك
+   بقواعد أعلاه وفي مستند الطباعة). */
+.ql-editor .ollc-manual-page-break {
+  margin: 10px 0;
+  padding: 5px 10px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #b45309;
+  background: repeating-linear-gradient(45deg, #fef3c7, #fef3c7 6px, #fde68a 6px, #fde68a 12px);
+  border: 1px dashed #d97706;
+  border-radius: 6px;
+  cursor: default;
+}
+.ql-editor .ollc-manual-page-break::before {
+  content: "⇊ فاصل صفحة يدوي — حدّديه واحذفيه لإلغائه ⇊";
+}
+/* خط فاصل تلقائي يظهر تحت آخر فقرة في كل صفحة أثناء الكتابة/التمرير، ليعرف
+   المستخدم فوراً أين تنتهي كل صفحة فعلياً دون الحاجة لفتح المعاينة أو الطباعة
+   للتأكد — يُحسب من نفس خوارزمية الترقيم المستخدمة في المعاينة والطباعة. */
+.ql-editor [data-ollc-page-end] {
+  position: relative;
+  padding-bottom: 20px !important;
+  margin-bottom: 26px !important;
+  border-bottom: 2px dashed #94a3b8;
+}
+.ql-editor [data-ollc-page-end]::after {
+  content: attr(data-ollc-page-end);
+  position: absolute;
+  bottom: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 9px;
+  border: 1px solid #94a3b8;
+  border-radius: 999px;
+  white-space: nowrap;
+  pointer-events: none;
+}
 `;
 
 const todayArabic = () =>
@@ -199,6 +346,14 @@ function buildPrintDocument(
     "  .letter-body * { max-width: 100% !important; }\n" +
     "  .letter-body img { height: auto; display: block; margin: 3mm auto; }\n" +
     "  .letter-body table { width: 100% !important; table-layout: fixed; }\n" +
+    // فاصل الصفحة اليدوي: نُبقيه ضمن تدفّق الصفحة (بلا display:none، الذي قد
+    // يجعل بعض محركات الطباعة تتجاهل page-break المرتبط به) لكن بلا أي مساحة
+    // أو أثر مرئي، مع إجبار كسر صفحة فعلي عنده بصياغتي CSS القديمة والحديثة معاً.
+    "  ." + MANUAL_PAGE_BREAK_CLASS + " {\n" +
+    "    visibility: hidden; height: 0; margin: 0 !important; padding: 0 !important;\n" +
+    "    overflow: hidden; border: 0;\n" +
+    "    page-break-before: always; break-before: page;\n" +
+    "  }\n" +
     "</style>\n" +
     "</head>\n" +
     "<body>\n" +
@@ -461,6 +616,16 @@ export default function OfficialLetterComposer({
     { showHeading: true, bodyHtml, showSignature: true },
   ]);
   const [currentPageIndex, setCurrentPageIndex] = useState(0);
+  // فهارس العناصر (ضمن أبناء نص الخطاب) التي تبدأ عندها كل صفحة ثانية وما بعدها
+  // (باستثناء الصفحة الأولى التي تبدأ دوماً عند الفهرس 0) — تُستخدم لوضع خط
+  // فاصل الصفحة داخل مربع التحرير نفسه على نفس العنصر الذي تنتهي عنده كل صفحة.
+  const [pageBoundaryChildIndices, setPageBoundaryChildIndices] = useState<number[]>([]);
+  // ملاحظة: النوع هنا any وليس ReactQuill لأن تعريفات الأنواع في حزمة
+  // react-quill-new (المبنية على أنماط React 18) لا تُقر بخاصية ref على
+  // مكوّن الصف تحت React 19 رغم أن ReactQuill مكوّن Class عادي يدعم ref
+  // بشكل كامل وقت التشغيل — هذا قيد في ملفات .d.ts الخاصة بالمكتبة فقط
+  // ولا يؤثر على السلوك الفعلي للمحرر.
+  const quillRef = useRef<any>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -532,24 +697,50 @@ export default function OfficialLetterComposer({
       }
 
       const chunks: string[][] = [];
+      const chunkElements: HTMLElement[][] = [];
+      // فهرس بداية كل صفحة ضمن children — نبدأ بالفهرس 0 دائماً (الصفحة الأولى)
+      const chunkStartIndices: number[] = [0];
       let current: string[] = [];
+      let currentEls: HTMLElement[] = [];
       let usedHeight = headingHeight;
 
-      children.forEach((child) => {
+      children.forEach((child, idx) => {
+        // فاصل الصفحة اليدوي: نُخرجه تماماً من محتوى أي صفحة (لا يُطبع ولا
+        // يُعرض في المعاينة)، ونجبر بدء صفحة جديدة عنده بصرف النظر عن المساحة
+        // المتبقية — إلا إذا كانت الصفحة الحالية لا تزال فارغة أصلاً (فاصل في
+        // مطلع النص أو فاصلان متتاليان)، فلا داعي لصفحة فارغة إضافية.
+        const isManualBreak = child.classList?.contains(MANUAL_PAGE_BREAK_CLASS);
+        if (isManualBreak) {
+          if (current.length > 0) {
+            chunks.push(current);
+            chunkElements.push(currentEls);
+            current = [];
+            currentEls = [];
+            usedHeight = 0;
+            chunkStartIndices.push(idx + 1);
+          }
+          return;
+        }
         const childHeight = heightOf(child);
         if (current.length > 0 && usedHeight + childHeight > available) {
           chunks.push(current);
+          chunkElements.push(currentEls);
           current = [];
+          currentEls = [];
           usedHeight = 0;
+          chunkStartIndices.push(idx);
         }
         current.push(child.outerHTML);
+        currentEls.push(child);
         usedHeight += childHeight;
       });
-      if (current.length > 0 || chunks.length === 0) chunks.push(current);
+      if (current.length > 0 || chunks.length === 0) {
+        chunks.push(current);
+        chunkElements.push(currentEls);
+      }
 
       // نتحقق إن كانت آخر صفحة تتّسع أيضاً لكتلة التوقيع، وإلا نضيف صفحة أخيرة له
-      const lastChunkCount = chunks[chunks.length - 1].length;
-      const lastPageChildEls = children.slice(children.length - lastChunkCount);
+      const lastPageChildEls = chunkElements[chunkElements.length - 1];
       let lastUsed = lastPageChildEls.reduce((sum, el) => sum + heightOf(el), 0);
       if (chunks.length === 1) lastUsed += headingHeight;
       const fitsSignatureOnLastPage = available - lastUsed >= signatureHeight;
@@ -566,7 +757,10 @@ export default function OfficialLetterComposer({
         pages.push({ showHeading: false, bodyHtml: "", showSignature: true });
       }
 
-      if (!cancelled) setLetterPages(pages);
+      if (!cancelled) {
+        setLetterPages(pages);
+        setPageBoundaryChildIndices(chunkStartIndices.slice(1));
+      }
     };
 
     paginate();
@@ -579,6 +773,40 @@ export default function OfficialLetterComposer({
   useEffect(() => {
     setCurrentPageIndex((idx) => Math.min(idx, Math.max(0, letterPages.length - 1)));
   }, [letterPages.length]);
+
+  // نضع علامة "نهاية الصفحة" مباشرة على العنصر المقابل داخل مربع التحرير
+  // الفعلي (لا نسخة القياس المخفية) حتى يرى المستخدم خط الفصل وهو يكتب أو
+  // يمرّر لأسفل — دون إدراج أي محتوى فعلي في النص نفسه (مجرّد سمة data-* على
+  // عنصر DOM قائم أصلاً، لا تُغيّر دلتا Quill ولا تُحفظ ضمن bodyHtml).
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      const editorRoot = quillRef.current?.getEditor?.()?.root as HTMLElement | undefined;
+      if (!editorRoot) return;
+      editorRoot
+        .querySelectorAll("[data-ollc-page-end]")
+        .forEach((el) => el.removeAttribute("data-ollc-page-end"));
+      const children = Array.from(editorRoot.children) as HTMLElement[];
+      pageBoundaryChildIndices.forEach((boundaryIdx, i) => {
+        const endOfPageEl = children[boundaryIdx - 1];
+        // إذا كان العنصر السابق مباشرة لبداية الصفحة الجديدة هو الفاصل اليدوي
+        // نفسه (أي أن هذه الصفحة انتهت بسبب فاصل وضعه المستخدم يدوياً وليس
+        // بامتلاء الصفحة)، لا نضع علامة "نهاية الصفحة" الإضافية عليه — فالفاصل
+        // اليدوي نفسه (بشريطه المميّز ونصّه الخاص) يوضّح ذلك أصلاً، ووضع
+        // العلامتين معاً على نفس العنصر الصغير يُنتج تراكماً بصرياً مربكاً
+        // (حدّان متقطّعان وتسميتان فوق بعضهما).
+        if (
+          endOfPageEl &&
+          !endOfPageEl.classList.contains(MANUAL_PAGE_BREAK_CLASS)
+        ) {
+          endOfPageEl.setAttribute(
+            "data-ollc-page-end",
+            `نهاية الصفحة ${i + 1}  —  بداية الصفحة ${i + 2}`
+          );
+        }
+      });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [pageBoundaryChildIndices]);
 
   const inputCls =
     "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition";
@@ -699,9 +927,39 @@ export default function OfficialLetterComposer({
               >
                 إدراج نموذج مذكرة محكمة
               </button>
+              <button
+                onClick={() => {
+                  const editor = quillRef.current?.getEditor?.();
+                  if (!editor) return;
+                  const selection = editor.getSelection();
+                  const insertIndex =
+                    selection && typeof selection.index === "number"
+                      ? selection.index
+                      : editor.getLength();
+                  editor.insertEmbed(insertIndex, "pageBreak", true, "user");
+                  editor.setSelection(insertIndex + 1, 0, "user");
+                }}
+                className="text-[10px] bg-orange-100 text-orange-700 px-2 py-1 rounded hover:bg-orange-200 transition font-bold"
+                title="يُدرج فاصل صفحة عند موضع المؤشر الحالي، بحيث ينتقل كل ما بعده إلى صفحة جديدة في الورق الرسمي"
+              >
+                ⇊ إدراج فاصل صفحة هنا
+              </button>
             </div>
+            {letterPages.length > 0 && (
+              <p className="mb-2 -mt-1 text-[10px] font-bold text-slate-500">
+                📄 سيتوزع هذا النص على {letterPages.length}{" "}
+                {letterPages.length === 1 ? "صفحة" : "صفحات"} في الورق
+                الرسمي عند التصدير/الطباعة
+              </p>
+            )}
+            {/* ملاحظة: تعريفات الأنواع في react-quill-new لا تُقر بخاصية ref على
+                هذا المكوّن تحت React 19 رغم أن ReactQuill مكوّن Class يدعمها
+                فعلياً وقت التشغيل بشكل كامل — قصور في ملفات .d.ts الخاصة
+                بالمكتبة فقط، ولا تأثير له على سلوك المحرر أو عملية البناء
+                الفعلية (لا يوجد تحقق أنواع صارم ضمن خط أنابيب النشر). */}
             <div className="bg-white rounded-xl border border-slate-300 overflow-hidden" style={{ fontFamily: LETTER_FONT_STACK }}>
               <ReactQuill
+                ref={quillRef}
                 theme="snow"
                 value={bodyHtml}
                 onChange={setBodyHtml}
@@ -738,7 +996,12 @@ export default function OfficialLetterComposer({
                   // السبب الحقيقي وراء اختفاء الصور الموجودة داخل المذكرات الملصوقة
                   // دون أي رسالة خطأ. إضافتها تسمح للصور بالبقاء في المحتوى المحرَّر
                   // والظهور في المعاينة والطباعة كليهما.
-                  'image'
+                  'image',
+                  // 'pageBreak' يسمح للفاصل اليدوي (الذي يُدرجه المستخدم عبر
+                  // زر "إدراج فاصل صفحة هنا") بالبقاء في المحتوى المحفوظ —
+                  // بدون إدراجها هنا سيُحذف الفاصل صامتاً بنفس آلية اختفاء
+                  // الصور القديمة أعلاه.
+                  'pageBreak'
                 ]}
                 style={{ height: '350px', direction: 'rtl', textAlign: 'right' }}
               />
