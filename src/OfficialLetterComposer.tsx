@@ -184,7 +184,14 @@ const RICH_TEXT_DISPLAY_CSS = `
 .ollc-rich-body { max-width: 100%; overflow-wrap: break-word; word-break: break-word; }
 .ollc-rich-body * { max-width: 100% !important; }
 .ollc-rich-body img { height: auto; display: block; margin: 8px auto; }
-.ollc-rich-body table { width: 100% !important; table-layout: fixed; }
+.ollc-rich-body table { width: 100% !important; table-layout: fixed; border-collapse: collapse; }
+/* الجداول الملصوقة (من الوورد أو جوجل شيتس) تصل بلا أي حدود CSS خاصة بها —
+   المتصفح لا يرسم حدود الخلايا افتراضياً لعنصر <table> عادي، فكانت تظهر
+   كأنها اختفت تماماً وتحوّلت لنص عادي متلاصق دون تمييز الأعمدة، رغم أن
+   بنية الجدول نفسها موجودة فعلياً. نرسم هنا حدوداً ورؤوس أعمدة واضحة تطابق
+   ما يظهر داخل صندوق التحرير نفسه (حيث يرسمها Quill تلقائياً) وما يُطبع
+   لاحقاً في buildPrintDocument. */
+.ollc-rich-body td, .ollc-rich-body th { border: 1px solid #333; padding: 4px 8px; vertical-align: top; }
 /* لا أثر مرئي لعلامة الفاصل اليدوي في المعاينة الحية — دورها الوحيد هناك هو
    إجبار خوارزمية الترقيم على بدء صفحة جديدة، وهي مُستبعدة أصلاً من HTML كل
    صفحة، وهذه قاعدة احتياطية إضافية فقط. */
@@ -416,7 +423,12 @@ function buildPrintDocument(
     "  .letter-content, .letter-body { max-width: 100%; overflow-wrap: break-word; word-break: break-word; }\n" +
     "  .letter-body * { max-width: 100% !important; }\n" +
     "  .letter-body img { height: auto; display: block; margin: 3mm auto; }\n" +
-    "  .letter-body table { width: 100% !important; table-layout: fixed; }\n" +
+    "  .letter-body table { width: 100% !important; table-layout: fixed; border-collapse: collapse; }\n" +
+    // تُرسم حدود خلايا الجدول صراحة هنا (مطابقةً للمعاينة الحية ولما يظهر
+    // داخل صندوق التحرير) لأن عنصر <table> عادي بلا CSS خاص لا يملك أي حدود
+    // مرئية افتراضياً في الطباعة، فيبدو الجدول الملصوق وكأنه اختفى وتحوّل
+    // لنص عادي متلاصق رغم وصول بنيته كاملة إلى مستند الطباعة.
+    "  .letter-body td, .letter-body th { border: 1px solid #333; padding: 2mm 3mm; vertical-align: top; }\n" +
     // فاصل الصفحة اليدوي لا يظهر إطلاقاً هنا عملياً (خوارزمية الترقيم تستبعده
     // مسبقاً من bodyHtml كل صفحة قبل وصوله لهذه الدالة) — هذه القاعدة قاعدة
     // أمان احتياطية فقط في حال وصل رمزه لسبب ما.
@@ -1051,7 +1063,19 @@ export default function OfficialLetterComposer({
                   // زر "إدراج فاصل صفحة هنا") بالبقاء في المحتوى المحفوظ —
                   // بدون إدراجها هنا سيُحذف الفاصل صامتاً بنفس آلية اختفاء
                   // الصور القديمة أعلاه.
-                  'pageBreak'
+                  'pageBreak',
+                  // 'table' غائب أيضاً كان يسبب نفس المشكلة بالضبط مع أي جدول
+                  // مَلصوق من الوورد أو جوجل شيتس: يُحوَّل الجدول أثناء اللصق
+                  // إلى فقرات نصية عادية بلا أي بنية جدولية (تُفقد الحدود
+                  // والأعمدة تماماً) دون أي رسالة خطأ — لأن Quill يتجاهل
+                  // صامتاً بنية HTML الخاصة بأي صيغة غير مدرجة هنا أثناء
+                  // تحويل اللصق. إضافة 'table' هنا (وهي اسم الصيغة الخاص بخلية
+                  // الجدول TableCell) تكفي وحدها: يسجّل Quill تلقائياً معها كل
+                  // مستوى الحاوية الأعلى المطلوب (الصف ثم المجموعة ثم الجدول
+                  // نفسه) عبر سلسلة "الحاوية المطلوبة" الخاصة بكل صيغة، فيعود
+                  // الجدول الملصوق يحتفظ ببنيته الكاملة (صفوف وأعمدة وحدود)
+                  // داخل المحرر والمعاينة والمطبوع على حدٍ سواء.
+                  'table'
                 ]}
                 style={{ direction: 'rtl', textAlign: 'right' }}
               />
