@@ -190,6 +190,19 @@ const RICH_TEXT_DISPLAY_CSS = `
    صفحة، وهذه قاعدة احتياطية إضافية فقط. */
 .ollc-rich-body .ollc-manual-page-break { display: none; }
 
+/* ---------- ارتفاع صندوق التحرير ---------- */
+/* كانت خاصية height مطبَّقة سابقاً على عنصر React-Quill الخارجي نفسه (الذي
+   يضمّ شريط الأدوات ومساحة التحرير معاً)، فيكافئ ذلك "350px لشريط الأدوات
+   ومساحة التحرير مجتمعين" بدل "350px لمساحة التحرير وحدها" — ولأن Quill
+   يمنح مساحة التحرير height:100% من ذلك العنصر الخارجي (350px إضافية بعد
+   شريط الأدوات)، كان إجمالي المحتوى الفعلي يتجاوز صندوق العنصر الخارجي
+   (350px) بارتفاع شريط الأدوات تقريباً، وبما أن الصندوق المحيط به من الخارج
+   محدود بـ overflow-hidden، كان شريط أدوات التنسيق (عريض/توسيط/...) يُقصّ
+   ويختفي فعلياً عن أنظار المستخدمة عند وجود محتوى طويل. الحل: تقييد الارتفاع
+   على مساحة التحرير (.ql-editor) نفسها فقط، تاركين شريط الأدوات بارتفاعه
+   الطبيعي فوقها دون أي قصّ. */
+.ollc-quill-editor-wrap .ql-editor { height: 350px; overflow-y: auto; }
+
 /* ---------- مؤشرات الصفحات داخل مربع التحرير نفسه ---------- */
 /* علامة الفاصل اليدوي: تظهر داخل صندوق التحرير فقط كشريط واضح قابل للتحديد
    والحذف كأي سطر عادي، ولا تظهر إطلاقاً في المعاينة أو المطبوع (مخفاة هناك
@@ -259,20 +272,72 @@ export interface OfficialLetterData {
   signTitle: string;
 }
 
+// تبني مستند الطباعة الآن من صفحات مُقسَّمة مسبقاً (pages) — وهي نفس القائمة
+// letterPages التي تحسبها خوارزمية الترقيم وتعرضها المعاينة الحية — بدل الاعتماد
+// على تقسيم المتصفح التلقائي لصفحة واحدة طويلة متدفقة عبر thead/tfoot متكرر.
+// هذا يضمن تطابق ما يُطبع فعلياً مع ما تراه المستخدمة في المعاينة تماماً
+// (نفس نقاط فصل الصفحات)، ويحل مشكلتين كانتا ناتجتين عن التقسيم التلقائي غير
+// المتحكَّم به: (أ) قص نهاية المذكرة أحياناً عند حسابات المتصفح لكسر الصفحة،
+// و(ب) بقاء كتلة التوقيع "معلّقة" في منتصف آخر صفحة بدل أن تكون مثبتة في
+// أسفلها — كل صفحة الآن مربّع محتوى بارتفاع A4 كامل بدقة (297mm)، وكتلة
+// التوقيع داخلها بهامش علوي auto ضمن عمود مرن (flex) فتُدفع تلقائياً لأسفل
+// الصفحة التي تظهر فيها مهما كانت المساحة المتبقية.
 function buildPrintDocument(
   data: OfficialLetterData,
+  pages: LetterPage[],
   headerStripImg: string,
   footerStripImg: string,
   signatureImg?: string | null,
   stampImg?: string | null
 ): string {
-  const { headerMm, footerMm, sideMm, pageWidthMm } = LETTERHEAD_LAYOUT;
+  const { headerMm, footerMm, sideMm, pageWidthMm, pageHeightMm } = LETTERHEAD_LAYOUT;
+  const contentHeightMm = pageHeightMm - headerMm - footerMm;
   const sigStampHtml = (signatureImg || stampImg)
     ? "<div class=\"sig-stamp-wrap\">" +
       (stampImg ? "<img class=\"stamp-img\" src=\"" + stampImg + "\" />" : "") +
       (signatureImg ? "<img class=\"signature-img\" src=\"" + signatureImg + "\" />" : "") +
       "</div>"
     : "";
+
+  const pagesToRender = pages.length > 0 ? pages : [{ showHeading: true, bodyHtml: data.bodyHtml, showSignature: true }];
+
+  const pagesHtml = pagesToRender
+    .map((page, idx) => {
+      const isLast = idx === pagesToRender.length - 1;
+      const headingHtml = page.showHeading
+        ? (data.recipient ? "<p class=\"recipient-line\">" + data.recipient + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;المحترمون</p>" : "") +
+          (data.subject ? "<p class=\"subject-line\">الموضوع: " + data.subject + "</p>" : "")
+        : "";
+      // مرجع داخلي خافت اللون للمكتب فقط — لا يظهر بارزاً أعلى المستند كما
+      // كان سابقاً (كان يظهر رقم مرجعي وتاريخ بخط عريض أعلى كل مذكرة، وهو ما
+      // كان يبدو غير لائق على مستند رسمي موجَّه لجهة خارجية كالمحكمة). يظهر
+      // الآن فقط بجانب التوقيع في أسفل الصفحة التي ينتهي بها الخطاب، بلون
+      // رمادي فاتح وحجم صغير جداً، ودون التاريخ (طلب المستخدمة الإبقاء على
+      // الرقم المرجعي فقط).
+      const signatureHtml = page.showSignature
+        ? "<div class=\"signature\">" +
+          sigStampHtml +
+          "<p class=\"sig-name\">" + data.signName + "</p>" +
+          "<p>" + data.signTitle + "</p>" +
+          "<p class=\"office-ref-mark\">مرجع داخلي: " + data.refNo + "</p>" +
+          "</div>"
+        : "";
+      return (
+        "  <div class=\"print-page\"" +
+        (isLast ? "" : " style=\"page-break-after: always; break-after: page;\"") +
+        ">\n" +
+        "    <img class=\"header-strip-img\" src=\"" + headerStripImg + "\" />\n" +
+        "    <div class=\"letter-content\">\n" +
+        "      " + headingHtml + "\n" +
+        "      <div class=\"letter-body\">" + page.bodyHtml + "</div>\n" +
+        "      " + signatureHtml + "\n" +
+        "    </div>\n" +
+        "    <img class=\"footer-strip-img\" src=\"" + footerStripImg + "\" />\n" +
+        "  </div>\n"
+      );
+    })
+    .join("");
+
   return "<!DOCTYPE html>\n" +
     "<html dir=\"rtl\" lang=\"ar\">\n" +
     "<head>\n" +
@@ -289,26 +354,32 @@ function buildPrintDocument(
     "    line-height: 2;\n" +
     "    color: #1a1a1a;\n" +
     "  }\n" +
-    "  table.page-frame { width: 100%; table-layout: fixed; border-collapse: collapse; }\n" +
-    "  thead td, tfoot td { padding: 0; }\n" +
-    "  .header-strip-img { display: block; width: " + pageWidthMm + "mm; height: " + headerMm + "mm; }\n" +
-    "  .footer-strip-img { display: block; width: " + pageWidthMm + "mm; height: " + footerMm + "mm; }\n" +
-    "  .letter-content { padding: 0 " + sideMm + "mm; text-align: justify; }\n" +
-    "  .letter-content p { margin-bottom: 4mm; }\n" +
-    "  .meta-row {\n" +
-    "    display: flex; justify-content: space-between;\n" +
-    "    margin-bottom: 6mm; font-size: 12pt; font-weight: 700;\n" +
+    "  .print-page {\n" +
+    "    width: " + pageWidthMm + "mm; height: " + pageHeightMm + "mm;\n" +
+    "    display: flex; flex-direction: column; overflow: hidden;\n" +
     "  }\n" +
+    "  .header-strip-img { display: block; width: " + pageWidthMm + "mm; height: " + headerMm + "mm; flex: none; }\n" +
+    "  .footer-strip-img { display: block; width: " + pageWidthMm + "mm; height: " + footerMm + "mm; flex: none; }\n" +
+    "  .letter-content {\n" +
+    "    flex: none; height: " + contentHeightMm + "mm; overflow: hidden;\n" +
+    "    padding: 0 " + sideMm + "mm; text-align: justify;\n" +
+    "    display: flex; flex-direction: column;\n" +
+    "  }\n" +
+    "  .letter-content p { margin-bottom: 4mm; }\n" +
     "  .recipient-line { font-weight: 700; margin-bottom: 4mm; }\n" +
     "  .subject-line {\n" +
     "    font-weight: 700; text-decoration: underline;\n" +
     "    text-underline-offset: 3pt; margin-bottom: 5mm;\n" +
     "  }\n" +
     "  .signature {\n" +
-    "    margin-top: 12mm; text-align: left;\n" +
-    "    padding-left: 8mm; page-break-inside: avoid;\n" +
+    "    margin-top: auto; text-align: left;\n" +
+    "    padding-top: 8mm; padding-left: 8mm;\n" +
     "  }\n" +
     "  .signature .sig-name { font-weight: 700; font-size: 13.5pt; }\n" +
+    "  .office-ref-mark {\n" +
+    "    color: #b0b6bd; font-size: 8pt; font-weight: 400;\n" +
+    "    text-decoration: none; margin-top: 3mm; margin-bottom: 0;\n" +
+    "  }\n" +
     "  .sig-stamp-wrap { position: relative; height: 26mm; width: 55mm; margin-bottom: 2mm; }\n" +
     "  .stamp-img { position: absolute; top: 0; right: 6mm; height: 26mm; width: 26mm; object-fit: contain; opacity: 0.9; transform: rotate(-6deg); }\n" +
     "  .signature-img { position: absolute; bottom: 1mm; left: 0; height: 16mm; object-fit: contain; }\n" +
@@ -346,43 +417,21 @@ function buildPrintDocument(
     "  .letter-body * { max-width: 100% !important; }\n" +
     "  .letter-body img { height: auto; display: block; margin: 3mm auto; }\n" +
     "  .letter-body table { width: 100% !important; table-layout: fixed; }\n" +
-    // فاصل الصفحة اليدوي: نُبقيه ضمن تدفّق الصفحة (بلا display:none، الذي قد
-    // يجعل بعض محركات الطباعة تتجاهل page-break المرتبط به) لكن بلا أي مساحة
-    // أو أثر مرئي، مع إجبار كسر صفحة فعلي عنده بصياغتي CSS القديمة والحديثة معاً.
-    "  ." + MANUAL_PAGE_BREAK_CLASS + " {\n" +
-    "    visibility: hidden; height: 0; margin: 0 !important; padding: 0 !important;\n" +
-    "    overflow: hidden; border: 0;\n" +
-    "    page-break-before: always; break-before: page;\n" +
-    "  }\n" +
+    // فاصل الصفحة اليدوي لا يظهر إطلاقاً هنا عملياً (خوارزمية الترقيم تستبعده
+    // مسبقاً من bodyHtml كل صفحة قبل وصوله لهذه الدالة) — هذه القاعدة قاعدة
+    // أمان احتياطية فقط في حال وصل رمزه لسبب ما.
+    "  ." + MANUAL_PAGE_BREAK_CLASS + " { display: none; }\n" +
     "</style>\n" +
     "</head>\n" +
     "<body>\n" +
-    "  <table class=\"page-frame\">\n" +
-    "    <thead><tr><td><img class=\"header-strip-img\" src=\"" + headerStripImg + "\" /></td></tr></thead>\n" +
-    "    <tbody><tr><td>\n" +
-    "      <div class=\"letter-content\">\n" +
-    "        <div class=\"meta-row\">\n" +
-    "          <span>الرقم المرجعي: " + data.refNo + "</span>\n" +
-    "          <span>التاريخ: " + data.date + "</span>\n" +
-    "        </div>\n" +
-    "        " + (data.recipient ? "<p class=\"recipient-line\">" + data.recipient + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;المحترمون</p>" : "") + "\n" +
-    "        " + (data.subject ? "<p class=\"subject-line\">الموضوع: " + data.subject + "</p>" : "") + "\n" +
-    "        <div class=\"letter-body\">" + data.bodyHtml + "</div>\n" +
-    "        <div class=\"signature\">\n" +
-    "          " + sigStampHtml + "\n" +
-    "          <p class=\"sig-name\">" + data.signName + "</p>\n" +
-    "          <p>" + data.signTitle + "</p>\n" +
-    "        </div>\n" +
-    "      </div>\n" +
-    "    </td></tr></tbody>\n" +
-    "    <tfoot><tr><td><img class=\"footer-strip-img\" src=\"" + footerStripImg + "\" /></td></tr></tfoot>\n" +
-    "  </table>\n" +
+    pagesHtml +
     "</body>\n" +
     "</html>";
 }
 
 export async function printOfficialLetter(
   data: OfficialLetterData,
+  pages: LetterPage[],
   headerImg?: string | null,
   footerImg?: string | null,
   signatureImg?: string | null,
@@ -402,7 +451,7 @@ export async function printOfficialLetter(
 
   const doc = iframe.contentDocument!;
   doc.open();
-  doc.write(buildPrintDocument(data, headerImg, footerImg, signatureImg, stampImg));
+  doc.write(buildPrintDocument(data, pages, headerImg, footerImg, signatureImg, stampImg));
   doc.close();
 
   // ننتظر اكتمال تحميل صور الترويسة/التذييل/التوقيع والختم فعلياً (بدل مهلة
@@ -580,6 +629,7 @@ export default function OfficialLetterComposer({
         signName,
         signTitle,
       },
+      letterPages,
       headerImg,
       footerImg,
       includeSigStamp ? signatureImg : null,
@@ -957,7 +1007,7 @@ export default function OfficialLetterComposer({
                 فعلياً وقت التشغيل بشكل كامل — قصور في ملفات .d.ts الخاصة
                 بالمكتبة فقط، ولا تأثير له على سلوك المحرر أو عملية البناء
                 الفعلية (لا يوجد تحقق أنواع صارم ضمن خط أنابيب النشر). */}
-            <div className="bg-white rounded-xl border border-slate-300 overflow-hidden" style={{ fontFamily: LETTER_FONT_STACK }}>
+            <div className="ollc-quill-editor-wrap bg-white rounded-xl border border-slate-300 overflow-hidden" style={{ fontFamily: LETTER_FONT_STACK }}>
               <ReactQuill
                 ref={quillRef}
                 theme="snow"
@@ -1003,7 +1053,7 @@ export default function OfficialLetterComposer({
                   // الصور القديمة أعلاه.
                   'pageBreak'
                 ]}
-                style={{ height: '350px', direction: 'rtl', textAlign: 'right' }}
+                style={{ direction: 'rtl', textAlign: 'right' }}
               />
             </div>
           </div>
@@ -1124,7 +1174,7 @@ export default function OfficialLetterComposer({
               )}
               <div
                 dir="rtl"
-                className="absolute overflow-hidden text-justify"
+                className="absolute overflow-hidden text-justify flex flex-col"
                 style={{
                   top: mmToPx(headerMm),
                   bottom: mmToPx(footerMm),
@@ -1138,10 +1188,6 @@ export default function OfficialLetterComposer({
               >
                 {letterPages[currentPageIndex]?.showHeading && (
                   <>
-                    <div className="mb-4 flex justify-between text-[14px] font-bold">
-                      <span>الرقم المرجعي: {refNo}</span>
-                      <span>التاريخ: {date}</span>
-                    </div>
                     {recipient && (
                       <p className="mb-3 font-bold">
                         {recipient}
@@ -1163,7 +1209,7 @@ export default function OfficialLetterComposer({
                   }}
                 />
                 {letterPages[currentPageIndex]?.showSignature && (
-                  <div className="mt-8 pl-6 text-left">
+                  <div className="mt-auto pt-8 pl-6 text-left">
                     {includeSigStamp && (
                       <div className="relative inline-block h-16 w-36 mb-1">
                         {stampImg && (
@@ -1176,6 +1222,7 @@ export default function OfficialLetterComposer({
                     )}
                     <p className="font-bold">{signName}</p>
                     <p>{signTitle}</p>
+                    <p className="text-[8px] text-slate-400">مرجع داخلي: {refNo}</p>
                   </div>
                 )}
               </div>
@@ -1199,10 +1246,6 @@ export default function OfficialLetterComposer({
             }}
           >
             <div ref={headingMeasureRef} className="text-justify">
-              <div className="mb-4 flex justify-between text-[14px] font-bold">
-                <span>الرقم المرجعي: {refNo}</span>
-                <span>التاريخ: {date}</span>
-              </div>
               {recipient && (
                 <p className="mb-3 font-bold">
                   {recipient}
@@ -1234,6 +1277,7 @@ export default function OfficialLetterComposer({
               )}
               <p className="font-bold">{signName}</p>
               <p>{signTitle}</p>
+              <p className="text-[8px] text-slate-400">مرجع داخلي: {refNo}</p>
             </div>
           </div>
         </div>
