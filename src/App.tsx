@@ -2968,6 +2968,13 @@ const invColor = (s: string) => ({
   "متأخرة": "bg-red-100 text-red-700",
 }[s] || "bg-slate-100 text-slate-600");
 
+// حالة الفاتورة الفعلية للعرض: تحسب "متأخرة" تلقائياً لأي فاتورة "مرسلة" تجاوزت تاريخ استحقاقها ولم تُسدَّد بعد،
+// بدل الاعتماد على حقل status المخزّن مباشرة الذي لا يوجد أي مسار بالنظام يضبطه على "متأخرة" فعلياً
+const effectiveInvoiceStatus = (inv: { status: string; due?: string }): string => {
+  if (inv.status === "مرسلة" && inv.due && inv.due < todayISO()) return "متأخرة";
+  return inv.status;
+};
+
 // ---------- مكونات عامة ----------
 const Badge = ({ className, children }: { className?: string; children: React.ReactNode }) => (
   <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${className}`}>{children}</span>
@@ -7964,7 +7971,7 @@ export default function App() {
   const stats = useMemo(() => {
     const active = cases.filter((c) => !["مغلقة", "صدر الحكم"].includes(c.status)).length;
     const weekHearings = hearings.filter((h) => !h.done && daysUntil(h.date) >= 0 && daysUntil(h.date) <= 7).length;
-    const dueAmount = invoices.filter((i) => ["مرسلة", "متأخرة"].includes(i.status)).reduce((s, i) => s + i.amount * (1 + VAT_RATE), 0);
+    const dueAmount = invoices.filter((i) => ["مرسلة", "متأخرة"].includes(effectiveInvoiceStatus(i))).reduce((s, i) => s + i.amount * (1 + VAT_RATE), 0);
     const expiringPoa = poas.filter((p) => daysUntil(p.expiry) <= 60 && daysUntil(p.expiry) >= 0).length;
     return { active, weekHearings, dueAmount, expiringPoa };
   }, [cases, hearings, invoices, poas]);
@@ -8027,15 +8034,16 @@ export default function App() {
 
     invoices.forEach((i) => {
       const val = i.amount * (1 + VAT_RATE);
+      const st = effectiveInvoiceStatus(i);
       totalInvoiced += val;
-      if (countMap[i.status] !== undefined) {
-        countMap[i.status] += 1;
-        amountMap[i.status] += val;
+      if (countMap[st] !== undefined) {
+        countMap[st] += 1;
+        amountMap[st] += val;
       }
-      if (i.status === "مدفوعة") paidAmount += val;
-      else if (i.status === "مرسلة") sentDueAmount += val;
-      else if (i.status === "متأخرة") overdueAmount += val;
-      else if (i.status === "مسودة") draftAmount += val;
+      if (st === "مدفوعة") paidAmount += val;
+      else if (st === "مرسلة") sentDueAmount += val;
+      else if (st === "متأخرة") overdueAmount += val;
+      else if (st === "مسودة") draftAmount += val;
     });
 
     const collectionRate = totalInvoiced > 0 ? Math.round((paidAmount / totalInvoiced) * 100) : 0;
@@ -8235,6 +8243,16 @@ export default function App() {
     if (!form.clientId || !form.amount) return;
     setInvoices([...invoices, { id: nextId(invoices), number: `INV-2026-${String(60 + nextId(invoices)).padStart(3, "0")}`, clientId: +form.clientId, caseId: form.caseId ? +form.caseId : null, date: todayISO(), due: form.due || addDays(30), amount: +form.amount, status: "مسودة", desc: form.desc || "" }]);
     setModal(null);
+  };
+
+  // تحديث حالة الفاتورة يدوياً (مسودة → مرسلة → مدفوعة) - بدون هذا كانت كل فاتورة تُنشأ تبقى "مسودة" للأبد
+  // لأن ما كان فيه أي آلية بالنظام لتغيير حالتها، مما يعطّل كل إحصائيات وتنبيهات "الفواتير المتأخرة"
+  const setInvoiceStatus = (invId: number, newStatus: string) => {
+    if (!checkPerm("manageInvoices", "تحديث حالة الفاتورة")) return;
+    const inv = invoices.find((i) => i.id === invId);
+    if (!inv) return;
+    setInvoices((prev) => prev.map((i) => (i.id === invId ? { ...i, status: newStatus } : i)));
+    logAuditAction("STATUS_CHANGE", "الفواتير", `فاتورة: ${inv.number}`, `تحديث حالة الفاتورة ${inv.number} للموكل ${clientName(inv.clientId)} من "${inv.status}" إلى "${newStatus}"`, inv.id);
   };
 
   const saveEmployee = async () => {
@@ -9203,7 +9221,7 @@ export default function App() {
   }, [tasks]);
 
   const upcoming = hearings.filter((h) => !h.done && daysUntil(h.date) >= 0).sort((a, b) => a.date.localeCompare(b.date));
-  const notifCount = stats.expiringPoa + invoices.filter((i) => i.status === "متأخرة").length + upcoming.filter((h) => daysUntil(h.date) <= 2).length + kycDue + overdueTasks;
+  const notifCount = stats.expiringPoa + invoices.filter((i) => effectiveInvoiceStatus(i) === "متأخرة").length + upcoming.filter((h) => daysUntil(h.date) <= 2).length + kycDue + overdueTasks;
 
   const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients]);
 
@@ -14225,6 +14243,7 @@ export default function App() {
                               {invoices.map((inv) => {
                                 const vat = inv.amount * VAT_RATE;
                                 const total = inv.amount + vat;
+                                const evs = effectiveInvoiceStatus(inv);
                                 return (
                                   <tr key={inv.id} className="hover:bg-amber-50/50">
                                     <td className="px-4 py-3 font-mono font-semibold">{inv.number}</td>
@@ -14232,9 +14251,19 @@ export default function App() {
                                     <td className="px-4 py-3">{fmtAED(inv.amount)}</td>
                                     <td className="px-4 py-3 text-slate-500">{fmtAED(vat)}</td>
                                     <td className="px-4 py-3 font-bold text-slate-900">{fmtAED(total)}</td>
-                                    <td className="px-4 py-3"><Badge className={invColor(inv.status)}>{inv.status}</Badge></td>
+                                    <td className="px-4 py-3"><Badge className={invColor(evs)}>{evs}</Badge></td>
                                     <td className="px-4 py-3 text-center">
                                       <div className="flex items-center justify-center gap-1">
+                                        {inv.status === "مسودة" && (
+                                          <button onClick={() => setInvoiceStatus(inv.id, "مرسلة")} className="p-1.5 text-sky-600 hover:text-sky-800 rounded-lg hover:bg-sky-50 flex items-center gap-1 text-xs font-semibold" title="تحديد الفاتورة كمُرسلة للموكل">
+                                            <SendHorizontal size={14} /> تحديد كمُرسلة
+                                          </button>
+                                        )}
+                                        {(inv.status === "مرسلة" || evs === "متأخرة") && (
+                                          <button onClick={() => setInvoiceStatus(inv.id, "مدفوعة")} className="p-1.5 text-emerald-700 hover:text-emerald-900 rounded-lg hover:bg-emerald-50 flex items-center gap-1 text-xs font-bold" title="تحديد الفاتورة كمُسدَّدة بالكامل">
+                                            <CheckCircle2 size={14} /> تحديد كمسددة
+                                          </button>
+                                        )}
                                         <button onClick={() => openNotificationComposer("تذكير فاتورة", inv)} className="p-1.5 text-emerald-600 hover:text-emerald-800 rounded-lg hover:bg-emerald-50 flex items-center gap-1 text-xs font-semibold" title="تذكير الموكل بسداد الفاتورة">
                                           <Send size={14} /> تذكير بالواتساب/الإيميل
                                         </button>
@@ -14246,7 +14275,7 @@ export default function App() {
                                             requestDelete({
                                               section: "الفواتير والمطالبات الضريبية",
                                               title: `الفاتورة رقم: ${inv.number}`,
-                                              details: `الموكل: ${clientName(inv.clientId)} | المبلغ الإجمالي: ${fmtAED(total)} | الحالة: ${inv.status}`,
+                                              details: `الموكل: ${clientName(inv.clientId)} | المبلغ الإجمالي: ${fmtAED(total)} | الحالة: ${evs}`,
                                               permKey: "deleteInvoices",
                                               actionName: "حذف الفاتورة الضريبية",
                                               onConfirm: () => {
