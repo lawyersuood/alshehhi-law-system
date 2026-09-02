@@ -80,11 +80,11 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
 
   // Payment Gateway State
   const [paymentMethod, setPaymentMethod] = useState<"apple_pay" | "credit_card" | "bank_transfer">("credit_card");
-  const [cardNumber, setCardNumber] = useState("4532 8820 9912 3481");
-  const [cardExpiry, setCardExpiry] = useState("09/28");
-  const [cardCvv, setCardCvv] = useState("482");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cardExpiry, setCardExpiry] = useState("");
+  const [cardCvv, setCardCvv] = useState("");
   const [bankRef, setBankRef] = useState("");
-  
+
   // Terms Modal & Checkbox
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
@@ -131,7 +131,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
         return {
           slot,
           available: false,
-          reason: diffInMinutes < 0 
+          reason: diffInMinutes < 0
             ? (lang === "ar" ? "وقت مضى" : "Past Time")
             : (lang === "ar" ? "أقل من 60 دقيقة" : "< 60 mins away")
         };
@@ -181,6 +181,34 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
       jurisdiction: court,
       keyQuestions: [q1, q2, q3]
     };
+  };
+
+  // ---------- تنسيق حقول بطاقة الدفع أثناء الكتابة (مظهر أكثر احترافية وسلامة الإدخال) ----------
+  const detectCardBrand = (digits: string): "visa" | "mastercard" | "unknown" => {
+    if (digits.startsWith("4")) return "visa";
+    if (/^5[1-5]/.test(digits) || /^2[2-7]/.test(digits)) return "mastercard";
+    return "unknown";
+  };
+
+  const cardBrand = useMemo(() => detectCardBrand(cardNumber.replace(/\s/g, "")), [cardNumber]);
+
+  const handleCardNumberChange = (raw: string) => {
+    const digits = raw.replace(/\D/g, "").slice(0, 16);
+    const grouped = digits.replace(/(.{4})/g, "$1 ").trim();
+    setCardNumber(grouped);
+  };
+
+  const handleCardExpiryChange = (raw: string) => {
+    const digits = raw.replace(/\D/g, "").slice(0, 4);
+    if (digits.length <= 2) {
+      setCardExpiry(digits);
+    } else {
+      setCardExpiry(`${digits.slice(0, 2)}/${digits.slice(2)}`);
+    }
+  };
+
+  const handleCardCvvChange = (raw: string) => {
+    setCardCvv(raw.replace(/\D/g, "").slice(0, 4));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -280,7 +308,22 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
 
   return (
     <div className={`min-h-screen bg-[#f8faf9] text-slate-800 font-sans pb-24 ${lang === "ar" ? "dir-rtl" : "dir-ltr"}`}>
-      
+      {/* Themed native date input: recolor the browser's calendar icon + consistent focus ring */}
+      <style>{`
+        input[type="date"].themed-date-input {
+          color-scheme: light;
+        }
+        input[type="date"].themed-date-input::-webkit-calendar-picker-indicator {
+          filter: invert(13%) sepia(22%) saturate(1800%) hue-rotate(140deg) brightness(90%);
+          cursor: pointer;
+          opacity: 0.85;
+          transition: opacity 0.15s ease;
+        }
+        input[type="date"].themed-date-input::-webkit-calendar-picker-indicator:hover {
+          opacity: 1;
+        }
+      `}</style>
+
       {/* Top Bar for Admin System return */}
       {onNavigateToAdmin && (
         <div className="bg-[#072422] text-[#e5c388] border-b border-[#124d49] px-4 py-2.5 text-xs font-bold flex items-center justify-between shadow-inner sticky top-0 z-50">
@@ -334,7 +377,6 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
 
       {/* Container */}
       <main className="max-w-6xl mx-auto px-4 pt-8 space-y-10">
-        
         {/* Hero Section */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-gradient-to-br from-[#072422] via-[#0b3835] to-[#041716] p-6 md:p-10 rounded-3xl border border-[#124d49] shadow-xl relative overflow-hidden text-white">
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
@@ -489,7 +531,6 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
 
         {/* Main Booking Container */}
         <div id="booking-form" className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
           {/* Main Form (8 Cols) */}
           <div className="lg:col-span-8 bg-white rounded-3xl shadow-xl border border-slate-200 text-slate-900 overflow-hidden">
             {!bookingSuccess ? (
@@ -510,7 +551,6 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-8">
-                  
                   {/* Step 1: Duration */}
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -611,7 +651,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                             setSelectedDate(e.target.value);
                             setSelectedTimeSlot("");
                           }}
-                          className="w-full p-3 rounded-xl border border-slate-300 text-xs font-bold focus:ring-2 focus:ring-[#092322] focus:outline-none"
+                          className="themed-date-input w-full p-3 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 bg-white transition focus:ring-2 focus:ring-[#092322]/30 focus:border-[#092322] focus:outline-none hover:border-slate-400"
                         />
                       </div>
 
@@ -670,7 +710,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
                           placeholder={lang === "ar" ? "اسم الموكل الكريـم" : "Client full name"}
-                          className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:ring-1 focus:ring-[#092322]"
+                          className="w-full p-3 rounded-xl border border-slate-300 text-xs transition focus:ring-2 focus:ring-[#092322]/30 focus:border-[#092322] focus:outline-none hover:border-slate-400"
                         />
                       </div>
                       <div>
@@ -684,7 +724,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                           onChange={(e) => setWhatsapp(e.target.value)}
                           placeholder="+971 50 000 0000"
                           dir="ltr"
-                          className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:ring-1 focus:ring-[#092322]"
+                          className="w-full p-3 rounded-xl border border-slate-300 text-xs transition focus:ring-2 focus:ring-[#092322]/30 focus:border-[#092322] focus:outline-none hover:border-slate-400"
                         />
                       </div>
                       <div>
@@ -698,7 +738,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="client@example.com"
                           dir="ltr"
-                          className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:ring-1 focus:ring-[#092322]"
+                          className="w-full p-3 rounded-xl border border-slate-300 text-xs transition focus:ring-2 focus:ring-[#092322]/30 focus:border-[#092322] focus:outline-none hover:border-slate-400"
                         />
                       </div>
                     </div>
@@ -717,7 +757,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                             ? "اكتب تفاصيل الموضوع أو الأسئلة التي تود مناقشتها خلال الجلسة..."
                             : "Describe your situation and questions to be addressed during the session..."
                         }
-                        className="w-full p-3 rounded-xl border border-slate-300 text-xs focus:ring-1 focus:ring-[#092322]"
+                        className="w-full p-3 rounded-xl border border-slate-300 text-xs transition focus:ring-2 focus:ring-[#092322]/30 focus:border-[#092322] focus:outline-none hover:border-slate-400"
                       />
                     </div>
 
@@ -833,14 +873,27 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                           <label className="block text-[11px] font-bold text-slate-600 mb-1">
                             {lang === "ar" ? "رقم البطاقة" : "Card Number"}
                           </label>
-                          <input
-                            type="text"
-                            value={cardNumber}
-                            onChange={(e) => setCardNumber(e.target.value)}
-                            placeholder="4532 •••• •••• 8839"
-                            dir="ltr"
-                            className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold"
-                          />
+                          <div className="relative">
+                            <input
+                              type="text"
+                              inputMode="numeric"
+                              autoComplete="cc-number"
+                              value={cardNumber}
+                              onChange={(e) => handleCardNumberChange(e.target.value)}
+                              placeholder="0000 0000 0000 0000"
+                              dir="ltr"
+                              className="w-full p-2.5 pl-16 rounded-xl border border-slate-300 text-xs font-mono font-bold transition focus:ring-2 focus:ring-[#092322]/30 focus:border-[#092322] focus:outline-none hover:border-slate-400"
+                            />
+                            {cardBrand !== "unknown" && (
+                              <span
+                                className={`absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] font-black px-1.5 py-1 rounded-md ${
+                                  cardBrand === "visa" ? "bg-blue-50 text-blue-700 border border-blue-200" : "bg-orange-50 text-orange-700 border border-orange-200"
+                                }`}
+                              >
+                                {cardBrand === "visa" ? "VISA" : "MASTERCARD"}
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
@@ -849,11 +902,13 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                             </label>
                             <input
                               type="text"
+                              inputMode="numeric"
+                              autoComplete="cc-exp"
                               value={cardExpiry}
-                              onChange={(e) => setCardExpiry(e.target.value)}
-                              placeholder="08/28"
+                              onChange={(e) => handleCardExpiryChange(e.target.value)}
+                              placeholder="MM/YY"
                               dir="ltr"
-                              className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold"
+                              className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold transition focus:ring-2 focus:ring-[#092322]/30 focus:border-[#092322] focus:outline-none hover:border-slate-400"
                             />
                           </div>
                           <div>
@@ -862,12 +917,14 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                             </label>
                             <input
                               type="password"
+                              inputMode="numeric"
+                              autoComplete="cc-csc"
                               maxLength={4}
                               value={cardCvv}
-                              onChange={(e) => setCardCvv(e.target.value)}
-                              placeholder="382"
+                              onChange={(e) => handleCardCvvChange(e.target.value)}
+                              placeholder="•••"
                               dir="ltr"
-                              className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold"
+                              className="w-full p-2.5 rounded-xl border border-slate-300 text-xs font-mono font-bold transition focus:ring-2 focus:ring-[#092322]/30 focus:border-[#092322] focus:outline-none hover:border-slate-400"
                             />
                           </div>
                         </div>
@@ -877,7 +934,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                     {paymentMethod === "apple_pay" && (
                       <div className="p-4 rounded-2xl bg-white border border-emerald-200 text-slate-800 shadow-sm flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-[#0D382B] text-white rounded-xl flex items-center justify-center font-black text-lg"></div>
+                          <div className="w-10 h-10 bg-[#0D382B] text-white rounded-xl flex items-center justify-center shrink-0">
+                            <Smartphone size={20} />
+                          </div>
                           <div>
                             <p className="text-xs font-bold text-[#0D382B]">Apple Pay / Google Pay Ready</p>
                             <p className="text-[10px] text-slate-500">سيتم تفعيل الدفع بلمسة واحدة عند النقر على زر التأكيد</p>
@@ -894,7 +953,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                           <span className="font-mono text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Emirates NBD</span>
                         </div>
                         <p className="text-slate-700 font-mono text-[11px]">
-                          <b>IBAN:</b> AE25 0350 0000 1234 5678 901
+                          <b>IBAN:</b> {settings.mbankIban || "AE25 0350 0000 1234 5678 901"}
                         </p>
                         <p className="text-slate-500 text-[10px]">
                           يرجى إدخال رقم مرجع الحوالة البنكية أو إرفاق إيصال التحويل أدناه:
@@ -904,7 +963,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                           value={bankRef}
                           onChange={(e) => setBankRef(e.target.value)}
                           placeholder="رقم مرجع الحوالة (مثال: TRF-992140)"
-                          className="w-full p-2.5 rounded-xl border border-amber-300 text-xs bg-white font-mono"
+                          className="w-full p-2.5 rounded-xl border border-amber-300 text-xs bg-white font-mono transition focus:ring-2 focus:ring-amber-400/40 focus:border-amber-500 focus:outline-none"
                         />
                       </div>
                     )}
