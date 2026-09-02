@@ -10454,7 +10454,7 @@ export default function App() {
                     canViewFinancials ? { label: "مبالغ مستحقة (شامل الضريبة 5%)", value: fmtAED(stats.dueAmount), icon: TrendingUp, tone: "bg-emerald-100 text-emerald-600" } : null,
                     { label: "وكالات تنتهي خلال 60 يومًا", value: stats.expiringPoa, icon: AlertTriangle, tone: "bg-red-100 text-red-600" },
                   ].filter(Boolean).map((k: any) => (
-                    <div key={k.label} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div key={k.label} className="app-card p-4">
                       <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${k.tone}`}><k.icon size={20} /></div>
                       <p className="text-xl font-bold">{k.value}</p>
                       <p className="mt-0.5 text-xs text-slate-500">{k.label}</p>
@@ -10465,7 +10465,7 @@ export default function App() {
                 {/* الرسوم البيانية التفاعلية للوحة التحكم */}
                 <div className={`grid gap-4.5 ${canViewFinancials ? "grid-cols-1 md:grid-cols-2 xl:grid-cols-3" : "grid-cols-1 lg:grid-cols-2"}`}>
                   {/* 1. توزيع القضايا حسب النوع */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+                  <div className="app-card p-5 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-3">
                         <div className="flex items-center gap-2">
@@ -10585,7 +10585,7 @@ export default function App() {
 
                   {/* 2. حالة الفواتير والتحصيل المالي (تظهر للمصرح لهم مالياً) */}
                   {canViewFinancials && (
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+                    <div className="app-card p-5 flex flex-col justify-between">
                       <div>
                         <div className="flex items-center justify-between gap-2 mb-3">
                           <div className="flex items-center gap-2">
@@ -10684,7 +10684,7 @@ export default function App() {
                   )}
 
                   {/* 3. نسبة إنجاز وتوزيع المهام */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col justify-between">
+                  <div className="app-card p-5 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-3">
                         <div className="flex items-center gap-2">
@@ -10855,7 +10855,7 @@ export default function App() {
 
                 <div className="grid gap-4 lg:grid-cols-2">
                   {/* الجلسات القادمة */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="app-card p-5">
                     <div className="mb-4 flex items-center justify-between">
                       <h3 className="font-bold">الجلسات القادمة</h3>
                       <button onClick={() => setTab("hearings")} className="flex items-center gap-1 text-sm font-medium text-amber-600 hover:underline">عرض الكل <ChevronLeft size={14} /></button>
@@ -10878,7 +10878,7 @@ export default function App() {
                     </div>
                   </div>
                   {/* المهام المعلقة */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="app-card p-5">
                     <div className="mb-4 flex items-center justify-between">
                       <h3 className="font-bold">مهام معلقة</h3>
                       <button onClick={() => setTab("tasks")} className="flex items-center gap-1 text-sm font-medium text-amber-600 hover:underline">عرض الكل <ChevronLeft size={14} /></button>
@@ -11633,7 +11633,7 @@ export default function App() {
                 </div>
 
                 {/* جدول القضايا مع شريط العداد عند الطلب ودليل الألوان */}
-                <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="overflow-x-auto custom-scrollbar app-card">
                   {/* شريط العداد الإحصائي ودليل الألوان العلوي للجدول */}
                   <div className="px-4 py-3 bg-stone-50 border-b border-slate-200 text-xs space-y-2.5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
@@ -11783,7 +11783,7 @@ export default function App() {
                 <button onClick={() => setCaseView(null)} className="flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-800">
                   <ChevronLeft size={16} className="rotate-180" /> عودة إلى القضايا
                 </button>
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="app-card p-6">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <div className="flex flex-wrap items-center gap-2.5">
@@ -11902,7 +11902,7 @@ export default function App() {
 
                 {/* كروت الإحصائيات السريعة والتوزيع */}
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs flex items-center justify-between">
+                  <div className="app-card p-4 flex items-center justify-between">
                     <div>
                       <p className="text-xs font-semibold text-slate-500">إجمالي المسجلين</p>
                       <p className="text-2xl font-black text-slate-900">{clients.length}</p>
@@ -12034,7 +12034,7 @@ export default function App() {
                         const IconComp = isGov ? Landmark : isCompany ? Building2 : isIndividual ? User : Globe;
 
                         return (
-                          <div key={c.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs flex flex-col justify-between hover:shadow-md transition">
+                          <div key={c.id} className="app-card p-5 flex flex-col justify-between hover:shadow-md transition">
                             <div>
                               {/* شريط الكارت العلوي */}
                               <div className="flex items-start justify-between gap-2">
@@ -12070,8 +12070,9 @@ export default function App() {
                               {/* التفاصيل المعروضة */}
                               <div className="mt-4 space-y-1.5 text-xs text-slate-600 border-t border-slate-100 pt-3">
                                 {c.idNo && <p className="font-mono text-[11px] text-slate-500">رقم الهوية / الرخصة: <b className="text-slate-800">{c.idNo}</b></p>}
-                                <p className="flex items-center gap-2"><Phone size={13} className="text-slate-400" /> {c.phone || "—"}</p>
-                                <p className="flex items-center gap-2"><Mail size={13} className="text-slate-400" /> {c.email || "—"}</p>
+                                {c.phone && <p className="flex items-center gap-2"><Phone size={13} className="text-slate-400" /> {c.phone}</p>}
+                                {c.email && <p className="flex items-center gap-2"><Mail size={13} className="text-slate-400" /> {c.email}</p>}
+                                {!c.phone && !c.email && <p className="text-[11px] text-slate-400 italic">لا توجد بيانات تواصل مسجلة</p>}
                                 <p className="flex items-center gap-2"><MapPin size={13} className="text-slate-400" /> {c.emirate} {c.address ? `— ${c.address}` : ""}</p>
                               </div>
                             </div>
@@ -12286,7 +12287,7 @@ export default function App() {
 
                     {/* بطاقات الإحصائيات الأربع */}
                     <div className="grid gap-4 sm:grid-cols-4">
-                      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                      <div className="app-card p-4">
                         <p className="text-xs text-slate-500">إجمالي أحكام الطعون</p>
                         <p className="text-2xl font-bold text-slate-900">{deadlines.length}</p>
                       </div>
@@ -12531,7 +12532,7 @@ export default function App() {
                     </div>
 
                     {/* كارت أدوات وتصفية رول الجلسات */}
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                    <div className="app-card p-5 space-y-4">
                       <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                         <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
                           <Filter size={16} className="text-amber-600" /> تصفية وتحديد تاريخ الرول المطلوبة
@@ -12645,7 +12646,7 @@ export default function App() {
                         .map((h) => {
                           const cs = cases.find((c) => c.id === h.caseId);
                           return (
-                            <div key={h.id} className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm hover:border-amber-300 transition">
+                            <div key={h.id} className="flex flex-wrap items-center justify-between gap-4 app-card p-4 hover:border-amber-300 transition">
                               <div className="flex items-center gap-4">
                                 <div className="flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-xl bg-slate-900 text-amber-400 font-mono">
                                   <span className="text-base font-bold">{new Date(h.date).getDate()}</span>
@@ -12795,7 +12796,7 @@ export default function App() {
                     </div>
                   ) : (
                     tasks.map((t) => (
-                      <div key={t.id} className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                      <div key={t.id} className="flex items-center justify-between app-card p-4">
                         <div className="flex items-center gap-3">
                           <button onClick={() => {
                             if (!checkPerm("manageTasks", "تحديث المهمة")) return;
@@ -13752,7 +13753,7 @@ export default function App() {
                           return (
                             <>
                               {/* هيدر الشات */}
-                              <div className="border border-slate-200 bg-white p-4 rounded-2xl shadow-xs flex flex-wrap items-center justify-between gap-3 mb-4">
+                              <div className="app-card p-4 flex flex-wrap items-center justify-between gap-3 mb-4">
                                 <div className="flex items-center gap-3">
                                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs text-white ${activeChat.avatarBg || 'bg-emerald-600'}`}>
                                     {activeChat.name.charAt(0)}
@@ -13948,7 +13949,7 @@ export default function App() {
 
                         {/* إحصائيات الدفعات */}
                         <div className="grid gap-4 sm:grid-cols-3">
-                          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                          <div className="app-card p-4">
                             <p className="text-xs text-slate-500">إجمالي التحصيلات المقبوضة</p>
                             <p className="text-2xl font-bold text-slate-900 font-mono">
                               {fmtAED(payments.reduce((sum, p) => sum + p.amount, 0))}
@@ -13969,7 +13970,7 @@ export default function App() {
                         </div>
 
                         {/* جدول الدفعات */}
-                        <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div className="overflow-x-auto custom-scrollbar app-card">
                           <table className="w-full min-w-[700px] text-sm">
                             <thead className="bg-stone-50 text-right text-xs text-slate-500">
                               <tr>
@@ -14061,7 +14062,7 @@ export default function App() {
                         </div>
 
                         <div className="grid gap-4 sm:grid-cols-3">
-                          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                          <div className="app-card p-4">
                             <p className="text-xs text-slate-500">إجمالي قيم اتفاقيات الأتعاب</p>
                             <p className="text-2xl font-bold text-slate-900 font-mono">
                               {fmtAED(feeAgreements.reduce((sum, a) => sum + a.totalAmount, 0))}
@@ -14089,7 +14090,7 @@ export default function App() {
                             const client = clients.find(c => c.id === agr.clientId);
 
                             return (
-                              <div key={agr.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4 hover:border-amber-300 transition">
+                              <div key={agr.id} className="app-card p-5 space-y-4 hover:border-amber-300 transition">
                                 <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 pb-3">
                                   <div>
                                     <div className="flex flex-wrap items-center gap-3">
@@ -14204,7 +14205,7 @@ export default function App() {
                             <button onClick={() => openModalWithCheck("invoice", "manageInvoices")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> إصدار فاتورة ضريبية</button>
                           </div>
                         </div>
-                        <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div className="overflow-x-auto custom-scrollbar app-card">
                           <table className="w-full min-w-[700px] text-sm">
                             <thead className="bg-stone-50 text-right text-xs text-slate-500">
                               <tr>
@@ -14283,7 +14284,7 @@ export default function App() {
                         </div>
 
                         <div className="grid gap-4 sm:grid-cols-3">
-                          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                          <div className="app-card p-4">
                             <p className="text-xs text-slate-500">إجمالي الساعات المسجلة</p>
                             <p className="text-2xl font-bold text-slate-900">{timeLogs.reduce((acc, t) => acc + t.hours, 0)} ساعة</p>
                           </div>
@@ -14306,7 +14307,7 @@ export default function App() {
                             const cs = cases.find((c) => c.id === log.caseId);
                             const val = log.hours * log.hourlyRate;
                             return (
-                              <div key={log.id} className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                              <div key={log.id} className="flex flex-wrap items-center justify-between gap-4 app-card p-4">
                                 <div className="space-y-1">
                                   <div className="flex items-center gap-2">
                                     <span className="font-bold text-slate-900 text-sm">{cs ? cs.number : "—"}</span>
@@ -14360,7 +14361,7 @@ export default function App() {
                             const withdrawals = cTx.filter((t) => t.type === "صرف أمانة").reduce((acc, t) => acc + t.amount, 0);
                             const net = deposits - withdrawals;
                             return (
-                              <div key={c.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-2">
+                              <div key={c.id} className="app-card p-4 space-y-2">
                                 <div className="flex items-center justify-between">
                                   <h3 className="font-bold text-slate-900 text-sm">{c.name}</h3>
                                   <Badge className={net > 0 ? "bg-emerald-100 text-emerald-800" : "bg-stone-100 text-slate-600"}>رصيد الأمانة</Badge>
@@ -14376,7 +14377,7 @@ export default function App() {
                         </div>
 
                         {/* جدول سجل الأمانات */}
-                        <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200 bg-white shadow-sm">
+                        <div className="overflow-x-auto custom-scrollbar app-card">
                           <table className="w-full min-w-[650px] text-sm">
                             <thead className="bg-stone-50 text-right text-xs text-slate-500">
                               <tr>
@@ -14442,7 +14443,7 @@ export default function App() {
                             const netProfit = totalAgreedFee - totalExpensesPaid;
 
                             return (
-                              <div key={cs.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-3">
+                              <div key={cs.id} className="app-card p-5 space-y-3">
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                   <div>
                                     <h3 className="font-bold text-slate-900 text-base">{cs.number} — {clientName(cs.clientId)}</h3>
@@ -14507,7 +14508,7 @@ export default function App() {
 
     <div className="grid gap-6 lg:grid-cols-3">
       {/* ───── نموذج إدخال البيانات المتغيرة ───── */}
-      <div className="lg:col-span-2 space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="lg:col-span-2 space-y-4 app-card p-5">
         <h3 className="font-bold text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-2">
           <Edit2 size={16} className="text-amber-600" /> البيانات المتغيرة للاتفاقية
         </h3>
@@ -14658,7 +14659,7 @@ export default function App() {
 
       {/* ───── أرشيف الاتفاقيات المنشأة ───── */}
       <div className="space-y-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="app-card p-4">
           <h3 className="font-bold text-slate-900 text-sm mb-1 flex items-center gap-2">
             <FolderOpen size={16} className="text-amber-600" /> أرشيف الاتفاقيات المنشأة ({officeAgreements.length})
           </h3>
@@ -14776,7 +14777,7 @@ export default function App() {
                       return (
                         <div className="grid gap-6 lg:grid-cols-3">
                           {/* اختيار القالب والقضية */}
-                          <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                          <div className="space-y-4 app-card p-5">
                             <Field label="اختر قالب المستند">
                               <select
                                 value={selectedTemplateId}
@@ -14866,7 +14867,7 @@ export default function App() {
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                       {docs.map((d) => (
-                        <div key={d.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex items-start justify-between gap-3">
+                        <div key={d.id} className="app-card p-4 flex items-start justify-between gap-3">
                           <div className="flex items-start gap-3 min-w-0 flex-1">
                             <div className="p-3 bg-sky-50 text-sky-600 rounded-xl"><FolderOpen size={20} /></div>
                             <div className="min-w-0 flex-1">
@@ -14925,7 +14926,7 @@ export default function App() {
 
                 <div className="grid gap-6 md:grid-cols-2">
                   {/* الورق الرسمي الكامل — صورة واحدة لكامل صفحة A4 (تُشتق منها الترويسة والتذييل تلقائياً) */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4 md:col-span-2">
+                  <div className="app-card p-6 space-y-4 md:col-span-2">
                     <h3 className="font-bold text-slate-900 flex items-center gap-2">
                       الورق الرسمي الكامل (صفحة A4 واحدة)
                     </h3>
@@ -14985,7 +14986,7 @@ export default function App() {
                   </div>
 
                   {/* التوقيع Signature */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+                  <div className="app-card p-6 space-y-4">
                     <h3 className="font-bold text-slate-900 flex items-center gap-2">
                       صورة التوقيع (Signature)
                     </h3>
@@ -15036,7 +15037,7 @@ export default function App() {
                   </div>
 
                   {/* الختم Stamp */}
-                  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+                  <div className="app-card p-6 space-y-4">
                     <h3 className="font-bold text-slate-900 flex items-center gap-2">
                       صورة الختم الرسمي (Stamp)
                     </h3>
@@ -15088,7 +15089,7 @@ export default function App() {
                 </div>
 
                 {/* سجل تتبع استخدام الهوية الرسمية */}
-                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div className="app-card overflow-hidden">
                   <div className="flex items-center gap-2 border-b border-slate-100 px-5 py-3">
                     <History size={16} className="text-amber-600" />
                     <h3 className="font-bold text-slate-800 text-sm">سجل تتبع الاستخدام — من ومتى استخدم الهوية الرسمية</h3>
@@ -15133,7 +15134,7 @@ export default function App() {
                   {poas.map((p) => {
                     const daysLeft = daysUntil(p.expiry);
                     return (
-                      <div key={p.id} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-2">
+                      <div key={p.id} className="app-card p-5 space-y-2">
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div>
                             <h3 className="font-bold text-slate-900">{p.number} — {clientName(p.clientId)}</h3>
@@ -15221,7 +15222,7 @@ export default function App() {
                       </p>
                     )}
                     {colleagues.map((c) => (
-                      <div key={c.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-2.5">
+                      <div key={c.id} className="app-card p-4 space-y-2.5">
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <h3 className="font-bold text-slate-900 text-sm">{c.name}</h3>
@@ -15256,7 +15257,7 @@ export default function App() {
                       const colleague = colleagues.find((c) => c.id === d.colleagueId);
                       const linkedCase = d.caseId ? cases.find((c) => c.id === d.caseId) : undefined;
                       return (
-                        <div key={d.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                        <div key={d.id} className="app-card p-4 flex flex-wrap items-center justify-between gap-3">
                           <div>
                             <div className="flex items-center gap-2">
                               <span className="font-mono text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">{d.refNo}</span>
@@ -15386,7 +15387,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div className="overflow-x-auto app-card">
                       {(() => {
                         const filteredWatchlist = kycWatchlist.filter((item) => {
                           if (kycTypeFilter !== "الكل" && item.type !== kycTypeFilter) return false;
@@ -15508,7 +15509,7 @@ export default function App() {
 
                     {/* بطاقات إحصائية سريعة لـ KYC */}
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                      <div className="app-card p-4">
                         <p className="text-xs text-slate-500">إجمالي الموكلين المفحوصين</p>
                         <p className="text-2xl font-bold text-slate-900">{kyc.length}</p>
                       </div>
@@ -15530,7 +15531,7 @@ export default function App() {
                     {kyc.length === 0 ? (
                       <EmptyState icon={UserCheck} text="لا توجد سجلات KYC مضافة حتى الآن" />
                     ) : (
-                      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                      <div className="app-card overflow-hidden">
                         <div className="overflow-x-auto custom-scrollbar">
                           <table className="w-full min-w-[750px] text-sm">
                             <thead className="bg-stone-50 text-right text-xs text-slate-500 border-b border-slate-100">
@@ -15676,7 +15677,7 @@ export default function App() {
                   <>
                     {/* بطاقات الإحصائيات السريعة */}
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                      <div className="app-card p-5">
                         <p className="text-xs font-medium text-slate-500">إجمالي الأنشطة الموثقة</p>
                         <p className="mt-2 text-2xl font-black text-slate-900">{auditLogs.length}</p>
                         <p className="mt-1 text-[11px] text-slate-400">سجل غير قابل للتعديل مع التوقيت ومعرف ID</p>
@@ -15707,7 +15708,7 @@ export default function App() {
                     </div>
 
                     {/* أشرطة التصفية والبحث */}
-                    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                    <div className="app-card p-5 space-y-4">
                       <div className="flex flex-wrap items-center justify-between gap-3">
                         <div className="flex flex-1 items-center gap-2 min-w-[280px]">
                           <div className="relative flex-1">
@@ -15785,7 +15786,7 @@ export default function App() {
                     </div>
 
                     {/* جدول السجلات */}
-                    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div className="overflow-hidden app-card">
                       <div className="overflow-x-auto custom-scrollbar">
                         <table className="w-full min-w-[950px] text-right text-xs">
                           <thead className="border-b border-slate-200 bg-slate-900 text-amber-400 font-bold">
@@ -15937,7 +15938,7 @@ export default function App() {
                 </div>
 
                 {/* شريط البحث والتصفية */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                <div className="app-card p-5 space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-1 items-center gap-2 min-w-[280px]">
                       <div className="relative flex-1">
@@ -16003,7 +16004,7 @@ export default function App() {
                   {filteredPrecedents.map((prec) => (
                     <div
                       key={prec.id}
-                      className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition flex flex-col justify-between"
+                      className="app-card p-5 hover:shadow-md transition flex flex-col justify-between"
                     >
                       <div>
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
@@ -16099,7 +16100,7 @@ export default function App() {
                 </div>
 
                 {filteredPrecedents.length === 0 && (
-                  <div className="rounded-2xl border border-slate-200 bg-white py-12 text-center text-slate-400">
+                  <div className="app-card py-12 text-center text-slate-400">
                     <BookOpen size={40} className="mx-auto mb-2 text-slate-300" />
                     <p className="text-sm font-semibold">لا توجد مبادئ قضائية مطابقة للبحث والتصفية</p>
                   </div>
@@ -16132,7 +16133,7 @@ export default function App() {
                   )}
                 </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                <div className="app-card p-5 space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-1 items-center gap-2 min-w-[280px]">
                       <div className="relative flex-1">
@@ -16163,7 +16164,7 @@ export default function App() {
                   {filteredPolicies.map((policy) => {
                     const isOpen = selectedPolicy?.id === policy.id;
                     return (
-                      <div key={policy.id} className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                      <div key={policy.id} className="app-card overflow-hidden">
                         <button
                           onClick={() => setSelectedPolicy(isOpen ? null : policy)}
                           className="w-full flex items-center justify-between gap-3 p-5 text-right hover:bg-slate-50 transition"
@@ -16211,7 +16212,7 @@ export default function App() {
                 </div>
 
                 {filteredPolicies.length === 0 && (
-                  <div className="rounded-2xl border border-slate-200 bg-white py-12 text-center text-slate-400">
+                  <div className="app-card py-12 text-center text-slate-400">
                     <ScrollText size={40} className="mx-auto mb-2 text-slate-300" />
                     <p className="text-sm font-semibold">
                       {policies.length === 0 ? "لم تُضَف أي سياسة داخلية بعد" : "لا توجد سياسات مطابقة للبحث والتصفية"}
@@ -16255,7 +16256,7 @@ export default function App() {
                 </div>
 
                 {/* بطاقة التحكم بتفعيل أو إلغاء المساعد الذكي (AI Assistant Toggle) */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs flex flex-wrap items-center justify-between gap-4">
+                <div className="app-card p-5 flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 font-bold shrink-0">
                       <Sparkles size={20} />
@@ -16400,7 +16401,7 @@ export default function App() {
                 </div>
 
                 {/* جدول فريق العمل */}
-                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                <div className="app-card overflow-hidden">
                   <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
                     <h3 className="font-bold text-slate-900 text-base">سجل أعضاء فريق العمل بالمكتب</h3>
                     <span className="text-xs text-slate-500 font-medium">إجمالي: {users.length} مستخدمين</span>
@@ -16528,7 +16529,7 @@ export default function App() {
                 </div>
 
                 {/* مصفوفة الصلاحيات التفصيلية التفاعلية للأقسام الـ 18 المعتمدة */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+                <div className="app-card p-6 space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
@@ -17014,7 +17015,7 @@ export default function App() {
 
                 {/* إحصائيات سريعة للدليل */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex items-center justify-between">
+                  <div className="app-card p-4 flex items-center justify-between">
                     <div>
                       <p className="text-xs text-slate-500">إجمالي جهات الاتصال</p>
                       <p className="text-2xl font-bold text-slate-900">{courtContacts.length}</p>
@@ -17023,7 +17024,7 @@ export default function App() {
                       <Landmark size={20} />
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex items-center justify-between">
+                  <div className="app-card p-4 flex items-center justify-between">
                     <div>
                       <p className="text-xs text-slate-500">الإمارات ومناطق الدولة</p>
                       <p className="text-2xl font-bold text-slate-900">
@@ -17034,7 +17035,7 @@ export default function App() {
                       <MapPin size={20} />
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex items-center justify-between">
+                  <div className="app-card p-4 flex items-center justify-between">
                     <div>
                       <p className="text-xs text-slate-500">خطوط وتمديدات مباشرة</p>
                       <p className="text-2xl font-bold text-slate-900">
@@ -17045,7 +17046,7 @@ export default function App() {
                       <PhoneCall size={20} />
                     </div>
                   </div>
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm flex items-center justify-between">
+                  <div className="app-card p-4 flex items-center justify-between">
                     <div>
                       <p className="text-xs text-slate-500">عناوين البريد المعتمدة</p>
                       <p className="text-2xl font-bold text-slate-900">
@@ -17059,7 +17060,7 @@ export default function App() {
                 </div>
 
                 {/* ================= صندوق التصنيف الهرمي الثلاثي والبحث الذكي المطور ================= */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                <div className="app-card p-5 space-y-4">
                   
                   {/* شريط البحث الذكي المطور */}
                   <div className="relative">
@@ -17605,7 +17606,7 @@ export default function App() {
 
                 {/* Stat Cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs flex items-center justify-between">
+                  <div className="app-card p-4 flex items-center justify-between">
                     <div>
                       <p className="text-xs text-slate-500">إجمالي الكادر الوظيفي</p>
                       <p className="text-2xl font-bold text-slate-900 mt-1">{employees.length} موظف</p>
@@ -17618,7 +17619,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs flex items-center justify-between">
+                  <div className="app-card p-4 flex items-center justify-between">
                     <div>
                       <p className="text-xs text-slate-500">إجمالي مسير الرواتب الشهري</p>
                       <p className="text-2xl font-bold text-slate-900 mt-1">
@@ -17631,7 +17632,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs flex items-center justify-between">
+                  <div className="app-card p-4 flex items-center justify-between">
                     <div>
                       <p className="text-xs text-slate-500">طلبات الإجازات المعلقة</p>
                       <p className="text-2xl font-bold text-slate-900 mt-1">
@@ -17644,7 +17645,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs flex items-center justify-between">
+                  <div className="app-card p-4 flex items-center justify-between">
                     <div>
                       <p className="text-xs text-slate-500">مطالبات المصروفات المعلقة</p>
                       <p className="text-2xl font-bold text-slate-900 mt-1">
@@ -17735,7 +17736,7 @@ export default function App() {
                       </span>
                     </div>
 
-                    <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200 bg-white shadow-xs">
+                    <div className="overflow-x-auto custom-scrollbar app-card">
                       <table className="w-full min-w-[750px] text-right text-xs">
                         <thead className="bg-slate-900 text-white font-bold">
                           <tr>
@@ -17854,7 +17855,7 @@ export default function App() {
                 {/* SUB TAB 2: LEAVE REQUESTS */}
                 {hrSubTab === "leaves" && (
                   <div className="space-y-4">
-                    <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200 bg-white shadow-xs">
+                    <div className="overflow-x-auto custom-scrollbar app-card">
                       <table className="w-full min-w-[700px] text-right text-xs">
                         <thead className="bg-slate-900 text-white font-bold">
                           <tr>
@@ -17926,7 +17927,7 @@ export default function App() {
                 {/* SUB TAB 3: EMPLOYEE EXPENSES */}
                 {hrSubTab === "expenses" && (
                   <div className="space-y-4">
-                    <div className="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-200 bg-white shadow-xs">
+                    <div className="overflow-x-auto custom-scrollbar app-card">
                       <table className="w-full min-w-[650px] text-right text-xs">
                         <thead className="bg-slate-900 text-white font-bold">
                           <tr>
@@ -19182,7 +19183,7 @@ export default function App() {
             ) : (
               <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
                 {selectedDeadlineLogs.autoAlertLogs.map((log) => (
-                  <div key={log.id} className="p-3 rounded-xl border border-slate-200 bg-white text-xs space-y-1 shadow-xs">
+                  <div key={log.id} className="app-card p-3 text-xs space-y-1">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-900 flex items-center gap-1.5">
                         {log.type === "3_days" ? "🚨 تنبيه حرج (3 أيام)" : log.type === "7_days" ? "⚠️ تنبيه استباقي (7 أيام)" : "📱 تنبيه يدوي"}
