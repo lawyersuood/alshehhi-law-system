@@ -5,6 +5,7 @@ import {
   HelpCircle, MapPin, Phone, Star, Scale, ShieldCheck, Award, ChevronDown, ChevronUp,
   Sparkles, Building2, UserCheck, Receipt, Smartphone
 } from "lucide-react";
+import { FirmEmblemSVG } from "./Logo";
 
 export interface BookingRecord {
   id: string;
@@ -345,9 +346,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
       <header className="bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#c59b27] via-[#d4af37] to-[#8c6b12] text-slate-950 flex items-center justify-center font-black text-2xl shadow-md shrink-0 border border-amber-300/50">
-              س
-            </div>
+            <FirmEmblemSVG className="w-11 h-11 shrink-0" />
             <div>
               <h1 className="text-sm md:text-base font-black text-[#072422] leading-tight flex items-center gap-2">
                 <span>{lang === "ar" ? "مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية" : "Suood Ahmed Al Shehhi Advocates & Legal Consultants"}</span>
