@@ -595,6 +595,20 @@ export interface EmployeeExpense {
   createdAt: string;
 }
 
+// سجل سري بالإجراءات التأديبية الخاصة بموظف معين (تحقيق داخلي / إنذار / قرار) — مقتصر على الحساب الرئيسي فقط
+export interface EmployeeDisciplinaryAction {
+  id: number;
+  employeeId: string;
+  employeeName: string;
+  type: "تحقيق داخلي" | "إنذار شفهي" | "إنذار كتابي" | "قرار تأديبي" | "قرار إداري" | "أخرى";
+  actionDate: string;
+  subject: string;
+  details: string;
+  attachmentRef?: string;
+  createdAt: string;
+  createdBy?: string;
+}
+
 // البنود الثابتة للاتفاقية المعتمدة (1-8) — لا تتغير من عميل لآخر
 const OFFICE_AGREEMENT_CLAUSES: { ar: string; en: string }[] = [
   {
@@ -4725,12 +4739,14 @@ export default function App() {
   const [employees, setEmployees] = useState<Employee[]>(() => loadStorage("firm_employees", seedEmployees));
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(() => loadStorage("firm_leave_requests", seedLeaveRequests));
   const [employeeExpenses, setEmployeeExpenses] = useState<EmployeeExpense[]>(() => loadStorage("firm_employee_expenses", seedEmployeeExpenses));
-  const [hrSubTab, setHrSubTab] = useState<"directory" | "leaves" | "expenses">("directory");
+  const [disciplinaryActions, setDisciplinaryActions] = useState<EmployeeDisciplinaryAction[]>(() => loadStorage("firm_employee_disciplinary_actions", []));
+  const [hrSubTab, setHrSubTab] = useState<"directory" | "leaves" | "expenses" | "disciplinary">("directory");
   const [employeeSearchQuery, setEmployeeSearchQuery] = useState("");
 
   useEffect(() => { saveStorage("firm_employees", employees); }, [employees]);
   useEffect(() => { saveStorage("firm_leave_requests", leaveRequests); }, [leaveRequests]);
   useEffect(() => { saveStorage("firm_employee_expenses", employeeExpenses); }, [employeeExpenses]);
+  useEffect(() => { saveStorage("firm_employee_disciplinary_actions", disciplinaryActions); }, [disciplinaryActions]);
 
   // ---------- سجل التدقيق والأنشطة (Audit Log Filters & Access) ----------
   const [auditSearchTerm, setAuditSearchTerm] = useState<string>("");
@@ -6240,6 +6256,7 @@ export default function App() {
         employees: employees.length,
         leaveRequests: leaveRequests.length,
         employeeExpenses: employeeExpenses.length,
+        disciplinaryActions: disciplinaryActions.length,
         auditLogs: auditLogs.length,
         precedents: precedents.length,
         policies: policies.length,
@@ -6262,6 +6279,7 @@ export default function App() {
         employees,
         leaveRequests,
         employeeExpenses,
+        disciplinaryActions,
         auditLogs,
         precedents,
         policies,
@@ -6356,6 +6374,7 @@ export default function App() {
       if (Array.isArray(db.employees)) { setEmployees(db.employees); saveStorage("firm_employees", db.employees); }
       if (Array.isArray(db.leaveRequests)) { setLeaveRequests(db.leaveRequests); saveStorage("firm_leave_requests", db.leaveRequests); }
       if (Array.isArray(db.employeeExpenses)) { setEmployeeExpenses(db.employeeExpenses); saveStorage("firm_employee_expenses", db.employeeExpenses); }
+      if (Array.isArray(db.disciplinaryActions)) { setDisciplinaryActions(db.disciplinaryActions); saveStorage("firm_employee_disciplinary_actions", db.disciplinaryActions); }
       if (Array.isArray(db.auditLogs)) { setAuditLogs(db.auditLogs); saveStorage("firm_audit_logs", db.auditLogs); }
       if (Array.isArray(db.precedents)) { setPrecedents(db.precedents); saveStorage("firm_legal_precedents", db.precedents); }
       if (Array.isArray(db.policies)) { setPolicies(db.policies); saveStorage("firm_internal_policies", db.policies); }
@@ -8277,6 +8296,53 @@ export default function App() {
         } catch (e) {
           console.log("Supabase delete employee note:", e);
         }
+      },
+    });
+  };
+
+  // ---------- سجل الإجراءات التأديبية السري (تحقيق / إنذار / قرار) — إضافة وحذف مقتصرة على الحساب الرئيسي فقط ----------
+  const saveDisciplinaryAction = () => {
+    if (!isSuperAdmin) return;
+    if (!form.employeeId || !form.subject) return;
+    const emp = employees.find(e => e.id === form.employeeId);
+    const newAction: EmployeeDisciplinaryAction = {
+      id: nextId(disciplinaryActions),
+      employeeId: form.employeeId,
+      employeeName: emp?.fullName || "موظف",
+      type: form.type || "تحقيق داخلي",
+      actionDate: form.actionDate || todayISO(),
+      subject: form.subject,
+      details: form.details || "",
+      attachmentRef: form.attachmentRef || "",
+      createdAt: todayISO(),
+      createdBy: currentUser?.name,
+    };
+    setDisciplinaryActions((prev) => [newAction, ...prev]);
+    logAuditAction(
+      "CREATE",
+      "الإجراءات التأديبية السرية",
+      `${newAction.type}: ${newAction.employeeName}`,
+      `تسجيل إجراء (${newAction.type}) بحق الموظف ${newAction.employeeName} — الموضوع: ${newAction.subject}`,
+      newAction.id,
+      "مؤكد"
+    );
+    setModal(null);
+  };
+
+  const deleteDisciplinaryAction = (actionId: number) => {
+    if (!isSuperAdmin) return;
+    const target = disciplinaryActions.find((a) => a.id === actionId);
+    if (!target) return;
+    requestDelete({
+      section: "الإجراءات التأديبية السرية",
+      title: `${target.type}: ${target.employeeName}`,
+      details: `الموضوع: ${target.subject}`,
+      targetId: target.id,
+      permKey: "deleteEmployees",
+      actionName: "حذف إجراء تأديبي سري",
+      onConfirm: () => {
+        logAuditAction("DELETE", "الإجراءات التأديبية السرية", `${target.type}: ${target.employeeName}`, `حذف سجل إجراء (${target.type}) الخاص بالموظف ${target.employeeName} — الموضوع: ${target.subject}`, target.id, "مؤكد");
+        setDisciplinaryActions((prev) => prev.filter((a) => a.id !== actionId));
       },
     });
   };
@@ -17517,6 +17583,14 @@ export default function App() {
                     >
                       <DollarSign size={16} className="text-emerald-600" /> مطالبة مصروفات
                     </button>
+                    {isSuperAdmin && (
+                      <button
+                        onClick={() => { setForm({ actionDate: todayISO(), type: "تحقيق داخلي" }); setModal("employee-disciplinary"); }}
+                        className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-bold text-red-700 hover:bg-red-100 transition shadow-2xs"
+                      >
+                        <ShieldAlert size={16} /> تسجيل إجراء تأديبي
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -17615,6 +17689,22 @@ export default function App() {
                       </span>
                     )}
                   </button>
+
+                  {isSuperAdmin && (
+                    <button
+                      onClick={() => setHrSubTab("disciplinary")}
+                      className={`px-4 py-3 text-xs font-bold border-b-2 transition flex items-center gap-2 ${
+                        hrSubTab === "disciplinary" ? "border-red-600 text-red-700 bg-red-50/50 rounded-t-xl" : "border-transparent text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      <ShieldAlert size={16} /> الإجراءات التأديبية (سري)
+                      {disciplinaryActions.length > 0 && (
+                        <span className="bg-red-600 text-white font-bold px-2 py-0.5 rounded-full text-[10px]">
+                          {disciplinaryActions.length}
+                        </span>
+                      )}
+                    </button>
+                  )}
                 </div>
 
                 {/* SUB TAB 1: DIRECTORY & PAYROLL */}
@@ -17898,6 +17988,57 @@ export default function App() {
                         </tbody>
                       </table>
                     </div>
+                  </div>
+                )}
+
+                {/* SUB TAB 4: CONFIDENTIAL DISCIPLINARY ACTIONS (SUPER ADMIN ONLY) */}
+                {hrSubTab === "disciplinary" && isSuperAdmin && (
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl p-3 text-[11px] text-red-800">
+                      <ShieldAlert size={16} className="shrink-0 mt-0.5" />
+                      <p>هذا السجل سري ومقتصر على الحساب الرئيسي فقط، ولا يظهر لبقية الكادر أو في أي قسم عام آخر بالنظام.</p>
+                    </div>
+
+                    {disciplinaryActions.length === 0 ? (
+                      <div className="text-center py-14 text-slate-400 bg-white rounded-2xl border border-slate-200">
+                        <ShieldAlert size={40} className="mx-auto mb-2 text-slate-300" />
+                        لا توجد أي إجراءات تأديبية مسجّلة حالياً
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {[...disciplinaryActions]
+                          .sort((a, b) => (b.actionDate || "").localeCompare(a.actionDate || ""))
+                          .map((act) => (
+                            <div key={act.id} className="bg-white rounded-2xl border border-slate-200 shadow-xs p-4">
+                              <div className="flex flex-wrap items-center justify-between gap-2">
+                                <div className="flex items-center gap-2">
+                                  <span className="bg-red-100 text-red-800 font-bold px-2.5 py-1 rounded-full text-[11px] border border-red-200">
+                                    {act.type}
+                                  </span>
+                                  <span className="font-bold text-slate-900 text-sm">{act.employeeName}</span>
+                                </div>
+                                <span className="text-[11px] text-slate-400">تاريخ الإجراء: {fmtDate(act.actionDate)}</span>
+                              </div>
+                              <p className="font-bold text-slate-800 text-sm mt-2">{act.subject}</p>
+                              {act.details && (
+                                <p className="text-xs text-slate-600 mt-1 whitespace-pre-wrap">{act.details}</p>
+                              )}
+                              {act.attachmentRef && (
+                                <p className="text-[11px] text-slate-500 mt-1.5">📎 {act.attachmentRef}</p>
+                              )}
+                              <div className="flex items-center justify-between mt-3 pt-2 border-t border-slate-100">
+                                <span className="text-[10px] text-slate-400">بواسطة: {act.createdBy || "—"} | {fmtDate(act.createdAt)}</span>
+                                <button
+                                  onClick={() => deleteDisciplinaryAction(act.id)}
+                                  className="flex items-center gap-1 text-[11px] font-bold text-red-600 hover:bg-red-50 px-2 py-1 rounded-lg"
+                                >
+                                  <Trash2 size={13} /> حذف
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -19626,6 +19767,58 @@ export default function App() {
 
             <button onClick={saveEmployeeExpense} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-800 transition">
               تقديم مطالبة المصروفات
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {modal === "employee-disciplinary" && isSuperAdmin && (
+        <Modal title="تسجيل إجراء تأديبي سري" onClose={() => setModal(null)}>
+          <div className="space-y-4 text-sm">
+            <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl p-2.5 text-[11px] text-red-800">
+              <ShieldAlert size={15} className="shrink-0 mt-0.5" />
+              <p>هذا السجل سري ويظهر فقط للحساب الرئيسي ضمن ملف الموظف المعني، ولا يطّلع عليه بقية الكادر.</p>
+            </div>
+
+            <Field label="الموظف المعني">
+              <select onChange={f("employeeId")} defaultValue={form.employeeId || ""} className={inputCls}>
+                <option value="">اختر الموظف...</option>
+                {employees.map((e) => (
+                  <option key={e.id} value={e.id}>{e.fullName} ({e.jobTitle})</option>
+                ))}
+              </select>
+            </Field>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="نوع الإجراء">
+                <select onChange={f("type")} defaultValue={form.type || "تحقيق داخلي"} className={inputCls}>
+                  <option value="تحقيق داخلي">تحقيق داخلي</option>
+                  <option value="إنذار شفهي">إنذار شفهي</option>
+                  <option value="إنذار كتابي">إنذار كتابي</option>
+                  <option value="قرار تأديبي">قرار تأديبي</option>
+                  <option value="قرار إداري">قرار إداري</option>
+                  <option value="أخرى">أخرى</option>
+                </select>
+              </Field>
+              <Field label="تاريخ الإجراء">
+                <input type="date" onChange={f("actionDate")} defaultValue={form.actionDate || todayISO()} className={inputCls} />
+              </Field>
+            </div>
+
+            <Field label="موضوع الإجراء">
+              <input onChange={f("subject")} placeholder="مثال: إنذار كتابي للتأخر المتكرر عن الدوام" className={inputCls} />
+            </Field>
+
+            <Field label="التفاصيل الكاملة">
+              <textarea onChange={f("details")} rows={5} placeholder="اكتبي تفاصيل التحقيق أو الإنذار أو القرار هنا بالتفصيل..." className={inputCls} />
+            </Field>
+
+            <Field label="رابط أو رقم المستند المرفق (اختياري)">
+              <input onChange={f("attachmentRef")} placeholder="رابط نسخة ضوئية من الإنذار/القرار، أو رقم مرجعي..." className={inputCls} />
+            </Field>
+
+            <button onClick={saveDisciplinaryAction} className="w-full rounded-xl bg-red-700 py-3 font-bold text-white hover:bg-red-800 transition">
+              حفظ الإجراء التأديبي
             </button>
           </div>
         </Modal>
