@@ -1,15 +1,43 @@
+/* خط عربي احترافي موحّد لكل النظام - يستبدل الخط الافتراضي العام للمتصفح
+   Cairo مصمم خصيصاً لواجهات لوحات التحكم العربية، ويدعم كل الأوزان المستخدمة بالنظام (400 إلى 900)
+   ملاحظة: يجب أن يسبق هذا الاستيراد "@import tailwindcss" مباشرة، لأن قاعدة @import
+   يجب أن تكون قبل أي قاعدة CSS أخرى وإلا يتجاهلها المتصفح بصمت */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
+
+/* ===== المرحلة الأولى من نظام التصميم الموحّد =====
+   ألوان الهوية البصرية الرسمية للمكتب كمتغيرات تصميم مركزية (Design Tokens)
+   بدل تكرار نفس قيم الألوان يدوياً (#0c4a47 و #b89b6a) في كل مكان بالكود،
+   هذا يوفر أساساً موحّداً تُبنى عليه بقية مراحل التحسين */
+@theme {
+  --font-sans: 'Cairo', ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --color-brand-teal: #0c4a47;
+  --color-brand-teal-dark: #072422;
+  --color-brand-gold: #b89b6a;
+  --color-brand-gold-light: #d4af37;
+
+  /* نظام ألوان دلالي موحّد للحالات - بدل استخدام ألوان عشوائية مختلفة لنفس المعنى في أماكن متفرقة */
+  --color-status-success: #059669;
+  --color-status-danger: #dc2626;
+  --color-status-warning: #d97706;
+  --color-status-neutral: #64748b;
+}
 
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
   }
-  
+
   body {
     overflow-x: hidden;
     touch-action: manipulation;
+    font-family: var(--font-sans);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   /* Prevent zoom-on-focus on iOS devices for input/select/textarea elements */
@@ -17,6 +45,57 @@
     input, select, textarea {
       font-size: 16px !important;
     }
+  }
+}
+
+/* ===== مكوّنات تصميم جاهزة للاستخدام التدريجي في المراحل القادمة =====
+   بطاقة موحّدة بظل خفيف ومسافات مريحة، بدل الحدود الرفيعة المسطحة الحالية */
+@layer components {
+  .app-card {
+    background-color: #ffffff;
+    border: 1px solid rgb(226 232 240 / 0.8);
+    border-radius: 1rem;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 16px -4px rgb(15 23 42 / 0.06);
+  }
+
+  .app-card:hover {
+    box-shadow: 0 2px 4px rgb(15 23 42 / 0.06), 0 8px 24px -6px rgb(15 23 42 / 0.10);
+  }
+
+  /* شارات حالة موحّدة الدلالة اللونية */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-weight: 700;
+    font-size: 0.6875rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    border-width: 1px;
+  }
+
+  .status-badge-success {
+    color: var(--color-status-success);
+    background-color: rgb(5 150 105 / 0.08);
+    border-color: rgb(5 150 105 / 0.25);
+  }
+
+  .status-badge-danger {
+    color: var(--color-status-danger);
+    background-color: rgb(220 38 38 / 0.08);
+    border-color: rgb(220 38 38 / 0.25);
+  }
+
+  .status-badge-warning {
+    color: var(--color-status-warning);
+    background-color: rgb(217 119 6 / 0.08);
+    border-color: rgb(217 119 6 / 0.25);
+  }
+
+  .status-badge-neutral {
+    color: var(--color-status-neutral);
+    background-color: rgb(100 116 139 / 0.08);
+    border-color: rgb(100 116 139 / 0.25);
   }
 }
 
