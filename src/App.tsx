@@ -4836,10 +4836,19 @@ export default function App() {
 
   const handleDeletePolicy = (policy: InternalPolicy) => {
     if (!isSuperAdmin) return;
-    if (!window.confirm(`هل أنت متأكدة من حذف سياسة "${policy.title}" نهائياً؟`)) return;
-    setPolicies((prev) => prev.filter((p) => p.id !== policy.id));
-    logAuditAction("DELETE", "السياسات الداخلية", policy.title, "حذف سياسة داخلية نهائياً من الأرشيف", policy.id, "مؤكد");
-    if (selectedPolicy?.id === policy.id) setSelectedPolicy(null);
+    requestDelete({
+      section: "السياسات الداخلية",
+      title: `سياسة: ${policy.title}`,
+      details: `التصنيف: ${policy.category}`,
+      targetId: policy.id,
+      permKey: "policies",
+      actionName: "حذف سياسة داخلية",
+      onConfirm: () => {
+        setPolicies((prev) => prev.filter((p) => p.id !== policy.id));
+        logAuditAction("DELETE", "السياسات الداخلية", policy.title, "حذف سياسة داخلية نهائياً من الأرشيف", policy.id, "مؤكد");
+        if (selectedPolicy?.id === policy.id) setSelectedPolicy(null);
+      },
+    });
   };
 
   const [policyForm, setPolicyForm] = useState<{ title: string; category: string; content: string; effectiveDate: string }>({
