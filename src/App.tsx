@@ -14103,6 +14103,17 @@ export default function App() {
                           </div>
                         </div>
 
+                        {feeAgreements.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-slate-300 bg-white space-y-3">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                              <FileSignature size={24} />
+                            </div>
+                            <p className="text-sm font-bold text-slate-800">لا توجد اتفاقيات أتعاب مسجلة حالياً</p>
+                            <p className="text-xs text-slate-500 max-w-sm">
+                              يمكنك تسجيل اتفاقية أتعاب جديدة لأحد الموكلين لمتابعة قيمتها والمحصّل والمتبقي منها.
+                            </p>
+                          </div>
+                        ) : (
                         <div className="space-y-4">
                           {feeAgreements.map((agr) => {
                             const paid = getPaidForAgreement(agr.id);
@@ -14207,6 +14218,7 @@ export default function App() {
                             );
                           })}
                         </div>
+                        )}
                       </div>
                     )}
                     {invoiceSubTab === "invoices" && (
@@ -14899,39 +14911,57 @@ export default function App() {
                       </div>
                       <button onClick={() => openModalWithCheck("doc", "manageDocs")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> رفع مستند</button>
                     </div>
-                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                      {docs.map((d) => (
-                        <div key={d.id} className="app-card p-4 flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3 min-w-0 flex-1">
-                            <div className="p-3 bg-sky-50 text-sky-600 rounded-xl"><FolderOpen size={20} /></div>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-semibold text-sm truncate">{d.name}</p>
-                              <p className="text-xs text-slate-500 mt-1">{d.type} • {fmtDate(d.date)}</p>
-                              <p className="text-[11px] text-slate-400 mt-0.5">بواسطة: {d.by}</p>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => {
-                              requestDelete({
-                                section: "الأرشيف والمستندات",
-                                title: `المستند: ${d.name}`,
-                                details: `النوع: ${d.type} | التاريخ: ${fmtDate(d.date)} | المضاف بواسطة: ${d.by}`,
-                                permKey: "deleteDocs",
-                                actionName: "حذف المستند من الأرشيف",
-                                onConfirm: () => {
-                                  logAuditAction("DELETE", "الأرشيف", `مستند: ${d.name}`, `حذف المستند ${d.name} من الأرشيف`, d.id);
-                                  setDocs((prev) => prev.filter((x) => x.id !== d.id));
-                                },
-                              });
-                            }}
-                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition cursor-pointer shrink-0"
-                            title="حذف المستند"
-                          >
-                            <Trash2 size={15} />
-                          </button>
+                    {docs.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-slate-300 bg-white space-y-3">
+                        <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center">
+                          <FolderOpen size={24} />
                         </div>
-                      ))}
-                    </div>
+                        <p className="text-sm font-bold text-slate-800">لا توجد مستندات مرفوعة بالأرشيف حالياً</p>
+                        <p className="text-xs text-slate-500 max-w-sm">
+                          يمكنك رفع صحائف الدعوى، المذكرات، وعقود الخبرة هنا لأرشفتها وربطها بالقضايا.
+                        </p>
+                        <button
+                          onClick={() => openModalWithCheck("doc", "manageDocs")}
+                          className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-700 transition cursor-pointer"
+                        >
+                          <Plus size={15} /> رفع مستند جديد
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        {docs.map((d) => (
+                          <div key={d.id} className="app-card p-4 flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3 min-w-0 flex-1">
+                              <div className="p-3 bg-sky-50 text-sky-600 rounded-xl"><FolderOpen size={20} /></div>
+                              <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-sm truncate">{d.name}</p>
+                                <p className="text-xs text-slate-500 mt-1">{d.type} • {fmtDate(d.date)}</p>
+                                <p className="text-[11px] text-slate-400 mt-0.5">بواسطة: {d.by}</p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => {
+                                requestDelete({
+                                  section: "الأرشيف والمستندات",
+                                  title: `المستند: ${d.name}`,
+                                  details: `النوع: ${d.type} | التاريخ: ${fmtDate(d.date)} | المضاف بواسطة: ${d.by}`,
+                                  permKey: "deleteDocs",
+                                  actionName: "حذف المستند من الأرشيف",
+                                  onConfirm: () => {
+                                    logAuditAction("DELETE", "الأرشيف", `مستند: ${d.name}`, `حذف المستند ${d.name} من الأرشيف`, d.id);
+                                    setDocs((prev) => prev.filter((x) => x.id !== d.id));
+                                  },
+                                });
+                              }}
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition cursor-pointer shrink-0"
+                              title="حذف المستند"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </>
                 ) : null}
               </div>
@@ -15164,6 +15194,17 @@ export default function App() {
                     <button onClick={() => openModalWithCheck("poa", "manageDocs")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> إضافة وكالة</button>
                   </div>
                 </div>
+                {poas.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-slate-300 bg-white space-y-3">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                      <ScrollText size={24} />
+                    </div>
+                    <p className="text-sm font-bold text-slate-800">لا توجد وكالات قانونية مسجلة حالياً</p>
+                    <p className="text-xs text-slate-500 max-w-sm">
+                      يمكنك إضافة وكالة كاتب عدل جديدة يدوياً، أو رفع ملف PDF للوكالة وسحب بياناتها آلياً.
+                    </p>
+                  </div>
+                ) : (
                 <div className="space-y-3">
                   {poas.map((p) => {
                     const daysLeft = daysUntil(p.expiry);
@@ -15215,6 +15256,7 @@ export default function App() {
                     );
                   })}
                 </div>
+                )}
               </>
             )}
 
