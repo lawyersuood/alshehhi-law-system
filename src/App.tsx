@@ -19,7 +19,7 @@ import {
   Inbox, Paperclip, RotateCw, QrCode, Settings, History, BookOpen, UploadCloud, Video,
   Sparkles, Bot, Zap, PlusCircle, Layers, BarChart3, PieChart as LucidePieChart, Activity, CheckSquare, Target, Percent, Menu,
   SlidersHorizontal, Eye, EyeOff, Hash, ArrowUpDown, RotateCcw, ChevronDown, ChevronUp,
-  Handshake, UserCog, Stamp
+  Handshake, UserCog, Stamp, ScrollText
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -150,6 +150,7 @@ export interface RolePermissions {
   auditLog?: boolean;            // 17. سجل التدقيق والأنشطة (Audit Log)
   manageUsers?: boolean;         // 18. إدارة المستخدمين والصلاحيات
   colleagues?: boolean;          // 19. الزملاء والإنابات
+  policies?: boolean;            // 20. السياسات الداخلية للمكتب
 
   // 2. صلاحيات العمليات والإجراءات الدقيقة والتفويضات (Action Permissions)
   manageCases?: boolean;         // قيد وتعديل القضايا
@@ -720,6 +721,7 @@ export const PERMISSION_MODULES: SystemModuleDef[] = [
   { id: "hr", label: "الموظفون والكادر (HR)", desc: "إدارة الكادر الوظيفي والرواتب والإجازات والمصروفات", category: "الإدارة والامتثال", navTabIds: ["employees"] },
   { id: "auditLog", label: "سجل التدقيق والأنشطة (Audit Log)", desc: "رقابة وتتبع عمليات الحذف والتعديل وتغييرات الصلاحيات الحساسة", category: "الإدارة والامتثال", navTabIds: ["audit_log"] },
   { id: "manageUsers", label: "المستخدمون وإدارة الصلاحيات", desc: "إضافة وتعديل واعتماد حسابات الموظفين وتخصيص الأدوار", category: "الإدارة والامتثال", navTabIds: ["users"] },
+  { id: "policies", label: "السياسات الداخلية للمكتب", desc: "لائحة السياسات والإجراءات الإدارية الداخلية المعتمدة من المكتب", category: "الإدارة والامتثال", navTabIds: ["policies"] },
 ];
 
 // مصفوفة صلاحيات العمليات الإجرائية الدقيقة والتفويضات والحذف المقيد
@@ -775,6 +777,12 @@ export const hasTabPermission = (user: UserItem | null | undefined, tabId: strin
   // تبويب المبادئ والأحكام القضائية متاح للجميع افتراضياً وللكادر القانوني إلا إذا قُيّد صراحة
   if (tabId === "precedents") {
     if (user.permissions && user.permissions.precedents === false) return false;
+    return true;
+  }
+
+  // تبويب السياسات الداخلية للمكتب متاح للجميع افتراضياً (الهدف إطلاع كل الكادر عليها) إلا إذا قُيّد صراحة
+  if (tabId === "policies") {
+    if (user.permissions && user.permissions.policies === false) return false;
     return true;
   }
 
@@ -1152,6 +1160,7 @@ const PERMISSION_LABELS: Record<keyof RolePermissions, { label: string; desc: st
   finance: { label: "13. الفواتير والضريبة", desc: "إصدار الفواتير الضريبية 5% وسندات القبض ومتابعة الذمم" },
   kyc: { label: "14. اعرف عميلك (KYC)", desc: "مراجعات الفحص والامتثال لمعايير مكافحة غسل الأموال" },
   precedents: { label: "15. المبادئ والأحكام القضائية", desc: "مكتبة وسجل المبادئ القانونية وسوابق التمييز والاتحادية" },
+  policies: { label: "20. السياسات الداخلية للمكتب", desc: "لائحة السياسات والإجراءات الإدارية الداخلية المعتمدة من المكتب" },
   hr: { label: "16. الموظفون والكادر (HR)", desc: "إدارة الكادر الوظيفي والرواتب والإجازات والمصروفات" },
   auditLog: { label: "17. سجل التدقيق والأنشطة", desc: "رقابة وتتبع عمليات الحذف والتعديل وتغييرات الصلاحيات الحساسة" },
   manageUsers: { label: "18. المستخدمون والصلاحيات", desc: "إضافة وتعديل واعتماد حسابات الموظفين وتخصيص الأدوار" },
@@ -2669,6 +2678,30 @@ export interface LegalPrecedent {
 }
 
 const seedLegalPrecedents: LegalPrecedent[] = [];
+
+// ---------- السياسات الداخلية للمكتب ----------
+export interface InternalPolicy {
+  id: number;
+  title: string;
+  category: string;
+  content: string;
+  effectiveDate?: string;
+  updatedAt: string;
+  updatedBy?: string;
+}
+
+export const POLICY_CATEGORIES = [
+  "السلوك المهني وتعارض المصالح",
+  "سرية بيانات الموكلين وحماية المعلومات",
+  "قبول القضايا وفحص التعارض",
+  "الحضور والإجازات وساعات العمل",
+  "الأتعاب والعمولات",
+  "أمن المعلومات واستخدام أنظمة المكتب",
+  "الامتثال ومكافحة غسل الأموال",
+  "أخرى",
+];
+
+const seedInternalPolicies: InternalPolicy[] = [];
 
 const DOC_TEMPLATES: DocTemplate[] = [
   {
@@ -4743,6 +4776,87 @@ export default function App() {
 
   useEffect(() => { saveStorage("firm_legal_precedents", precedents); }, [precedents]);
 
+  // ---------- السياسات الداخلية للمكتب ----------
+  const [policies, setPolicies] = useState<InternalPolicy[]>(() => loadStorage("firm_internal_policies", seedInternalPolicies));
+  const [policySearch, setPolicySearch] = useState<string>("");
+  const [policyCategoryFilter, setPolicyCategoryFilter] = useState<string>("الكل");
+  const [showPolicyModal, setShowPolicyModal] = useState<boolean>(false);
+  const [editingPolicy, setEditingPolicy] = useState<InternalPolicy | null>(null);
+  const [selectedPolicy, setSelectedPolicy] = useState<InternalPolicy | null>(null);
+
+  useEffect(() => { saveStorage("firm_internal_policies", policies); }, [policies]);
+
+  const filteredPolicies = useMemo(() => {
+    return policies
+      .filter((p) => policyCategoryFilter === "الكل" || p.category === policyCategoryFilter)
+      .filter((p) => {
+        const q = policySearch.trim().toLowerCase();
+        if (!q) return true;
+        return p.title.toLowerCase().includes(q) || p.content.toLowerCase().includes(q);
+      })
+      .sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+  }, [policies, policySearch, policyCategoryFilter]);
+
+  const handleSavePolicy = (data: { title: string; category: string; content: string; effectiveDate?: string }) => {
+    if (!isSuperAdmin) return;
+    const now = todayISO();
+    if (editingPolicy) {
+      const updated: InternalPolicy = { ...editingPolicy, ...data, updatedAt: now, updatedBy: currentUser?.name };
+      setPolicies((prev) => prev.map((p) => (p.id === editingPolicy.id ? updated : p)));
+      logAuditAction("UPDATE", "السياسات الداخلية", data.title, "تعديل نص أو بيانات سياسة داخلية معتمدة", editingPolicy.id);
+    } else {
+      const newPolicy: InternalPolicy = {
+        id: nextId(policies),
+        ...data,
+        updatedAt: now,
+        updatedBy: currentUser?.name,
+      };
+      setPolicies((prev) => [newPolicy, ...prev]);
+      logAuditAction("CREATE", "السياسات الداخلية", data.title, "إضافة سياسة داخلية جديدة معتمدة من المكتب", newPolicy.id);
+    }
+    setShowPolicyModal(false);
+    setEditingPolicy(null);
+  };
+
+  const handleDeletePolicy = (policy: InternalPolicy) => {
+    if (!isSuperAdmin) return;
+    if (!window.confirm(`هل أنت متأكدة من حذف سياسة "${policy.title}" نهائياً؟`)) return;
+    setPolicies((prev) => prev.filter((p) => p.id !== policy.id));
+    logAuditAction("DELETE", "السياسات الداخلية", policy.title, "حذف سياسة داخلية نهائياً من الأرشيف", policy.id, "مؤكد");
+    if (selectedPolicy?.id === policy.id) setSelectedPolicy(null);
+  };
+
+  const [policyForm, setPolicyForm] = useState<{ title: string; category: string; content: string; effectiveDate: string }>({
+    title: "",
+    category: POLICY_CATEGORIES[0],
+    content: "",
+    effectiveDate: todayISO(),
+  });
+
+  const openAddPolicy = () => {
+    if (!isSuperAdmin) return;
+    setEditingPolicy(null);
+    setPolicyForm({ title: "", category: POLICY_CATEGORIES[0], content: "", effectiveDate: todayISO() });
+    setShowPolicyModal(true);
+  };
+
+  const openEditPolicy = (policy: InternalPolicy) => {
+    if (!isSuperAdmin) return;
+    setEditingPolicy(policy);
+    setPolicyForm({
+      title: policy.title,
+      category: policy.category,
+      content: policy.content,
+      effectiveDate: policy.effectiveDate || todayISO(),
+    });
+    setShowPolicyModal(true);
+  };
+
+  const handlePolicySubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSavePolicy(policyForm);
+  };
+
   // تنظيف تلقائي فوري لأي بيانات تجريبية سابقة قديمة مخزنة في متصفح المستخدم
   useEffect(() => {
     try {
@@ -6128,6 +6242,7 @@ export default function App() {
         employeeExpenses: employeeExpenses.length,
         auditLogs: auditLogs.length,
         precedents: precedents.length,
+        policies: policies.length,
         users: users.length,
         feeAgreements: feeAgreements.length,
         payments: payments.length,
@@ -6149,6 +6264,7 @@ export default function App() {
         employeeExpenses,
         auditLogs,
         precedents,
+        policies,
         users,
         feeAgreements,
         payments,
@@ -6242,6 +6358,7 @@ export default function App() {
       if (Array.isArray(db.employeeExpenses)) { setEmployeeExpenses(db.employeeExpenses); saveStorage("firm_employee_expenses", db.employeeExpenses); }
       if (Array.isArray(db.auditLogs)) { setAuditLogs(db.auditLogs); saveStorage("firm_audit_logs", db.auditLogs); }
       if (Array.isArray(db.precedents)) { setPrecedents(db.precedents); saveStorage("firm_legal_precedents", db.precedents); }
+      if (Array.isArray(db.policies)) { setPolicies(db.policies); saveStorage("firm_internal_policies", db.policies); }
       if (Array.isArray(db.users)) { setUsers(db.users); saveStorage("firm_users", db.users); }
       if (Array.isArray(db.feeAgreements)) { setFeeAgreements(db.feeAgreements); saveStorage("firm_fee_agreements", db.feeAgreements); }
       if (Array.isArray(db.payments)) { setPayments(db.payments); saveStorage("firm_payments", db.payments); }
@@ -8980,6 +9097,7 @@ export default function App() {
     // 4. الامتثال والإدارة
     { id: "kyc", label: "اعرف عميلك (KYC)", icon: ShieldCheck, category: "الإدارة والامتثال" },
     { id: "precedents", label: "المبادئ والأحكام القضائية", icon: BookOpen, category: "الإدارة والامتثال" },
+    { id: "policies", label: "السياسات الداخلية للمكتب", icon: ScrollText, category: "الإدارة والامتثال" },
     { id: "employees", label: "الموظفون والكادر (HR)", icon: UserCheck, category: "الإدارة والامتثال" },
     { id: "audit_log", label: "سجل التدقيق والأنشطة", icon: History, category: "الإدارة والامتثال" },
     { id: "users", label: "المستخدمون والصلاحيات", icon: Lock, category: "الإدارة والامتثال" },
@@ -9849,7 +9967,7 @@ export default function App() {
                 onClick={() => setMobileMenuOpen(true)}
                 className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-[#0D382B] border border-emerald-200/80 hover:bg-emerald-100 transition md:hidden cursor-pointer relative shrink-0"
                 aria-label="فتح القائمة الرئيسية والأقسام"
-                title="القائمة الرئيسية وجميع الأقسام الـ 18"
+                title={`القائمة الرئيسية وجميع الأقسام الـ ${PERMISSION_MODULES.length}`}
               >
                 <Menu size={20} />
                 {notifCount > 0 && (
@@ -15914,6 +16032,120 @@ export default function App() {
               </div>
             )}
 
+            {/* ================= السياسات الداخلية للمكتب ================= */}
+            {tab === "policies" && (
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-amber-50 text-amber-700 border border-amber-200/60">
+                      <ScrollText size={24} />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-slate-900">السياسات الداخلية للمكتب</h2>
+                      <p className="text-xs text-slate-500 mt-1">
+                        لائحة السياسات والإجراءات الإدارية المعتمدة، متاحة لجميع الكادر للاطلاع عليها
+                      </p>
+                    </div>
+                  </div>
+                  {isSuperAdmin && (
+                    <button
+                      onClick={openAddPolicy}
+                      className="flex items-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-amber-700 transition shadow-sm"
+                    >
+                      <Plus size={16} /> إضافة سياسة جديدة
+                    </button>
+                  )}
+                </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex flex-1 items-center gap-2 min-w-[280px]">
+                      <div className="relative flex-1">
+                        <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                        <input
+                          type="text"
+                          value={policySearch}
+                          onChange={(e) => setPolicySearch(e.target.value)}
+                          placeholder="البحث في عنوان أو نص السياسة..."
+                          className="w-full rounded-xl border border-slate-200 py-2.5 pr-9 pl-4 text-sm focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <select
+                      value={policyCategoryFilter}
+                      onChange={(e) => setPolicyCategoryFilter(e.target.value)}
+                      className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-medium focus:border-amber-500 focus:outline-none bg-stone-50"
+                    >
+                      <option value="الكل">جميع التصنيفات</option>
+                      {POLICY_CATEGORIES.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {filteredPolicies.map((policy) => {
+                    const isOpen = selectedPolicy?.id === policy.id;
+                    return (
+                      <div key={policy.id} className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                        <button
+                          onClick={() => setSelectedPolicy(isOpen ? null : policy)}
+                          className="w-full flex items-center justify-between gap-3 p-5 text-right hover:bg-slate-50 transition"
+                        >
+                          <div>
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <Badge className="bg-amber-50 text-amber-800 border border-amber-200/60 text-[11px] font-bold">
+                                {policy.category}
+                              </Badge>
+                              <span className="text-[11px] text-slate-400 font-mono">
+                                آخر تحديث: {policy.updatedAt}
+                              </span>
+                            </div>
+                            <h3 className="text-base font-bold text-slate-900">{policy.title}</h3>
+                          </div>
+                          {isOpen ? <ChevronUp size={18} className="text-slate-400 shrink-0" /> : <ChevronDown size={18} className="text-slate-400 shrink-0" />}
+                        </button>
+                        {isOpen && (
+                          <div className="border-t border-slate-100 p-5 bg-stone-50/60">
+                            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{policy.content}</p>
+                            {policy.effectiveDate && (
+                              <p className="text-[11px] text-slate-400 mt-3">تاريخ السريان: {policy.effectiveDate}</p>
+                            )}
+                            {isSuperAdmin && (
+                              <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-200">
+                                <button
+                                  onClick={() => openEditPolicy(policy)}
+                                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
+                                >
+                                  <Edit2 size={13} /> تعديل
+                                </button>
+                                <button
+                                  onClick={() => handleDeletePolicy(policy)}
+                                  className="flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600 hover:bg-red-100"
+                                >
+                                  <Trash2 size={13} /> حذف
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {filteredPolicies.length === 0 && (
+                  <div className="rounded-2xl border border-slate-200 bg-white py-12 text-center text-slate-400">
+                    <ScrollText size={40} className="mx-auto mb-2 text-slate-300" />
+                    <p className="text-sm font-semibold">
+                      {policies.length === 0 ? "لم تُضَف أي سياسة داخلية بعد" : "لا توجد سياسات مطابقة للبحث والتصفية"}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* ================= المستخدمون والصلاحيات ================= */}
             {tab === "users" && (
               <div className="space-y-6">
@@ -16225,7 +16457,7 @@ export default function App() {
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <h3 className="font-bold text-slate-900 text-base flex items-center gap-2">
-                        <ShieldCheck className="text-amber-600" /> مصفوفة التحكم التفاعلية بالأقسام والتبويبات الـ 18 (Permission Matrix)
+                        <ShieldCheck className="text-amber-600" /> مصفوفة التحكم التفاعلية بالأقسام والتبويبات الـ {PERMISSION_MODULES.length} (Permission Matrix)
                       </h3>
                       <p className="text-xs text-slate-500 mt-0.5">
                         سياسة الحظر الافتراضي (Default-Deny Policy): يمكنك النقر على خانة أي قسم لتفعيله أو إلغائه فوراً لكل عضو (المزامنة حية ومباشرة مع الملف التعريفي)
@@ -18329,7 +18561,7 @@ export default function App() {
               <div className="flex items-center justify-between">
                 <p className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                   <ShieldCheck size={15} className="text-amber-600" />
-                  صلاحيات الأقسام والتبويبات الـ 18 (System Modules):
+                  صلاحيات الأقسام والتبويبات الـ {PERMISSION_MODULES.length} (System Modules):
                 </p>
                 <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200 font-mono">
                   {Object.keys(form.permissions || ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions || {}).filter((k) => PERMISSION_MODULES.some((m) => m.id === k) && Boolean((form.permissions || ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions || {})[k as keyof RolePermissions])).length} / {PERMISSION_MODULES.length}
@@ -20368,6 +20600,81 @@ export default function App() {
               </div>
             </div>
           </div>
+        </Modal>
+      )}
+
+      {/* ═══ مودال إضافة / تعديل سياسة داخلية ═══ */}
+      {showPolicyModal && (
+        <Modal
+          title={editingPolicy ? "تعديل السياسة الداخلية" : "إضافة سياسة داخلية جديدة"}
+          onClose={() => { setShowPolicyModal(false); setEditingPolicy(null); }}
+          wide
+        >
+          <form onSubmit={handlePolicySubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">عنوان السياسة:</label>
+              <input
+                type="text"
+                required
+                placeholder="مثال: سياسة سرية بيانات الموكلين"
+                value={policyForm.title}
+                onChange={(e) => setPolicyForm({ ...policyForm, title: e.target.value })}
+                className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-amber-500 focus:outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">التصنيف:</label>
+                <select
+                  value={policyForm.category}
+                  onChange={(e) => setPolicyForm({ ...policyForm, category: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-amber-500 focus:outline-none bg-white"
+                >
+                  {POLICY_CATEGORIES.map((c) => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">تاريخ السريان:</label>
+                <input
+                  type="date"
+                  value={policyForm.effectiveDate}
+                  onChange={(e) => setPolicyForm({ ...policyForm, effectiveDate: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-amber-500 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">نص السياسة:</label>
+              <textarea
+                required
+                rows={10}
+                placeholder="اكتبي نص السياسة أو الإجراء الداخلي بالتفصيل هنا..."
+                value={policyForm.content}
+                onChange={(e) => setPolicyForm({ ...policyForm, content: e.target.value })}
+                className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-amber-500 focus:outline-none leading-relaxed"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => { setShowPolicyModal(false); setEditingPolicy(null); }}
+                className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50"
+              >
+                إلغاء
+              </button>
+              <button
+                type="submit"
+                className="rounded-xl bg-amber-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-amber-700 transition"
+              >
+                {editingPolicy ? "حفظ التعديلات" : "حفظ السياسة"}
+              </button>
+            </div>
+          </form>
         </Modal>
       )}
 
