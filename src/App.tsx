@@ -2917,7 +2917,8 @@ const statusColor = (s: string) => ({
   "صدر الحكم": "bg-teal-100 text-teal-800 border-teal-200",
   "قيد النظر": "bg-sky-100 text-sky-700 border-sky-200",
   "محجوزة للحكم": "bg-purple-100 text-purple-700 border-purple-200",
-  "مشطوبة": "bg-stone-200 text-stone-700 border-stone-300",
+  // "مشطوبة" حالة سلبية مختلفة عن الإنهاء الطبيعي للقضية، لذا تُميَّز بلون تحذيري مستقل بدل تكرار لون "منتهية"
+  "مشطوبة": "bg-red-100 text-red-800 border-red-300",
   "معلقة": "bg-rose-100 text-rose-800 border-rose-200",
   "مغلقة": "bg-slate-200 text-slate-600 border-slate-300",
 }[s] || "bg-slate-100 text-slate-600 border-slate-200");
@@ -11558,10 +11559,12 @@ export default function App() {
                         <button
                           key={s}
                           onClick={() => setCaseFilter(s)}
-                          className={`rounded-full px-3 py-1 text-xs font-semibold transition flex items-center gap-1 ${
+                          className={`rounded-full px-3 py-1 text-xs font-semibold transition flex items-center gap-1 border ${
                             isSelected
-                              ? "bg-slate-900 text-white shadow-xs"
-                              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                              ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                              : s === "الكل"
+                              ? "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
+                              : `${statusColor(s)} hover:brightness-95`
                           }`}
                         >
                           <span>{s}</span>
@@ -14364,7 +14367,9 @@ export default function App() {
                               <div key={c.id} className="app-card p-4 space-y-2">
                                 <div className="flex items-center justify-between">
                                   <h3 className="font-bold text-slate-900 text-sm">{c.name}</h3>
-                                  <Badge className={net > 0 ? "bg-emerald-100 text-emerald-800" : "bg-stone-100 text-slate-600"}>رصيد الأمانة</Badge>
+                                  <Badge className={net > 0 ? "bg-emerald-100 text-emerald-800" : net < 0 ? "bg-red-100 text-red-800 border border-red-200" : "bg-stone-100 text-slate-600"}>
+                                    {net < 0 ? "عجز في الأمانة!" : "رصيد الأمانة"}
+                                  </Badge>
                                 </div>
                                 <p className="text-2xl font-mono font-bold text-amber-600">{fmtAED(net)}</p>
                                 <div className="text-[11px] text-slate-500 flex justify-between border-t border-slate-100 pt-2">
