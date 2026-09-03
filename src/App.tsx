@@ -11794,7 +11794,8 @@ export default function App() {
                         <th className="px-4 py-3 font-semibold">نوع القضية</th>
                         <th className="px-4 py-3 font-semibold">مرحلة الدعوى</th>
                         <th className="px-4 py-3 font-semibold">الحالة</th>
-                        <th className="px-4 py-3 font-semibold text-center">إجراءات</th>
+                        {/* عمود ثابت (sticky) حتى تبقى أزرار عرض/تعديل/حذف القضية ظاهرة دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
+                        <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-stone-50 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -11833,7 +11834,8 @@ export default function App() {
                           </td>
                           <td className="px-4 py-3"><Badge className={stageBadgeColor(getCaseStage(c))}>{getCaseStage(c)}</Badge></td>
                           <td className="px-4 py-3"><Badge className={statusColor(c.status)}>{c.status}</Badge></td>
-                          <td className="px-4 py-3 text-center">
+                          {/* عمود ثابت (sticky) حتى تبقى أزرار عرض/تعديل/حذف القضية ظاهرة دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
+                          <td className="sticky left-0 z-10 bg-white group-hover:bg-amber-50/60 px-4 py-3 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
                             <div className="flex items-center justify-center gap-2">
                               <button onClick={() => setCaseView(c.id)} className="text-xs font-semibold text-amber-700 hover:underline">عرض التفاصيل</button>
                               <button
