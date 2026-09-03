@@ -14135,7 +14135,8 @@ export default function App() {
                                 <th className="px-4 py-3 font-semibold">طريقة السداد</th>
                                 <th className="px-4 py-3 font-semibold">المبلغ المقبوض</th>
                                 <th className="px-4 py-3 font-semibold">البيان والملاحظات</th>
-                                <th className="px-4 py-3 font-semibold text-center">إجراءات</th>
+                                {/* عمود ثابت (sticky) حتى يبقى زر الحذف ظاهراً دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
+                                <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-stone-50 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -14145,7 +14146,7 @@ export default function App() {
                                 const agreement = !isUnallocated ? feeAgreements.find(a => a.id === p.feeAgreementId) : null;
 
                                 return (
-                                  <tr key={p.id} className="hover:bg-amber-50/50">
+                                  <tr key={p.id} className="hover:bg-amber-50/50 group">
                                     <td className="px-4 py-3 font-mono font-bold text-slate-900">{p.referenceNo}</td>
                                     <td className="px-4 py-3 text-xs text-slate-500">{fmtDate(p.date)}</td>
                                     <td className="px-4 py-3 font-semibold text-slate-900">{client?.name || "—"}</td>
@@ -14167,7 +14168,7 @@ export default function App() {
                                       +{fmtAED(p.amount)}
                                     </td>
                                     <td className="px-4 py-3 text-xs text-slate-600">{p.notes || "—"}</td>
-                                    <td className="px-4 py-3 text-center">
+                                    <td className="sticky left-0 z-10 bg-white group-hover:bg-amber-50/50 px-4 py-3 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
                                       <button
                                         onClick={() => {
                                           requestDelete({
@@ -14381,7 +14382,8 @@ export default function App() {
                                 <th className="px-4 py-3 font-semibold">الضريبة 5%</th>
                                 <th className="px-4 py-3 font-semibold">الإجمالي</th>
                                 <th className="px-4 py-3 font-semibold">الحالة</th>
-                                <th className="px-4 py-3 font-semibold text-center">إجراءات وتصدير FTA</th>
+                                {/* عمود ثابت (sticky) حتى تبقى أزرار الفاتورة (تحديد كمسددة، تذكير، طباعة، حذف) ظاهرة دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
+                                <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-stone-50 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات وتصدير FTA</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -14390,14 +14392,14 @@ export default function App() {
                                 const total = inv.amount + vat;
                                 const evs = effectiveInvoiceStatus(inv);
                                 return (
-                                  <tr key={inv.id} className="hover:bg-amber-50/50">
+                                  <tr key={inv.id} className="hover:bg-amber-50/50 group">
                                     <td className="px-4 py-3 font-mono font-semibold">{inv.number}</td>
                                     <td className="px-4 py-3">{clientName(inv.clientId)}</td>
                                     <td className="px-4 py-3">{fmtAED(inv.amount)}</td>
                                     <td className="px-4 py-3 text-slate-500">{fmtAED(vat)}</td>
                                     <td className="px-4 py-3 font-bold text-slate-900">{fmtAED(total)}</td>
                                     <td className="px-4 py-3"><Badge className={invColor(evs)}>{evs}</Badge></td>
-                                    <td className="px-4 py-3 text-center">
+                                    <td className="sticky left-0 z-10 bg-white group-hover:bg-amber-50/50 px-4 py-3 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
                                       <div className="flex items-center justify-center gap-1">
                                         {inv.status === "مسودة" && (
                                           <button onClick={() => setInvoiceStatus(inv.id, "مرسلة")} className="p-1.5 text-sky-600 hover:text-sky-800 rounded-lg hover:bg-sky-50 flex items-center gap-1 text-xs font-semibold" title="تحديد الفاتورة كمُرسلة للموكل">
@@ -15655,12 +15657,13 @@ export default function App() {
                                   <th className="px-4 py-3 font-semibold">سبب الحظر والمنع</th>
                                   <th className="px-4 py-3 font-semibold">الجنسية</th>
                                   <th className="px-4 py-3 font-semibold">تاريخ الإدراج</th>
-                                  <th className="px-4 py-3 font-semibold text-center">إجراءات</th>
+                                  {/* عمود ثابت (sticky) حتى يبقى زر الحذف ظاهراً دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
+                                  <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-stone-50 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-100">
                                 {filteredWatchlist.map((item) => (
-                                  <tr key={item.id} className="hover:bg-red-50/40">
+                                  <tr key={item.id} className="hover:bg-red-50/40 group">
                                     <td className="px-4 py-3 font-bold text-slate-900">{item.fullName}</td>
                                     <td className="px-4 py-3 font-mono text-xs text-slate-600">{item.idNo || "—"}</td>
                                     <td className="px-4 py-3">
@@ -15669,7 +15672,7 @@ export default function App() {
                                     <td className="px-4 py-3 text-xs text-slate-600 max-w-xs">{item.reason}</td>
                                     <td className="px-4 py-3 text-xs text-slate-500">{item.nationality || "أخرى"}</td>
                                     <td className="px-4 py-3 text-xs font-mono text-slate-500">{item.addedDate}</td>
-                                    <td className="px-4 py-3 text-center">
+                                    <td className="sticky left-0 z-10 bg-white group-hover:bg-red-50/40 px-4 py-3 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
                                       <button
                                         onClick={() => {
                                           requestDelete({
@@ -15786,7 +15789,8 @@ export default function App() {
                                 <th className="px-4 py-3 font-semibold text-center">درجة المخاطر</th>
                                 <th className="px-4 py-3 font-semibold text-center">الحالة</th>
                                 <th className="px-4 py-3 font-semibold text-center">المراجعة القادمة</th>
-                                <th className="px-4 py-3 font-semibold text-center">إجراءات</th>
+                                {/* عمود ثابت (sticky) حتى تبقى أزرار التعديل والطباعة والحذف ظاهرة دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
+                                <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-stone-50 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
@@ -15794,7 +15798,7 @@ export default function App() {
                                 const nextRev = nextReviewDate(k.lastReview, k.risk);
                                 const daysToRev = daysUntil(nextRev);
                                 return (
-                                  <tr key={k.id} className="hover:bg-amber-50/30">
+                                  <tr key={k.id} className="hover:bg-amber-50/30 group">
                                     <td className="px-4 py-3 font-bold text-slate-900">{clientName(k.clientId)}</td>
                                     <td className="px-4 py-3 text-xs">
                                       <p className="font-semibold text-slate-800">{k.nationality}</p>
@@ -15824,7 +15828,7 @@ export default function App() {
                                         <span className="text-[10px] text-slate-400">متبقي {daysToRev} يوم</span>
                                       )}
                                     </td>
-                                    <td className="px-4 py-3 text-center">
+                                    <td className="sticky left-0 z-10 bg-white group-hover:bg-amber-50/30 px-4 py-3 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
                                       <div className="flex items-center justify-center gap-1">
                                         <button
                                           onClick={() => openNotificationComposer("تجديد وثائق / KYC", k)}
@@ -16651,7 +16655,8 @@ export default function App() {
                           <th className="px-4 py-3 font-semibold">كلمة المرور</th>
                           <th className="px-4 py-3 font-semibold">الحالة</th>
                           <th className="px-4 py-3 font-semibold text-center">الأقسام المصرح بها</th>
-                          <th className="px-4 py-3 font-semibold text-center">إجراءات</th>
+                          {/* عمود ثابت (sticky) حتى تبقى أزرار التعديل والحذف ظاهرة دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
+                          <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-stone-50 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -16659,7 +16664,7 @@ export default function App() {
                           const openCount = getActivePermissionsCount(u);
                           const totalCount = PERMISSION_MODULES.length;
                           return (
-                            <tr key={u.id} className="hover:bg-amber-50/40">
+                            <tr key={u.id} className="hover:bg-amber-50/40 group">
                               <td className="px-4 py-3 font-semibold">
                                 <div className="flex items-center gap-2.5">
                                   <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${u.avatarBg}`}>
@@ -16715,7 +16720,7 @@ export default function App() {
                                   {openCount} / {totalCount}
                                 </span>
                               </td>
-                              <td className="px-4 py-3 text-center">
+                              <td className="sticky left-0 z-10 bg-white group-hover:bg-amber-50/40 px-4 py-3 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
                                 <div className="flex items-center justify-center gap-2">
                                   <button
                                     onClick={() => {
@@ -18100,7 +18105,8 @@ export default function App() {
                             <th className="p-3.5">إجمالي الأيام</th>
                             <th className="p-3.5">السبب / الملاحظات</th>
                             <th className="p-3.5 text-center">الحالة</th>
-                            <th className="p-3.5 text-center rounded-l-xl">اعتماد الإدارة</th>
+                            {/* عمود ثابت (sticky) حتى يبقى زرا القبول والرفض ظاهرين دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
+                            <th className="sticky left-0 z-10 p-3.5 text-center bg-slate-900 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.3)]">اعتماد الإدارة</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -18110,7 +18116,7 @@ export default function App() {
                             </tr>
                           ) : (
                             leaveRequests.map((leave) => (
-                              <tr key={leave.id} className="hover:bg-slate-50">
+                              <tr key={leave.id} className="hover:bg-slate-50 group">
                                 <td className="p-3.5 font-bold text-slate-900">{leave.employeeName}</td>
                                 <td className="p-3.5">
                                   {leave.leaveType === "ANNUAL" && <span className="bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded text-[11px]">سنوية اعتيادية</span>}
@@ -18128,7 +18134,7 @@ export default function App() {
                                   {leave.status === "APPROVED" && <span className="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold text-[11px]">مقبولة ومُعتمدة</span>}
                                   {leave.status === "REJECTED" && <span className="bg-red-100 text-red-800 px-2.5 py-1 rounded-full font-bold text-[11px]">مرفوضة</span>}
                                 </td>
-                                <td className="p-3.5 text-center">
+                                <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 p-3.5 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
                                   {leave.status === "PENDING" ? (
                                     <div className="flex items-center justify-center gap-1.5">
                                       <button
@@ -18171,7 +18177,8 @@ export default function App() {
                             <th className="p-3.5">المبلغ المطالب</th>
                             <th className="p-3.5">القضية المرتبطة</th>
                             <th className="p-3.5 text-center">الحالة</th>
-                            <th className="p-3.5 text-center rounded-l-xl">اعتماد الصرف</th>
+                            {/* عمود ثابت (sticky) حتى يبقى زرا الاعتماد والرفض ظاهرين دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
+                            <th className="sticky left-0 z-10 p-3.5 text-center bg-slate-900 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.3)]">اعتماد الصرف</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -18183,7 +18190,7 @@ export default function App() {
                             employeeExpenses.map((exp) => {
                               const caseItem = cases.find(c => c.id === exp.caseId);
                               return (
-                                <tr key={exp.id} className="hover:bg-slate-50">
+                                <tr key={exp.id} className="hover:bg-slate-50 group">
                                   <td className="p-3.5 font-bold text-slate-900">{exp.employeeName}</td>
                                   <td className="p-3.5 font-medium">
                                     {exp.category === "COURT_FEES" && <span className="bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded text-[11px]">رسوم محاكم وخدمات</span>}
@@ -18206,7 +18213,7 @@ export default function App() {
                                     {exp.status === "PAID" && <span className="bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-full font-bold text-[11px]">مدفوع / تم التعويض</span>}
                                     {exp.status === "REJECTED" && <span className="bg-red-100 text-red-800 px-2.5 py-1 rounded-full font-bold text-[11px]">مرفوض</span>}
                                   </td>
-                                  <td className="p-3.5 text-center">
+                                  <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 p-3.5 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
                                     {exp.status === "PENDING" ? (
                                       <div className="flex items-center justify-center gap-1.5">
                                         <button
@@ -19853,12 +19860,13 @@ export default function App() {
                       <th className="p-2.5">الموظف / المسمى</th>
                       <th className="p-2.5">الهاتف والتمديدة</th>
                       <th className="p-2.5">البريد الإلكتروني</th>
-                      <th className="p-2.5 text-center">إجراء</th>
+                      {/* عمود ثابت (sticky) حتى يبقى زر الحذف ظاهراً دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
+                      <th className="sticky left-0 z-10 p-2.5 text-center bg-slate-100 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراء</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 bg-white">
                     {courtImportPreviewList.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50 text-slate-800">
+                      <tr key={idx} className="hover:bg-slate-50 text-slate-800 group">
                         <td className="p-2.5 font-mono text-slate-400">{idx + 1}</td>
                         <td className="p-2.5 font-bold text-slate-900">{item.courtName}</td>
                         <td className="p-2.5">
@@ -19870,7 +19878,7 @@ export default function App() {
                           {item.phone} {item.extOrSeal && item.extOrSeal !== "—" ? `(${item.extOrSeal})` : ""}
                         </td>
                         <td className="p-2.5 font-mono text-slate-600 text-[11px]">{item.email}</td>
-                        <td className="p-2.5 text-center">
+                        <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 p-2.5 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
                           <button
                             onClick={() => setCourtImportPreviewList(prev => prev.filter((_, i) => i !== idx))}
                             className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
