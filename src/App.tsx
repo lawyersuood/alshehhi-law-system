@@ -2855,6 +2855,10 @@ const fmtAED = (n: number) => new Intl.NumberFormat("ar-AE", { style: "currency"
 const fmtDate = (d: string) => d ? new Date(d + "T00:00:00").toLocaleDateString("ar-AE", { year: "numeric", month: "long", day: "numeric" }) : "—";
 const daysUntil = (d: string) => Math.ceil((new Date(d).getTime() - new Date(todayISO()).getTime()) / 86400000);
 
+// ميعاد الطعن يُعتبر "مغلقاً" (لا يحتاج تنبيهاً عاجلاً) إذا تم قيده أو تقديمه فعلياً بالمحكمة —
+// نفس التعريف المعتمد في محرك التنبيهات التلقائي، موحّد هنا لتفادي تكرار الشرط في أكثر من مكان
+const isDeadlineOpen = (status: string) => status !== "تم قيد الطعن" && status !== "تم تقديم الطعن";
+
 const normalizeArabicName = (str: string) => {
   if (!str) return "";
   return str
@@ -4110,6 +4114,9 @@ export default function App() {
   const canViewFinancials = useMemo(() => {
     if (!currentUser) return false;
     if (isSuperAdmin || isAdmin) return true;
+    // يجب مطابقة نفس شرط hasTabPermission لتبويب "invoices" (بما في ذلك علم canViewFinances
+    // المستقل على المستخدم)، وإلا يظهر التبويب بالتنقل لمستخدم ثم تُحجب عنه محتوياته فعلياً
+    if (currentUser.canViewFinances) return true;
     if (userPerms?.finance || userPerms?.viewInvoices || userPerms?.manageInvoices || userPerms?.agreements) return true;
     const preset = ROLE_PRESETS[currentUser.roleKey]?.permissions;
     if (preset?.finance || preset?.viewInvoices || preset?.manageInvoices || preset?.agreements) return true;
@@ -4795,6 +4802,19 @@ export default function App() {
   const auditModuleOptions = useMemo(() => {
     return Array.from(new Set(auditLogs.map((a) => a.targetModule))).filter(Boolean).sort((a, b) => a.localeCompare(b, "ar"));
   }, [auditLogs]);
+
+  // تبويبات تصنيف قوائم حظر KYC تُبنى ديناميكياً من القيم الفعلية الموجودة بالقائمة، بدل ثلاث قيم ثابتة
+  // فقط كانت لا تغطي القيمة الافتراضية عند استيراد إكسل بدون عمود تصنيف مطابق ("شخص منكشف سياسياً (PEP)")
+  // ما كان يجعل هذه السجلات غير قابلة للوصول عبر أي تبويب تصنيف عدا "الكل"
+  const KYC_TYPE_LABELS: Record<string, string> = {
+    "شخص إرهابي": "أفراد إرهابيون",
+    "كيان إرهابي": "كيانات إرهابية",
+    "تنظيم إرهابي": "تنظيمات إرهابية",
+  };
+  const kycTypeOptions = useMemo(() => {
+    const distinctTypes = Array.from(new Set(kycWatchlist.map((i) => i.type))).filter(Boolean).sort((a, b) => a.localeCompare(b, "ar"));
+    return [{ label: "الكل", val: "الكل" }, ...distinctTypes.map((t) => ({ label: KYC_TYPE_LABELS[t] || t, val: t }))];
+  }, [kycWatchlist]);
 
   // ---------- المبادئ والأحكام القضائية (Legal Precedents) ----------
   const [precedents, setPrecedents] = useState<LegalPrecedent[]>(() => loadStorage("firm_legal_precedents", seedLegalPrecedents));
@@ -5502,11 +5522,11 @@ export default function App() {
               ubo: item.clientName,
               sourceOfFunds: "نشاط تجاري",
               pep: true,
-              sanctions: "تطابق محتمل (محظور)",
+              sanctions: "تطابق محتمل",
               risk: "مرتفع",
               status: "قيد المراجعة",
               lastReview: todayISO(),
-              notes: `تنبيه حظر استيراد Excel: مسجل في قائمة المحظورين (سبب: ${matchSanction.reason})`
+              notes: `🚫 محظور تلقائياً — تنبيه حظر استيراد Excel: مسجل في قائمة المحظورين (سبب: ${matchSanction.reason})`
             }
           ]);
         }
@@ -5947,7 +5967,7 @@ export default function App() {
         setKyc((prev) => {
           const exists = prev.find((k) => k.clientId === c.id);
           if (exists) {
-            return prev.map((k) => (k.clientId === c.id ? { ...k, pep: true, sanctions: "تطابق محتمل (محظور)", risk: "مرتفع", notes: "🚨 تطابق تلقائي مع القائمة السوداء المستوردة حديثاً!" } : k));
+            return prev.map((k) => (k.clientId === c.id ? { ...k, pep: true, sanctions: "تطابق محتمل", risk: "مرتفع", notes: "🚫 محظور تلقائياً — تطابق تلقائي مع القائمة السوداء المستوردة حديثاً!" } : k));
           } else {
             return [
               ...prev,
@@ -5960,11 +5980,11 @@ export default function App() {
                 ubo: c.name,
                 sourceOfFunds: "نشاط تجاري",
                 pep: true,
-                sanctions: "تطابق محتمل (محظور)",
+                sanctions: "تطابق محتمل",
                 risk: "مرتفع",
                 status: "قيد المراجعة",
                 lastReview: todayISO(),
-                notes: "🚨 تطابق تلقائي عند رفع قائمة الحظر الجديدة!"
+                notes: "🚫 محظور تلقائياً — تطابق تلقائي عند رفع قائمة الحظر الجديدة!"
               }
             ];
           }
@@ -7976,7 +7996,10 @@ export default function App() {
 
   // ---------- إحصاءات ومخططات تفاعلية ----------
   const stats = useMemo(() => {
-    const active = cases.filter((c) => !["مغلقة", "صدر الحكم"].includes(c.status)).length;
+    // القضايا "النشطة" هي فقط القضايا الجارية فعلياً (متداولة / قيد النظر / محجوزة للحكم)،
+    // بنفس التعريف المعتمد في caseStatsBreakdown.stageStatusMap — القيم القديمة "مغلقة"/"صدر الحكم"
+    // لم تعد ضمن CASE_STATUS الفعلية، ما كان يجعل هذا العداد يساوي دائماً إجمالي عدد القضايا
+    const active = cases.filter((c) => c.status === "متداولة" || c.status === "قيد النظر" || c.status === "محجوزة للحكم").length;
     const weekHearings = hearings.filter((h) => !h.done && daysUntil(h.date) >= 0 && daysUntil(h.date) <= 7).length;
     const dueAmount = invoices.filter((i) => ["مرسلة", "متأخرة"].includes(effectiveInvoiceStatus(i))).reduce((s, i) => s + i.amount * (1 + VAT_RATE), 0);
     const expiringPoa = poas.filter((p) => daysUntil(p.expiry) <= 60 && daysUntil(p.expiry) >= 0).length;
@@ -9558,6 +9581,7 @@ export default function App() {
     return (
       <PublicConsultationPage
         settings={consultationSettings}
+        existingBookings={consultationBookings}
         onNewBooking={(newBooking) => {
           setConsultationBookings((prev) => [newBooking, ...prev]);
 
@@ -12324,7 +12348,7 @@ export default function App() {
                           <AlertTriangle size={14} /> طعون حرجة (أقل من 3 أيام 🚨)
                         </p>
                         <p className="text-2xl font-bold text-red-700">
-                          {deadlines.filter((d) => d.status !== "تم قيد الطعن" && daysUntil(d.appealDeadlineDate) <= 3 && daysUntil(d.appealDeadlineDate) >= 0).length}
+                          {deadlines.filter((d) => isDeadlineOpen(d.status) && daysUntil(d.appealDeadlineDate) <= 3 && daysUntil(d.appealDeadlineDate) >= 0).length}
                         </p>
                       </div>
                       <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
@@ -12332,7 +12356,7 @@ export default function App() {
                           <Clock size={14} /> طعون قريبة (أقل من 7 أيام ⚠️)
                         </p>
                         <p className="text-2xl font-bold text-amber-800">
-                          {deadlines.filter((d) => d.status !== "تم قيد الطعن" && daysUntil(d.appealDeadlineDate) <= 7 && daysUntil(d.appealDeadlineDate) >= 0).length}
+                          {deadlines.filter((d) => isDeadlineOpen(d.status) && daysUntil(d.appealDeadlineDate) <= 7 && daysUntil(d.appealDeadlineDate) >= 0).length}
                         </p>
                       </div>
                       <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm">
@@ -12357,7 +12381,7 @@ export default function App() {
                         onClick={() => setDeadlineFilter("urgent")}
                         className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${deadlineFilter === "urgent" ? "bg-red-600 text-white" : "bg-red-50 text-red-700 hover:bg-red-100"}`}
                       >
-                        ⚠️ تحتاج تنبيه عاجل (أقل من 7 أيام) ({deadlines.filter(d => d.status !== "تم قيد الطعن" && daysUntil(d.appealDeadlineDate) <= 7).length})
+                        ⚠️ تحتاج تنبيه عاجل (أقل من 7 أيام) ({deadlines.filter(d => isDeadlineOpen(d.status) && daysUntil(d.appealDeadlineDate) <= 7).length})
                       </button>
                       <button
                         onClick={() => setDeadlineFilter("active")}
@@ -12378,7 +12402,7 @@ export default function App() {
                       {deadlines
                         .filter((d) => {
                           const daysLeft = daysUntil(d.appealDeadlineDate);
-                          if (deadlineFilter === "urgent") return d.status !== "تم قيد الطعن" && daysLeft <= 7;
+                          if (deadlineFilter === "urgent") return isDeadlineOpen(d.status) && daysLeft <= 7;
                           if (deadlineFilter === "active") return d.status === "جارٍ حساب الميعاد";
                           if (deadlineFilter === "done") return d.status === "تم قيد الطعن" || d.status === "تم تقديم الطعن";
                           return true;
@@ -12386,8 +12410,8 @@ export default function App() {
                         .map((d) => {
                           const cs = cases.find((c) => c.id === d.caseId);
                           const daysLeft = daysUntil(d.appealDeadlineDate);
-                          const isUrgent3 = daysLeft <= 3 && daysLeft >= 0 && d.status !== "تم قيد الطعن";
-                          const isUrgent7 = daysLeft <= 7 && daysLeft > 3 && d.status !== "تم قيد الطعن";
+                          const isUrgent3 = daysLeft <= 3 && daysLeft >= 0 && isDeadlineOpen(d.status);
+                          const isUrgent7 = daysLeft <= 7 && daysLeft > 3 && isDeadlineOpen(d.status);
 
                           return (
                             <div
@@ -12431,7 +12455,9 @@ export default function App() {
                                   <p className="text-slate-500">تاريخ صدور الحكم: {fmtDate(d.rulingDate)}</p>
                                   <p className="font-bold text-slate-900 text-sm mt-0.5">آخر موعد قاطع: {fmtDate(d.appealDeadlineDate)}</p>
                                   <div className="mt-1">
-                                    {daysLeft < 0 ? (
+                                    {!isDeadlineOpen(d.status) ? (
+                                      <span className="text-emerald-700 font-bold px-2 py-0.5 rounded-md bg-emerald-50">✔️ تم تقديم/قيد الطعن — لا حاجة لتنبيه</span>
+                                    ) : daysLeft < 0 ? (
                                       <span className="text-red-600 font-bold px-2 py-0.5 rounded-md bg-red-100">⚠️ انتهت المهلة القانونية</span>
                                     ) : daysLeft <= 3 ? (
                                       <span className="text-red-700 font-black px-2 py-0.5 rounded-md bg-red-100 animate-pulse">🚨 طارئ: متبقي {daysLeft} أيام فقط!</span>
@@ -13620,7 +13646,7 @@ export default function App() {
             {/* ================= واتساب المكتب المدمج WhatsApp Office ================= */}
             {tab === "whatsapp_office" && (
               <div className="space-y-6">
-                {!isSuperAdmin && !currentUser.canAccessWhatsapp ? (
+                {!isSuperAdmin && !currentUser.canAccessWhatsapp && !currentUser.permissions?.whatsapp ? (
                   <div className="rounded-3xl border border-amber-200 bg-amber-50/80 p-8 text-center space-y-4 my-8">
                     <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-amber-100 text-amber-800">
                       <MessageSquare size={36} />
@@ -15470,12 +15496,7 @@ export default function App() {
                     <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-3">
                       <div className="flex flex-wrap items-center gap-2 pb-2 border-b border-slate-100">
                         <span className="text-xs font-bold text-slate-500 ml-2">تصنيف القائمة:</span>
-                        {[
-                          { label: "الكل", val: "الكل" },
-                          { label: "أفراد إرهابيون", val: "شخص إرهابي" },
-                          { label: "كيانات إرهابية", val: "كيان إرهابي" },
-                          { label: "تنظيمات إرهابية", val: "تنظيم إرهابي" },
-                        ].map((tab) => (
+                        {kycTypeOptions.map((tab) => (
                           <button
                             key={tab.val}
                             onClick={() => setKycTypeFilter(tab.val)}
