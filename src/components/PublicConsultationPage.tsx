@@ -46,11 +46,13 @@ interface PublicConsultationPageProps {
   onNewBooking?: (booking: BookingRecord) => void;
   onNavigateToAdmin?: () => void;
   settings?: ConsultationSettings;
+  existingBookings?: BookingRecord[];
 }
 
 export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
   onNewBooking,
   onNavigateToAdmin,
+  existingBookings = [],
   settings = {
     price30: 525,
     price60: 945,
@@ -100,10 +102,16 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
     return settings.blockedDates.includes(selectedDate);
   }, [selectedDate, settings.blockedDates]);
 
-  // Available Time Slots with 60-Minute Rule
+  // Available Time Slots with 60-Minute Rule + Double-Booking Protection
   const timeSlotStatuses = useMemo(() => {
     const now = new Date();
     const isToday = selectedDate === now.toISOString().split("T")[0];
+
+    // المواعيد المحجوزة فعلياً لنفس التاريخ (أي حجز موجود يُعتبر شاغلاً للموعد، بغض النظر عن حالته
+    // اللاحقة — لا توجد حالة "ملغاة" ضمن BookingRecord.status حالياً) — لمنع الحجز المزدوج لنفس الموعد
+    const takenSlots = new Set(
+      existingBookings.filter((b) => b.date === selectedDate).map((b) => b.timeSlot)
+    );
 
     return settings.availableSlots.map((slot) => {
       if (isDateBlocked) {
@@ -111,6 +119,14 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
           slot,
           available: false,
           reason: lang === "ar" ? "تاريخ غير متاح" : "Date Unavailable"
+        };
+      }
+
+      if (takenSlots.has(slot)) {
+        return {
+          slot,
+          available: false,
+          reason: lang === "ar" ? "الموعد محجوز مسبقاً" : "Already Booked"
         };
       }
 
@@ -140,7 +156,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
 
       return { slot, available: true, reason: "" };
     });
-  }, [selectedDate, settings.availableSlots, isDateBlocked, lang]);
+  }, [selectedDate, settings.availableSlots, isDateBlocked, lang, existingBookings]);
 
   // AI Summary Classifier
   const generateLegalSummary = (text: string) => {
@@ -228,6 +244,19 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
           ? "يرجى اختيار الموعد المناسب للجلسة المرئية من الأوقات المتاحة."
           : "Please select an available time slot for your consultation."
       );
+      return;
+    }
+
+    // إعادة التحقق لحظة الإرسال من أن الموعد المختار لم يُحجز من زائر آخر أثناء تعبئة النموذج
+    // (حماية إضافية من الحجز المزدوج، وليست فقط اعتماداً على حالة القائمة وقت عرضها)
+    const isSlotNowTaken = existingBookings.some((b) => b.date === selectedDate && b.timeSlot === selectedTimeSlot);
+    if (isSlotNowTaken) {
+      alert(
+        lang === "ar"
+          ? "عذراً، تم حجز هذا الموعد للتو من قِبل زائر آخر. يرجى اختيار موعد آخر متاح."
+          : "Sorry, this time slot was just booked by someone else. Please choose another available slot."
+      );
+      setSelectedTimeSlot("");
       return;
     }
 
@@ -1123,10 +1152,23 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                 <div className="text-center pt-2">
                   <button
                     onClick={() => {
+                      // تصفير كامل لبيانات النموذج (بما فيها الموعد وبيانات الدفع)، وليس فقط جزءاً منها،
+                      // لمنع إعادة استخدام موعد قديم غير محدّث أو بقاء بيانات بطاقة الدفع بعد إتمام الحجز
                       setBookingSuccess(false);
                       setCreatedBooking(null);
                       setIssueSummary("");
                       setFullName("");
+                      setWhatsapp("");
+                      setEmail("");
+                      setAttachedFile(null);
+                      setAgreedToTerms(false);
+                      setSelectedTimeSlot("");
+                      setSelectedDate(new Date().toISOString().split("T")[0]);
+                      setPaymentMethod("credit_card");
+                      setCardNumber("");
+                      setCardExpiry("");
+                      setCardCvv("");
+                      setBankRef("");
                     }}
                     className="text-xs text-slate-500 underline hover:text-[#0D382B] cursor-pointer font-semibold"
                   >
