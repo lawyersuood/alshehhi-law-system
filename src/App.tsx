@@ -250,7 +250,9 @@ export interface CaseItem {
   id: number;
   number: string;
   clientId: number;
-  opponent: string;
+  /** قائمة الخصوم (يمكن أن تضم أكثر من خصم واحد) — الحقل القديم "opponent" (نص واحد) لم يعد مستخدماً،
+   * ويُهاجَر تلقائياً إلى هذه القائمة عبر sanitizeCase() عند تحميل بيانات قديمة مخزّنة محلياً */
+  opponents: string[];
   type: string;
   court: string;
   judge: string;
@@ -1350,7 +1352,7 @@ const seedCases: CaseItem[] = [
     id: 201,
     number: "565/2026",
     clientId: 135, // ايلين لتجارة المواد الغذائية (ش.ذ.م.م)
-    opponent: "",
+    opponents: [],
     type: "تجاري",
     court: "محكمة الاستئناف المدنية عجمان",
     judge: "",
@@ -1363,7 +1365,7 @@ const seedCases: CaseItem[] = [
     id: 202,
     number: "72/2026",
     clientId: 153, // يو اس كية للمعادن ذ.م.م خالد بشير اوان محمد بشير اختر
-    opponent: "",
+    opponents: [],
     type: "تجاري",
     court: "محكمة أم القيوين الاتحادية المحكمة الاستئنافية المدنية",
     judge: "",
@@ -1376,7 +1378,7 @@ const seedCases: CaseItem[] = [
     id: 203,
     number: "1324/2025",
     clientId: 156, // عمر مصطفى عيد محمد
-    opponent: "",
+    opponents: [],
     type: "أحوال شخصية",
     court: "محكمة عجمان الاستئنافية الشرعية",
     judge: "",
@@ -1389,7 +1391,7 @@ const seedCases: CaseItem[] = [
     id: 204,
     number: "1032 / 2025",
     clientId: 187, // احمد حسن حسنى كامل جاويش
-    opponent: "",
+    opponents: [],
     type: "مدني",
     court: "محكمة الاستئناف دبي",
     judge: "",
@@ -1402,7 +1404,7 @@ const seedCases: CaseItem[] = [
     id: 205,
     number: "925 / 2025",
     clientId: 182, // رافى اكوب قره بتيان
-    opponent: "",
+    opponents: [],
     type: "تنفيذي",
     court: "محكمة الاستئناف دبي",
     judge: "",
@@ -1415,7 +1417,7 @@ const seedCases: CaseItem[] = [
     id: 206,
     number: "357 / 2024",
     clientId: 188, // جوناتهان جارفين ديميسا
-    opponent: "",
+    opponents: [],
     type: "تجاري",
     court: "محكمة الاستئناف دبي",
     judge: "",
@@ -1428,7 +1430,7 @@ const seedCases: CaseItem[] = [
     id: 207,
     number: "282 / 2024",
     clientId: 189, // ورده مبارك سالم بن زوبع
-    opponent: "",
+    opponents: [],
     type: "عقاري",
     court: "محكمة الاستئناف دبي",
     judge: "",
@@ -1441,7 +1443,7 @@ const seedCases: CaseItem[] = [
     id: 208,
     number: "92 / 2024",
     clientId: 190, // اطلانتس للمطابخ ش.ذ.م.م
-    opponent: "",
+    opponents: [],
     type: "تجاري",
     court: "محكمة الاستئناف دبي",
     judge: "",
@@ -1454,7 +1456,7 @@ const seedCases: CaseItem[] = [
     id: 209,
     number: "286 / 2024",
     clientId: 182, // رافى اكوب قره بتيان
-    opponent: "",
+    opponents: [],
     type: "أمر أداء",
     court: "محكمة الاستئناف دبي",
     judge: "",
@@ -1467,7 +1469,7 @@ const seedCases: CaseItem[] = [
     id: 210,
     number: "1475 / 2023",
     clientId: 191, // ميس منذر سعد الدين غوشه
-    opponent: "",
+    opponents: [],
     type: "أحوال شخصية",
     court: "محكمة الاستئناف دبي",
     judge: "",
@@ -1480,7 +1482,7 @@ const seedCases: CaseItem[] = [
     id: 211,
     number: "1447 / 2023",
     clientId: 191, // ميس منذر سعد الدين غوشه
-    opponent: "",
+    opponents: [],
     type: "أحوال شخصية",
     court: "محكمة الاستئناف دبي",
     judge: "",
@@ -1493,7 +1495,7 @@ const seedCases: CaseItem[] = [
     id: 212,
     number: "436 / 2022",
     clientId: 192, // وصال عثمان محمد على
-    opponent: "",
+    opponents: [],
     type: "أمر أداء",
     court: "محكمة الاستئناف دبي",
     judge: "",
@@ -1506,7 +1508,7 @@ const seedCases: CaseItem[] = [
     id: 213,
     number: "470 / 2020",
     clientId: 192, // وصال عثمان محمد على
-    opponent: "",
+    opponents: [],
     type: "أمر أداء",
     court: "محكمة الاستئناف دبي",
     judge: "",
@@ -1519,7 +1521,7 @@ const seedCases: CaseItem[] = [
     id: 214,
     number: "1211/2025",
     clientId: 164, // امينه ال بيات
-    opponent: "",
+    opponents: [],
     type: "مدني",
     court: "محكمة الشارقة الاستئنافية المدنية",
     judge: "",
@@ -1532,7 +1534,7 @@ const seedCases: CaseItem[] = [
     id: 215,
     number: "1862/2025",
     clientId: 193, // سيروس مالك هاميلتون
-    opponent: "",
+    opponents: [],
     type: "جزائي",
     court: "محكمة استئناف الجنح دبي",
     judge: "",
@@ -1545,7 +1547,7 @@ const seedCases: CaseItem[] = [
     id: 216,
     number: "1543/2024",
     clientId: 187, // احمد حسن حسنى كامل جاويش
-    opponent: "",
+    opponents: [],
     type: "جزائي",
     court: "محكمة استئناف الجنح دبي",
     judge: "",
@@ -1558,7 +1560,7 @@ const seedCases: CaseItem[] = [
     id: 217,
     number: "7362/2022",
     clientId: 194, // محمد صلاح السيد محمد قنديل
-    opponent: "",
+    opponents: [],
     type: "جزائي",
     court: "محكمة استئناف الجنح دبي",
     judge: "",
@@ -1571,7 +1573,7 @@ const seedCases: CaseItem[] = [
     id: 218,
     number: "1584/2026",
     clientId: 166, // خالد بشير اوان محمد بشير اختر
-    opponent: "",
+    opponents: [],
     type: "جزائي",
     court: "محكمة استئناف الجنح عجمان",
     judge: "",
@@ -1584,7 +1586,7 @@ const seedCases: CaseItem[] = [
     id: 219,
     number: "806/2025",
     clientId: 156, // عمر مصطفي عيد محمد
-    opponent: "",
+    opponents: [],
     type: "جزائي",
     court: "محكمة استئناف الجنح عجمان",
     judge: "",
@@ -1597,7 +1599,7 @@ const seedCases: CaseItem[] = [
     id: 220,
     number: "160/2025",
     clientId: 149, // عزه
-    opponent: "",
+    opponents: [],
     type: "أحوال شخصية",
     court: "محكمة رأس الخيمة الاستئنافية الشرعية",
     judge: "",
@@ -1610,7 +1612,7 @@ const seedCases: CaseItem[] = [
     id: 221,
     number: "816/2024",
     clientId: 170, // فاروق احمد غلام اكبر
-    opponent: "",
+    opponents: [],
     type: "جزائي",
     court: "محكمة استئناف الجنح رأس الخيمة",
     judge: "",
@@ -1623,7 +1625,7 @@ const seedCases: CaseItem[] = [
     id: 222,
     number: "852/2024",
     clientId: 195, // شاه ايران سيد وهاب
-    opponent: "",
+    opponents: [],
     type: "جزائي",
     court: "محكمة استئناف الجنح رأس الخيمة",
     judge: "",
@@ -1636,7 +1638,7 @@ const seedCases: CaseItem[] = [
     id: 223,
     number: "783/2026",
     clientId: 196, // شاما خالد عوان خالد بشير
-    opponent: "",
+    opponents: [],
     type: "تجاري",
     court: "محكمة الاستئناف المدنية عجمان",
     judge: "",
@@ -1649,7 +1651,7 @@ const seedCases: CaseItem[] = [
     id: 224,
     number: "84/2026",
     clientId: 153, // يو اس كية للمعادن ذ.م.م -خالد بشير
-    opponent: "",
+    opponents: [],
     type: "تجاري",
     court: "محكمة أم القيوين الاتحادية المحكمة الاستئنافية المدنية",
     judge: "",
@@ -1662,7 +1664,7 @@ const seedCases: CaseItem[] = [
     id: 301,
     number: "2026/450",
     clientId: 197,
-    opponent: "",
+    opponents: [],
     type: "منازعة التنفيذ الموضوعية",
     court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
     judge: "",
@@ -1675,7 +1677,7 @@ const seedCases: CaseItem[] = [
     id: 302,
     number: "2026/240",
     clientId: 153,
-    opponent: "",
+    opponents: [],
     type: "منازعة التنفيذ الموضوعية",
     court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
     judge: "",
@@ -1688,7 +1690,7 @@ const seedCases: CaseItem[] = [
     id: 303,
     number: "2026/241",
     clientId: 153,
-    opponent: "",
+    opponents: [],
     type: "منازعة التنفيذ الموضوعية",
     court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
     judge: "",
@@ -1701,7 +1703,7 @@ const seedCases: CaseItem[] = [
     id: 304,
     number: "2026/322",
     clientId: 197,
-    opponent: "",
+    opponents: [],
     type: "تجاري - البنوك",
     court: "محكمة عجمان المدنية الاتحادية",
     judge: "",
@@ -1714,7 +1716,7 @@ const seedCases: CaseItem[] = [
     id: 305,
     number: "2025/481",
     clientId: 153,
-    opponent: "",
+    opponents: [],
     type: "منازعة التنفيذ الموضوعية",
     court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
     judge: "",
@@ -1727,7 +1729,7 @@ const seedCases: CaseItem[] = [
     id: 306,
     number: "2025/5881",
     clientId: 135,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - تجاري - مطالبات مالية",
     court: "محكمة عجمان الابتدائية",
     judge: "",
@@ -1740,7 +1742,7 @@ const seedCases: CaseItem[] = [
     id: 307,
     number: "2025/881",
     clientId: 153,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - الشيكات المرتجعة - الوفاء الكلي",
     court: "محكمة أم القيوين",
     judge: "",
@@ -1753,7 +1755,7 @@ const seedCases: CaseItem[] = [
     id: 309,
     number: "2026/242",
     clientId: 153,
-    opponent: "",
+    opponents: [],
     type: "منازعة التنفيذ الموضوعية",
     court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
     judge: "",
@@ -1766,7 +1768,7 @@ const seedCases: CaseItem[] = [
     id: 310,
     number: "2026/514",
     clientId: 196,
-    opponent: "",
+    opponents: [],
     type: "المحكمة الابتدائية المدنية - تجاري - البنوك",
     court: "محكمة عجمان الابتدائية",
     judge: "",
@@ -1779,7 +1781,7 @@ const seedCases: CaseItem[] = [
     id: 311,
     number: "2024/3909",
     clientId: 160,
-    opponent: "",
+    opponents: [],
     type: "المحكمة الابتدائية المدنيه - أمر على عريضة",
     court: "محكمة عجمان الابتدائية",
     judge: "",
@@ -1792,7 +1794,7 @@ const seedCases: CaseItem[] = [
     id: 312,
     number: "2025/566",
     clientId: 198,
-    opponent: "",
+    opponents: [],
     type: "الدائرة المدنية والتجارية والعمالية",
     court: "محكمة عجمان الابتدائية",
     judge: "",
@@ -1805,7 +1807,7 @@ const seedCases: CaseItem[] = [
     id: 313,
     number: "2025/569",
     clientId: 198,
-    opponent: "",
+    opponents: [],
     type: "الدائرة المدنية والتجارية والعمالية والإدارية ودعاوي الملكية الفكرية",
     court: "محكمة عجمان الابتدائية",
     judge: "",
@@ -1818,7 +1820,7 @@ const seedCases: CaseItem[] = [
     id: 314,
     number: "2025/568",
     clientId: 198,
-    opponent: "",
+    opponents: [],
     type: "الدائرة المدنية والتجارية والعمالية والإدارية ودعاوي الملكية الفكرية",
     court: "محكمة عجمان الابتدائية",
     judge: "",
@@ -1831,7 +1833,7 @@ const seedCases: CaseItem[] = [
     id: 315,
     number: "2025/1205",
     clientId: 156,
-    opponent: "",
+    opponents: [],
     type: "المحكمة الابتدائية الشرعية - الأحوال الشخصية - دعوى نسب (اثبات / انكار)",
     court: "محكمة عجمان الابتدائية",
     judge: "",
@@ -1844,7 +1846,7 @@ const seedCases: CaseItem[] = [
     id: 316,
     number: "2026/3",
     clientId: 153,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
     court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
     judge: "",
@@ -1857,7 +1859,7 @@ const seedCases: CaseItem[] = [
     id: 317,
     number: "2024/127",
     clientId: 153,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
     court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
     judge: "",
@@ -1870,7 +1872,7 @@ const seedCases: CaseItem[] = [
     id: 318,
     number: "2024/2393",
     clientId: 197,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
     court: "محكمة عجمان الابتدائية",
     judge: "",
@@ -1883,7 +1885,7 @@ const seedCases: CaseItem[] = [
     id: 319,
     number: "2025/6",
     clientId: 160,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
     court: "محكمة عجمان الابتدائية",
     judge: "",
@@ -1896,7 +1898,7 @@ const seedCases: CaseItem[] = [
     id: 320,
     number: "2025/93",
     clientId: 153,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
     court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
     judge: "",
@@ -1909,7 +1911,7 @@ const seedCases: CaseItem[] = [
     id: 321,
     number: "2024/3911",
     clientId: 160,
-    opponent: "",
+    opponents: [],
     type: "دائرة الدعاوي المستعجلة والأوامر على عرائض",
     court: "محكمة عجمان الابتدائية",
     judge: "",
@@ -1922,7 +1924,7 @@ const seedCases: CaseItem[] = [
     id: 322,
     number: "2026/38",
     clientId: 153,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
     court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
     judge: "",
@@ -1935,7 +1937,7 @@ const seedCases: CaseItem[] = [
     id: 323,
     number: "2026/73",
     clientId: 153,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
     court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
     judge: "",
@@ -1948,7 +1950,7 @@ const seedCases: CaseItem[] = [
     id: 324,
     number: "2026/52",
     clientId: 153,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
     court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
     judge: "",
@@ -1961,7 +1963,7 @@ const seedCases: CaseItem[] = [
     id: 325,
     number: "2026/1360",
     clientId: 135,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - منازعة التنفيذ الموضوعية",
     court: "محكمة عجمان الابتدائية",
     judge: "",
@@ -1974,7 +1976,7 @@ const seedCases: CaseItem[] = [
     id: 326,
     number: "2023/795",
     clientId: 153,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
     court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
     judge: "",
@@ -1987,7 +1989,7 @@ const seedCases: CaseItem[] = [
     id: 327,
     number: "2024/320",
     clientId: 197,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
     court: "محكمة عجمان الابتدائية",
     judge: "",
@@ -2000,7 +2002,7 @@ const seedCases: CaseItem[] = [
     id: 328,
     number: "2026/211",
     clientId: 153,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
     court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
     judge: "",
@@ -2013,7 +2015,7 @@ const seedCases: CaseItem[] = [
     id: 329,
     number: "2026/219",
     clientId: 197,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
     court: "محكمة أم القيوين - دائرة التنفيذ الأولى",
     judge: "",
@@ -2026,7 +2028,7 @@ const seedCases: CaseItem[] = [
     id: 330,
     number: "2025/0002112",
     clientId: 197,
-    opponent: "",
+    opponents: [],
     type: "الأحوال الشخصية لغير المسلمين - دعوى طلاق (للضرر)",
     court: "محكمة الشارقة الابتدائية",
     judge: "",
@@ -2039,7 +2041,7 @@ const seedCases: CaseItem[] = [
     id: 331,
     number: "2025/0000172",
     clientId: 197,
-    opponent: "",
+    opponents: [],
     type: "المحكمة الابتدائية الشرعية - تظلم",
     court: "محكمة الشارقة الابتدائية",
     judge: "",
@@ -2052,7 +2054,7 @@ const seedCases: CaseItem[] = [
     id: 332,
     number: "2025/7445",
     clientId: 141,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
     court: "محكمة الشارقة الابتدائية",
     judge: "",
@@ -2065,7 +2067,7 @@ const seedCases: CaseItem[] = [
     id: 333,
     number: "2025/3529",
     clientId: 199,
-    opponent: "",
+    opponents: [],
     type: "المحكمة الابتدائية المدنيه - تجاري",
     court: "دائرة الملكية الفكرية الشارقة",
     judge: "",
@@ -2078,7 +2080,7 @@ const seedCases: CaseItem[] = [
     id: 334,
     number: "2025/0001237",
     clientId: 150,
-    opponent: "",
+    opponents: [],
     type: "المحكمة الابتدائية الشرعية - الأحوال الشخصية - دعوى طلاق (للضرر)",
     court: "محكمة الشارقة الابتدائية",
     judge: "",
@@ -2091,7 +2093,7 @@ const seedCases: CaseItem[] = [
     id: 335,
     number: "2025/114",
     clientId: 150,
-    opponent: "",
+    opponents: [],
     type: "المحكمة الابتدائية الشرعية - تظلم",
     court: "محكمة الشارقة الابتدائية",
     judge: "",
@@ -2104,7 +2106,7 @@ const seedCases: CaseItem[] = [
     id: 336,
     number: "2025/4643",
     clientId: 164,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - عمالي",
     court: "دائرة التنفيذ العمالي السابعة الشارقة",
     judge: "",
@@ -2117,7 +2119,7 @@ const seedCases: CaseItem[] = [
     id: 337,
     number: "COM2019/0003542",
     clientId: 200,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - تجاري (كلي) - مطالبات مالية",
     court: "دائرة التنفيذ الثانية الشارقة",
     judge: "",
@@ -2130,7 +2132,7 @@ const seedCases: CaseItem[] = [
     id: 338,
     number: "2026/3331",
     clientId: 201,
-    opponent: "",
+    opponents: [],
     type: "المحكمة الابتدائية المدنيه - منازعة إيجارية - سكني",
     court: "لجنة فض المنازعات الشارقة",
     judge: "",
@@ -2143,7 +2145,7 @@ const seedCases: CaseItem[] = [
     id: 339,
     number: "2023/15",
     clientId: 202,
-    opponent: "",
+    opponents: [],
     type: "المحكمة الابتدائية الشرعية - تظلم",
     court: "كلباء - دائرة الأحوال الشخصية الأولى",
     judge: "",
@@ -2156,7 +2158,7 @@ const seedCases: CaseItem[] = [
     id: 340,
     number: "2023/064",
     clientId: 202,
-    opponent: "",
+    opponents: [],
     type: "المحكمة الابتدائية الشرعية - أمر على عريضة - الأمور المستعجلة",
     court: "كلباء - دائرة الأمور المستعجلة",
     judge: "",
@@ -2169,7 +2171,7 @@ const seedCases: CaseItem[] = [
     id: 341,
     number: "2023/2646",
     clientId: 203,
-    opponent: "",
+    opponents: [],
     type: "محكمة التنفيذ المدنية - الشيكات المرتجعة",
     court: "دائرة التنفيذ الثالثة الشارقة",
     judge: "",
@@ -2182,7 +2184,7 @@ const seedCases: CaseItem[] = [
     id: 342,
     number: "2026/3760",
     clientId: 204,
-    opponent: "",
+    opponents: [],
     type: "حالات زوجية مسلمين",
     court: "محاكم دبي",
     judge: "",
@@ -2195,7 +2197,7 @@ const seedCases: CaseItem[] = [
     id: 343,
     number: "2024/599",
     clientId: 187,
-    opponent: "",
+    opponents: [],
     type: "مدنى جزئى",
     court: "محاكم دبي",
     judge: "",
@@ -2208,7 +2210,7 @@ const seedCases: CaseItem[] = [
     id: 344,
     number: "2023/1613",
     clientId: 205,
-    opponent: "",
+    opponents: [],
     type: "امر أداء",
     court: "محاكم دبي",
     judge: "",
@@ -2221,7 +2223,7 @@ const seedCases: CaseItem[] = [
     id: 345,
     number: "2023/46",
     clientId: 192,
-    opponent: "",
+    opponents: [],
     type: "منازعة موضوعية التنفيذ التجاري",
     court: "محاكم دبي",
     judge: "",
@@ -2234,7 +2236,7 @@ const seedCases: CaseItem[] = [
     id: 346,
     number: "2024/984",
     clientId: 206,
-    opponent: "",
+    opponents: [],
     type: "عقاري",
     court: "محاكم دبي",
     judge: "",
@@ -2247,7 +2249,7 @@ const seedCases: CaseItem[] = [
     id: 347,
     number: "2025/19016",
     clientId: 147,
-    opponent: "",
+    opponents: [],
     type: "تنفيذ شيكات",
     court: "محاكم دبي",
     judge: "",
@@ -2260,7 +2262,7 @@ const seedCases: CaseItem[] = [
     id: 348,
     number: "2019/268",
     clientId: 152,
-    opponent: "",
+    opponents: [],
     type: "تنفيذ شرعي",
     court: "محاكم دبي",
     judge: "",
@@ -2273,7 +2275,7 @@ const seedCases: CaseItem[] = [
     id: 349,
     number: "2026/2726",
     clientId: 207,
-    opponent: "",
+    opponents: [],
     type: "منازعة ايجارية",
     court: "محاكم الشارقة",
     judge: "",
@@ -2286,7 +2288,7 @@ const seedCases: CaseItem[] = [
     id: 350,
     number: "2026/806",
     clientId: 208,
-    opponent: "",
+    opponents: [],
     type: "قضية",
     court: "محاكم رأس الخيمة",
     judge: "",
@@ -2299,7 +2301,7 @@ const seedCases: CaseItem[] = [
     id: 351,
     number: "2026/397",
     clientId: 209,
-    opponent: "",
+    opponents: [],
     type: "طلاق للضرر",
     court: "محاكم الشارقة",
     judge: "",
@@ -2312,7 +2314,7 @@ const seedCases: CaseItem[] = [
     id: 352,
     number: "2026/1062",
     clientId: 209,
-    opponent: "",
+    opponents: [],
     type: "طلاق للضرر",
     court: "محاكم الشارقة",
     judge: "",
@@ -2325,7 +2327,7 @@ const seedCases: CaseItem[] = [
     id: 353,
     number: "2025/215",
     clientId: 161,
-    opponent: "",
+    opponents: [],
     type: "عقاري كلي",
     court: "محاكم دبي",
     judge: "",
@@ -2338,7 +2340,7 @@ const seedCases: CaseItem[] = [
     id: 354,
     number: "2025/196",
     clientId: 157,
-    opponent: "",
+    opponents: [],
     type: "تظلم شرعي",
     court: "محاكم دبي",
     judge: "",
@@ -2351,7 +2353,7 @@ const seedCases: CaseItem[] = [
     id: 355,
     number: "2025/355",
     clientId: 121,
-    opponent: "",
+    opponents: [],
     type: "امر أداء",
     court: "محاكم دبي",
     judge: "",
@@ -2364,7 +2366,7 @@ const seedCases: CaseItem[] = [
     id: 356,
     number: "2025/32",
     clientId: 171,
-    opponent: "",
+    opponents: [],
     type: "تظلم من أمر أداء",
     court: "محاكم دبي",
     judge: "",
@@ -2377,7 +2379,7 @@ const seedCases: CaseItem[] = [
     id: 357,
     number: "2025/1546",
     clientId: 157,
-    opponent: "",
+    opponents: [],
     type: "احوال نفس مسلمين",
     court: "محاكم دبي",
     judge: "",
@@ -2390,7 +2392,7 @@ const seedCases: CaseItem[] = [
     id: 358,
     number: "2025/140",
     clientId: 182,
-    opponent: "",
+    opponents: [],
     type: "منازعة موضوعية تنفيذ شيكات",
     court: "محاكم دبي",
     judge: "",
@@ -2403,7 +2405,7 @@ const seedCases: CaseItem[] = [
     id: 359,
     number: "2023/555",
     clientId: 189,
-    opponent: "",
+    opponents: [],
     type: "عقاري",
     court: "محاكم دبي",
     judge: "",
@@ -2416,7 +2418,7 @@ const seedCases: CaseItem[] = [
     id: 360,
     number: "",
     clientId: 188,
-    opponent: "",
+    opponents: [],
     type: "تجاري",
     court: "محاكم دبي",
     judge: "",
@@ -2429,7 +2431,7 @@ const seedCases: CaseItem[] = [
     id: 361,
     number: "2023/1486",
     clientId: 191,
-    opponent: "",
+    opponents: [],
     type: "احوال نفس مسلمين",
     court: "محاكم دبي",
     judge: "",
@@ -2442,7 +2444,7 @@ const seedCases: CaseItem[] = [
     id: 364,
     number: "2025/584",
     clientId: 210,
-    opponent: "",
+    opponents: [],
     type: "منازعة موضوعية تنفيذ شيكات",
     court: "محاكم دبي",
     judge: "",
@@ -2455,7 +2457,7 @@ const seedCases: CaseItem[] = [
     id: 365,
     number: "2024/30121",
     clientId: 182,
-    opponent: "",
+    opponents: [],
     type: "تنفيذ شيكات",
     court: "محاكم دبي",
     judge: "",
@@ -2468,7 +2470,7 @@ const seedCases: CaseItem[] = [
     id: 366,
     number: "2025/18042",
     clientId: 211,
-    opponent: "",
+    opponents: [],
     type: "تنفيذ شيكات",
     court: "محاكم دبي",
     judge: "",
@@ -2481,7 +2483,7 @@ const seedCases: CaseItem[] = [
     id: 367,
     number: "2017/19",
     clientId: 161,
-    opponent: "",
+    opponents: [],
     type: "عرض وإيداع مدني",
     court: "محاكم دبي",
     judge: "",
@@ -2494,7 +2496,7 @@ const seedCases: CaseItem[] = [
     id: 368,
     number: "2019/5820",
     clientId: 171,
-    opponent: "",
+    opponents: [],
     type: "تنفيذ تجاري",
     court: "محاكم دبي",
     judge: "",
@@ -2900,6 +2902,14 @@ const getCaseStage = (c: { stage?: string; court?: string; subject?: string; num
   if (txt.includes("تنفيذ")) return "التنفيذ";
   if (txt.includes("لجنة") || txt.includes("منازعات") || txt.includes("توفيق") || txt.includes("إيجاري")) return "لجان فض المنازعات";
   return "الابتدائية";
+};
+
+// نص عرض قائمة الخصوم بصيغة عربية مقروءة: خصم واحد كما هو، اثنان بـ"و"، وثلاثة فأكثر بفواصل مع "و" قبل الأخير
+const caseOpponentsLabel = (c: { opponents?: string[] }): string => {
+  const list = (c.opponents || []).map((o) => (o || "").trim()).filter(Boolean);
+  if (list.length === 0) return "—";
+  if (list.length === 1) return list[0];
+  return list.slice(0, -1).join("، ") + " و" + list[list.length - 1];
 };
 
 const stageBadgeColor = (st: string) => ({
@@ -4304,7 +4314,8 @@ export default function App() {
   const isDemoCase = (c: any): boolean => {
     if (!c) return false;
     const num = String(c.number || "").toLowerCase();
-    const opp = String(c.opponent || "").toLowerCase();
+    // يدعم الشكل القديم (opponent: نص واحد) والشكل الحالي (opponents: مصفوفة) قبل تطبيع البيانات
+    const opp = String(Array.isArray(c.opponents) ? c.opponents.join(" ") : (c.opponent || "")).toLowerCase();
     const judge = String(c.judge || "").toLowerCase();
     const subj = String(c.subject || "").toLowerCase();
     return (
@@ -4327,30 +4338,35 @@ export default function App() {
   };
 
   const sanitizeCase = (c: CaseItem): CaseItem => {
-    let opp = c.opponent || "";
+    // هجرة الشكل القديم (opponent: نص واحد) إلى الشكل الحالي (opponents: مصفوفة) للبيانات المخزّنة محلياً من إصدار سابق
+    const legacyOpponent = (c as any).opponent;
+    const rawOpponents: string[] = Array.isArray(c.opponents)
+      ? c.opponents
+      : (legacyOpponent ? [legacyOpponent] : []);
+
+    const PLACEHOLDER_OPPONENTS = new Set([
+      "المستأنف ضده",
+      "الخصم المستأنف ضده",
+      "الطرف المقابل في الدعوى الشرعية",
+      "المنفذ ضده / طالب التنفيذ",
+      "المطور / المالك العقاري",
+      "الطرف الآخر في الالتماس",
+      "المدعى عليه في أمر الأداء",
+      "الطرف الآخر في التركة والمواريث",
+      "الطرف الآخر في النزاع الأسري",
+      "النيابة العامة / الشاكي",
+      "الطرف المقابل في الأحوال الشخصية",
+      "المدعى عليه في المطالبة المالية",
+      "الطرف المقابل",
+      "الخصم",
+      "—",
+    ]);
+    // تفريغ أي نصوص عشوائية أو افتراضية للخصم لم ترد في المستند
+    const opponents = rawOpponents.map((o) => (o || "").trim()).filter((o) => o && !PLACEHOLDER_OPPONENTS.has(o));
+
     let judge = c.judge || "";
     let fee = 0; // حذف وتصفير أي أتعاب افتراضية تم إدخالها على القضايا سابقاً أو افتراضياً
     let openDate = c.openDate || "";
-
-    // تفريغ أي نصوص عشوائية أو افتراضية للخصم لم ترد في المستند
-    if (
-      opp === "المستأنف ضده" ||
-      opp === "الخصم المستأنف ضده" ||
-      opp === "الطرف المقابل في الدعوى الشرعية" ||
-      opp === "المنفذ ضده / طالب التنفيذ" ||
-      opp === "المطور / المالك العقاري" ||
-      opp === "الطرف الآخر في الالتماس" ||
-      opp === "المدعى عليه في أمر الأداء" ||
-      opp === "الطرف الآخر في التركة والمواريث" ||
-      opp === "الطرف الآخر في النزاع الأسري" ||
-      opp === "النيابة العامة / الشاكي" ||
-      opp === "الطرف المقابل في الأحوال الشخصية" ||
-      opp === "المدعى عليه في المطالبة المالية" ||
-      opp === "الطرف المقابل" ||
-      opp === "الخصم"
-    ) {
-      opp = "";
-    }
 
     // تفريغ أي نصوص عشوائية أو افتراضية لاسم القاضي أو الدائرة
     if (
@@ -4371,12 +4387,13 @@ export default function App() {
       st = "منتهية";
     }
     const stage = c.stage || getCaseStage({ ...c, status: st });
+    const { opponent: _legacyOpponentField, ...rest } = c as any;
 
     return {
-      ...c,
+      ...rest,
       stage: stage,
       status: st,
-      opponent: opp,
+      opponents: opponents,
       judge: judge,
       fee: fee,
       openDate: openDate,
@@ -4429,7 +4446,7 @@ export default function App() {
 
       if (normNum && seenNumberKeys.has(normNum)) {
         const existing = seenNumberKeys.get(normNum)!;
-        if (!existing.opponent && c.opponent) existing.opponent = c.opponent;
+        if ((!existing.opponents || existing.opponents.length === 0) && c.opponents && c.opponents.length > 0) existing.opponents = c.opponents;
         if (!existing.judge && c.judge) existing.judge = c.judge;
         if ((!existing.court || existing.court === "محاكم دبي") && c.court && c.court !== "محاكم دبي") {
           existing.court = c.court;
@@ -5450,7 +5467,11 @@ export default function App() {
         const parsed = rows.map((r, idx) => {
           const caseNumber = String(r["رقم القضية"] || r["رقم/كود القضية"] || r["رقم القضيه"] || r["Case Number"] || r["number"] || `CAS-2026-${100 + idx}`).trim();
           const cName = String(r["اسم الموكل"] || r["الموكل"] || r["Client Name"] || r["client"] || "موكل غير محدد").trim();
-          const opponent = String(r["اسم الخصم"] || r["الخصم"] || r["Opponent"] || r["opponent"] || "غير محدد").trim();
+          // يدعم عمود "اسم الخصم" ذكر أكثر من خصم مفصولين بفاصلة أو "،" أو "و" فيقسّمهم إلى قائمة خصوم منفصلة
+          const opponentRaw = String(r["اسم الخصم"] || r["الخصم"] || r["Opponent"] || r["opponent"] || "").trim();
+          const opponents = opponentRaw
+            ? opponentRaw.split(/[,،]| و /).map((o) => o.trim()).filter(Boolean)
+            : [];
           const type = String(r["نوع القضية"] || r["النوع"] || r["Type"] || r["type"] || "تجاري").trim();
           const court = String(r["المحكمة"] || r["الجهة القضائية"] || r["Court"] || r["court"] || "محاكم دبي").trim();
           const subject = String(r["موضوع القضية"] || r["الموضوع"] || r["العنوان"] || r["subject"] || "دعوى قضائية").trim();
@@ -5463,7 +5484,7 @@ export default function App() {
             id: idx + 1,
             caseNumber,
             clientName: cName,
-            opponent,
+            opponents,
             type,
             court,
             subject,
@@ -5539,7 +5560,7 @@ export default function App() {
         id: nextId(cases) + newCasesList.length,
         number: item.caseNumber,
         clientId: finalClientId,
-        opponent: item.opponent,
+        opponents: item.opponents,
         type: item.type,
         court: item.court,
         judge: "القاضي المختص",
@@ -5576,7 +5597,7 @@ export default function App() {
       {
         "رقم القضية": "CAS-2026-802",
         "اسم الموكل": "سالم محمد الكعبي",
-        "اسم الخصم": "شركة الأفق للاستثمار",
+        "اسم الخصم": "شركة الأفق للاستثمار و سالم راشد المهيري",
         "نوع القضية": "عقاري",
         "المحكمة": "دائرة القضاء - أبوظبي",
         "موضوع القضية": "نزاع استرداد مسددات وحدة عقارية تحت الإنشاء",
@@ -6113,6 +6134,9 @@ export default function App() {
   const [caseSortBy, setCaseSortBy] = useState<"default" | "newest" | "oldest" | "number" | "client" | "court">("default");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showCaseStatsOnDemand, setShowCaseStatsOnDemand] = useState(false);
+
+  // حالة تعديل قضية موجودة (عند عدم التعيين، نافذة القضية تُنشئ قضية جديدة بدلاً من تعديل قضية قائمة)
+  const [editingCase, setEditingCase] = useState<CaseItem | null>(null);
 
   // حالات إدارة الموكلين
   const [clientCategoryFilter, setClientCategoryFilter] = useState<string>("الكل");
@@ -8186,6 +8210,7 @@ export default function App() {
   const [form, setForm] = useState<Record<string, any>>({});
   const openModalWithCheck = (kind: string, permKey?: keyof RolePermissions) => {
     if (permKey && !checkPerm(permKey, kind)) return;
+    if (kind === "case") setEditingCase(null); // التأكد من فتح نافذة "قضية جديدة" وليس تعديل قضية سابقة عالقة بالحالة
     setForm({});
     setModal(kind);
   };
@@ -8207,24 +8232,48 @@ export default function App() {
   };
 
   const saveCase = () => {
-    if (!checkPerm("manageCases", "إضافة قضية")) return;
+    if (!checkPerm("manageCases", editingCase ? "تعديل قضية" : "إضافة قضية")) return;
     if (!form.number || !form.clientId) return;
 
     const normNum = normalizeCaseNumberKey(form.number);
-    const existing = cases.find(c => normalizeCaseNumberKey(c.number) === normNum);
+    // عند التعديل، نستثني القضية نفسها من فحص تكرار رقم الملف حتى يمكن حفظها بدون تغيير رقمها
+    const existing = cases.find(c => normalizeCaseNumberKey(c.number) === normNum && c.id !== editingCase?.id);
     if (existing) {
       alert(`تنبيه: يوجد قضية مسجلة مسبقاً بنفس رقم الملف/الدعوى (${form.number}) بالرقم التعريفي #${existing.id}. يرجى التحقق من الرقم لمنع تكرار القضايا.`);
       return;
     }
-    
-    const newCaseId = nextId(cases);
+
     const openDate = form.openDate || todayISO();
-    
     const stage = form.stage || "الابتدائية";
     const status = form.status || "متداولة";
-    
-    setCases(prev => deduplicateCases([...prev, { id: newCaseId, number: form.number, clientId: +form.clientId, opponent: form.opponent || "—", type: form.type || CASE_TYPES[0], court: form.court || COURTS[0], judge: form.judge || "", stage: stage, status: status, subject: form.subject || "", openDate: openDate, fee: +form.fee || 0, emirate: form.emirate || "" }]));
-    
+    const opponents: string[] = (form.opponents || []).map((o: string) => (o || "").trim()).filter(Boolean);
+
+    if (editingCase) {
+      setCases(prev => prev.map(c => c.id === editingCase.id ? {
+        ...c,
+        number: form.number,
+        clientId: +form.clientId,
+        opponents,
+        type: form.type || c.type,
+        court: form.court || c.court,
+        judge: form.judge ?? c.judge,
+        stage: stage,
+        status: status,
+        subject: form.subject ?? c.subject,
+        openDate: openDate,
+        fee: form.fee !== undefined && form.fee !== "" ? +form.fee : c.fee,
+        emirate: form.emirate ?? c.emirate,
+      } : c));
+      logAuditAction("UPDATE", "القضايا", `قضية رقم ${form.number}`, `تعديل بيانات القضية رقم ${form.number} (الخصوم، الأطراف، أو التفاصيل الأساسية)`, editingCase.id);
+      setEditingCase(null);
+      setModal(null);
+      return;
+    }
+
+    const newCaseId = nextId(cases);
+
+    setCases(prev => deduplicateCases([...prev, { id: newCaseId, number: form.number, clientId: +form.clientId, opponents, type: form.type || CASE_TYPES[0], court: form.court || COURTS[0], judge: form.judge || "", stage: stage, status: status, subject: form.subject || "", openDate: openDate, fee: +form.fee || 0, emirate: form.emirate || "" }]));
+
     if (form.taskTemplate) {
       const template = TASK_TEMPLATES.find(t => t.id === form.taskTemplate);
       if (template) {
@@ -8243,7 +8292,7 @@ export default function App() {
         });
       }
     }
-    
+
     setModal(null);
   };
 
@@ -9397,7 +9446,7 @@ export default function App() {
         (c.number && c.number.toLowerCase().includes(query)) ||
         clientName(c.clientId).toLowerCase().includes(query) ||
         (c.subject && c.subject.toLowerCase().includes(query)) ||
-        (c.opponent && c.opponent.toLowerCase().includes(query)) ||
+        (c.opponents && c.opponents.some((o) => o.toLowerCase().includes(query))) ||
         (c.court && c.court.toLowerCase().includes(query)) ||
         (c.judge && c.judge.toLowerCase().includes(query)) ||
         (c.type && c.type.toLowerCase().includes(query)) ||
@@ -11763,7 +11812,7 @@ export default function App() {
                             </div>
                           </td>
                           <td className="px-4 py-3 cursor-pointer" onClick={() => setCaseView(c.id)}>{clientName(c.clientId)}</td>
-                          <td className="px-4 py-3 text-slate-500 cursor-pointer" onClick={() => setCaseView(c.id)}>{c.opponent}</td>
+                          <td className="px-4 py-3 text-slate-500 cursor-pointer" onClick={() => setCaseView(c.id)}>{caseOpponentsLabel(c)}</td>
                           <td className="hidden px-4 py-3 text-slate-500 lg:table-cell cursor-pointer" onClick={() => setCaseView(c.id)}>{c.court}</td>
                           <td className="hidden px-4 py-3 md:table-cell cursor-pointer" onClick={() => setCaseView(c.id)}>
                             {c.judge && c.judge.trim() ? (
@@ -11788,10 +11837,34 @@ export default function App() {
                               <button onClick={() => setCaseView(c.id)} className="text-xs font-semibold text-amber-700 hover:underline">عرض التفاصيل</button>
                               <button
                                 onClick={() => {
+                                  setEditingCase(c);
+                                  setForm({
+                                    number: c.number,
+                                    clientId: c.clientId,
+                                    opponents: c.opponents && c.opponents.length > 0 ? [...c.opponents] : [""],
+                                    type: c.type,
+                                    court: c.court,
+                                    judge: c.judge,
+                                    stage: c.stage,
+                                    status: c.status,
+                                    subject: c.subject,
+                                    openDate: c.openDate,
+                                    fee: c.fee,
+                                    emirate: c.emirate,
+                                  });
+                                  setModal("case");
+                                }}
+                                className="text-slate-400 hover:text-amber-700 p-1 transition"
+                                title="تعديل بيانات القضية"
+                              >
+                                <Edit2 size={15} />
+                              </button>
+                              <button
+                                onClick={() => {
                                   requestDelete({
                                     section: "إدارة القضايا والملفات",
                                     title: `القضية رقم: ${c.number}`,
-                                    details: `الموكل: ${clientName(c.clientId)} | الخصم: ${c.opponent} | المحكمة: ${c.court} | المرحلة: ${getCaseStage(c)}`,
+                                    details: `الموكل: ${clientName(c.clientId)} | الخصم: ${caseOpponentsLabel(c)} | المحكمة: ${c.court} | المرحلة: ${getCaseStage(c)}`,
                                     permKey: "deleteCases",
                                     actionName: "حذف ملف القضية",
                                     onConfirm: () => {
@@ -11857,6 +11930,30 @@ export default function App() {
                     </div>
                     {userPerms.manageCases ? (
                       <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            setEditingCase(selectedCase);
+                            setForm({
+                              number: selectedCase.number,
+                              clientId: selectedCase.clientId,
+                              opponents: selectedCase.opponents && selectedCase.opponents.length > 0 ? [...selectedCase.opponents] : [""],
+                              type: selectedCase.type,
+                              court: selectedCase.court,
+                              judge: selectedCase.judge,
+                              stage: selectedCase.stage,
+                              status: selectedCase.status,
+                              subject: selectedCase.subject,
+                              openDate: selectedCase.openDate,
+                              fee: selectedCase.fee,
+                              emirate: selectedCase.emirate,
+                            });
+                            setModal("case");
+                          }}
+                          className="self-end flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-xs font-bold text-amber-800 hover:bg-amber-100 transition"
+                          title="تعديل بيانات القضية"
+                        >
+                          <Edit2 size={13} /> تعديل بيانات القضية
+                        </button>
                         <div className="space-y-0.5">
                           <span className="text-[10px] font-bold text-slate-400 block">مرحلة الدعوى:</span>
                           <select
@@ -11896,7 +11993,7 @@ export default function App() {
                       ["مرحلة الدعوى (درجة التقاضي)", getCaseStage(selectedCase)],
                       ["حالة القضية الإجرائية", selectedCase.status],
                       ["الموكل", clientName(selectedCase.clientId)],
-                      ["الخصم", selectedCase.opponent],
+                      ["الخصم", caseOpponentsLabel(selectedCase)],
                       ["المحكمة", selectedCase.court],
                       ["الدائرة/القاضي", selectedCase.judge || "—"],
                       ["تاريخ القيد", fmtDate(selectedCase.openDate)],
@@ -14885,7 +14982,7 @@ export default function App() {
                         .replace(/\{\{CLIENT_NAME\}\}/g, selClient ? selClient.name : "—")
                         .replace(/\{\{CLIENT_ID_NO\}\}/g, selClient ? selClient.idNo : "—")
                         .replace(/\{\{COURT\}\}/g, selCs.court)
-                        .replace(/\{\{OPPONENT\}\}/g, selCs.opponent)
+                        .replace(/\{\{OPPONENT\}\}/g, caseOpponentsLabel(selCs))
                         .replace(/\{\{CASE_SUBJECT\}\}/g, selCs.subject)
                         .replace(/\{\{CASE_FEE\}\}/g, selCs.fee ? selCs.fee.toLocaleString("ar-AE") : "0")
                         .replace(/\{\{TODAY_DATE\}\}/g, fmtDate(todayISO()))
@@ -18245,40 +18342,82 @@ export default function App() {
 
       {/* ================= النوافذ المنبثقة ================= */}
       {modal === "case" && (
-        <Modal title="قيد قضية جديدة" onClose={() => setModal(null)}>
+        <Modal title={editingCase ? `تعديل بيانات القضية رقم ${editingCase.number}` : "قيد قضية جديدة"} onClose={() => { setModal(null); setEditingCase(null); }}>
           <div className="space-y-4 text-sm">
             <Field label="رقم القضية لدى المحكمة">
-              <input onChange={f("number")} placeholder="مثال: 1245/2026 تجاري كلي" className={inputCls} />
+              <input value={form.number || ""} onChange={f("number")} placeholder="مثال: 1245/2026 تجاري كلي" className={inputCls} />
             </Field>
             <Field label="الموكل">
-              <select onChange={f("clientId")} className={inputCls}>
+              <select value={form.clientId || ""} onChange={f("clientId")} className={inputCls}>
                 <option value="">اختر الموكل…</option>
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </Field>
-            <Field label="الخصم">
-              <input onChange={f("opponent")} placeholder="اسم المدعى عليه أو الخصم" className={inputCls} />
+
+            {/* قائمة الخصوم — تدعم إضافة أكثر من خصم واحد لنفس القضية */}
+            <Field label="الخصوم (يمكن إضافة أكثر من خصم)">
+              <div className="space-y-2">
+                {(form.opponents && form.opponents.length > 0 ? form.opponents : [""]).map((opp: string, idx: number) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <input
+                      value={opp}
+                      onChange={(e) => {
+                        const list = [...(form.opponents && form.opponents.length > 0 ? form.opponents : [""])];
+                        list[idx] = e.target.value;
+                        setForm((prev: any) => ({ ...prev, opponents: list }));
+                      }}
+                      placeholder="اسم المدعى عليه أو الخصم"
+                      className={inputCls}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const list = [...(form.opponents && form.opponents.length > 0 ? form.opponents : [""])];
+                        list.splice(idx, 1);
+                        setForm((prev: any) => ({ ...prev, opponents: list.length > 0 ? list : [""] }));
+                      }}
+                      className="shrink-0 p-2 rounded-lg text-red-500 hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                      disabled={(form.opponents || [""]).length <= 1}
+                      title="حذف هذا الخصم"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const list = [...(form.opponents && form.opponents.length > 0 ? form.opponents : [""])];
+                    list.push("");
+                    setForm((prev: any) => ({ ...prev, opponents: list }));
+                  }}
+                  className="flex items-center gap-1.5 text-xs font-bold text-amber-700 hover:text-amber-900"
+                >
+                  <Plus size={14} /> إضافة خصم آخر
+                </button>
+              </div>
             </Field>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="مرحلة الدعوى (درجة التقاضي)">
-                <select onChange={f("stage")} defaultValue="الابتدائية" className={inputCls}>
+                <select value={form.stage || "الابتدائية"} onChange={f("stage")} className={inputCls}>
                   {CASE_STAGES.map((st) => <option key={st} value={st}>{st}</option>)}
                 </select>
               </Field>
               <Field label="حالة القضية">
-                <select onChange={f("status")} defaultValue="متداولة" className={inputCls}>
+                <select value={form.status || "متداولة"} onChange={f("status")} className={inputCls}>
                   {CASE_STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </Field>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Field label="نوع الدعوى">
-                <select onChange={f("type")} className={inputCls}>
+                <select value={form.type || CASE_TYPES[0]} onChange={f("type")} className={inputCls}>
                   {CASE_TYPES.map((t) => <option key={t}>{t}</option>)}
                 </select>
               </Field>
               <Field label="الإمارة">
-                <select onChange={f("emirate")} className={inputCls} defaultValue="">
+                <select value={form.emirate || ""} onChange={f("emirate")} className={inputCls}>
                   <option value="">اختر الإمارة...</option>
                   {["أبوظبي", "دبي", "الشارقة", "عجمان", "أم القيوين", "رأس الخيمة", "الفجيرة"].map((e) => (
                     <option key={e} value={e}>{e}</option>
@@ -18286,30 +18425,34 @@ export default function App() {
                 </select>
               </Field>
               <Field label="المحكمة المختصة">
-                <select onChange={f("court")} className={inputCls}>
+                <select value={form.court || COURTS[0]} onChange={f("court")} className={inputCls}>
                   {COURTS.map((c) => <option key={c}>{c}</option>)}
                 </select>
               </Field>
             </div>
             <Field label="الدائرة القضائية / القاضي المشرف">
-              <input onChange={f("judge")} placeholder="مثال: دائرة الجنايات الأولى - القاضي محمد" className={inputCls} />
+              <input value={form.judge || ""} onChange={f("judge")} placeholder="مثال: دائرة الجنايات الأولى - القاضي محمد" className={inputCls} />
             </Field>
             <Field label="موضوع الدعوى والطلبات">
-              <textarea onChange={f("subject")} rows={2} placeholder="ملخص وقائع الدعوى..." className={inputCls} />
+              <textarea value={form.subject || ""} onChange={f("subject")} rows={2} placeholder="ملخص وقائع الدعوى..." className={inputCls} />
             </Field>
-            <Field label="قالب المهام التلقائية (اختياري)">
-              <select onChange={f("taskTemplate")} className={inputCls}>
-                <option value="">لا يوجد (عدم إضافة مهام تلقائية)</option>
-                {TASK_TEMPLATES.map((t) => (
-                  <option key={t.id} value={t.id}>{t.name}</option>
-                ))}
-              </select>
-            </Field>
+            {!editingCase && (
+              <Field label="قالب المهام التلقائية (اختياري)">
+                <select onChange={f("taskTemplate")} className={inputCls}>
+                  <option value="">لا يوجد (عدم إضافة مهام تلقائية)</option>
+                  {TASK_TEMPLATES.map((t) => (
+                    <option key={t.id} value={t.id}>{t.name}</option>
+                  ))}
+                </select>
+              </Field>
+            )}
             <Field label="الأتعاب المتفق عليها (د.إ)">
-              <input type="number" onChange={f("fee")} placeholder="0.00" className={inputCls} />
+              <input type="number" value={form.fee ?? ""} onChange={f("fee")} placeholder="0.00" className={inputCls} />
             </Field>
 
-            <button onClick={saveCase} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">حفظ وحفظ القضية</button>
+            <button onClick={saveCase} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">
+              {editingCase ? "حفظ التعديلات" : "حفظ وحفظ القضية"}
+            </button>
           </div>
         </Modal>
       )}
@@ -21410,6 +21553,7 @@ export default function App() {
               <p className="font-bold">💡 التعليمات وآلية الربط:</p>
               <p>• يمكنك إرفاق جدول Excel يحتوي على القضايا السابقة. وسيتم ربط القضية بالموكل تلقائياً إذا كان الاسم مسجلاً بالنظام، أو إنشاء ملف موكل جديد آلياً.</p>
               <p>• الأعمدة المقبولة في ملف Excel: [رقم القضية، اسم الموكل، اسم الخصم، نوع القضية، المحكمة، موضوع القضية، تاريخ القيد، الأتعاب].</p>
+              <p>• عمود "اسم الخصم" يدعم أكثر من خصم لنفس القضية — افصل بين الأسماء بفاصلة "،" أو بكلمة "و" (مثال: أحمد محمد و شركة الأفق للاستثمار).</p>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
@@ -21451,7 +21595,7 @@ export default function App() {
                         <tr key={i} className="hover:bg-amber-50/40">
                           <td className="p-2.5 font-bold">{item.caseNumber}</td>
                           <td className="p-2.5">{item.clientName}</td>
-                          <td className="p-2.5 text-slate-500">{item.opponent}</td>
+                          <td className="p-2.5 text-slate-500">{caseOpponentsLabel(item)}</td>
                           <td className="p-2.5 text-slate-500">{item.court}</td>
                           <td className="p-2.5">{item.type}</td>
                           <td className="p-2.5">
