@@ -8260,7 +8260,8 @@ export default function App() {
         stage: stage,
         status: status,
         subject: form.subject ?? c.subject,
-        openDate: openDate,
+        // في وضع التعديل: نحافظ على تاريخ القيد كما هو محفوظ (أو كما عدّله المستخدم صراحة عبر الحقل)، ولا نستبدله بتاريخ اليوم تلقائياً
+        openDate: form.openDate ?? c.openDate,
         fee: form.fee !== undefined && form.fee !== "" ? +form.fee : c.fee,
         emirate: form.emirate ?? c.emirate,
       } : c));
@@ -18435,6 +18436,9 @@ export default function App() {
             </Field>
             <Field label="موضوع الدعوى والطلبات">
               <textarea value={form.subject || ""} onChange={f("subject")} rows={2} placeholder="ملخص وقائع الدعوى..." className={inputCls} />
+            </Field>
+            <Field label="تاريخ القيد (اختياري)">
+              <input type="date" value={form.openDate || ""} onChange={f("openDate")} className={inputCls} />
             </Field>
             {!editingCase && (
               <Field label="قالب المهام التلقائية (اختياري)">
