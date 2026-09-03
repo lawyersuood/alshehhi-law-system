@@ -4789,6 +4789,13 @@ export default function App() {
     });
   }, [auditLogs, auditActionFilter, auditModuleFilter, auditSearchTerm]);
 
+  // قائمة "الأقسام" لفلتر سجل التدقيق تُبنى ديناميكياً من قيم targetModule الفعلية المسجّلة بالسجل،
+  // بدل قائمة ثابتة يدوية كانت لا تطابق نصياً القيم الحقيقية التي تُسجَّل بها الأنشطة (مثال: "سجل الموكلين" في القائمة
+  // مقابل "الموكلين" في السجل الفعلي) — ما كان يجعل اختيار أغلب الأقسام من الفلتر يُظهر نتائج فارغة رغم وجود أنشطة فعلية
+  const auditModuleOptions = useMemo(() => {
+    return Array.from(new Set(auditLogs.map((a) => a.targetModule))).filter(Boolean).sort((a, b) => a.localeCompare(b, "ar"));
+  }, [auditLogs]);
+
   // ---------- المبادئ والأحكام القضائية (Legal Precedents) ----------
   const [precedents, setPrecedents] = useState<LegalPrecedent[]>(() => loadStorage("firm_legal_precedents", seedLegalPrecedents));
   const [precedentSearch, setPrecedentSearch] = useState<string>("");
@@ -15861,18 +15868,9 @@ export default function App() {
                             className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-bold focus:border-amber-500 focus:outline-none bg-stone-50"
                           >
                             <option value="الكل">جميع الأقسام</option>
-                            <option value="إدارة القضايا">إدارة القضايا</option>
-                            <option value="سجل الموكلين">سجل الموكلين</option>
-                            <option value="المستخدمون والصلاحيات">المستخدمون والصلاحيات</option>
-                            <option value="الفواتير والضريبة">الفواتير والضريبة</option>
-                            <option value="اتفاقيات وعقود الأتعاب">اتفاقيات وعقود الأتعاب</option>
-                            <option value="الأرشيف والمستندات">الأرشيف والمستندات</option>
-                            <option value="الوكالات القانونية">الوكالات القانونية</option>
-                            <option value="جدول الجلسات والرول القضائي">جدول الجلسات والرول القضائي</option>
-                            <option value="المهام والتكليفات">المهام والتكليفات</option>
-                            <option value="قوائم الامتثال والحظر KYC">قوائم الامتثال والحظر KYC</option>
-                            <option value="دليل المحاكم والجهات القضائية">دليل المحاكم والجهات القضائية</option>
-                            <option value="الكادر والرواتب HR">الكادر والرواتب HR</option>
+                            {auditModuleOptions.map((m) => (
+                              <option key={m} value={m}>{m}</option>
+                            ))}
                           </select>
 
                           <button
@@ -16079,6 +16077,7 @@ export default function App() {
                         <option value="محكمة تمييز دبي">محكمة تمييز دبي</option>
                         <option value="محكمة نقض أبوظبي">محكمة نقض أبوظبي</option>
                         <option value="محكمة تمييز رأس الخيمة">محكمة تمييز رأس الخيمة</option>
+                        <option value="محاكم عجمان الاستئنافية">محاكم عجمان الاستئنافية</option>
                       </select>
 
                       {/* فلتر التصنيف */}
@@ -16094,6 +16093,7 @@ export default function App() {
                         <option value="عمالي">عمالي</option>
                         <option value="جزائي">جزائي</option>
                         <option value="أحوال شخصية">أحوال شخصية</option>
+                        <option value="إداري">إداري</option>
                       </select>
 
                       {/* فلتر السنة */}
