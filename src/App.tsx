@@ -14397,32 +14397,49 @@ export default function App() {
                           </button>
                         </div>
 
-                        {/* إجمالي رصيد الأمانات لكل موكل */}
-                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                          {clients.map((c) => {
-                            const cTx = trustTransactions.filter((t) => t.clientId === c.id);
-                            const deposits = cTx.filter((t) => t.type === "إيداع أمانة").reduce((acc, t) => acc + t.amount, 0);
-                            const withdrawals = cTx.filter((t) => t.type === "صرف أمانة").reduce((acc, t) => acc + t.amount, 0);
-                            const net = deposits - withdrawals;
-                            return (
-                              <div key={c.id} className="app-card p-4 space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <h3 className="font-bold text-slate-900 text-sm">{c.name}</h3>
-                                  <Badge className={net > 0 ? "bg-emerald-100 text-emerald-800" : net < 0 ? "bg-red-100 text-red-800 border border-red-200" : "bg-stone-100 text-slate-600"}>
-                                    {net < 0 ? "عجز في الأمانة!" : "رصيد الأمانة"}
-                                  </Badge>
-                                </div>
-                                <p className="text-2xl font-mono font-bold text-amber-600">{fmtAED(net)}</p>
-                                <div className="text-[11px] text-slate-500 flex justify-between border-t border-slate-100 pt-2">
-                                  <span>إيداعات: {fmtAED(deposits)}</span>
-                                  <span>مصروفات أمانة: {fmtAED(withdrawals)}</span>
-                                </div>
+                        {/* إجمالي رصيد الأمانات لكل موكل — تُعرض فقط للموكلين الذين لديهم حركة أمانة فعلية،
+                            بدل عرض بطاقة لكل موكل مسجل بالمكتب (111 موكلاً) حتى لو لم تُسجَّل له أي معاملة أمانة إطلاقاً */}
+                        {(() => {
+                          const clientsWithTrust = clients.filter((c) => trustTransactions.some((t) => t.clientId === c.id));
+                          return clientsWithTrust.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-slate-300 bg-white space-y-3">
+                              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                                <ShieldCheck size={24} />
                               </div>
-                            );
-                          })}
-                        </div>
+                              <p className="text-sm font-bold text-slate-800">لا توجد معاملات أمانة مسجلة حالياً</p>
+                              <p className="text-xs text-slate-500 max-w-sm">
+                                عند تسجيل أول إيداع أو صرف أمانة لأحد الموكلين، سيظهر رصيده هنا للمتابعة.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                              {clientsWithTrust.map((c) => {
+                                const cTx = trustTransactions.filter((t) => t.clientId === c.id);
+                                const deposits = cTx.filter((t) => t.type === "إيداع أمانة").reduce((acc, t) => acc + t.amount, 0);
+                                const withdrawals = cTx.filter((t) => t.type === "صرف أمانة").reduce((acc, t) => acc + t.amount, 0);
+                                const net = deposits - withdrawals;
+                                return (
+                                  <div key={c.id} className="app-card p-4 space-y-2">
+                                    <div className="flex items-center justify-between">
+                                      <h3 className="font-bold text-slate-900 text-sm">{c.name}</h3>
+                                      <Badge className={net > 0 ? "bg-emerald-100 text-emerald-800" : net < 0 ? "bg-red-100 text-red-800 border border-red-200" : "bg-stone-100 text-slate-600"}>
+                                        {net < 0 ? "عجز في الأمانة!" : "رصيد الأمانة"}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-2xl font-mono font-bold text-amber-600">{fmtAED(net)}</p>
+                                    <div className="text-[11px] text-slate-500 flex justify-between border-t border-slate-100 pt-2">
+                                      <span>إيداعات: {fmtAED(deposits)}</span>
+                                      <span>مصروفات أمانة: {fmtAED(withdrawals)}</span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
 
                         {/* جدول سجل الأمانات */}
+                        {trustTransactions.length > 0 && (
                         <div className="overflow-x-auto custom-scrollbar app-card">
                           <table className="w-full min-w-[650px] text-sm">
                             <thead className="bg-stone-50 text-right text-xs text-slate-500">
@@ -14459,6 +14476,7 @@ export default function App() {
                             </tbody>
                           </table>
                         </div>
+                        )}
                       </div>
                     )}
 
@@ -14477,54 +14495,74 @@ export default function App() {
                           </button>
                         </div>
 
-                        {/* ملخص تقرير ربحية القضايا */}
-                        <div className="space-y-3">
-                          {cases.map((cs) => {
-                            const csInvoices = invoices.filter((i) => i.caseId === cs.id);
-                            const totalAgreedFee = csInvoices.reduce((acc, i) => acc + i.amount, 0);
-                            const csTime = timeLogs.filter((t) => t.caseId === cs.id);
-                            const totalTimeCost = csTime.reduce((acc, t) => acc + (t.hours * t.hourlyRate), 0);
-                            const csExpenses = caseExpenses.filter((e) => e.caseId === cs.id);
-                            const totalExpensesPaid = csExpenses.reduce((acc, e) => acc + e.amount, 0);
-                            const netProfit = totalAgreedFee - totalExpensesPaid;
-
-                            return (
-                              <div key={cs.id} className="app-card p-5 space-y-3">
-                                <div className="flex flex-wrap items-center justify-between gap-3">
-                                  <div>
-                                    <h3 className="font-bold text-slate-900 text-base">{cs.number} — {clientName(cs.clientId)}</h3>
-                                    <p className="text-xs text-slate-500">{cs.court} • الموضوع: {cs.subject}</p>
-                                  </div>
-                                  <button
-                                    onClick={() => setReport({ type: "profitability", caseId: cs.id })}
-                                    className="flex items-center gap-1 rounded-xl bg-slate-900 text-white px-3 py-1.5 text-xs font-bold hover:bg-slate-800"
-                                  >
-                                    <Printer size={14} /> عرض وتصدير تقرير الربحية (PDF)
-                                  </button>
-                                </div>
-
-                                <div className="grid gap-3 sm:grid-cols-4 bg-stone-50 p-3 rounded-xl border border-stone-200 text-xs">
-                                  <div>
-                                    <span className="text-slate-500 block">إجمالي الأتعاب المتفق عليها</span>
-                                    <span className="font-bold text-slate-900 text-sm">{fmtAED(totalAgreedFee)}</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-slate-500 block">مصروفات قضائية ومدفوعات</span>
-                                    <span className="font-bold text-red-600 text-sm">{fmtAED(totalExpensesPaid)}</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-slate-500 block">تكلفة وقت المحامين</span>
-                                    <span className="font-bold text-slate-700 text-sm">{fmtAED(totalTimeCost)}</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-slate-500 block">الربح الصافي المستهدف</span>
-                                    <span className={`font-bold text-sm ${netProfit >= 0 ? "text-emerald-700" : "text-red-700"}`}>{fmtAED(netProfit)}</span>
-                                  </div>
-                                </div>
+                        {/* ملخص تقرير ربحية القضايا — تُعرض فقط القضايا التي لديها فعلياً فواتير أو ساعات عمل أو مصروفات مسجلة،
+                            بدل عرض بطاقة تقرير لكل قضية نشطة (89 قضية) حتى لو لم تُسجَّل عليها أي بيانات مالية إطلاقاً */}
+                        {(() => {
+                          const casesWithActivity = cases.filter((cs) =>
+                            invoices.some((i) => i.caseId === cs.id) ||
+                            timeLogs.some((t) => t.caseId === cs.id) ||
+                            caseExpenses.some((e) => e.caseId === cs.id)
+                          );
+                          return casesWithActivity.length === 0 ? (
+                            <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-slate-300 bg-white space-y-3">
+                              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                                <TrendingUp size={24} />
                               </div>
-                            );
-                          })}
-                        </div>
+                              <p className="text-sm font-bold text-slate-800">لا توجد بيانات مالية على القضايا حتى الآن</p>
+                              <p className="text-xs text-slate-500 max-w-sm">
+                                بمجرد تسجيل فاتورة أو ساعات عمل أو مصروف على إحدى القضايا، سيظهر هنا تقرير ربحيتها.
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {casesWithActivity.map((cs) => {
+                                const csInvoices = invoices.filter((i) => i.caseId === cs.id);
+                                const totalAgreedFee = csInvoices.reduce((acc, i) => acc + i.amount, 0);
+                                const csTime = timeLogs.filter((t) => t.caseId === cs.id);
+                                const totalTimeCost = csTime.reduce((acc, t) => acc + (t.hours * t.hourlyRate), 0);
+                                const csExpenses = caseExpenses.filter((e) => e.caseId === cs.id);
+                                const totalExpensesPaid = csExpenses.reduce((acc, e) => acc + e.amount, 0);
+                                const netProfit = totalAgreedFee - totalExpensesPaid;
+
+                                return (
+                                  <div key={cs.id} className="app-card p-5 space-y-3">
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
+                                      <div>
+                                        <h3 className="font-bold text-slate-900 text-base">{cs.number} — {clientName(cs.clientId)}</h3>
+                                        <p className="text-xs text-slate-500">{cs.court} • الموضوع: {cs.subject}</p>
+                                      </div>
+                                      <button
+                                        onClick={() => setReport({ type: "profitability", caseId: cs.id })}
+                                        className="flex items-center gap-1 rounded-xl bg-slate-900 text-white px-3 py-1.5 text-xs font-bold hover:bg-slate-800"
+                                      >
+                                        <Printer size={14} /> عرض وتصدير تقرير الربحية (PDF)
+                                      </button>
+                                    </div>
+
+                                    <div className="grid gap-3 sm:grid-cols-4 bg-stone-50 p-3 rounded-xl border border-stone-200 text-xs">
+                                      <div>
+                                        <span className="text-slate-500 block">إجمالي الأتعاب المتفق عليها</span>
+                                        <span className="font-bold text-slate-900 text-sm">{fmtAED(totalAgreedFee)}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-slate-500 block">مصروفات قضائية ومدفوعات</span>
+                                        <span className="font-bold text-red-600 text-sm">{fmtAED(totalExpensesPaid)}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-slate-500 block">تكلفة وقت المحامين</span>
+                                        <span className="font-bold text-slate-700 text-sm">{fmtAED(totalTimeCost)}</span>
+                                      </div>
+                                      <div>
+                                        <span className="text-slate-500 block">الربح الصافي المستهدف</span>
+                                        <span className={`font-bold text-sm ${netProfit >= 0 ? "text-emerald-700" : "text-red-700"}`}>{fmtAED(netProfit)}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
                   </>
