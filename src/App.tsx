@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import OfficialLetterComposer, { LETTERHEAD_LAYOUT as LETTERHEAD_PAGE_LAYOUT } from "./OfficialLetterComposer";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 import Logo from "./components/Logo";
 import BookingConsultationView from "./components/BookingConsultationView";
 import PublicConsultationPage, { BookingRecord, ConsultationSettings } from "./components/PublicConsultationPage";
@@ -19,7 +21,7 @@ import {
   Inbox, Paperclip, RotateCw, QrCode, Settings, History, BookOpen, UploadCloud, Video,
   Sparkles, Bot, Zap, PlusCircle, Layers, BarChart3, PieChart as LucidePieChart, Activity, CheckSquare, Target, Percent, Menu,
   SlidersHorizontal, Eye, EyeOff, Hash, ArrowUpDown, RotateCcw, ChevronDown, ChevronUp,
-  Handshake, UserCog, Stamp, ScrollText
+  Handshake, UserCog, Stamp, ScrollText, Save
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
@@ -309,6 +311,7 @@ export interface ColleagueDelegation {
   sessionDate?: string;          // تاريخ الجلسة المناب لها الزميل
   issuerLicenseNumber?: string;  // رقم قيد المحامي الموكِّل (يُسحب تلقائياً، قابل للتعديل)
   colleagueLicenseNumber?: string; // رقم قيد الزميل المُناب (يُسحب تلقائياً، قابل للتعديل)
+  customBodyHtml?: string; // صياغة نص الإنابة بعد تعديلها يدوياً من المستخدم (تحل محل النص التلقائي عند وجودها)
 }
 
 export interface TaskItem {
@@ -557,6 +560,7 @@ export interface OfficeAgreement {
   paymentTermsEn: string;
   installments: OfficeAgreementInstallment[];
   createdAt: string;
+  customClauses?: { ar: string; en: string }[]; // بنود وشروط معدّلة يدوياً لهذه الاتفاقية تحديداً (تحل محل القائمة الافتراضية عند وجودها)
 }
 
 export interface Employee {
@@ -5175,6 +5179,13 @@ export default function App() {
   const [agrPreviewId, setAgrPreviewId] = useState<number | null>(null);
   const [delegationPreviewId, setDelegationPreviewId] = useState<number | null>(null);
   const [deleteAgrConfirm, setDeleteAgrConfirm] = useState<OfficeAgreement | null>(null);
+  // تعديل صياغة نص الإنابة (خاص بكل إنابة على حدة)
+  const [editingDelegationWording, setEditingDelegationWording] = useState(false);
+  const [delegationDraftHtml, setDelegationDraftHtml] = useState("");
+  const delegationBodyRef = React.useRef<HTMLDivElement>(null);
+  // تعديل بنود اتفاقية الأتعاب (خاص بكل اتفاقية على حدة)
+  const [editingAgreementClauses, setEditingAgreementClauses] = useState(false);
+  const [agreementClausesDraft, setAgreementClausesDraft] = useState<{ ar: string; en: string }[]>([]);
   const emptyAgrForm = () => ({
     contractDate: todayISO(),
     contractCity: "الشارقة",
@@ -20158,6 +20169,24 @@ export default function App() {
   const logAgreementUsage = () => {
     logAuditAction("UPDATE", "الورق الرسمي", `طباعة اتفاقية أتعاب رقم: ${oa.agreementNumber}`, `استخدم المستخدم "${currentUser.name}" الورق الرسمي${includesSigStampAgr ? " والتوقيع والختم المعتمدين" : ""} لطباعة/تصدير اتفاقية الأتعاب رقم ${oa.agreementNumber}`, oa.id);
   };
+  const activeClauses = oa.customClauses && oa.customClauses.length > 0 ? oa.customClauses : OFFICE_AGREEMENT_CLAUSES;
+  const startEditAgreementClauses = () => {
+    if (!checkPerm("manageAgreements", "تعديل بنود اتفاقية الأتعاب")) return;
+    setAgreementClausesDraft(activeClauses.map((c) => ({ ...c })));
+    setEditingAgreementClauses(true);
+  };
+  const saveAgreementClauses = () => {
+    const cleaned = agreementClausesDraft.filter((c) => c.ar.trim() || c.en.trim());
+    setOfficeAgreements((prev) => prev.map((x) => (x.id === oa.id ? { ...x, customClauses: cleaned } : x)));
+    logAuditAction("UPDATE", "اتفاقيات الأتعاب", `تعديل بنود اتفاقية رقم: ${oa.agreementNumber}`, `قام المستخدم "${currentUser.name}" بتعديل الشروط والبنود يدوياً لاتفاقية الأتعاب رقم ${oa.agreementNumber}`, oa.id);
+    setEditingAgreementClauses(false);
+  };
+  const cancelEditAgreementClauses = () => setEditingAgreementClauses(false);
+  const resetAgreementClauses = () => {
+    if (!checkPerm("manageAgreements", "استعادة البنود الافتراضية لاتفاقية الأتعاب")) return;
+    setOfficeAgreements((prev) => prev.map((x) => (x.id === oa.id ? { ...x, customClauses: undefined } : x)));
+    logAuditAction("UPDATE", "اتفاقيات الأتعاب", `استعادة البنود الافتراضية لاتفاقية رقم: ${oa.agreementNumber}`, `قام المستخدم "${currentUser.name}" باستعادة الشروط والبنود الافتراضية لاتفاقية الأتعاب رقم ${oa.agreementNumber}`, oa.id);
+  };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 overflow-y-auto">
       <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl print-area">
@@ -20178,17 +20207,48 @@ export default function App() {
             >
               <Trash2 size={15} /> حذف الاتفاقية
             </button>
-            <button
-              onClick={() => { logAgreementUsage(); handleDownloadPDF("printable-agreement", `اتفاقية_أتعاب_${oa.agreementNumber}.pdf`); }}
-              className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
-              title="تصدير وتحميل الاتفاقية مباشرة كملف PDF"
-            >
-              <Download size={15} /> تحميل PDF
-            </button>
-            <button onClick={() => { logAgreementUsage(); window.print(); }} className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400">
-              <Printer size={15} /> طباعة (Print)
-            </button>
-            <button onClick={() => setAgrPreviewId(null)} className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="إغلاق">
+            {!editingAgreementClauses && (
+              <button
+                onClick={startEditAgreementClauses}
+                className="flex items-center gap-1.5 rounded-xl bg-white border border-amber-300 px-3.5 py-2 text-xs font-bold text-amber-700 hover:bg-amber-50 transition"
+                title="تعديل الشروط والبنود يدوياً لهذه الاتفاقية"
+              >
+                <Edit2 size={15} /> تعديل البنود
+              </button>
+            )}
+            {!editingAgreementClauses && oa.customClauses && (
+              <button
+                onClick={resetAgreementClauses}
+                className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 transition"
+                title="استعادة البنود الافتراضية"
+              >
+                <RotateCcw size={15} /> استعادة الافتراضي
+              </button>
+            )}
+            {editingAgreementClauses ? (
+              <>
+                <button onClick={saveAgreementClauses} className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition">
+                  <Save size={15} /> حفظ البنود
+                </button>
+                <button onClick={cancelEditAgreementClauses} className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+                  إلغاء
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => { logAgreementUsage(); handleDownloadPDF("printable-agreement", `اتفاقية_أتعاب_${oa.agreementNumber}.pdf`); }}
+                  className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
+                  title="تصدير وتحميل الاتفاقية مباشرة كملف PDF"
+                >
+                  <Download size={15} /> تحميل PDF
+                </button>
+                <button onClick={() => { logAgreementUsage(); window.print(); }} className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400">
+                  <Printer size={15} /> طباعة (Print)
+                </button>
+              </>
+            )}
+            <button onClick={() => { setAgrPreviewId(null); setEditingAgreementClauses(false); }} className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="إغلاق">
               <X size={20} />
             </button>
           </div>
@@ -20268,18 +20328,57 @@ export default function App() {
             </table>
           )}
 
-          {/* البنود الثابتة 1-8 */}
+          {/* البنود الثابتة — قابلة للتعديل يدوياً لكل اتفاقية على حدة */}
           <div className="border border-slate-300 rounded-lg overflow-hidden text-[11px]">
             <div className="bg-slate-100 font-bold px-4 py-2 grid grid-cols-2">
               <span>الشروط والبنود</span>
               <span dir="ltr">Terms & Conditions</span>
             </div>
-            {OFFICE_AGREEMENT_CLAUSES.map((cl, idx) => (
-              <div key={idx} className="grid grid-cols-2 gap-4 p-3 border-t border-slate-200">
-                <p className="leading-relaxed"><b>({idx + 1})</b> {cl.ar}</p>
-                <p className="leading-relaxed" dir="ltr"><b>{idx + 1}-</b> {cl.en}</p>
+            {editingAgreementClauses ? (
+              <div className="p-3 space-y-3 no-print">
+                {agreementClausesDraft.map((cl, idx) => (
+                  <div key={idx} className="grid grid-cols-2 gap-3 border border-slate-200 rounded-lg p-2 bg-slate-50">
+                    <textarea
+                      value={cl.ar}
+                      onChange={(e) => setAgreementClausesDraft((prev) => prev.map((c, i) => (i === idx ? { ...c, ar: e.target.value } : c)))}
+                      className="w-full rounded-lg border border-slate-300 p-2 text-xs leading-relaxed min-h-[70px]"
+                      placeholder={`البند (${idx + 1}) بالعربي`}
+                    />
+                    <div className="relative">
+                      <textarea
+                        dir="ltr"
+                        value={cl.en}
+                        onChange={(e) => setAgreementClausesDraft((prev) => prev.map((c, i) => (i === idx ? { ...c, en: e.target.value } : c)))}
+                        className="w-full rounded-lg border border-slate-300 p-2 text-xs leading-relaxed min-h-[70px]"
+                        placeholder={`Clause (${idx + 1}) in English`}
+                      />
+                      <button
+                        onClick={() => setAgreementClausesDraft((prev) => prev.filter((_, i) => i !== idx))}
+                        className="absolute -top-2 -left-2 rounded-full bg-red-100 text-red-600 p-1 hover:bg-red-200 transition"
+                        title="حذف هذا البند"
+                        type="button"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                <button
+                  onClick={() => setAgreementClausesDraft((prev) => [...prev, { ar: "", en: "" }])}
+                  className="flex items-center gap-1.5 rounded-xl bg-white border border-dashed border-slate-300 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition"
+                  type="button"
+                >
+                  <Plus size={14} /> إضافة بند جديد
+                </button>
               </div>
-            ))}
+            ) : (
+              activeClauses.map((cl, idx) => (
+                <div key={idx} className="grid grid-cols-2 gap-4 p-3 border-t border-slate-200">
+                  <p className="leading-relaxed whitespace-pre-line"><b>({idx + 1})</b> {cl.ar}</p>
+                  <p className="leading-relaxed whitespace-pre-line" dir="ltr"><b>{idx + 1}-</b> {cl.en}</p>
+                </div>
+              ))
+            )}
           </div>
 
           {/* الإشهاد والتوقيعات */}
@@ -20335,6 +20434,22 @@ export default function App() {
     const includesSigStamp = canUseSignatureStamp && Boolean(letterhead.signatureImg || letterhead.stampImg);
     logAuditAction("UPDATE", "الورق الرسمي", `طباعة إنابة رقم: ${d.refNo}`, `استخدم المستخدم "${currentUser.name}" الورق الرسمي${includesSigStamp ? " والتوقيع والختم المعتمدين" : ""} لطباعة/تصدير الإنابة رقم ${d.refNo} الخاصة بالزميل ${colleague?.name || "—"}`, d.id);
   };
+  const startEditDelegationWording = () => {
+    if (!checkPerm("manageColleagues", "تعديل صياغة الإنابة")) return;
+    setDelegationDraftHtml(d.customBodyHtml || delegationBodyRef.current?.innerHTML || "");
+    setEditingDelegationWording(true);
+  };
+  const saveDelegationWording = () => {
+    setColleagueDelegations((prev) => prev.map((x) => (x.id === d.id ? { ...x, customBodyHtml: delegationDraftHtml } : x)));
+    logAuditAction("UPDATE", "الزملاء والإنابات", `تعديل صياغة إنابة رقم: ${d.refNo}`, `قام المستخدم "${currentUser.name}" بتعديل صياغة نص الإنابة رقم ${d.refNo} يدوياً`, d.id);
+    setEditingDelegationWording(false);
+  };
+  const cancelEditDelegationWording = () => setEditingDelegationWording(false);
+  const resetDelegationWording = () => {
+    if (!checkPerm("manageColleagues", "استعادة الصياغة الافتراضية للإنابة")) return;
+    setColleagueDelegations((prev) => prev.map((x) => (x.id === d.id ? { ...x, customBodyHtml: undefined } : x)));
+    logAuditAction("UPDATE", "الزملاء والإنابات", `استعادة الصياغة الافتراضية لإنابة رقم: ${d.refNo}`, `قام المستخدم "${currentUser.name}" باستعادة الصياغة التلقائية الافتراضية لنص الإنابة رقم ${d.refNo}`, d.id);
+  };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 overflow-y-auto">
       <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl print-area">
@@ -20344,16 +20459,48 @@ export default function App() {
             <h3 className="font-bold text-slate-800">معاينة الإنابة {d.refNo}</h3>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => { logDelegationUsage(); handleDownloadPDF("printable-delegation", `إنابة_${d.refNo}.pdf`); }}
-              className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
-            >
-              <Download size={15} /> تحميل PDF
-            </button>
-            <button onClick={() => { logDelegationUsage(); window.print(); }} className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400">
-              <Printer size={15} /> طباعة
-            </button>
-            <button onClick={() => setDelegationPreviewId(null)} className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="إغلاق"><X size={20} /></button>
+            {editingDelegationWording ? (
+              <>
+                <button
+                  onClick={saveDelegationWording}
+                  className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition"
+                >
+                  <Save size={15} /> حفظ الصياغة
+                </button>
+                <button onClick={cancelEditDelegationWording} className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+                  إلغاء
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={startEditDelegationWording}
+                  className="flex items-center gap-1.5 rounded-xl bg-white border border-amber-300 px-3.5 py-2 text-xs font-bold text-amber-700 hover:bg-amber-50 transition"
+                  title="تعديل صياغة نص الإنابة يدوياً"
+                >
+                  <Edit2 size={15} /> تعديل الصياغة
+                </button>
+                {d.customBodyHtml && (
+                  <button
+                    onClick={resetDelegationWording}
+                    className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 transition"
+                    title="استعادة الصياغة التلقائية الافتراضية"
+                  >
+                    <RotateCcw size={15} /> استعادة الافتراضي
+                  </button>
+                )}
+                <button
+                  onClick={() => { logDelegationUsage(); handleDownloadPDF("printable-delegation", `إنابة_${d.refNo}.pdf`); }}
+                  className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
+                >
+                  <Download size={15} /> تحميل PDF
+                </button>
+                <button onClick={() => { logDelegationUsage(); window.print(); }} className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400">
+                  <Printer size={15} /> طباعة
+                </button>
+              </>
+            )}
+            <button onClick={() => { setDelegationPreviewId(null); setEditingDelegationWording(false); }} className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="إغلاق"><X size={20} /></button>
           </div>
         </div>
 
@@ -20371,30 +20518,42 @@ export default function App() {
             <p>لدى {linkedCase?.court || "المحكمة المختصة"} الموقرة ,,,</p>
             <p>في القضية رقم :- <b>{linkedCase?.number || d.caseTitleSnapshot || "—"}</b></p>
           </div>
-          <h2 className="text-xl font-bold text-center tracking-[0.3em]">إنـابـة</h2>
-          <div className="text-sm space-y-2.5">
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-              <span>الموكل :- <b>{linkedCase ? clientName(linkedCase.clientId) : "—"}</b></span>
-              <span>الصفة :- <b>{linkedCase?.clientCapacity || "—"}</b></span>
-            </div>
-            <p>ضـــد :- <b>{linkedCase ? (caseOpponentsLabel(linkedCase) || "—") : "—"}</b></p>
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pt-2 border-t border-dashed border-slate-300">
-              <span>أنـــا المحامي :- <b>{d.issuedByName}</b></span>
-              <span>قيد رقم :- <b>{d.issuerLicenseNumber || "—"}</b></span>
-            </div>
-            <p className="leading-loose">
-              بموجب هذه الإنابة، وبصفتي وكيلاً عن الموكل المذكور أعلاه أنيب زميلي الأستاذ المحامي :- <b>{colleague?.name || "—"}</b>
-              {"  "}قيد رقم :- <b>{d.colleagueLicenseNumber || "—"}</b>
-            </p>
-            <p className="leading-loose">
-              للحضور والترافع والقيام بجميع الإجراءات اللازمة نيابة عني في القضية المذكورة أعلاه
-              {d.sessionDate ? <> وذلك بجلسة يوم <b>{fmtDate(d.sessionDate)}</b></> : ""}
-              {!linkedCase && d.caseTitleSnapshot ? ` (${d.caseTitleSnapshot})` : ""}.
-            </p>
-          </div>
-          <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 text-sm">
-            <p className="font-bold mb-1">الغرض من الإنابة:</p>
-            <p className="whitespace-pre-line">{d.purpose}</p>
+          <div ref={delegationBodyRef} className="space-y-5">
+            {editingDelegationWording ? (
+              <div className="delegation-quill-editor">
+                <ReactQuill theme="snow" value={delegationDraftHtml} onChange={setDelegationDraftHtml} />
+              </div>
+            ) : d.customBodyHtml ? (
+              <div dangerouslySetInnerHTML={{ __html: d.customBodyHtml }} />
+            ) : (
+              <>
+                <h2 className="text-xl font-bold text-center tracking-[0.3em]">إنـابـة</h2>
+                <div className="text-sm space-y-2.5">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                    <span>الموكل :- <b>{linkedCase ? clientName(linkedCase.clientId) : "—"}</b></span>
+                    <span>الصفة :- <b>{linkedCase?.clientCapacity || "—"}</b></span>
+                  </div>
+                  <p>ضـــد :- <b>{linkedCase ? (caseOpponentsLabel(linkedCase) || "—") : "—"}</b></p>
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pt-2 border-t border-dashed border-slate-300">
+                    <span>أنـــا المحامي :- <b>{d.issuedByName}</b></span>
+                    <span>قيد رقم :- <b>{d.issuerLicenseNumber || "—"}</b></span>
+                  </div>
+                  <p className="leading-loose">
+                    بموجب هذه الإنابة، وبصفتي وكيلاً عن الموكل المذكور أعلاه أنيب زميلي الأستاذ المحامي :- <b>{colleague?.name || "—"}</b>
+                    {"  "}قيد رقم :- <b>{d.colleagueLicenseNumber || "—"}</b>
+                  </p>
+                  <p className="leading-loose">
+                    للحضور والترافع والقيام بجميع الإجراءات اللازمة نيابة عني في القضية المذكورة أعلاه
+                    {d.sessionDate ? <> وذلك بجلسة يوم <b>{fmtDate(d.sessionDate)}</b></> : ""}
+                    {!linkedCase && d.caseTitleSnapshot ? ` (${d.caseTitleSnapshot})` : ""}.
+                  </p>
+                </div>
+                <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 text-sm">
+                  <p className="font-bold mb-1">الغرض من الإنابة:</p>
+                  <p className="whitespace-pre-line">{d.purpose}</p>
+                </div>
+              </>
+            )}
           </div>
           <p className="text-sm">وتفضلوا بقبول وافر الاحترام والتقدير.</p>
           <div className="pt-8 text-sm">
