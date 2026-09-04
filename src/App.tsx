@@ -27,7 +27,8 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart, Pie, Cell, Legend, RadialBarChart, RadialBar, AreaChart, Area
 } from "recharts";
-import html2pdf from "html2pdf.js";
+import html2canvas from "html2canvas-pro";
+import jsPDF from "jspdf";
 import * as XLSX from "xlsx";
 import { uaeTerroristList } from "./data/uaeTerroristListData";
 import { seedCourtContacts } from "./courtContactsData";
@@ -110,24 +111,42 @@ const TASK_TEMPLATES = [
 ];
 
 // دالة تصدير ملفات PDF مباشرة إلى جهاز المستخدم
-const handleDownloadPDF = (elementId: string, filename: string) => {
+// ملاحظة: نستخدم html2canvas-pro (وليس html2canvas/html2pdf.js الأصلية) لأنها تدعم صيغ الألوان
+// الحديثة مثل oklch()/oklab() التي يولّدها Tailwind v4 في كامل النظام؛ النسخة الأصلية كانت
+// تفشل بخطأ "unsupported color function oklch" وتتراجع صامتة لفتح نافذة الطباعة.
+const handleDownloadPDF = async (elementId: string, filename: string) => {
   const element = document.getElementById(elementId);
   if (!element) {
     window.print();
     return;
   }
-  const opt = {
-    margin: [8, 8, 8, 8],
-    filename: filename || 'document.pdf',
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true, logging: false },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  } as any;
-  
-  html2pdf().set(opt).from(element).save().catch((err: any) => {
+  try {
+    const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false });
+    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    const margin = 8;
+    const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;
+    const pageHeight = pdf.internal.pageSize.getHeight() - margin * 2;
+    const imgWidth = pageWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = margin;
+
+    pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position -= pageHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', margin, position + margin, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save(filename || 'document.pdf');
+  } catch (err) {
     console.error("PDF generation failed, falling back to window.print()", err);
     window.print();
-  });
+  }
 };
 
 // ---------- الأنواع والواجهات ومصفوفة الصلاحيات الموسعة ----------
