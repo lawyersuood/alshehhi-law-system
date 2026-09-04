@@ -3288,7 +3288,7 @@ const PendingApprovalScreen = ({
             </div>
             <div>
               <h2 className="text-xl font-black text-[#0c4a47]">طلب تفعيل الحساب قيد الانتظار والاعتماد</h2>
-              <p className="text-xs font-bold text-[#b89b6a] mt-0.5">Pending Admin Approval • Supabase RLS Protected</p>
+              <p className="text-xs font-bold text-[#b89b6a] mt-0.5">بانتظار موافقة مدير النظام</p>
             </div>
           </div>
           <span className="rounded-full bg-amber-100 text-amber-900 border border-amber-300 px-3.5 py-1 text-xs font-bold shrink-0">
@@ -3303,7 +3303,7 @@ const PendingApprovalScreen = ({
             أهلاً بك، {currentUser.name}! تم تقديم طلب تسجيل حسابك بنجاح.
           </p>
           <p>
-            وفقاً لسياسة الأمان والاعتماد المعتمدة وحماية البيانات في <b>Supabase Row Level Security (RLS)</b>، تظل جميع صلاحيات الوصول ومحتويات النظام محجوبة حتى يتلقى حسابك تفعيلاً وموافقة صريحة من مدير النظام (المحامي سعود أحمد الشحي).
+            وفقاً لسياسة الأمان والاعتماد المعتمدة في النظام، تظل جميع صلاحيات الوصول ومحتويات النظام محجوبة حتى يتلقى حسابك تفعيلاً وموافقة صريحة من مدير النظام (المحامي سعود أحمد الشحي).
           </p>
         </div>
 
@@ -3319,7 +3319,7 @@ const PendingApprovalScreen = ({
             <p><b>رقم الهاتف:</b> {currentUser.phone}</p>
             <p><b>الدور المخصص:</b> {currentUser.roleTitle}</p>
             <p><b>حالة الطلب الآن:</b> <span className="text-amber-700 font-bold">معلق بانتظار المدير (Pending)</span></p>
-            <p><b>صلاحيات RLS:</b> <span className="text-red-600 font-bold">محظور مؤقتاً (Access Denied)</span></p>
+            <p><b>حالة الوصول:</b> <span className="text-red-600 font-bold">محظور مؤقتاً</span></p>
           </div>
         </div>
 
@@ -3684,7 +3684,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
         roleTitle: roleTitleMap[regRoleKey]
       });
 
-      setSuccessMsg("✅ تم تسجيل الحساب بنجاح في قائمة Supabase Authentication! طلبك الآن في انتظار اعتماد وتفعيل مدير النظام.");
+      setSuccessMsg("✅ تم تسجيل الحساب بنجاح! طلبك الآن في انتظار اعتماد وتفعيل مدير النظام.");
       setErrorMsg(null);
       setRegName("");
       setRegEmail("");
@@ -3694,7 +3694,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
     } catch (err: any) {
       console.error("Registration submission error:", err);
       alert('Registration Failed: ' + (err?.message || "Error during registration"));
-      setErrorMsg(err?.message || "حدث خطأ أثناء التواصل مع خادم Supabase.");
+      setErrorMsg(err?.message || "حدث خطأ أثناء التواصل مع الخادم.");
     } finally {
       setIsSubmitting(false);
     }
@@ -3917,7 +3917,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                     <Hourglass size={14} className="shrink-0" /> آلية تفعيل الحساب:
                   </p>
                   <p>
-                    يتم إنشاء الحساب فوراً في قائمة Supabase Authentication وتقديم الطلب لمراجعة واعتماد مدير النظام.
+                    يتم إنشاء الحساب فوراً وتقديم الطلب لمراجعة واعتماد مدير النظام.
                   </p>
                 </div>
               </div>
@@ -3929,11 +3929,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
               >
                 {isSubmitting ? (
                   <>
-                    <RefreshCw size={16} className="animate-spin" /> جارٍ الإرسال إلى Supabase...
+                    <RefreshCw size={16} className="animate-spin" /> جارٍ إرسال الطلب...
                   </>
                 ) : (
                   <>
-                    <UserPlus size={16} /> إرسال طلب الانضمام إلى Supabase
+                    <UserPlus size={16} /> إرسال طلب الانضمام
                   </>
                 )}
               </button>
@@ -7026,7 +7026,7 @@ export default function App() {
     }
 
     if (sendSucceeded) {
-      setPermissionNotice("تم إرسال الرسالة الإلكترونية فعلياً وتوثيقها في جدول Supabase!");
+      setPermissionNotice("تم إرسال الرسالة الإلكترونية بنجاح وحفظها في السجل!");
     } else {
       setPermissionNotice(`تنبيه: تعذر إرسال الرسالة فعلياً عبر الخادم (${sendErrorMessage}) — تم حفظ نسخة منها في السجل فقط دون إرسالها. يرجى مراجعة إعدادات خادم البريد أو التواصل مع الدعم الفني.`);
     }
@@ -9892,17 +9892,6 @@ export default function App() {
               <Download size={14} className="text-slate-600" />
             </button>
 
-            {/* الإعدادات الفنية حصرية للمدير الأعلى (المحامي سعود) */}
-            {isSuperAdmin && (
-              <button
-                onClick={() => setShowSupabaseModal(true)}
-                className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-bold text-[#0D382B] bg-amber-50 border border-amber-200 hover:bg-amber-100 transition mt-3"
-                title="أكواد القواعد والبروفايل الحية Supabase RLS"
-              >
-                <Code size={16} className="text-[#C5A059] shrink-0" />
-                <span>الإعدادات الفنية (Supabase RLS)</span>
-              </button>
-            )}
           </nav>
           <div className="border-t border-slate-100 p-4 text-xs text-slate-500 space-y-2 bg-slate-50">
             <button
@@ -10120,18 +10109,6 @@ export default function App() {
                     <ChevronLeft size={14} className="text-slate-600" />
                   </button>
 
-                  {isSuperAdmin && (
-                    <button
-                      onClick={() => {
-                        setShowSupabaseModal(true);
-                        setMobileMenuOpen(false);
-                      }}
-                      className="flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-bold text-[#0D382B] bg-amber-50 border border-amber-200 hover:bg-amber-100 transition"
-                    >
-                      <Code size={16} className="text-[#C5A059] shrink-0" />
-                      <span>الإعدادات الفنية (Supabase RLS)</span>
-                    </button>
-                  )}
                 </div>
               </nav>
 
@@ -10171,7 +10148,7 @@ export default function App() {
                   </span>
                 )}
               </button>
-              <Logo variant="horizontal" mode="light" size="sm" />
+              <Logo variant="horizontal" mode="light" size="sm" className="md:hidden" />
             </div>
 
             {/* شريط البحث لسطح المكتب */}
@@ -13018,7 +12995,7 @@ export default function App() {
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
                     <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-                      <Mail className="text-amber-600" /> البريد الإلكتروني المدمج (SMTP / IMAP & Supabase Sync)
+                      <Mail className="text-amber-600" /> البريد الإلكتروني المدمج
                     </h2>
                     <p className="text-xs text-slate-500">متابعة إشعارات المحاكم، مراسلات الموكلين، ومستندات وزارة العدل عبر السيرفر الرسمي بمرونة كاملة</p>
                   </div>
@@ -13065,7 +13042,7 @@ export default function App() {
                     <button
                       onClick={() => {
                         fetchSupabaseEmailMessages();
-                        setPermissionNotice("تمت مزامنة الرسائل من جدول Supabase (email_messages) بنجاح!");
+                        setPermissionNotice("تمت مزامنة الرسائل بنجاح!");
                       }}
                       className="flex items-center gap-1.5 rounded-xl bg-slate-100 border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
                     >
@@ -13132,7 +13109,7 @@ export default function App() {
                     </button>
 
                     <div className="pt-4 border-t border-slate-100 mt-4 space-y-2">
-                      <div className="text-[11px] font-semibold text-slate-500">حالة الربط وسيرفر Supabase:</div>
+                      <div className="text-[11px] font-semibold text-slate-500">حالة الربط بالخادم:</div>
                       <div className="p-2.5 bg-stone-50 rounded-xl border border-slate-200 text-[11px] space-y-1 text-slate-600">
                         <div className="flex items-center justify-between">
                           <span>سيرفر SMTP:</span>
@@ -13755,7 +13732,7 @@ export default function App() {
                         onClick={handleSendInAppEmail}
                         className="w-full rounded-xl bg-amber-500 py-3 font-bold text-slate-900 hover:bg-amber-400 transition shadow-sm"
                       >
-                        إرسال وحفظ في جدول Supabase الآن
+                        إرسال وحفظ الآن
                       </button>
                     </div>
                   </Modal>
@@ -13790,21 +13767,21 @@ export default function App() {
                           </h2>
                         </div>
                         <p className="text-xs text-slate-300">
-                          ربط حي ومباشر مع قاعدة بيانات Supabase (جدول <code className="text-emerald-300 font-mono bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/50">whatsapp_messages</code>) ودالة Edge Function (<code className="text-emerald-300 font-mono bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/50">send-whatsapp-message</code>)
+                          مزامنة فورية ومباشرة مع سجل محادثات الواتساب الخاص بالمكتب
                         </p>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/40 px-3.5 py-1.5 rounded-xl text-xs text-emerald-300 font-bold">
                           <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                          <span>المزامن اللحظي: Supabase Realtime Active</span>
+                          <span>التحديث اللحظي: نشط</span>
                         </div>
 
                         <button
                           onClick={() => fetchSupabaseWhatsAppMessages()}
                           className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition border border-slate-700"
                         >
-                          <RotateCw size={14} className="text-emerald-400" /> تحديث من Supabase
+                          <RotateCw size={14} className="text-emerald-400" /> تحديث المحادثات
                         </button>
 
                         <button
@@ -13826,7 +13803,7 @@ export default function App() {
                               <MessageSquare size={16} className="text-emerald-600" /> قائمة المحادثات (<code className="text-xs font-mono">{waChats.length}</code>)
                             </h3>
                             <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                              Realtime
+                              مباشر
                             </span>
                           </div>
 
@@ -13970,7 +13947,7 @@ export default function App() {
                                         <span>{msg.time}</span>
                                         {msg.sender === "me" && (
                                           <span className="text-emerald-600 font-bold flex items-center gap-0.5">
-                                            <CheckCheck size={13} /> Edge Function
+                                            <CheckCheck size={13} /> تم الإرسال
                                           </span>
                                         )}
                                       </div>
@@ -13989,14 +13966,14 @@ export default function App() {
                                       handleSendWaMessage(activeChat.id);
                                     }
                                   }}
-                                  placeholder="اكتب رسالتك المباشرة هنا (سيتم إرسالها عبر Edge Function وتخزينها في Supabase)..."
+                                  placeholder="اكتب رسالتك المباشرة هنا..."
                                   className="flex-1 bg-transparent px-3 py-2 text-xs text-slate-800 focus:outline-none"
                                 />
                                 <button
                                   onClick={() => handleSendWaMessage(activeChat.id)}
                                   className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition shrink-0 shadow-xs"
                                 >
-                                  <Send size={15} /> إرسال عبر الواتساب (Edge Function)
+                                  <Send size={15} /> إرسال عبر الواتساب
                                 </button>
                               </div>
                             </>
@@ -14011,7 +13988,7 @@ export default function App() {
 
             {/* مودال إنشاء محادثة جديدة */}
             {showNewWaChatModal && (
-              <Modal title="بدء محادثة واتساب جديدة (Meta API & Supabase)" onClose={() => setShowNewWaChatModal(false)}>
+              <Modal title="بدء محادثة واتساب جديدة" onClose={() => setShowNewWaChatModal(false)}>
                 <div className="space-y-4 text-sm">
                   <Field label="اسم العميل / الموكل">
                     <input
@@ -16564,7 +16541,7 @@ export default function App() {
                             )}
                           </h3>
                           <p className="text-xs text-slate-600">
-                            المستخدمون المسجلون بحالة معلقة (status: 'pending') بحاجة لموافقة صريحة للوصول إلى النظام
+                            المستخدمون المسجلون الذين ينتظرون الموافقة بحاجة لتفعيل صريح للوصول إلى النظام
                           </p>
                         </div>
                       </div>
@@ -16576,7 +16553,6 @@ export default function App() {
                           <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
                           لا توجد طلبات تسجيل معلقة حالياً. جميع الحسابات نشطة ومصرح لها بالدخول للنظام.
                         </p>
-                        <span className="text-[11px] text-slate-400 font-mono hidden sm:inline">RLS Status: All Approved</span>
                       </div>
                     ) : (
                       <div className="grid gap-3 sm:grid-cols-2">
@@ -16706,7 +16682,7 @@ export default function App() {
                                 <p className="text-slate-400">{u.phone}</p>
                               </td>
                               <td className="px-4 py-3 text-xs">
-                                <span className="inline-flex items-center gap-1 bg-stone-100 border border-stone-200 px-2.5 py-1 rounded-lg text-slate-800 font-mono font-bold" title="مشفّرة في Supabase Auth">
+                                <span className="inline-flex items-center gap-1 bg-stone-100 border border-stone-200 px-2.5 py-1 rounded-lg text-slate-800 font-mono font-bold" title="مشفّرة وآمنة">
                                   <Lock size={12} className="text-amber-600" />
                                   ••••••••
                                 </span>
@@ -19043,7 +19019,7 @@ export default function App() {
             <Field label="رقم قيد المحامي (نقابة المحامين) — يُستخدم في مستندات الإنابة">
               <input onChange={f("licenseNumber")} defaultValue={form.licenseNumber || ""} placeholder="مثال: 1754" className={inputCls} />
             </Field>
-            <Field label="كلمة المرور المسجلة (تشفير أمان Supabase Auth)">
+            <Field label="كلمة المرور المسجلة (مشفّرة وآمنة)">
               <input type="password" readOnly disabled value="••••••••" className={`${inputCls} bg-stone-100 text-slate-500 cursor-not-allowed`} />
             </Field>
 
@@ -20863,7 +20839,7 @@ export default function App() {
         >
           <div className="space-y-5 text-sm">
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-950 space-y-1">
-              <p className="font-bold">طلب اعتماد جديد (RLS Approved)</p>
+              <p className="font-bold">طلب اعتماد جديد</p>
               <p className="opacity-90">البريد: {approvingUser.email} | الهاتف: {approvingUser.phone}</p>
             </div>
 
@@ -21082,7 +21058,7 @@ export default function App() {
                 disabled={precedentLoading}
                 className="rounded-xl bg-amber-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-amber-700 disabled:opacity-50 transition shadow-sm"
               >
-                {precedentLoading ? "جاري الحفظ والرفع لـ Supabase..." : "حفظ المبدأ القضائي"}
+                {precedentLoading ? "جاري الحفظ والرفع..." : "حفظ المبدأ القضائي"}
               </button>
             </div>
           </form>
