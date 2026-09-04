@@ -13919,7 +13919,7 @@ export default function App() {
 
                                 <div className="flex items-center gap-2">
                                   <span className="text-[11px] text-emerald-800 font-bold bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl flex items-center gap-1.5">
-                                    <CheckCheck size={14} className="text-emerald-600" /> Meta WhatsApp Cloud API Active
+                                    <CheckCheck size={14} className="text-emerald-600" /> متصل ويعمل الآن
                                   </span>
                                 </div>
                               </div>
