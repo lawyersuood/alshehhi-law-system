@@ -205,6 +205,7 @@ export interface UserItem {
   canViewAgreements?: boolean;
   canAccessWhatsapp?: boolean;
   canViewFinances?: boolean;
+  licenseNumber?: string; // رقم قيد المحامي (نقابة المحامين) — يُستخدم في مستندات الإنابة
 }
 
 export type FeeAgreementStatus = "نشطة" | "مسددة بالكامل" | "ملغاة";
@@ -262,6 +263,8 @@ export interface CaseItem {
   openDate: string;
   fee: number;
   emirate?: string;
+  /** صفة الموكل في القضية (مدعي / مدعى عليه / مستأنف ...) — تُستخدم في توليد مستندات الإنابة وغيرها */
+  clientCapacity?: string;
 }
 
 export interface Hearing {
@@ -289,6 +292,7 @@ export interface Colleague {
   status: "متاح" | "غير متاح";
   addedBy?: string;
   createdAt: string; // ISO
+  licenseNumber?: string; // رقم قيد المحامي (نقابة المحامين)
 }
 
 export interface ColleagueDelegation {
@@ -302,6 +306,9 @@ export interface ColleagueDelegation {
   issuedByName: string;
   issuedAt: string; // ISO
   status: "صادرة" | "مستخدمة" | "ملغاة";
+  sessionDate?: string;          // تاريخ الجلسة المناب لها الزميل
+  issuerLicenseNumber?: string;  // رقم قيد المحامي الموكِّل (يُسحب تلقائياً، قابل للتعديل)
+  colleagueLicenseNumber?: string; // رقم قيد الزميل المُناب (يُسحب تلقائياً، قابل للتعديل)
 }
 
 export interface TaskItem {
@@ -1225,7 +1232,8 @@ const seedUsers: UserItem[] = [
     status: "نشط",
     avatarBg: "bg-[#0c4a47]",
     avatarText: "سش",
-    permissions: ROLE_PRESETS.admin.permissions
+    permissions: ROLE_PRESETS.admin.permissions,
+    licenseNumber: "1754"
   }
 ];
 
@@ -8264,6 +8272,7 @@ export default function App() {
         openDate: form.openDate ?? c.openDate,
         fee: form.fee !== undefined && form.fee !== "" ? +form.fee : c.fee,
         emirate: form.emirate ?? c.emirate,
+        clientCapacity: form.clientCapacity ?? c.clientCapacity,
       } : c));
       logAuditAction("UPDATE", "القضايا", `قضية رقم ${form.number}`, `تعديل بيانات القضية رقم ${form.number} (الخصوم، الأطراف، أو التفاصيل الأساسية)`, editingCase.id);
       setEditingCase(null);
@@ -8273,7 +8282,7 @@ export default function App() {
 
     const newCaseId = nextId(cases);
 
-    setCases(prev => deduplicateCases([...prev, { id: newCaseId, number: form.number, clientId: +form.clientId, opponents, type: form.type || CASE_TYPES[0], court: form.court || COURTS[0], judge: form.judge || "", stage: stage, status: status, subject: form.subject || "", openDate: openDate, fee: +form.fee || 0, emirate: form.emirate || "" }]));
+    setCases(prev => deduplicateCases([...prev, { id: newCaseId, number: form.number, clientId: +form.clientId, opponents, type: form.type || CASE_TYPES[0], court: form.court || COURTS[0], judge: form.judge || "", stage: stage, status: status, subject: form.subject || "", openDate: openDate, fee: +form.fee || 0, emirate: form.emirate || "", clientCapacity: form.clientCapacity || "" }]));
 
     if (form.taskTemplate) {
       const template = TASK_TEMPLATES.find(t => t.id === form.taskTemplate);
@@ -8719,6 +8728,7 @@ export default function App() {
         coverageArea: form.coverageArea?.trim() || undefined,
         notes: form.notes?.trim() || undefined,
         status: (form.status === "غير متاح" ? "غير متاح" : "متاح"),
+        licenseNumber: form.licenseNumber?.trim() || undefined,
       } : c));
       logAuditAction("UPDATE", "الزملاء والإنابات", `الزميل: ${form.name}`, `تعديل بيانات الزميل المتعاون ${form.name}`);
     } else {
@@ -8731,6 +8741,7 @@ export default function App() {
         coverageArea: form.coverageArea?.trim() || undefined,
         notes: form.notes?.trim() || undefined,
         status: (form.status === "غير متاح" ? "غير متاح" : "متاح"),
+        licenseNumber: form.licenseNumber?.trim() || undefined,
         addedBy: currentUser?.name,
         createdAt: new Date().toISOString(),
       };
@@ -8757,7 +8768,11 @@ export default function App() {
 
   const openIssueDelegationModal = (c: Colleague) => {
     if (!checkPerm("manageColleagues", "إصدار إنابة حضور")) return;
-    setForm({ colleagueId: c.id });
+    setForm({
+      colleagueId: c.id,
+      colleagueLicenseNumber: c.licenseNumber || "",
+      issuerLicenseNumber: currentUser?.licenseNumber || "",
+    });
     setModal("issueDelegation");
   };
 
@@ -8781,6 +8796,9 @@ export default function App() {
       issuedByName: currentUser?.name || "مكتب سعود أحمد الشحي",
       issuedAt: new Date().toISOString(),
       status: "صادرة",
+      sessionDate: form.sessionDate?.trim() || undefined,
+      issuerLicenseNumber: form.issuerLicenseNumber?.trim() || undefined,
+      colleagueLicenseNumber: form.colleagueLicenseNumber?.trim() || undefined,
     };
     setColleagueDelegations((prev) => [newDelegation, ...prev]);
     logAuditAction("CREATE", "الزملاء والإنابات", `إنابة رقم: ${refNo}`, `إصدار إنابة حضور رقم ${refNo} للزميل ${colleague?.name || "—"}`, newDelegation.id);
@@ -8828,6 +8846,7 @@ export default function App() {
         canViewAgreements: form.canViewAgreements !== undefined ? form.canViewAgreements : u.canViewAgreements,
         canAccessWhatsapp: form.canAccessWhatsapp !== undefined ? form.canAccessWhatsapp : u.canAccessWhatsapp,
         canViewFinances: form.canViewFinances !== undefined ? form.canViewFinances : u.canViewFinances,
+        licenseNumber: form.licenseNumber !== undefined ? form.licenseNumber : u.licenseNumber,
       } : u);
     } else {
       const newUser: UserItem = {
@@ -8846,6 +8865,7 @@ export default function App() {
         canViewAgreements: form.canViewAgreements || false,
         canAccessWhatsapp: form.canAccessWhatsapp || false,
         canViewFinances: form.canViewFinances || false,
+        licenseNumber: form.licenseNumber || "",
       };
       updatedList = [...users, newUser];
     }
@@ -16734,7 +16754,8 @@ export default function App() {
                                         roleKey: u.roleKey,
                                         roleTitle: u.roleTitle,
                                         status: u.status,
-                                        permissions: { ...u.permissions }
+                                        permissions: { ...u.permissions },
+                                        licenseNumber: u.licenseNumber || ""
                                       });
                                       setModal("user");
                                     }}
@@ -18363,6 +18384,9 @@ export default function App() {
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </Field>
+            <Field label="صفة الموكل في القضية (تُستخدم في مستندات الإنابة وغيرها)">
+              <input value={form.clientCapacity || ""} onChange={f("clientCapacity")} placeholder="مثال: مدعي / مدعى عليه / مستأنف / طالب التنفيذ" className={inputCls} />
+            </Field>
 
             {/* قائمة الخصوم — تدعم إضافة أكثر من خصم واحد لنفس القضية */}
             <Field label="الخصوم (يمكن إضافة أكثر من خصم)">
@@ -18915,6 +18939,9 @@ export default function App() {
                 <input onChange={f("coverageArea")} defaultValue={form.coverageArea || ""} placeholder="مثال: محاكم دبي" className={inputCls} />
               </Field>
             </div>
+            <Field label="رقم قيد المحامي (نقابة المحامين)">
+              <input onChange={f("licenseNumber")} defaultValue={form.licenseNumber || ""} placeholder="مثال: 2210" className={inputCls} />
+            </Field>
             <Field label="الحالة">
               <select onChange={f("status")} defaultValue={form.status || "متاح"} className={inputCls}>
                 <option value="متاح">متاح</option>
@@ -18933,12 +18960,20 @@ export default function App() {
         <Modal title="إصدار إنابة حضور" onClose={() => setModal(null)}>
           <div className="space-y-4 text-sm">
             <Field label="الزميل المُنَاب">
-              <select onChange={f("colleagueId")} defaultValue={form.colleagueId || ""} className={inputCls}>
+              <select
+                onChange={(e) => {
+                  const cid = e.target.value;
+                  const sel = colleagues.find((cc) => String(cc.id) === cid);
+                  setForm((prev: any) => ({ ...prev, colleagueId: cid, colleagueLicenseNumber: sel?.licenseNumber || "" }));
+                }}
+                defaultValue={form.colleagueId || ""}
+                className={inputCls}
+              >
                 <option value="">اختر الزميل…</option>
                 {colleagues.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </Field>
-            <Field label="القضية (اختياري)">
+            <Field label="القضية (اختياري) — تُستخدم لسحب اسم الموكل وصفته والخصم تلقائياً">
               <select onChange={f("caseId")} defaultValue={form.caseId || ""} className={inputCls}>
                 <option value="">بدون ربط بقضية مسجلة…</option>
                 {cases.map((c) => <option key={c.id} value={c.id}>{c.number} — {c.subject}</option>)}
@@ -18947,6 +18982,17 @@ export default function App() {
             <Field label="وصف القضية/الجلسة (إن لم تُربط بقضية مسجلة)">
               <input onChange={f("caseTitleSnapshot")} defaultValue={form.caseTitleSnapshot || ""} placeholder="مثال: جلسة محكمة الشارقة الابتدائية - دائرة مدنية" className={inputCls} />
             </Field>
+            <Field label="تاريخ الجلسة المناب لها الزميل">
+              <input type="date" onChange={f("sessionDate")} defaultValue={form.sessionDate || ""} className={inputCls} />
+            </Field>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="رقم قيد المحامي المُنيب (يُسحب تلقائياً، قابل للتعديل)">
+                <input onChange={f("issuerLicenseNumber")} defaultValue={form.issuerLicenseNumber || ""} placeholder="مثال: 1754" className={inputCls} />
+              </Field>
+              <Field label="رقم قيد الزميل المُناب (يُسحب تلقائياً، قابل للتعديل)">
+                <input key={form.colleagueId || "none"} onChange={f("colleagueLicenseNumber")} defaultValue={form.colleagueLicenseNumber || ""} placeholder="مثال: 2210" className={inputCls} />
+              </Field>
+            </div>
             <Field label="الغرض من الإنابة">
               <textarea onChange={f("purpose")} defaultValue={form.purpose || ""} rows={3} placeholder="حضور الجلسة المحددة نيابة عن المكتب وتقديم المذكرات والمرافعة..." className={inputCls} />
             </Field>
@@ -18993,6 +19039,9 @@ export default function App() {
             </Field>
             <Field label="المسمى الوظيفي">
               <input onChange={f("roleTitle")} defaultValue={form.roleTitle || ""} placeholder="مثال: محامي استئناف ومدني" className={inputCls} />
+            </Field>
+            <Field label="رقم قيد المحامي (نقابة المحامين) — يُستخدم في مستندات الإنابة">
+              <input onChange={f("licenseNumber")} defaultValue={form.licenseNumber || ""} placeholder="مثال: 1754" className={inputCls} />
             </Field>
             <Field label="كلمة المرور المسجلة (تشفير أمان Supabase Auth)">
               <input type="password" readOnly disabled value="••••••••" className={`${inputCls} bg-stone-100 text-slate-500 cursor-not-allowed`} />
@@ -20342,34 +20391,50 @@ export default function App() {
             <span>الرقم المرجعي: <b className="font-mono">{d.refNo}</b></span>
             <span>التاريخ: {fmtDate(d.issuedAt.slice(0, 10))}</span>
           </div>
-          <h2 className="text-xl font-bold text-center">إنابة حضور</h2>
-          <p className="text-sm">
-            بموجب هذه الإنابة، يُفوَّض السيد/ة <b>{colleague?.name || "—"}</b> {colleague?.specialization ? `(${colleague.specialization})` : ""} بالحضور والترافع نيابة عن مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية
-            {linkedCase ? ` في القضية رقم ${linkedCase.number}` : (d.caseTitleSnapshot ? ` بخصوص: ${d.caseTitleSnapshot}` : "")}.
-          </p>
+          <div className="text-sm space-y-1">
+            <p>لدى {linkedCase?.court || "المحكمة المختصة"} الموقرة ,,,</p>
+            <p>في القضية رقم :- <b>{linkedCase?.number || d.caseTitleSnapshot || "—"}</b></p>
+          </div>
+          <h2 className="text-xl font-bold text-center tracking-[0.3em]">إنـابـة</h2>
+          <div className="text-sm space-y-2.5">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <span>الموكل :- <b>{linkedCase ? clientName(linkedCase.clientId) : "—"}</b></span>
+              <span>الصفة :- <b>{linkedCase?.clientCapacity || "—"}</b></span>
+            </div>
+            <p>ضـــد :- <b>{linkedCase ? (caseOpponentsLabel(linkedCase) || "—") : "—"}</b></p>
+            <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pt-2 border-t border-dashed border-slate-300">
+              <span>أنـــا المحامي :- <b>{d.issuedByName}</b></span>
+              <span>قيد رقم :- <b>{d.issuerLicenseNumber || "—"}</b></span>
+            </div>
+            <p className="leading-loose">
+              بموجب هذه الإنابة، وبصفتي وكيلاً عن الموكل المذكور أعلاه أنيب زميلي الأستاذ المحامي :- <b>{colleague?.name || "—"}</b>
+              {"  "}قيد رقم :- <b>{d.colleagueLicenseNumber || "—"}</b>
+            </p>
+            <p className="leading-loose">
+              للحضور والترافع والقيام بجميع الإجراءات اللازمة نيابة عني في القضية المذكورة أعلاه
+              {d.sessionDate ? <> وذلك بجلسة يوم <b>{fmtDate(d.sessionDate)}</b></> : ""}
+              {!linkedCase && d.caseTitleSnapshot ? ` (${d.caseTitleSnapshot})` : ""}.
+            </p>
+          </div>
           <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 text-sm">
             <p className="font-bold mb-1">الغرض من الإنابة:</p>
             <p className="whitespace-pre-line">{d.purpose}</p>
           </div>
-          <p className="text-sm">وتفضلوا بقبول فائق الاحترام والتقدير.</p>
-          <div className="pt-8 flex justify-between text-sm">
-            <div>
-              {canUseSignatureStamp && (letterhead.signatureImg || letterhead.stampImg) ? (
-                <div className="relative inline-block h-20 w-44 mb-1">
-                  {letterhead.stampImg && (
-                    <img src={letterhead.stampImg} alt="ختم" className="absolute top-0 right-4 h-20 w-20 object-contain opacity-90 -rotate-6" />
-                  )}
-                  {letterhead.signatureImg && (
-                    <img src={letterhead.signatureImg} alt="توقيع" className="absolute bottom-1 left-0 h-11 object-contain" />
-                  )}
-                </div>
-              ) : null}
-              <p className="border-t border-slate-400 pt-1 mx-2">التوقيع والختم</p>
-            </div>
-            <div className="text-left">
-              <p className="font-bold">{d.issuedByName}</p>
-              <p className="text-xs text-slate-500">مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية</p>
-            </div>
+          <p className="text-sm">وتفضلوا بقبول وافر الاحترام والتقدير.</p>
+          <div className="pt-8 text-sm">
+            <p className="font-bold">المحامي الموكل</p>
+            <p className="mt-1">الاسم :- {d.issuedByName}</p>
+            {canUseSignatureStamp && (letterhead.signatureImg || letterhead.stampImg) ? (
+              <div className="relative inline-block h-20 w-44 mt-2 mb-1">
+                {letterhead.stampImg && (
+                  <img src={letterhead.stampImg} alt="ختم" className="absolute top-0 right-4 h-20 w-20 object-contain opacity-90 -rotate-6" />
+                )}
+                {letterhead.signatureImg && (
+                  <img src={letterhead.signatureImg} alt="توقيع" className="absolute bottom-1 left-0 h-11 object-contain" />
+                )}
+              </div>
+            ) : null}
+            <p className="border-t border-slate-400 pt-1 mt-8 inline-block">التوقيع والختم</p>
           </div>
           {letterhead.footerImg && (
             <div className="pt-6">
