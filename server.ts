@@ -4,11 +4,19 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import QRCode from 'qrcode';
 import nodemailer from 'nodemailer';
+import { accountingRouter } from './server/accountingApi';
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json({ limit: '25mb' }));
+
+// ================= النظام المحاسبي المتكامل — واجهة برمجة قاعدة البيانات =================
+// معزول بالكامل خلف تسجيل الدخول (requireSupabaseAuth داخل accountingRouter)، ولا يوجد
+// أي كود في الواجهة الأمامية (App.tsx / src/accounting) يستدعي هذه المسارات بعد — الوحدة
+// المحاسبية بالكامل لا تزال ACCOUNTING_MODULE_ENABLED = false وتستخدم localStorage فقط.
+// هذا المسار جاهز فقط للاختبار المباشر (عبر Postman أو ما شابه) قبل ربط الواجهة الأمامية به.
+app.use('/api/accounting', accountingRouter);
 
 // ================= WHATSAPP WEB ENGINE BACKEND =================
 interface WhatsAppSessionState {
@@ -35,7 +43,7 @@ app.post('/api/whatsapp/generate-qr', async (req, res) => {
     const timestamp = Date.now();
     const sessionId = `wa-office-suood-${timestamp}`;
     const rawQrPayload = `2@${sessionId},88192301923,key=${Math.random().toString(36).substring(2)}`;
-    
+
     const qrDataUrl = await QRCode.toDataURL(rawQrPayload, {
       margin: 2,
       width: 280,
@@ -185,7 +193,7 @@ app.post('/api/email/test-connection', async (req, res) => {
     const portToUse = Number(port) || activeEmailConfig.port || 587;
     const passwordToUse = password !== undefined ? password : activeEmailConfig.password;
     const selectedProtocol = protocol || (portToUse === 465 ? 'ssl_tls' : (protocol === 'none' ? 'none' : 'starttls'));
-    
+
     if (!hostToUse || !emailToUse) {
       res.status(400).json({
         success: false,
@@ -304,11 +312,11 @@ app.post('/api/email/send', async (req, res) => {
       });
 
       const invoiceBadge = isInvoiceTest ? `
-        <div style="background-color: #fef3c7; border: 1px solid #f59e0b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #78350f;">
-          📄 <strong>رسالة فحص تجريبية لإرسال الفواتير الضريبية (Tax Invoice Delivery Test)</strong><br />
-          تم إرسال هذا البريد للتحقق من نجاح المراسلة عبر خادم SMTP الآمن وببروتوكول (${selectedProtocol.toUpperCase()}).
-        </div>
-      ` : '';
+<div style="background-color: #fef3c7; border: 1px solid #f59e0b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; font-size: 13px; color: #78350f;">
+📄 <strong>رسالة فحص تجريبية لإرسال الفواتير الضريبية (Tax Invoice Delivery Test)</strong><br />
+تم إرسال هذا البريد للتحقق من نجاح المراسلة عبر خادم SMTP الآمن وببروتوكول (${selectedProtocol.toUpperCase()}).
+</div>
+` : '';
 
       const info = await transporter.sendMail({
         from: `"${configToUse.senderName || configToUse.email}" <${configToUse.email}>`,
@@ -316,19 +324,19 @@ app.post('/api/email/send', async (req, res) => {
         subject: subject,
         text: body,
         html: `<div dir="rtl" style="font-family: 'Segoe UI', Tahoma, Arial, sans-serif; line-height: 1.6; color: #1e293b; padding: 24px; background-color: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; max-width: 650px; margin: 0 auto;">
-          <div style="text-align: center; border-b: 2px solid #072422; padding-bottom: 12px; margin-bottom: 20px;">
-            <h1 style="color: #072422; margin: 0; font-size: 18px; font-weight: bold;">مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية</h1>
-            <p style="color: #92400e; font-size: 12px; margin: 4px 0 0 0;">Suood Ahmed Al Shehhi Advocates & Legal Consultants — UAE</p>
-          </div>
-          ${invoiceBadge}
-          <h2 style="color: #0f172a; font-size: 16px; margin-top: 0; border-right: 4px solid #d4af37; padding-right: 10px;">${subject}</h2>
-          <div style="white-space: pre-wrap; font-size: 14px; color: #334155; margin-top: 16px;">${body}</div>
-          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0 16px 0;" />
-          <div style="font-size: 11px; color: #64748b; line-height: 1.5;">
-            📌 مرسلة رسمياً عبر خادم البريد المعتمد للمكتب (${configToUse.host}) ببروتوكول أمان (${selectedProtocol.toUpperCase()}).<br />
-            إصدار ومعالجة: ${configToUse.senderName || configToUse.email} | هاتف: +971 50 799 6976
-          </div>
-        </div>`
+<div style="text-align: center; border-b: 2px solid #072422; padding-bottom: 12px; margin-bottom: 20px;">
+<h1 style="color: #072422; margin: 0; font-size: 18px; font-weight: bold;">مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية</h1>
+<p style="color: #92400e; font-size: 12px; margin: 4px 0 0 0;">Suood Ahmed Al Shehhi Advocates & Legal Consultants — UAE</p>
+</div>
+${invoiceBadge}
+<h2 style="color: #0f172a; font-size: 16px; margin-top: 0; border-right: 4px solid #d4af37; padding-right: 10px;">${subject}</h2>
+<div style="white-space: pre-wrap; font-size: 14px; color: #334155; margin-top: 16px;">${body}</div>
+<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0 16px 0;" />
+<div style="font-size: 11px; color: #64748b; line-height: 1.5;">
+📌 مرسلة رسمياً عبر خادم البريد المعتمد للمكتب (${configToUse.host}) ببروتوكول أمان (${selectedProtocol.toUpperCase()}).<br />
+إصدار ومعالجة: ${configToUse.senderName || configToUse.email} | هاتف: +971 50 799 6976
+</div>
+</div>`
       });
 
       res.json({ success: true, messageId: info.messageId, mode: 'live_smtp', protocol: selectedProtocol });
@@ -808,36 +816,36 @@ app.post('/api/extract-doc', async (req, res) => {
 
 إذا كان المستند (poa) وكالة قانونية:
 {
-  "clientName": "اسم الموكل الكامل",
-  "poaNumber": "رقم الوكالة أو التوكيل المرجعي",
-  "issuer": "جهة الإصدار (مثلاً: الكاتب العدل بدبي / أبوظبي)",
-  "issueDate": "تاريخ الصدور بتنسيق YYYY-MM-DD",
-  "expiryDate": "تاريخ الانتهاء بتنسيق YYYY-MM-DD",
-  "scope": "صلاحيات الوكالة والنطاق (مثلاً: مرافعة وتمثيل أمام جميع المحاكم، فتح البلاغات، الصلح والإقرار)",
-  "notes": "أي ملاحظات قانونية أو شروط خاصة بالوكالة"
+"clientName": "اسم الموكل الكامل",
+"poaNumber": "رقم الوكالة أو التوكيل المرجعي",
+"issuer": "جهة الإصدار (مثلاً: الكاتب العدل بدبي / أبوظبي)",
+"issueDate": "تاريخ الصدور بتنسيق YYYY-MM-DD",
+"expiryDate": "تاريخ الانتهاء بتنسيق YYYY-MM-DD",
+"scope": "صلاحيات الوكالة والنطاق (مثلاً: مرافعة وتمثيل أمام جميع المحاكم، فتح البلاغات، الصلح والإقرار)",
+"notes": "أي ملاحظات قانونية أو شروط خاصة بالوكالة"
 }
 
 إذا كان المستند (agreement) اتفاقية أتعاب:
 {
-  "clientName": "اسم الموكل الكامل",
-  "agreementNumber": "رقم الاتفاقية المرجعي",
-  "title": "موضوع أو عنوان الاتفاقية",
-  "totalAmount": 50000,
-  "date": "تاريخ الاتفاقية بتنسيق YYYY-MM-DD",
-  "installmentsNotes": "تفاصيل الأقساط أو جدول السداد المتفق عليه",
-  "notes": "الشروط والأحكام الخاصة"
+"clientName": "اسم الموكل الكامل",
+"agreementNumber": "رقم الاتفاقية المرجعي",
+"title": "موضوع أو عنوان الاتفاقية",
+"totalAmount": 50000,
+"date": "تاريخ الاتفاقية بتنسيق YYYY-MM-DD",
+"installmentsNotes": "تفاصيل الأقساط أو جدول السداد المتفق عليه",
+"notes": "الشروط والأحكام الخاصة"
 }
 
 إذا كان المستند (invoice) فاتورة:
 {
-  "clientName": "اسم الموكل أو الشركة",
-  "invoiceNumber": "رقم الفاتورة",
-  "amount": 20000,
-  "vatAmount": 1000,
-  "totalAmount": 21000,
-  "date": "تاريخ الفاتورة YYYY-MM-DD",
-  "due": "تاريخ الاستحقاق YYYY-MM-DD",
-  "description": "تفاصيل الخدمات أو الأتعاب المذكورة بالفاتورة"
+"clientName": "اسم الموكل أو الشركة",
+"invoiceNumber": "رقم الفاتورة",
+"amount": 20000,
+"vatAmount": 1000,
+"totalAmount": 21000,
+"date": "تاريخ الفاتورة YYYY-MM-DD",
+"due": "تاريخ الاستحقاق YYYY-MM-DD",
+"description": "تفاصيل الخدمات أو الأتعاب المذكورة بالفاتورة"
 }
 
 تنبيه مهم جداً: أرجع فقط كائن JSON النقي بدون أي نصوص تمهيدية أو إضافية.`;
