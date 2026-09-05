@@ -334,6 +334,10 @@ export interface RolePermissions {
   manageBankAccounts?: boolean;     // إدارة سجل الحسابات البنكية
   recordBankTransactions?: boolean; // تسجيل حركات بنكية (إيداع/سحب)
   deleteBankTransactions?: boolean; // حذف حركات بنكية وقيودها المرتبطة
+  manageSalesInvoices?: boolean;    // إنشاء وتعديل مسودات الفواتير الضريبية الجديدة
+  approveSalesInvoices?: boolean;   // اعتماد الفواتير الضريبية وترحيل قيودها
+  recordSalesPayments?: boolean;    // تسجيل تحصيل دفعات الفواتير الضريبية الجديدة
+  deleteSalesInvoices?: boolean;    // حذف مسودات الفواتير الضريبية الجديدة
 }
 
 export interface UserItem {
@@ -1377,6 +1381,10 @@ const PERMISSION_LABELS: Record<keyof RolePermissions, { label: string; desc: st
   manageBankAccounts: { label: "إدارة الحسابات البنكية", desc: "إضافة وتعديل سجل حسابات المكتب البنكية" },
   recordBankTransactions: { label: "تسجيل حركات بنكية", desc: "تسجيل إيداعات وسحوبات الحسابات البنكية وترحيل قيودها" },
   deleteBankTransactions: { label: "حذف حركات بنكية", desc: "حذف حركات بنكية مسجّلة وقيودها المرتبطة" },
+  manageSalesInvoices: { label: "إنشاء الفواتير الضريبية (النظام الجديد)", desc: "إنشاء وتعديل مسودات الفواتير الضريبية متعددة البنود" },
+  approveSalesInvoices: { label: "اعتماد الفواتير الضريبية", desc: "اعتماد الفواتير الضريبية وترحيل قيودها المحاسبية تلقائياً" },
+  recordSalesPayments: { label: "تحصيل دفعات الفواتير الضريبية", desc: "تسجيل تحصيل الدفعات على الفواتير الضريبية المعتمدة" },
+  deleteSalesInvoices: { label: "حذف مسودات الفواتير الضريبية", desc: "حذف مسودات فواتير ضريبية لم تُعتمد بعد" },
 };
 
 const seedUsers: UserItem[] = [
@@ -18518,7 +18526,13 @@ export default function App() {
                 canManageBankAccounts={isSuperAdmin || Boolean(currentUser.permissions?.manageBankAccounts)}
                 canRecordBankTransactions={isSuperAdmin || Boolean(currentUser.permissions?.recordBankTransactions)}
                 canDeleteBankTransactions={isSuperAdmin || Boolean(currentUser.permissions?.deleteBankTransactions)}
+                canManageSalesInvoices={isSuperAdmin || Boolean(currentUser.permissions?.manageSalesInvoices)}
+                canApproveSalesInvoices={isSuperAdmin || Boolean(currentUser.permissions?.approveSalesInvoices)}
+                canRecordSalesPayments={isSuperAdmin || Boolean(currentUser.permissions?.recordSalesPayments)}
+                canDeleteSalesInvoices={isSuperAdmin || Boolean(currentUser.permissions?.deleteSalesInvoices)}
                 currentUserName={currentUser.name}
+                letterheadHeaderImg={letterhead.headerImg}
+                letterheadFooterImg={letterhead.footerImg}
               />
             )}
           </>
