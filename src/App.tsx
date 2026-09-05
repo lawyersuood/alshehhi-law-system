@@ -35,6 +35,7 @@ import {
 import * as XLSX from "xlsx";
 import { uaeTerroristList } from "./data/uaeTerroristListData";
 import { seedCourtContacts } from "./courtContactsData";
+import AccountingModule from "./accounting/AccountingModule";
 
 /* ============================================================
    نظام إدارة مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية
@@ -112,6 +113,15 @@ const TASK_TEMPLATES = [
     ]
   }
 ];
+
+// ---------- العلم الرئيسي للنظام المحاسبي المتكامل (المرحلة قيد الإنشاء) ----------
+// هذا الثابت هو المفتاح الوحيد لتفعيل النظام المحاسبي الجديد بكامله في الموقع.
+// طالما قيمته false: لا يظهر أي تبويب أو رابط للنظام المحاسبي في القائمة الجانبية،
+// ولا تُعرض واجهته إطلاقاً مهما كانت صلاحيات المستخدم (حتى مدير النظام) — بشكل مستقل
+// تماماً عن نظام الصلاحيات المعتاد (RolePermissions)، تحسباً لاحتوائه على استثناءات
+// خاصة بحساب المدير تتجاوز الصلاحيات. لا يتم تفعيله (تحويله إلى true) إلا بتعليمات
+// صريحة من مالك المكتب بعد اكتمال جميع مراحل النظام المحاسبي السبع.
+const ACCOUNTING_MODULE_ENABLED = false;
 
 // تحويل النص العادي إلى HTML آمن (لمنع كسر بنية مستند الطباعة أو حقن وسوم
 // غير مقصودة عند وجود رموز مثل < أو & أو " ضمن بيانات الموكلين/القضايا).
@@ -315,6 +325,12 @@ export interface RolePermissions {
   deleteUsers?: boolean;         // حذف حسابات المستخدمين والموظفين
   deleteContacts?: boolean;      // حذف جهات الاتصال ودليل المحاكم
   deleteColleagues?: boolean;    // حذف بيانات الزملاء والإنابات الصادرة
+
+  // 4. صلاحيات النظام المحاسبي المتكامل (قيد الإنشاء — غير مفعّلة بعد، انظر ACCOUNTING_MODULE_ENABLED)
+  accounting?: boolean;             // الوصول لقسم المحاسبة
+  manageChartOfAccounts?: boolean;  // إدارة شجرة الحسابات
+  postJournalEntries?: boolean;     // ترحيل القيود اليومية
+  deleteJournalEntries?: boolean;   // حذف القيود اليومية
 }
 
 export interface UserItem {
@@ -9426,6 +9442,9 @@ export default function App() {
     // 3.5 الفواتير والضريبة (تصنيف مستقل)
     { id: "invoices", label: "الفواتير والضريبة", icon: Receipt, category: "الفواتير والضريبة" },
 
+    // 3.6 النظام المحاسبي المتكامل — يظهر فقط إذا تم تفعيل العلم ACCOUNTING_MODULE_ENABLED
+    ...(ACCOUNTING_MODULE_ENABLED ? [{ id: "accounting", label: "المحاسبة", icon: Calculator, category: "الفواتير والضريبة" }] : []),
+
     // 4. الامتثال والإدارة
     { id: "kyc", label: "اعرف عميلك (KYC)", icon: ShieldCheck, category: "الإدارة والامتثال" },
     { id: "precedents", label: "المبادئ والأحكام القضائية", icon: BookOpen, category: "الإدارة والامتثال" },
@@ -18476,6 +18495,15 @@ export default function App() {
                   );
                 }}
                 onOpenPublicPage={() => setCurrentRoute("public_consultation")}
+              />
+            )}
+
+            {ACCOUNTING_MODULE_ENABLED && tab === "accounting" && (
+              <AccountingModule
+                canManageAccounts={isSuperAdmin || Boolean(currentUser.permissions?.manageChartOfAccounts)}
+                canPostEntries={isSuperAdmin || Boolean(currentUser.permissions?.postJournalEntries)}
+                canDeleteEntries={isSuperAdmin || Boolean(currentUser.permissions?.deleteJournalEntries)}
+                currentUserName={currentUser.name}
               />
             )}
           </>
