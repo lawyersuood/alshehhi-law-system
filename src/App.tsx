@@ -27,8 +27,6 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
   PieChart, Pie, Cell, Legend, RadialBarChart, RadialBar, AreaChart, Area
 } from "recharts";
-import html2canvas from "html2canvas-pro";
-import jsPDF from "jspdf";
 import * as XLSX from "xlsx";
 import { uaeTerroristList } from "./data/uaeTerroristListData";
 import { seedCourtContacts } from "./courtContactsData";
@@ -110,44 +108,6 @@ const TASK_TEMPLATES = [
   }
 ];
 
-// دالة تصدير ملفات PDF مباشرة إلى جهاز المستخدم
-// ملاحظة: نستخدم html2canvas-pro (وليس html2canvas/html2pdf.js الأصلية) لأنها تدعم صيغ الألوان
-// الحديثة مثل oklch()/oklab() التي يولّدها Tailwind v4 في كامل النظام؛ النسخة الأصلية كانت
-// تفشل بخطأ "unsupported color function oklch" وتتراجع صامتة لفتح نافذة الطباعة.
-const handleDownloadPDF = async (elementId: string, filename: string) => {
-  const element = document.getElementById(elementId);
-  if (!element) {
-    window.print();
-    return;
-  }
-  try {
-    const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false });
-    const imgData = canvas.toDataURL('image/jpeg', 0.98);
-    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-    const margin = 8;
-    const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;
-    const pageHeight = pdf.internal.pageSize.getHeight() - margin * 2;
-    const imgWidth = pageWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = margin;
-
-    pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft > 0) {
-      position -= pageHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'JPEG', margin, position + margin, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-    }
-
-    pdf.save(filename || 'document.pdf');
-  } catch (err) {
-    console.error("PDF generation failed, falling back to window.print()", err);
-    window.print();
-  }
-};
 
 // ---------- الأنواع والواجهات ومصفوفة الصلاحيات الموسعة ----------
 export interface RolePermissions {
@@ -20256,9 +20216,9 @@ export default function App() {
             ) : (
               <>
                 <button
-                  onClick={() => { logAgreementUsage(); handleDownloadPDF("printable-agreement", `اتفاقية_أتعاب_${oa.agreementNumber}.pdf`); }}
+                  onClick={() => { logAgreementUsage(); window.print(); }}
                   className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
-                  title="تصدير وتحميل الاتفاقية مباشرة كملف PDF"
+                  title="فتح نافذة الطباعة لحفظ الاتفاقية كملف PDF بجودة عالية (اختر 'حفظ كـ PDF' من الوجهة)"
                 >
                   <Download size={15} /> تحميل PDF
                 </button>
@@ -20509,8 +20469,9 @@ export default function App() {
                   </button>
                 )}
                 <button
-                  onClick={() => { logDelegationUsage(); handleDownloadPDF("printable-delegation", `إنابة_${d.refNo}.pdf`); }}
+                  onClick={() => { logDelegationUsage(); window.print(); }}
                   className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
+                  title="فتح نافذة الطباعة لحفظ الإنابة كملف PDF بجودة عالية (اختر 'حفظ كـ PDF' من الوجهة)"
                 >
                   <Download size={15} /> تحميل PDF
                 </button>
