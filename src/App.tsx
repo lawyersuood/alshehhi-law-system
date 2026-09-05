@@ -338,6 +338,12 @@ export interface RolePermissions {
   approveSalesInvoices?: boolean;   // اعتماد الفواتير الضريبية وترحيل قيودها
   recordSalesPayments?: boolean;    // تسجيل تحصيل دفعات الفواتير الضريبية الجديدة
   deleteSalesInvoices?: boolean;    // حذف مسودات الفواتير الضريبية الجديدة
+  manageVendors?: boolean;          // إدارة سجل الموردين
+  deleteVendors?: boolean;          // حذف الموردين
+  managePurchaseInvoices?: boolean; // إنشاء وتعديل مسودات فواتير المشتريات
+  approvePurchaseInvoices?: boolean;// اعتماد فواتير المشتريات وترحيل قيودها
+  recordPurchasePayments?: boolean; // تسجيل دفعات سداد فواتير المشتريات
+  deletePurchaseInvoices?: boolean; // حذف مسودات فواتير المشتريات
 }
 
 export interface UserItem {
@@ -1385,6 +1391,12 @@ const PERMISSION_LABELS: Record<keyof RolePermissions, { label: string; desc: st
   approveSalesInvoices: { label: "اعتماد الفواتير الضريبية", desc: "اعتماد الفواتير الضريبية وترحيل قيودها المحاسبية تلقائياً" },
   recordSalesPayments: { label: "تحصيل دفعات الفواتير الضريبية", desc: "تسجيل تحصيل الدفعات على الفواتير الضريبية المعتمدة" },
   deleteSalesInvoices: { label: "حذف مسودات الفواتير الضريبية", desc: "حذف مسودات فواتير ضريبية لم تُعتمد بعد" },
+  manageVendors: { label: "إدارة الموردين", desc: "إضافة وتعديل سجل موردي المكتب" },
+  deleteVendors: { label: "حذف الموردين", desc: "حذف موردين من السجل" },
+  managePurchaseInvoices: { label: "إنشاء فواتير المشتريات", desc: "إنشاء وتعديل مسودات فواتير المشتريات والمصروفات" },
+  approvePurchaseInvoices: { label: "اعتماد فواتير المشتريات", desc: "اعتماد فواتير المشتريات وترحيل قيودها المحاسبية تلقائياً" },
+  recordPurchasePayments: { label: "تسجيل سداد فواتير المشتريات", desc: "تسجيل دفعات السداد على فواتير المشتريات المعتمدة" },
+  deletePurchaseInvoices: { label: "حذف مسودات فواتير المشتريات", desc: "حذف مسودات فواتير مشتريات لم تُعتمد بعد" },
 };
 
 const seedUsers: UserItem[] = [
@@ -18530,6 +18542,12 @@ export default function App() {
                 canApproveSalesInvoices={isSuperAdmin || Boolean(currentUser.permissions?.approveSalesInvoices)}
                 canRecordSalesPayments={isSuperAdmin || Boolean(currentUser.permissions?.recordSalesPayments)}
                 canDeleteSalesInvoices={isSuperAdmin || Boolean(currentUser.permissions?.deleteSalesInvoices)}
+                canManageVendors={isSuperAdmin || Boolean(currentUser.permissions?.manageVendors)}
+                canDeleteVendors={isSuperAdmin || Boolean(currentUser.permissions?.deleteVendors)}
+                canManagePurchaseInvoices={isSuperAdmin || Boolean(currentUser.permissions?.managePurchaseInvoices)}
+                canApprovePurchaseInvoices={isSuperAdmin || Boolean(currentUser.permissions?.approvePurchaseInvoices)}
+                canRecordPurchasePayments={isSuperAdmin || Boolean(currentUser.permissions?.recordPurchasePayments)}
+                canDeletePurchaseInvoices={isSuperAdmin || Boolean(currentUser.permissions?.deletePurchaseInvoices)}
                 currentUserName={currentUser.name}
                 letterheadHeaderImg={letterhead.headerImg}
                 letterheadFooterImg={letterhead.footerImg}
