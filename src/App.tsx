@@ -347,6 +347,10 @@ export interface RolePermissions {
   manageFixedAssets?: boolean;      // إدارة سجل الأصول الثابتة
   runDepreciation?: boolean;        // توليد قيود الإهلاك الدوري وترحيلها
   deleteFixedAssets?: boolean;      // حذف أصول ثابتة لم يُحتسب لها إهلاك بعد
+  managePayrollEmployees?: boolean; // إدارة سجل موظفي الرواتب (مستقل عن سجل الموظفون والكادر)
+  deletePayrollEmployees?: boolean; // حذف موظف من سجل الرواتب لم يُصرف له راتب بعد
+  runPayroll?: boolean;             // تشغيل الرواتب الشهري وترحيل قيد الاستحقاق
+  recordPayrollPayments?: boolean;  // تسجيل سداد الرواتب وترحيل قيد السداد
 }
 
 export interface UserItem {
@@ -1403,6 +1407,10 @@ const PERMISSION_LABELS: Record<keyof RolePermissions, { label: string; desc: st
   manageFixedAssets: { label: "إدارة الأصول الثابتة", desc: "إضافة وتعديل واستبعاد سجل أصول المكتب الثابتة" },
   runDepreciation: { label: "توليد قيود الإهلاك", desc: "توليد قيد الإهلاك الدوري للأصول الثابتة وترحيله تلقائياً" },
   deleteFixedAssets: { label: "حذف الأصول الثابتة", desc: "حذف أصل ثابت لم يُحتسب له أي إهلاك بعد" },
+  managePayrollEmployees: { label: "إدارة سجل موظفي الرواتب", desc: "إضافة وتعديل سجل الموظفين الخاص بدورة الرواتب" },
+  deletePayrollEmployees: { label: "حذف موظفي الرواتب", desc: "حذف موظف من سجل الرواتب لم يُصرف له راتب بعد" },
+  runPayroll: { label: "تشغيل الرواتب", desc: "تشغيل الرواتب الشهري وترحيل قيد الاستحقاق تلقائياً" },
+  recordPayrollPayments: { label: "تسجيل سداد الرواتب", desc: "تسجيل سداد الرواتب المستحقة وترحيل قيد السداد" },
 };
 
 const seedUsers: UserItem[] = [
@@ -18557,6 +18565,10 @@ export default function App() {
                 canManageFixedAssets={isSuperAdmin || Boolean(currentUser.permissions?.manageFixedAssets)}
                 canRunDepreciation={isSuperAdmin || Boolean(currentUser.permissions?.runDepreciation)}
                 canDeleteFixedAssets={isSuperAdmin || Boolean(currentUser.permissions?.deleteFixedAssets)}
+                canManagePayrollEmployees={isSuperAdmin || Boolean(currentUser.permissions?.managePayrollEmployees)}
+                canDeletePayrollEmployees={isSuperAdmin || Boolean(currentUser.permissions?.deletePayrollEmployees)}
+                canRunPayroll={isSuperAdmin || Boolean(currentUser.permissions?.runPayroll)}
+                canRecordPayrollPayments={isSuperAdmin || Boolean(currentUser.permissions?.recordPayrollPayments)}
                 currentUserName={currentUser.name}
                 letterheadHeaderImg={letterhead.headerImg}
                 letterheadFooterImg={letterhead.footerImg}
