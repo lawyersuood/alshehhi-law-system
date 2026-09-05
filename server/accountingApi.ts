@@ -1,22 +1,32 @@
 // ============================================================
-// واجهة برمجة النظام المحاسبي (المرحلة الأولى من العمل على قاعدة البيانات)
-// يغطي هذا الملف حتى الآن: شجرة الحسابات + القيود اليومية (الأساس الذي تُبنى عليه كل
-// الوحدات الأخرى: البنوك، المبيعات، المشتريات، الأصول، الرواتب). بعد اختبار هذا الجزء
-// والتأكد من سلامته، تُضاف بقية أجزاء الـ API لبقية الجداول بنفس النمط تماماً.
+// واجهة برمجة النظام المحاسبي الكاملة (كل المراحل: الحسابات، القيود، البنوك، المبيعات،
+// المشتريات، الأصول الثابتة، الرواتب) — تجميعة موجّهات فرعية لكل وحدة في server/routes/*.
 //
 // كل المسارات هنا محمية بـ requireSupabaseAuth (لا يمكن الوصول إليها دون تسجيل دخول
-// فعلي عبر نفس نظام الدخول الحالي للموقع). لا شيء هنا متصل بالموقع الحي أو مفعّل فيه —
-// هذا الملف غير مستورد بعد داخل server.ts الفعلي المنشور، وسيبقى كذلك حتى المراجعة.
+// فعلي عبر نفس نظام الدخول الحالي للموقع). لا شيء هنا مستدعى بعد من الواجهة الأمامية —
+// الوحدة المحاسبية بالكامل لا تزال ACCOUNTING_MODULE_ENABLED = false وتعمل بـ localStorage.
+// ملاحظة نطاق: هذا يتحقق فقط من "تسجيل الدخول"، وليس بعد من صلاحيات كل عملية بدقة
+// (RolePermissions) — تلك لا تزال تُفرض في الواجهة الأمامية فقط، كبقية النظام حالياً.
 // ============================================================
 
 import { Router } from "express";
 import { randomUUID } from "crypto";
 import { getPool, isAccountingDbConfigured } from "./db";
 import { requireSupabaseAuth, type AuthedRequest } from "./auth";
+import { bankRouter } from "./routes/bank";
+import { salesRouter } from "./routes/sales";
+import { purchasesRouter } from "./routes/purchases";
+import { assetsRouter } from "./routes/assets";
+import { payrollRouter } from "./routes/payroll";
 
 export const accountingRouter = Router();
 
 accountingRouter.use(requireSupabaseAuth);
+accountingRouter.use(bankRouter);
+accountingRouter.use(salesRouter);
+accountingRouter.use(purchasesRouter);
+accountingRouter.use(assetsRouter);
+accountingRouter.use(payrollRouter);
 
 // فحص سريع: هل قاعدة البيانات مهيأة ويمكن الاتصال بها؟
 accountingRouter.get("/status", async (_req, res) => {
