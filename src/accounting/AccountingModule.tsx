@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BookOpen, ListOrdered, ScrollText, Scale, Landmark, ReceiptText, Truck, ShoppingCart } from "lucide-react";
+import { BookOpen, ListOrdered, ScrollText, Scale, Landmark, ReceiptText, Truck, ShoppingCart, FileBarChart } from "lucide-react";
 import { Account, JournalEntry, LS_KEYS } from "./types";
 import {
   loadAccounts,
@@ -25,8 +25,9 @@ import BankAccountLedger from "./BankAccountLedger";
 import SalesInvoices from "./SalesInvoices";
 import Vendors from "./Vendors";
 import PurchaseInvoices from "./PurchaseInvoices";
+import FinancialReports from "./FinancialReports";
 
-type SubTab = "accounts" | "bank" | "sales" | "vendors" | "purchases" | "journal" | "ledger" | "trial_balance";
+type SubTab = "accounts" | "bank" | "sales" | "vendors" | "purchases" | "journal" | "ledger" | "trial_balance" | "reports";
 
 const SUB_TABS: Array<{ id: SubTab; label: string; icon: React.ComponentType<{ size?: number }> }> = [
   { id: "accounts", label: "شجرة الحسابات", icon: BookOpen },
@@ -37,6 +38,7 @@ const SUB_TABS: Array<{ id: SubTab; label: string; icon: React.ComponentType<{ s
   { id: "journal", label: "القيود اليومية", icon: ListOrdered },
   { id: "ledger", label: "دفتر الأستاذ", icon: ScrollText },
   { id: "trial_balance", label: "ميزان المراجعة", icon: Scale },
+  { id: "reports", label: "التقارير المالية", icon: FileBarChart },
 ];
 
 export default function AccountingModule({
@@ -112,9 +114,9 @@ export default function AccountingModule({
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-xs text-amber-800">
-        النظام المحاسبي قيد الإنشاء التدريجي (المرحلة 4 من 7: المشتريات والمصروفات، بعد اكتمال شجرة الحسابات والقيود اليومية والحسابات البنكية والمبيعات
-        والفوترة الضريبية) — سجل موردين وفواتير مشتريات/مصروفات منفصل تماماً عن بيانات المكتب الفعلية الحالية، وبيانات هذه المرحلة محفوظة محلياً ومستقلة
-        عن بقية بيانات المكتب.
+        النظام المحاسبي قيد الإنشاء التدريجي (المرحلة 5 من 7: التقارير المالية، بعد اكتمال شجرة الحسابات والقيود اليومية والحسابات البنكية والمبيعات
+        والمشتريات) — تقارير محسوبة آلياً من بيانات المراحل السابقة (قائمة الدخل، الميزانية العمومية، التدفق النقدي، ضريبة القيمة المضافة، وأعمار الذمم)،
+        ولا تخزّن أي بيانات جديدة بذاتها.
       </div>
 
       <div className="flex border-b border-slate-200 overflow-x-auto">
@@ -211,6 +213,20 @@ export default function AccountingModule({
       )}
       {subTab === "ledger" && <Ledger accounts={accounts} entries={entries} />}
       {subTab === "trial_balance" && <TrialBalance accounts={accounts} entries={entries} />}
+
+      {subTab === "reports" && (
+        <FinancialReports
+          accounts={accounts}
+          entries={entries}
+          bankAccounts={bankAccounts}
+          transactions={transactions}
+          salesInvoices={salesInvoices}
+          salesPayments={salesPayments}
+          vendors={vendors}
+          purchaseInvoices={purchaseInvoices}
+          purchasePayments={purchasePayments}
+        />
+      )}
     </div>
   );
 }
