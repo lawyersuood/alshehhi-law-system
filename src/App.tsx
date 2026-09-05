@@ -331,6 +331,9 @@ export interface RolePermissions {
   manageChartOfAccounts?: boolean;  // إدارة شجرة الحسابات
   postJournalEntries?: boolean;     // ترحيل القيود اليومية
   deleteJournalEntries?: boolean;   // حذف القيود اليومية
+  manageBankAccounts?: boolean;     // إدارة سجل الحسابات البنكية
+  recordBankTransactions?: boolean; // تسجيل حركات بنكية (إيداع/سحب)
+  deleteBankTransactions?: boolean; // حذف حركات بنكية وقيودها المرتبطة
 }
 
 export interface UserItem {
@@ -1365,6 +1368,15 @@ const PERMISSION_LABELS: Record<keyof RolePermissions, { label: string; desc: st
   deletePrecedents: { label: "حذف المبادئ القضائية", desc: "حذف السوابق والأحكام التمييزية" },
   deleteUsers: { label: "حذف حسابات المستخدمين", desc: "حذف حسابات المستخدمين والموظفين" },
   deleteContacts: { label: "حذف جهات الاتصال والدليل", desc: "حذف بيانات دليل المحاكم وجهات التواصل" },
+
+  // النظام المحاسبي المتكامل (قيد الإنشاء — غير مفعّل بعد، انظر ACCOUNTING_MODULE_ENABLED)
+  accounting: { label: "المحاسبة", desc: "الوصول لقسم النظام المحاسبي المتكامل" },
+  manageChartOfAccounts: { label: "إدارة شجرة الحسابات", desc: "إضافة وتعديل وتعطيل حسابات الدليل المحاسبي" },
+  postJournalEntries: { label: "ترحيل القيود اليومية", desc: "اعتماد وترحيل قيود اليومية المحاسبية" },
+  deleteJournalEntries: { label: "حذف القيود اليومية", desc: "حذف قيود اليومية المسجّلة" },
+  manageBankAccounts: { label: "إدارة الحسابات البنكية", desc: "إضافة وتعديل سجل حسابات المكتب البنكية" },
+  recordBankTransactions: { label: "تسجيل حركات بنكية", desc: "تسجيل إيداعات وسحوبات الحسابات البنكية وترحيل قيودها" },
+  deleteBankTransactions: { label: "حذف حركات بنكية", desc: "حذف حركات بنكية مسجّلة وقيودها المرتبطة" },
 };
 
 const seedUsers: UserItem[] = [
@@ -18503,6 +18515,9 @@ export default function App() {
                 canManageAccounts={isSuperAdmin || Boolean(currentUser.permissions?.manageChartOfAccounts)}
                 canPostEntries={isSuperAdmin || Boolean(currentUser.permissions?.postJournalEntries)}
                 canDeleteEntries={isSuperAdmin || Boolean(currentUser.permissions?.deleteJournalEntries)}
+                canManageBankAccounts={isSuperAdmin || Boolean(currentUser.permissions?.manageBankAccounts)}
+                canRecordBankTransactions={isSuperAdmin || Boolean(currentUser.permissions?.recordBankTransactions)}
+                canDeleteBankTransactions={isSuperAdmin || Boolean(currentUser.permissions?.deleteBankTransactions)}
                 currentUserName={currentUser.name}
               />
             )}
