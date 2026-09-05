@@ -144,9 +144,9 @@ export const LETTERHEAD_LAYOUT = {
   pageHeightMm: 297,
 };
 
-const LETTER_FONT_STACK =
+export const LETTER_FONT_STACK =
   "'Amiri', 'Traditional Arabic', 'Sakkal Majalla', 'Times New Roman', serif";
-const AMIRI_FONT_LINK =
+export const AMIRI_FONT_LINK =
   "https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&display=swap";
 
 // أصناف Quill (ql-align-*, ql-size-*, ql-indent-*) لا تُنسّق تلقائياً إلا داخل
@@ -384,7 +384,7 @@ function buildPrintDocument(
     "  }\n" +
     "  .signature .sig-name { font-weight: 700; font-size: 13.5pt; }\n" +
     "  .office-ref-mark {\n" +
-    "    color: #b0b6bd; font-size: 8pt; font-weight: 400;\n" +
+    "    color: #b0b6bd; font-size: 8pt; font-weight: 400; text-align: right;\n" +
     "    text-decoration: none; margin-top: 3mm; margin-bottom: 0;\n" +
     "  }\n" +
     "  .sig-stamp-wrap { position: relative; height: 26mm; width: 55mm; margin-bottom: 2mm; }\n" +
@@ -441,21 +441,13 @@ function buildPrintDocument(
     "</html>";
 }
 
-export async function printOfficialLetter(
-  data: OfficialLetterData,
-  pages: LetterPage[],
-  headerImg?: string | null,
-  footerImg?: string | null,
-  signatureImg?: string | null,
-  stampImg?: string | null
-) {
-  if (!headerImg || !footerImg) {
-    alert(
-      "يرجى أولاً اعتماد صورتي ترويسة وتذييل الورق الرسمي من قسم \"الهوية الرسمية والأختام\" المحمي في القائمة الجانبية."
-    );
-    return;
-  }
-
+// دالة عامة مشتركة: تطبع أي مستند HTML كامل (تم بناؤه مسبقاً كسلسلة نصية)
+// عبر إطار iframe مخفي، بنفس الأسلوب الذي يحقق جودة طباعة أصلية (نص متجه
+// حقيقي وصور بدقتها الكاملة دون أي تحويل إلى صورة/رسترة). مستخرجة من
+// printOfficialLetter لتُستخدم أيضاً من أي قسم آخر في النظام (كالإنابات
+// واتفاقيات الأتعاب) يحتاج نفس جودة الطباعة المعتمدة هنا في المذكرات، دون
+// تكرار منطق الانتظار وتحميل الصور/الخطوط.
+export async function printHtmlDocumentInHiddenIframe(html: string): Promise<void> {
   const iframe = document.createElement("iframe");
   iframe.style.cssText =
     "position:fixed;left:-10000px;top:0;width:0;height:0;border:0;";
@@ -463,7 +455,7 @@ export async function printOfficialLetter(
 
   const doc = iframe.contentDocument!;
   doc.open();
-  doc.write(buildPrintDocument(data, pages, headerImg, footerImg, signatureImg, stampImg));
+  doc.write(html);
   doc.close();
 
   // ننتظر اكتمال تحميل صور الترويسة/التذييل/التوقيع والختم فعلياً (بدل مهلة
@@ -524,6 +516,25 @@ export async function printOfficialLetter(
   } finally {
     setTimeout(() => iframe.remove(), 60000);
   }
+}
+
+export async function printOfficialLetter(
+  data: OfficialLetterData,
+  pages: LetterPage[],
+  headerImg?: string | null,
+  footerImg?: string | null,
+  signatureImg?: string | null,
+  stampImg?: string | null
+) {
+  if (!headerImg || !footerImg) {
+    alert(
+      "يرجى أولاً اعتماد صورتي ترويسة وتذييل الورق الرسمي من قسم \"الهوية الرسمية والأختام\" المحمي في القائمة الجانبية."
+    );
+    return;
+  }
+  await printHtmlDocumentInHiddenIframe(
+    buildPrintDocument(data, pages, headerImg, footerImg, signatureImg, stampImg)
+  );
 }
 
 const COURT_MEMO_TEMPLATE = `

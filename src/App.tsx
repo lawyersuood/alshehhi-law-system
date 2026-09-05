@@ -1,5 +1,10 @@
 import React, { useState, useMemo, useEffect } from "react";
-import OfficialLetterComposer, { LETTERHEAD_LAYOUT as LETTERHEAD_PAGE_LAYOUT } from "./OfficialLetterComposer";
+import OfficialLetterComposer, {
+  LETTERHEAD_LAYOUT as LETTERHEAD_PAGE_LAYOUT,
+  printHtmlDocumentInHiddenIframe,
+  LETTER_FONT_STACK,
+  AMIRI_FONT_LINK,
+} from "./OfficialLetterComposer";
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import Logo from "./components/Logo";
@@ -108,6 +113,149 @@ const TASK_TEMPLATES = [
   }
 ];
 
+// تحويل النص العادي إلى HTML آمن (لمنع كسر بنية مستند الطباعة أو حقن وسوم
+// غير مقصودة عند وجود رموز مثل < أو & أو " ضمن بيانات الموكلين/القضايا).
+function escapeHtmlText(value: string | null | undefined): string {
+  if (!value) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// بيانات الإنابة الجاهزة لبناء مستند طباعتها — كل الحقول هنا نصوص/قيم مُحسّبة
+// مسبقاً (وليست دوال أو كائنات حالة) حتى تبقى دالة البناء نقية بلا اعتماد على
+// حالة أو خطافات React، تماماً كما هو معمول به في buildPrintDocument الخاصة
+// بالمذكرات في OfficialLetterComposer.tsx.
+interface DelegationPrintData {
+  refNo: string;
+  dateLabel: string;
+  courtName: string;
+  caseNumber: string;
+  clientName: string;
+  clientCapacity: string;
+  opponents: string;
+  issuedByName: string;
+  issuerLicenseNumber: string;
+  colleagueName: string;
+  colleagueLicenseNumber: string;
+  sessionDateLabel?: string;
+  caseTitleSnapshot?: string;
+  purpose: string;
+  customBodyHtml?: string;
+  headerImg?: string | null;
+  footerImg?: string | null;
+  signatureImg?: string | null;
+  stampImg?: string | null;
+  showSignatureStamp: boolean;
+}
+
+// تبني مستند HTML كامل مستقل لطباعة الإنابة، بنفس أسلوب buildPrintDocument
+// المعتمد في قسم "المذكرات" (OfficialLetterComposer): صور ترويسة/تذييل بحجمها
+// الفعلي الكامل (210mm عرضاً) بدل تصغيرها ضمن الصفحة الحية، ونص متجه حقيقي
+// بلا أي تحويل إلى صورة. يُطبع هذا المستند لاحقاً عبر إطار iframe مخفي منفصل
+// تماماً عن صفحة النظام الحية (وليس عبر window.print() على الصفحة نفسها)،
+// وهو ما يمنع أيضاً إضافة المتصفح التلقائية لعنوان الصفحة ورابط الموقع أعلى/
+// أسفل كل صفحة مطبوعة (وهي إضافة تلقائية من نافذة طباعة المتصفح خاصة بالصفحة
+// الحية ذات العنوان والرابط الحقيقيين، ولا تظهر عند طباعة مستند iframe منفصل
+// بلا عنوان/رابط حقيقيين).
+function buildDelegationPrintHtml(d: DelegationPrintData): string {
+  const sigStampHtml = d.showSignatureStamp
+    ? "<div class=\"sig-stamp-wrap\">" +
+      (d.stampImg ? "<img class=\"stamp-img\" src=\"" + d.stampImg + "\" />" : "") +
+      (d.signatureImg ? "<img class=\"signature-img\" src=\"" + d.signatureImg + "\" />" : "") +
+      "</div>"
+    : "";
+
+  const defaultBodyHtml =
+    "<div class=\"row-between\">" +
+    "<span>الموكل :- <b>" + escapeHtmlText(d.clientName) + "</b></span>" +
+    "<span>الصفة :- <b>" + escapeHtmlText(d.clientCapacity) + "</b></span>" +
+    "</div>" +
+    "<p>ضـــد :- <b>" + escapeHtmlText(d.opponents) + "</b></p>" +
+    "<div class=\"row-between dashed-top\">" +
+    "<span>أنـــا المحامي :- <b>" + escapeHtmlText(d.issuedByName) + "</b></span>" +
+    "<span>قيد رقم :- <b>" + escapeHtmlText(d.issuerLicenseNumber) + "</b></span>" +
+    "</div>" +
+    "<p class=\"body-para\">بموجب هذه الإنابة، وبصفتي وكيلاً عن الموكل المذكور أعلاه أنيب زميلي الأستاذ المحامي :- <b>" +
+    escapeHtmlText(d.colleagueName) + "</b>&nbsp;&nbsp;قيد رقم :- <b>" + escapeHtmlText(d.colleagueLicenseNumber) + "</b></p>" +
+    "<p class=\"body-para\">للحضور والترافع والقيام بجميع الإجراءات اللازمة نيابة عني في القضية المذكورة أعلاه" +
+    (d.sessionDateLabel ? " وذلك بجلسة يوم <b>" + escapeHtmlText(d.sessionDateLabel) + "</b>" : "") +
+    (d.caseTitleSnapshot ? " (" + escapeHtmlText(d.caseTitleSnapshot) + ")" : "") +
+    ".</p>" +
+    "<div class=\"purpose-box\">" +
+    "<p class=\"title\">الغرض من الإنابة:</p>" +
+    "<p>" + escapeHtmlText(d.purpose).replace(/\n/g, "<br>") + "</p>" +
+    "</div>";
+
+  const bodyHtml = d.customBodyHtml ? d.customBodyHtml : defaultBodyHtml;
+
+  return "<!DOCTYPE html>\n" +
+    "<html dir=\"rtl\" lang=\"ar\">\n" +
+    "<head>\n" +
+    "<meta charset=\"utf-8\">\n" +
+    "<title>إنابة — " + escapeHtmlText(d.refNo) + "</title>\n" +
+    "<link rel=\"stylesheet\" href=\"" + AMIRI_FONT_LINK + "\">\n" +
+    "<style>\n" +
+    "  @page { size: A4; margin: 0; }\n" +
+    "  * { margin: 0; padding: 0; box-sizing: border-box; }\n" +
+    "  html, body { width: 210mm; }\n" +
+    "  body { font-family: " + LETTER_FONT_STACK + "; font-size: 12.5pt; line-height: 1.9; color: #1a1a1a; }\n" +
+    "  .print-page { width: 210mm; min-height: 297mm; display: flex; flex-direction: column; }\n" +
+    "  .header-strip-img { display: block; width: 210mm; height: 46mm; flex: none; }\n" +
+    "  .footer-strip-img { display: block; width: 210mm; height: 20mm; flex: none; }\n" +
+    "  .doc-content { flex: 1; display: flex; flex-direction: column; padding: 6mm 18mm; max-width: 100%; overflow-wrap: break-word; word-break: break-word; }\n" +
+    "  .doc-topbar { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 0.3mm solid #e2e2e2; padding-bottom: 3mm; margin-bottom: 6mm; }\n" +
+    "  .doc-date { font-size: 9.5pt; color: #555; }\n" +
+    "  .doc-refno { font-size: 7.5pt; color: #b3b8bd; font-family: 'Courier New', monospace; text-align: right; }\n" +
+    "  .court-line, .case-line { margin-bottom: 2mm; }\n" +
+    "  .delegation-title { text-align: center; font-size: 15pt; font-weight: 700; letter-spacing: 4pt; margin: 6mm 0; }\n" +
+    "  .row-between { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4mm; margin-bottom: 2mm; }\n" +
+    "  .dashed-top { border-top: 0.3mm dashed #c7c7c7; padding-top: 3mm; margin-top: 2mm; }\n" +
+    "  .body-para { margin-bottom: 4mm; }\n" +
+    "  .purpose-box { border: 0.3mm solid #ddd; border-radius: 2mm; background: #fafaf8; padding: 4mm; margin: 4mm 0; }\n" +
+    "  .purpose-box .title { font-weight: 700; margin-bottom: 1.5mm; }\n" +
+    "  .closing-line { margin: 4mm 0; }\n" +
+    "  .signature { margin-top: auto; text-align: left; padding-top: 6mm; }\n" +
+    "  .signature .sig-name-title { font-weight: 700; }\n" +
+    "  .sig-stamp-wrap { position: relative; height: 26mm; width: 55mm; margin: 2mm 0; }\n" +
+    "  .stamp-img { position: absolute; top: 0; right: 6mm; height: 26mm; width: 26mm; object-fit: contain; opacity: 0.9; transform: rotate(-6deg); }\n" +
+    "  .signature-img { position: absolute; bottom: 1mm; left: 0; height: 16mm; object-fit: contain; }\n" +
+    "  .sign-line { border-top: 0.3mm solid #999; padding-top: 1mm; display: inline-block; margin-top: 6mm; }\n" +
+    "  .ql-align-center { text-align: center; }\n" +
+    "  .ql-align-right { text-align: right; }\n" +
+    "  .ql-align-justify { text-align: justify; }\n" +
+    "  .ql-align-left { text-align: left; }\n" +
+    "  .doc-content p { margin-bottom: 3mm; }\n" +
+    "  .doc-content b, .doc-content strong { font-weight: bold; }\n" +
+    "</style>\n" +
+    "</head>\n" +
+    "<body>\n" +
+    "  <div class=\"print-page\">\n" +
+    (d.headerImg ? "    <img class=\"header-strip-img\" src=\"" + d.headerImg + "\" />\n" : "") +
+    "    <div class=\"doc-content\">\n" +
+    "      <div class=\"doc-topbar\">\n" +
+    "        <span class=\"doc-date\">التاريخ: " + escapeHtmlText(d.dateLabel) + "</span>\n" +
+    "        <span class=\"doc-refno\">الرقم المرجعي: " + escapeHtmlText(d.refNo) + "</span>\n" +
+    "      </div>\n" +
+    "      <p class=\"court-line\">لدى " + escapeHtmlText(d.courtName) + " الموقرة ,,,</p>\n" +
+    "      <p class=\"case-line\">في القضية رقم :- <b>" + escapeHtmlText(d.caseNumber) + "</b></p>\n" +
+    "      <h1 class=\"delegation-title\">إنـابـة</h1>\n" +
+    "      " + bodyHtml + "\n" +
+    "      <p class=\"closing-line\">وتفضلوا بقبول وافر الاحترام والتقدير.</p>\n" +
+    "      <div class=\"signature\">\n" +
+    "        <p class=\"sig-name-title\">المحامي الموكل</p>\n" +
+    "        <p>الاسم :- " + escapeHtmlText(d.issuedByName) + "</p>\n" +
+    sigStampHtml + "\n" +
+    "        <p class=\"sign-line\">التوقيع والختم</p>\n" +
+    "      </div>\n" +
+    "    </div>\n" +
+    (d.footerImg ? "    <img class=\"footer-strip-img\" src=\"" + d.footerImg + "\" />\n" : "") +
+    "  </div>\n" +
+    "</body>\n" +
+    "</html>";
+}
 
 // ---------- الأنواع والواجهات ومصفوفة الصلاحيات الموسعة ----------
 export interface RolePermissions {
@@ -20429,6 +20577,37 @@ export default function App() {
     setColleagueDelegations((prev) => prev.map((x) => (x.id === d.id ? { ...x, customBodyHtml: undefined } : x)));
     logAuditAction("UPDATE", "الزملاء والإنابات", `استعادة الصياغة الافتراضية لإنابة رقم: ${d.refNo}`, `قام المستخدم "${currentUser.name}" باستعادة الصياغة التلقائية الافتراضية لنص الإنابة رقم ${d.refNo}`, d.id);
   };
+  // طباعة/تصدير الإنابة عبر نفس أسلوب الطباعة الأصلي المعتمد في قسم "المذكرات"
+  // (مستند HTML مستقل بصور ترويسة/تذييل بحجمها الكامل داخل إطار iframe مخفي)
+  // بدل window.print() على الصفحة الحية — يحل هذا مشكلتي تصغير الورق الرسمي
+  // وإضافة المتصفح التلقائية لعنوان الصفحة ورابط الموقع أعلى/أسفل كل ورقة.
+  const handleDelegationPrint = () => {
+    logDelegationUsage();
+    const includesSigStamp = canUseSignatureStamp && Boolean(letterhead.signatureImg || letterhead.stampImg);
+    const html = buildDelegationPrintHtml({
+      refNo: d.refNo,
+      dateLabel: fmtDate(d.issuedAt.slice(0, 10)),
+      courtName: linkedCase?.court || "المحكمة المختصة",
+      caseNumber: linkedCase?.number || d.caseTitleSnapshot || "—",
+      clientName: linkedCase ? clientName(linkedCase.clientId) : "—",
+      clientCapacity: linkedCase?.clientCapacity || "—",
+      opponents: linkedCase ? (caseOpponentsLabel(linkedCase) || "—") : "—",
+      issuedByName: d.issuedByName,
+      issuerLicenseNumber: d.issuerLicenseNumber || "—",
+      colleagueName: colleague?.name || "—",
+      colleagueLicenseNumber: d.colleagueLicenseNumber || "—",
+      sessionDateLabel: d.sessionDate ? fmtDate(d.sessionDate) : undefined,
+      caseTitleSnapshot: !linkedCase && d.caseTitleSnapshot ? d.caseTitleSnapshot : undefined,
+      purpose: d.purpose,
+      customBodyHtml: d.customBodyHtml,
+      headerImg: letterhead.headerImg,
+      footerImg: letterhead.footerImg,
+      signatureImg: letterhead.signatureImg,
+      stampImg: letterhead.stampImg,
+      showSignatureStamp: includesSigStamp,
+    });
+    printHtmlDocumentInHiddenIframe(html);
+  };
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 overflow-y-auto">
       <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl print-area">
@@ -20469,13 +20648,13 @@ export default function App() {
                   </button>
                 )}
                 <button
-                  onClick={() => { logDelegationUsage(); window.print(); }}
+                  onClick={handleDelegationPrint}
                   className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
                   title="فتح نافذة الطباعة لحفظ الإنابة كملف PDF بجودة عالية (اختر 'حفظ كـ PDF' من الوجهة)"
                 >
                   <Download size={15} /> تحميل PDF
                 </button>
-                <button onClick={() => { logDelegationUsage(); window.print(); }} className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400">
+                <button onClick={handleDelegationPrint} className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400">
                   <Printer size={15} /> طباعة
                 </button>
               </>
@@ -20486,13 +20665,13 @@ export default function App() {
 
         <div id="printable-delegation" className="p-8 space-y-5 text-slate-900 leading-relaxed bg-white">
           {letterhead.headerImg && (
-            <div className="mb-4">
-              <img src={letterhead.headerImg} alt="ترويسة المكتب" className="w-full max-h-40 object-contain mx-auto" />
+            <div className="mb-4 -mx-8 -mt-8">
+              <img src={letterhead.headerImg} alt="ترويسة المكتب" className="w-full block" />
             </div>
           )}
-          <div className="flex items-center justify-between text-xs text-slate-600 border-b border-slate-200 pb-3">
-            <span>الرقم المرجعي: <b className="font-mono">{d.refNo}</b></span>
-            <span>التاريخ: {fmtDate(d.issuedAt.slice(0, 10))}</span>
+          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+            <span className="text-[10px] text-slate-300 font-mono text-right">الرقم المرجعي: {d.refNo}</span>
+            <span className="text-xs text-slate-600">التاريخ: {fmtDate(d.issuedAt.slice(0, 10))}</span>
           </div>
           <div className="text-sm space-y-1">
             <p>لدى {linkedCase?.court || "المحكمة المختصة"} الموقرة ,,,</p>
@@ -20552,8 +20731,8 @@ export default function App() {
             <p className="border-t border-slate-400 pt-1 mt-8 inline-block">التوقيع والختم</p>
           </div>
           {letterhead.footerImg && (
-            <div className="pt-6">
-              <img src={letterhead.footerImg} alt="تذييل المكتب" className="w-full max-h-24 object-contain mx-auto" />
+            <div className="pt-6 -mx-8 -mb-8">
+              <img src={letterhead.footerImg} alt="تذييل المكتب" className="w-full block" />
             </div>
           )}
         </div>
