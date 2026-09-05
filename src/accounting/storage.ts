@@ -1,5 +1,6 @@
 import { Account, JournalEntry, LS_KEYS } from "./types";
 import { DEFAULT_CHART_OF_ACCOUNTS } from "./seedAccounts";
+import { BankAccount, BankTransaction, BANK_LS_KEYS } from "./bankTypes";
 
 export function loadAccountingStorage<T>(key: string, fallback: T): T {
   try {
@@ -24,6 +25,14 @@ export function loadAccounts(): Account[] {
 
 export function loadJournalEntries(): JournalEntry[] {
   return loadAccountingStorage<JournalEntry[]>(LS_KEYS.journalEntries, []);
+}
+
+export function loadBankAccounts(): BankAccount[] {
+  return loadAccountingStorage<BankAccount[]>(BANK_LS_KEYS.bankAccounts, []);
+}
+
+export function loadBankTransactions(): BankTransaction[] {
+  return loadAccountingStorage<BankTransaction[]>(BANK_LS_KEYS.bankTransactions, []);
 }
 
 // توليد رقم قيد تسلسلي بصيغة JE-YYYY-XXXX بحسب السنة الحالية
