@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BookOpen, ListOrdered, ScrollText, Scale, Landmark, ReceiptText } from "lucide-react";
+import { BookOpen, ListOrdered, ScrollText, Scale, Landmark, ReceiptText, Truck, ShoppingCart } from "lucide-react";
 import { Account, JournalEntry, LS_KEYS } from "./types";
 import {
   loadAccounts,
@@ -8,10 +8,14 @@ import {
   loadBankTransactions,
   loadSalesInvoices,
   loadSalesPayments,
+  loadVendors,
+  loadPurchaseInvoices,
+  loadPurchasePayments,
   saveAccountingStorage,
 } from "./storage";
 import { BankAccount, BankTransaction, BANK_LS_KEYS } from "./bankTypes";
 import { SalesInvoice, SalesPayment, SALES_LS_KEYS } from "./salesTypes";
+import { Vendor, PurchaseInvoice, PurchasePayment, PURCHASE_LS_KEYS } from "./purchaseTypes";
 import ChartOfAccounts from "./ChartOfAccounts";
 import JournalEntries from "./JournalEntries";
 import Ledger from "./Ledger";
@@ -19,13 +23,17 @@ import TrialBalance from "./TrialBalance";
 import BankAccounts from "./BankAccounts";
 import BankAccountLedger from "./BankAccountLedger";
 import SalesInvoices from "./SalesInvoices";
+import Vendors from "./Vendors";
+import PurchaseInvoices from "./PurchaseInvoices";
 
-type SubTab = "accounts" | "bank" | "sales" | "journal" | "ledger" | "trial_balance";
+type SubTab = "accounts" | "bank" | "sales" | "vendors" | "purchases" | "journal" | "ledger" | "trial_balance";
 
 const SUB_TABS: Array<{ id: SubTab; label: string; icon: React.ComponentType<{ size?: number }> }> = [
   { id: "accounts", label: "شجرة الحسابات", icon: BookOpen },
   { id: "bank", label: "الحسابات البنكية", icon: Landmark },
   { id: "sales", label: "المبيعات والفواتير", icon: ReceiptText },
+  { id: "vendors", label: "الموردون", icon: Truck },
+  { id: "purchases", label: "المشتريات والمصروفات", icon: ShoppingCart },
   { id: "journal", label: "القيود اليومية", icon: ListOrdered },
   { id: "ledger", label: "دفتر الأستاذ", icon: ScrollText },
   { id: "trial_balance", label: "ميزان المراجعة", icon: Scale },
@@ -42,6 +50,12 @@ export default function AccountingModule({
   canApproveSalesInvoices = true,
   canRecordSalesPayments = true,
   canDeleteSalesInvoices = true,
+  canManageVendors = true,
+  canDeleteVendors = true,
+  canManagePurchaseInvoices = true,
+  canApprovePurchaseInvoices = true,
+  canRecordPurchasePayments = true,
+  canDeletePurchaseInvoices = true,
   currentUserName,
   letterheadHeaderImg,
   letterheadFooterImg,
@@ -56,6 +70,12 @@ export default function AccountingModule({
   canApproveSalesInvoices?: boolean;
   canRecordSalesPayments?: boolean;
   canDeleteSalesInvoices?: boolean;
+  canManageVendors?: boolean;
+  canDeleteVendors?: boolean;
+  canManagePurchaseInvoices?: boolean;
+  canApprovePurchaseInvoices?: boolean;
+  canRecordPurchasePayments?: boolean;
+  canDeletePurchaseInvoices?: boolean;
   currentUserName?: string;
   letterheadHeaderImg?: string | null;
   letterheadFooterImg?: string | null;
@@ -68,6 +88,9 @@ export default function AccountingModule({
   const [selectedBankId, setSelectedBankId] = useState<string | null>(null);
   const [salesInvoices, setSalesInvoices] = useState<SalesInvoice[]>(() => loadSalesInvoices());
   const [salesPayments, setSalesPayments] = useState<SalesPayment[]>(() => loadSalesPayments());
+  const [vendors, setVendors] = useState<Vendor[]>(() => loadVendors());
+  const [purchaseInvoices, setPurchaseInvoices] = useState<PurchaseInvoice[]>(() => loadPurchaseInvoices());
+  const [purchasePayments, setPurchasePayments] = useState<PurchasePayment[]>(() => loadPurchasePayments());
 
   useEffect(() => saveAccountingStorage(LS_KEYS.accounts, accounts), [accounts]);
   useEffect(() => saveAccountingStorage(LS_KEYS.journalEntries, entries), [entries]);
@@ -75,6 +98,9 @@ export default function AccountingModule({
   useEffect(() => saveAccountingStorage(BANK_LS_KEYS.bankTransactions, transactions), [transactions]);
   useEffect(() => saveAccountingStorage(SALES_LS_KEYS.invoices, salesInvoices), [salesInvoices]);
   useEffect(() => saveAccountingStorage(SALES_LS_KEYS.payments, salesPayments), [salesPayments]);
+  useEffect(() => saveAccountingStorage(PURCHASE_LS_KEYS.vendors, vendors), [vendors]);
+  useEffect(() => saveAccountingStorage(PURCHASE_LS_KEYS.invoices, purchaseInvoices), [purchaseInvoices]);
+  useEffect(() => saveAccountingStorage(PURCHASE_LS_KEYS.payments, purchasePayments), [purchasePayments]);
 
   useEffect(() => {
     if (selectedBankId && !bankAccounts.some((b) => b.id === selectedBankId)) setSelectedBankId(null);
@@ -86,9 +112,9 @@ export default function AccountingModule({
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-xs text-amber-800">
-        النظام المحاسبي قيد الإنشاء التدريجي (المرحلة 3 من 7: المبيعات والفوترة الضريبية، بعد اكتمال شجرة الحسابات والقيود اليومية والحسابات البنكية) —
-        نظام فوترة منفصل تماماً عن قسم "الفواتير والضريبة" الحالي المستخدم فعلياً في الموقع، وبيانات هذه المرحلة محفوظة محلياً ومستقلة عن بقية بيانات
-        المكتب.
+        النظام المحاسبي قيد الإنشاء التدريجي (المرحلة 4 من 7: المشتريات والمصروفات، بعد اكتمال شجرة الحسابات والقيود اليومية والحسابات البنكية والمبيعات
+        والفوترة الضريبية) — سجل موردين وفواتير مشتريات/مصروفات منفصل تماماً عن بيانات المكتب الفعلية الحالية، وبيانات هذه المرحلة محفوظة محلياً ومستقلة
+        عن بقية بيانات المكتب.
       </div>
 
       <div className="flex border-b border-slate-200 overflow-x-auto">
@@ -150,6 +176,26 @@ export default function AccountingModule({
           currentUserName={currentUserName}
           letterheadHeaderImg={letterheadHeaderImg}
           letterheadFooterImg={letterheadFooterImg}
+        />
+      )}
+
+      {subTab === "vendors" && <Vendors vendors={vendors} setVendors={setVendors} canManage={canManageVendors} canDelete={canDeleteVendors} />}
+
+      {subTab === "purchases" && (
+        <PurchaseInvoices
+          accounts={accounts}
+          vendors={vendors}
+          invoices={purchaseInvoices}
+          setInvoices={setPurchaseInvoices}
+          payments={purchasePayments}
+          setPayments={setPurchasePayments}
+          entries={entries}
+          setEntries={setEntries}
+          canManage={canManagePurchaseInvoices}
+          canApprove={canApprovePurchaseInvoices}
+          canRecordPayment={canRecordPurchasePayments}
+          canDelete={canDeletePurchaseInvoices}
+          currentUserName={currentUserName}
         />
       )}
 
