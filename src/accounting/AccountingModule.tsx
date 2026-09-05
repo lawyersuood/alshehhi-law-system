@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BookOpen, ListOrdered, ScrollText, Scale, Landmark, ReceiptText, Truck, ShoppingCart, FileBarChart, Boxes } from "lucide-react";
+import { BookOpen, ListOrdered, ScrollText, Scale, Landmark, ReceiptText, Truck, ShoppingCart, FileBarChart, Boxes, UserRound, Wallet2 } from "lucide-react";
 import { Account, JournalEntry, LS_KEYS } from "./types";
 import {
   loadAccounts,
@@ -13,12 +13,16 @@ import {
   loadPurchasePayments,
   loadFixedAssets,
   loadDepreciationRuns,
+  loadPayrollEmployees,
+  loadPayrollRuns,
+  loadPayslips,
   saveAccountingStorage,
 } from "./storage";
 import { BankAccount, BankTransaction, BANK_LS_KEYS } from "./bankTypes";
 import { SalesInvoice, SalesPayment, SALES_LS_KEYS } from "./salesTypes";
 import { Vendor, PurchaseInvoice, PurchasePayment, PURCHASE_LS_KEYS } from "./purchaseTypes";
 import { FixedAsset, DepreciationRun, FIXED_ASSET_LS_KEYS } from "./fixedAssetTypes";
+import { PayrollEmployee, PayrollRun, Payslip, PAYROLL_LS_KEYS } from "./payrollTypes";
 import ChartOfAccounts from "./ChartOfAccounts";
 import JournalEntries from "./JournalEntries";
 import Ledger from "./Ledger";
@@ -30,8 +34,22 @@ import Vendors from "./Vendors";
 import PurchaseInvoices from "./PurchaseInvoices";
 import FinancialReports from "./FinancialReports";
 import FixedAssets from "./FixedAssets";
+import PayrollEmployees from "./PayrollEmployees";
+import PayrollRuns from "./PayrollRuns";
 
-type SubTab = "accounts" | "bank" | "sales" | "vendors" | "purchases" | "assets" | "journal" | "ledger" | "trial_balance" | "reports";
+type SubTab =
+  | "accounts"
+  | "bank"
+  | "sales"
+  | "vendors"
+  | "purchases"
+  | "assets"
+  | "payroll_employees"
+  | "payroll_runs"
+  | "journal"
+  | "ledger"
+  | "trial_balance"
+  | "reports";
 
 const SUB_TABS: Array<{ id: SubTab; label: string; icon: React.ComponentType<{ size?: number }> }> = [
   { id: "accounts", label: "شجرة الحسابات", icon: BookOpen },
@@ -40,6 +58,8 @@ const SUB_TABS: Array<{ id: SubTab; label: string; icon: React.ComponentType<{ s
   { id: "vendors", label: "الموردون", icon: Truck },
   { id: "purchases", label: "المشتريات والمصروفات", icon: ShoppingCart },
   { id: "assets", label: "الأصول الثابتة", icon: Boxes },
+  { id: "payroll_employees", label: "سجل موظفي الرواتب", icon: UserRound },
+  { id: "payroll_runs", label: "تشغيل الرواتب", icon: Wallet2 },
   { id: "journal", label: "القيود اليومية", icon: ListOrdered },
   { id: "ledger", label: "دفتر الأستاذ", icon: ScrollText },
   { id: "trial_balance", label: "ميزان المراجعة", icon: Scale },
@@ -66,6 +86,10 @@ export default function AccountingModule({
   canManageFixedAssets = true,
   canRunDepreciation = true,
   canDeleteFixedAssets = true,
+  canManagePayrollEmployees = true,
+  canDeletePayrollEmployees = true,
+  canRunPayroll = true,
+  canRecordPayrollPayments = true,
   currentUserName,
   letterheadHeaderImg,
   letterheadFooterImg,
@@ -89,6 +113,10 @@ export default function AccountingModule({
   canManageFixedAssets?: boolean;
   canRunDepreciation?: boolean;
   canDeleteFixedAssets?: boolean;
+  canManagePayrollEmployees?: boolean;
+  canDeletePayrollEmployees?: boolean;
+  canRunPayroll?: boolean;
+  canRecordPayrollPayments?: boolean;
   currentUserName?: string;
   letterheadHeaderImg?: string | null;
   letterheadFooterImg?: string | null;
@@ -106,6 +134,9 @@ export default function AccountingModule({
   const [purchasePayments, setPurchasePayments] = useState<PurchasePayment[]>(() => loadPurchasePayments());
   const [fixedAssets, setFixedAssets] = useState<FixedAsset[]>(() => loadFixedAssets());
   const [depreciationRuns, setDepreciationRuns] = useState<DepreciationRun[]>(() => loadDepreciationRuns());
+  const [payrollEmployees, setPayrollEmployees] = useState<PayrollEmployee[]>(() => loadPayrollEmployees());
+  const [payrollRuns, setPayrollRuns] = useState<PayrollRun[]>(() => loadPayrollRuns());
+  const [payslips, setPayslips] = useState<Payslip[]>(() => loadPayslips());
 
   useEffect(() => saveAccountingStorage(LS_KEYS.accounts, accounts), [accounts]);
   useEffect(() => saveAccountingStorage(LS_KEYS.journalEntries, entries), [entries]);
@@ -118,6 +149,9 @@ export default function AccountingModule({
   useEffect(() => saveAccountingStorage(PURCHASE_LS_KEYS.payments, purchasePayments), [purchasePayments]);
   useEffect(() => saveAccountingStorage(FIXED_ASSET_LS_KEYS.assets, fixedAssets), [fixedAssets]);
   useEffect(() => saveAccountingStorage(FIXED_ASSET_LS_KEYS.depreciationRuns, depreciationRuns), [depreciationRuns]);
+  useEffect(() => saveAccountingStorage(PAYROLL_LS_KEYS.employees, payrollEmployees), [payrollEmployees]);
+  useEffect(() => saveAccountingStorage(PAYROLL_LS_KEYS.runs, payrollRuns), [payrollRuns]);
+  useEffect(() => saveAccountingStorage(PAYROLL_LS_KEYS.payslips, payslips), [payslips]);
 
   useEffect(() => {
     if (selectedBankId && !bankAccounts.some((b) => b.id === selectedBankId)) setSelectedBankId(null);
@@ -129,8 +163,9 @@ export default function AccountingModule({
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-xs text-amber-800">
-        النظام المحاسبي قيد الإنشاء التدريجي (المرحلة 6 من 7: الأصول الثابتة، بعد اكتمال شجرة الحسابات والقيود اليومية والحسابات البنكية والمبيعات
-        والمشتريات والتقارير المالية) — سجل أصول ثابتة وتوليد قيود إهلاكها الدوري بضغطة واحدة، منفصل تماماً عن بيانات المكتب الفعلية الحالية.
+        النظام المحاسبي قيد الإنشاء التدريجي (المرحلة 7 والأخيرة من 7: الرواتب والموظفون) — سجل موظفين مستقل خاص بدورة الرواتب (لا علاقة له بسجل
+        "الموظفون والكادر" الحالي في الموقع)، وتشغيل رواتب شهري يولّد قسيمة لكل موظف وقيداً محاسبياً واحداً مجمّعاً. لا يشمل توليد ملف حماية الأجور (WPS).
+        بانتهاء هذه المرحلة تكتمل كل المراحل السبع المخطّطة، وتبقى بانتظار قرارك بشأن موعد تفعيل النظام بالكامل.
       </div>
 
       <div className="flex border-b border-slate-200 overflow-x-auto">
@@ -227,6 +262,34 @@ export default function AccountingModule({
           canManage={canManageFixedAssets}
           canRunDepreciation={canRunDepreciation}
           canDelete={canDeleteFixedAssets}
+          currentUserName={currentUserName}
+        />
+      )}
+
+      {subTab === "payroll_employees" && (
+        <PayrollEmployees
+          accounts={accounts}
+          employees={payrollEmployees}
+          setEmployees={setPayrollEmployees}
+          payslips={payslips}
+          canManage={canManagePayrollEmployees}
+          canDelete={canDeletePayrollEmployees}
+          currentUserName={currentUserName}
+        />
+      )}
+
+      {subTab === "payroll_runs" && (
+        <PayrollRuns
+          accounts={accounts}
+          employees={payrollEmployees}
+          runs={payrollRuns}
+          setRuns={setPayrollRuns}
+          payslips={payslips}
+          setPayslips={setPayslips}
+          entries={entries}
+          setEntries={setEntries}
+          canRun={canRunPayroll}
+          canRecordPayment={canRecordPayrollPayments}
           currentUserName={currentUserName}
         />
       )}
