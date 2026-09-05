@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { BookOpen, ListOrdered, ScrollText, Scale, Landmark, ReceiptText, Truck, ShoppingCart, FileBarChart } from "lucide-react";
+import { BookOpen, ListOrdered, ScrollText, Scale, Landmark, ReceiptText, Truck, ShoppingCart, FileBarChart, Boxes } from "lucide-react";
 import { Account, JournalEntry, LS_KEYS } from "./types";
 import {
   loadAccounts,
@@ -11,11 +11,14 @@ import {
   loadVendors,
   loadPurchaseInvoices,
   loadPurchasePayments,
+  loadFixedAssets,
+  loadDepreciationRuns,
   saveAccountingStorage,
 } from "./storage";
 import { BankAccount, BankTransaction, BANK_LS_KEYS } from "./bankTypes";
 import { SalesInvoice, SalesPayment, SALES_LS_KEYS } from "./salesTypes";
 import { Vendor, PurchaseInvoice, PurchasePayment, PURCHASE_LS_KEYS } from "./purchaseTypes";
+import { FixedAsset, DepreciationRun, FIXED_ASSET_LS_KEYS } from "./fixedAssetTypes";
 import ChartOfAccounts from "./ChartOfAccounts";
 import JournalEntries from "./JournalEntries";
 import Ledger from "./Ledger";
@@ -26,8 +29,9 @@ import SalesInvoices from "./SalesInvoices";
 import Vendors from "./Vendors";
 import PurchaseInvoices from "./PurchaseInvoices";
 import FinancialReports from "./FinancialReports";
+import FixedAssets from "./FixedAssets";
 
-type SubTab = "accounts" | "bank" | "sales" | "vendors" | "purchases" | "journal" | "ledger" | "trial_balance" | "reports";
+type SubTab = "accounts" | "bank" | "sales" | "vendors" | "purchases" | "assets" | "journal" | "ledger" | "trial_balance" | "reports";
 
 const SUB_TABS: Array<{ id: SubTab; label: string; icon: React.ComponentType<{ size?: number }> }> = [
   { id: "accounts", label: "شجرة الحسابات", icon: BookOpen },
@@ -35,6 +39,7 @@ const SUB_TABS: Array<{ id: SubTab; label: string; icon: React.ComponentType<{ s
   { id: "sales", label: "المبيعات والفواتير", icon: ReceiptText },
   { id: "vendors", label: "الموردون", icon: Truck },
   { id: "purchases", label: "المشتريات والمصروفات", icon: ShoppingCart },
+  { id: "assets", label: "الأصول الثابتة", icon: Boxes },
   { id: "journal", label: "القيود اليومية", icon: ListOrdered },
   { id: "ledger", label: "دفتر الأستاذ", icon: ScrollText },
   { id: "trial_balance", label: "ميزان المراجعة", icon: Scale },
@@ -58,6 +63,9 @@ export default function AccountingModule({
   canApprovePurchaseInvoices = true,
   canRecordPurchasePayments = true,
   canDeletePurchaseInvoices = true,
+  canManageFixedAssets = true,
+  canRunDepreciation = true,
+  canDeleteFixedAssets = true,
   currentUserName,
   letterheadHeaderImg,
   letterheadFooterImg,
@@ -78,6 +86,9 @@ export default function AccountingModule({
   canApprovePurchaseInvoices?: boolean;
   canRecordPurchasePayments?: boolean;
   canDeletePurchaseInvoices?: boolean;
+  canManageFixedAssets?: boolean;
+  canRunDepreciation?: boolean;
+  canDeleteFixedAssets?: boolean;
   currentUserName?: string;
   letterheadHeaderImg?: string | null;
   letterheadFooterImg?: string | null;
@@ -93,6 +104,8 @@ export default function AccountingModule({
   const [vendors, setVendors] = useState<Vendor[]>(() => loadVendors());
   const [purchaseInvoices, setPurchaseInvoices] = useState<PurchaseInvoice[]>(() => loadPurchaseInvoices());
   const [purchasePayments, setPurchasePayments] = useState<PurchasePayment[]>(() => loadPurchasePayments());
+  const [fixedAssets, setFixedAssets] = useState<FixedAsset[]>(() => loadFixedAssets());
+  const [depreciationRuns, setDepreciationRuns] = useState<DepreciationRun[]>(() => loadDepreciationRuns());
 
   useEffect(() => saveAccountingStorage(LS_KEYS.accounts, accounts), [accounts]);
   useEffect(() => saveAccountingStorage(LS_KEYS.journalEntries, entries), [entries]);
@@ -103,6 +116,8 @@ export default function AccountingModule({
   useEffect(() => saveAccountingStorage(PURCHASE_LS_KEYS.vendors, vendors), [vendors]);
   useEffect(() => saveAccountingStorage(PURCHASE_LS_KEYS.invoices, purchaseInvoices), [purchaseInvoices]);
   useEffect(() => saveAccountingStorage(PURCHASE_LS_KEYS.payments, purchasePayments), [purchasePayments]);
+  useEffect(() => saveAccountingStorage(FIXED_ASSET_LS_KEYS.assets, fixedAssets), [fixedAssets]);
+  useEffect(() => saveAccountingStorage(FIXED_ASSET_LS_KEYS.depreciationRuns, depreciationRuns), [depreciationRuns]);
 
   useEffect(() => {
     if (selectedBankId && !bankAccounts.some((b) => b.id === selectedBankId)) setSelectedBankId(null);
@@ -114,9 +129,8 @@ export default function AccountingModule({
   return (
     <div className="space-y-6">
       <div className="rounded-2xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-xs text-amber-800">
-        النظام المحاسبي قيد الإنشاء التدريجي (المرحلة 5 من 7: التقارير المالية، بعد اكتمال شجرة الحسابات والقيود اليومية والحسابات البنكية والمبيعات
-        والمشتريات) — تقارير محسوبة آلياً من بيانات المراحل السابقة (قائمة الدخل، الميزانية العمومية، التدفق النقدي، ضريبة القيمة المضافة، وأعمار الذمم)،
-        ولا تخزّن أي بيانات جديدة بذاتها.
+        النظام المحاسبي قيد الإنشاء التدريجي (المرحلة 6 من 7: الأصول الثابتة، بعد اكتمال شجرة الحسابات والقيود اليومية والحسابات البنكية والمبيعات
+        والمشتريات والتقارير المالية) — سجل أصول ثابتة وتوليد قيود إهلاكها الدوري بضغطة واحدة، منفصل تماماً عن بيانات المكتب الفعلية الحالية.
       </div>
 
       <div className="flex border-b border-slate-200 overflow-x-auto">
@@ -197,6 +211,22 @@ export default function AccountingModule({
           canApprove={canApprovePurchaseInvoices}
           canRecordPayment={canRecordPurchasePayments}
           canDelete={canDeletePurchaseInvoices}
+          currentUserName={currentUserName}
+        />
+      )}
+
+      {subTab === "assets" && (
+        <FixedAssets
+          accounts={accounts}
+          assets={fixedAssets}
+          setAssets={setFixedAssets}
+          depreciationRuns={depreciationRuns}
+          setDepreciationRuns={setDepreciationRuns}
+          entries={entries}
+          setEntries={setEntries}
+          canManage={canManageFixedAssets}
+          canRunDepreciation={canRunDepreciation}
+          canDelete={canDeleteFixedAssets}
           currentUserName={currentUserName}
         />
       )}

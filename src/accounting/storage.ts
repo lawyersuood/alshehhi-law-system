@@ -3,6 +3,7 @@ import { DEFAULT_CHART_OF_ACCOUNTS } from "./seedAccounts";
 import { BankAccount, BankTransaction, BANK_LS_KEYS } from "./bankTypes";
 import { SalesInvoice, SalesPayment, SALES_LS_KEYS } from "./salesTypes";
 import { Vendor, PurchaseInvoice, PurchasePayment, PURCHASE_LS_KEYS } from "./purchaseTypes";
+import { FixedAsset, DepreciationRun, FIXED_ASSET_LS_KEYS } from "./fixedAssetTypes";
 
 export function loadAccountingStorage<T>(key: string, fallback: T): T {
   try {
@@ -55,6 +56,14 @@ export function loadPurchaseInvoices(): PurchaseInvoice[] {
 
 export function loadPurchasePayments(): PurchasePayment[] {
   return loadAccountingStorage<PurchasePayment[]>(PURCHASE_LS_KEYS.payments, []);
+}
+
+export function loadFixedAssets(): FixedAsset[] {
+  return loadAccountingStorage<FixedAsset[]>(FIXED_ASSET_LS_KEYS.assets, []);
+}
+
+export function loadDepreciationRuns(): DepreciationRun[] {
+  return loadAccountingStorage<DepreciationRun[]>(FIXED_ASSET_LS_KEYS.depreciationRuns, []);
 }
 
 // توليد رقم قيد تسلسلي بصيغة JE-YYYY-XXXX بحسب السنة الحالية
