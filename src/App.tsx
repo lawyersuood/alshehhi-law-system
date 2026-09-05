@@ -344,6 +344,9 @@ export interface RolePermissions {
   approvePurchaseInvoices?: boolean;// اعتماد فواتير المشتريات وترحيل قيودها
   recordPurchasePayments?: boolean; // تسجيل دفعات سداد فواتير المشتريات
   deletePurchaseInvoices?: boolean; // حذف مسودات فواتير المشتريات
+  manageFixedAssets?: boolean;      // إدارة سجل الأصول الثابتة
+  runDepreciation?: boolean;        // توليد قيود الإهلاك الدوري وترحيلها
+  deleteFixedAssets?: boolean;      // حذف أصول ثابتة لم يُحتسب لها إهلاك بعد
 }
 
 export interface UserItem {
@@ -1397,6 +1400,9 @@ const PERMISSION_LABELS: Record<keyof RolePermissions, { label: string; desc: st
   approvePurchaseInvoices: { label: "اعتماد فواتير المشتريات", desc: "اعتماد فواتير المشتريات وترحيل قيودها المحاسبية تلقائياً" },
   recordPurchasePayments: { label: "تسجيل سداد فواتير المشتريات", desc: "تسجيل دفعات السداد على فواتير المشتريات المعتمدة" },
   deletePurchaseInvoices: { label: "حذف مسودات فواتير المشتريات", desc: "حذف مسودات فواتير مشتريات لم تُعتمد بعد" },
+  manageFixedAssets: { label: "إدارة الأصول الثابتة", desc: "إضافة وتعديل واستبعاد سجل أصول المكتب الثابتة" },
+  runDepreciation: { label: "توليد قيود الإهلاك", desc: "توليد قيد الإهلاك الدوري للأصول الثابتة وترحيله تلقائياً" },
+  deleteFixedAssets: { label: "حذف الأصول الثابتة", desc: "حذف أصل ثابت لم يُحتسب له أي إهلاك بعد" },
 };
 
 const seedUsers: UserItem[] = [
@@ -18548,6 +18554,9 @@ export default function App() {
                 canApprovePurchaseInvoices={isSuperAdmin || Boolean(currentUser.permissions?.approvePurchaseInvoices)}
                 canRecordPurchasePayments={isSuperAdmin || Boolean(currentUser.permissions?.recordPurchasePayments)}
                 canDeletePurchaseInvoices={isSuperAdmin || Boolean(currentUser.permissions?.deletePurchaseInvoices)}
+                canManageFixedAssets={isSuperAdmin || Boolean(currentUser.permissions?.manageFixedAssets)}
+                canRunDepreciation={isSuperAdmin || Boolean(currentUser.permissions?.runDepreciation)}
+                canDeleteFixedAssets={isSuperAdmin || Boolean(currentUser.permissions?.deleteFixedAssets)}
                 currentUserName={currentUser.name}
                 letterheadHeaderImg={letterhead.headerImg}
                 letterheadFooterImg={letterhead.footerImg}
