@@ -115,13 +115,18 @@ const TASK_TEMPLATES = [
 ];
 
 // ---------- العلم الرئيسي للنظام المحاسبي المتكامل (المرحلة قيد الإنشاء) ----------
-// هذا الثابت هو المفتاح الوحيد لتفعيل النظام المحاسبي الجديد بكامله في الموقع.
-// طالما قيمته false: لا يظهر أي تبويب أو رابط للنظام المحاسبي في القائمة الجانبية،
-// ولا تُعرض واجهته إطلاقاً مهما كانت صلاحيات المستخدم (حتى مدير النظام) — بشكل مستقل
-// تماماً عن نظام الصلاحيات المعتاد (RolePermissions)، تحسباً لاحتوائه على استثناءات
-// خاصة بحساب المدير تتجاوز الصلاحيات. لا يتم تفعيله (تحويله إلى true) إلا بتعليمات
-// صريحة من مالك المكتب بعد اكتمال جميع مراحل النظام المحاسبي السبع.
+// هذا الثابت هو المفتاح الوحيد لتفعيل النظام المحاسبي الجديد بكامله في الموقع لجميع المستخدمين.
+// طالما قيمته false: لا يظهر أي تبويب أو رابط للنظام المحاسبي في القائمة الجانبية لعموم
+// المستخدمين، ولا تُعرض واجهته إطلاقاً — بشكل مستقل تماماً عن نظام الصلاحيات المعتاد
+// (RolePermissions). لا يتم تفعيله (تحويله إلى true) إلا بتعليمات صريحة من مالك المكتب
+// بعد اكتمال جميع مراحل النظام المحاسبي السبع واختباره بالكامل على قاعدة البيانات الخلفية.
 const ACCOUNTING_MODULE_ENABLED = false;
+
+// تفعيل تجريبي محدود: يسمح بظهور النظام المحاسبي فقط لحساب بريده الإلكتروني ضمن هذه القائمة
+// (طلب صريح من مالك المكتب لتجربة النظام على حسابه الشخصي فقط، قبل اكتمال نقل البيانات
+// لقاعدة البيانات الخلفية). لا يُضاف أي بريد لهذه القائمة إلا بتعليمات صريحة من مالك المكتب.
+// هذا التفعيل التجريبي لا يغيّر قيمة ACCOUNTING_MODULE_ENABLED أعلاه ولا يؤثر على أي مستخدم آخر.
+const ACCOUNTING_TRIAL_USER_EMAILS: string[] = ["info@lawyersuood.com"];
 
 // تحويل النص العادي إلى HTML آمن (لمنع كسر بنية مستند الطباعة أو حقن وسوم
 // غير مقصودة عند وجود رموز مثل < أو & أو " ضمن بيانات الموكلين/القضايا).
@@ -9499,8 +9504,9 @@ export default function App() {
     // 3.5 الفواتير والضريبة (تصنيف مستقل)
     { id: "invoices", label: "الفواتير والضريبة", icon: Receipt, category: "الفواتير والضريبة" },
 
-    // 3.6 النظام المحاسبي المتكامل — يظهر فقط إذا تم تفعيل العلم ACCOUNTING_MODULE_ENABLED
-    ...(ACCOUNTING_MODULE_ENABLED ? [{ id: "accounting", label: "المحاسبة", icon: Calculator, category: "الفواتير والضريبة" }] : []),
+    // 3.6 النظام المحاسبي المتكامل — يظهر فقط إذا تم تفعيل العلم ACCOUNTING_MODULE_ENABLED للجميع،
+    // أو لحساب ضمن قائمة التفعيل التجريبي المحدود ACCOUNTING_TRIAL_USER_EMAILS
+    ...((ACCOUNTING_MODULE_ENABLED || ACCOUNTING_TRIAL_USER_EMAILS.includes(currentUser?.email || "")) ? [{ id: "accounting", label: "المحاسبة (تجريبي)", icon: Calculator, category: "الفواتير والضريبة" }] : []),
 
     // 4. الامتثال والإدارة
     { id: "kyc", label: "اعرف عميلك (KYC)", icon: ShieldCheck, category: "الإدارة والامتثال" },
@@ -18572,7 +18578,7 @@ export default function App() {
               />
             )}
 
-            {ACCOUNTING_MODULE_ENABLED && tab === "accounting" && (
+            {(ACCOUNTING_MODULE_ENABLED || ACCOUNTING_TRIAL_USER_EMAILS.includes(currentUser?.email || "")) && tab === "accounting" && (
               <AccountingModule
                 canManageAccounts={isSuperAdmin || Boolean(currentUser.permissions?.manageChartOfAccounts)}
                 canPostEntries={isSuperAdmin || Boolean(currentUser.permissions?.postJournalEntries)}
