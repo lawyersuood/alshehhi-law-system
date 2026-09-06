@@ -27,8 +27,12 @@ import ComingSoon from "./ComingSoon";
 import AccountingDashboard from "./AccountingDashboard";
 import QuoteProposals from "./QuoteProposals";
 import CashExpenses from "./CashExpenses";
+import CreditNotes from "./CreditNotes";
+import DebitNotes from "./DebitNotes";
 import { SalesQuote } from "./quoteTypes";
 import { CashExpense } from "./cashExpenseTypes";
+import { CreditNote } from "./creditNoteTypes";
+import { DebitNote } from "./debitNoteTypes";
 import { Account, JournalEntry, LS_KEYS } from "./types";
 import {
   loadAccounts,
@@ -47,10 +51,14 @@ import {
   loadPayslips,
   loadSalesQuotes,
   loadCashExpenses,
+  loadCreditNotes,
+  loadDebitNotes,
   saveAccountingStorage,
 } from "./storage";
 import { QUOTE_LS_KEYS } from "./quoteTypes";
 import { CASH_EXPENSE_LS_KEYS } from "./cashExpenseTypes";
+import { CREDIT_NOTE_LS_KEYS } from "./creditNoteTypes";
+import { DEBIT_NOTE_LS_KEYS } from "./debitNoteTypes";
 import { BankAccount, BankTransaction, BANK_LS_KEYS } from "./bankTypes";
 import { SalesInvoice, SalesPayment, SALES_LS_KEYS } from "./salesTypes";
 import { Vendor, PurchaseInvoice, PurchasePayment, PURCHASE_LS_KEYS } from "./purchaseTypes";
@@ -242,6 +250,8 @@ export default function AccountingModule({
   const [payslips, setPayslips] = useState<Payslip[]>(() => loadPayslips());
   const [salesQuotes, setSalesQuotes] = useState<SalesQuote[]>(() => loadSalesQuotes());
   const [cashExpenses, setCashExpenses] = useState<CashExpense[]>(() => loadCashExpenses());
+  const [creditNotes, setCreditNotes] = useState<CreditNote[]>(() => loadCreditNotes());
+  const [debitNotes, setDebitNotes] = useState<DebitNote[]>(() => loadDebitNotes());
 
   useEffect(() => saveAccountingStorage(LS_KEYS.accounts, accounts), [accounts]);
   useEffect(() => saveAccountingStorage(LS_KEYS.journalEntries, entries), [entries]);
@@ -259,6 +269,8 @@ export default function AccountingModule({
   useEffect(() => saveAccountingStorage(PAYROLL_LS_KEYS.payslips, payslips), [payslips]);
   useEffect(() => saveAccountingStorage(QUOTE_LS_KEYS.quotes, salesQuotes), [salesQuotes]);
   useEffect(() => saveAccountingStorage(CASH_EXPENSE_LS_KEYS.expenses, cashExpenses), [cashExpenses]);
+  useEffect(() => saveAccountingStorage(CREDIT_NOTE_LS_KEYS.creditNotes, creditNotes), [creditNotes]);
+  useEffect(() => saveAccountingStorage(DEBIT_NOTE_LS_KEYS.debitNotes, debitNotes), [debitNotes]);
 
   useEffect(() => {
     if (selectedBankId && !bankAccounts.some((b) => b.id === selectedBankId)) setSelectedBankId(null);
@@ -423,9 +435,16 @@ export default function AccountingModule({
       )}
 
       {subTab === "sales_credit_notes" && (
-        <ComingSoon
-          title="إشعارات دائنة"
-          description="لتصحيح أو إلغاء جزء من فاتورة بيع صادرة سابقاً (مثلاً خصم على أتعاب أو تراجع عن بند) بدون حذف الفاتورة الأصلية."
+        <CreditNotes
+          accounts={accounts}
+          creditNotes={creditNotes}
+          setCreditNotes={setCreditNotes}
+          invoices={salesInvoices}
+          entries={entries}
+          setEntries={setEntries}
+          canManage={canManageSalesInvoices}
+          canApprove={canApproveSalesInvoices}
+          currentUserName={currentUserName}
         />
       )}
 
@@ -464,9 +483,17 @@ export default function AccountingModule({
       )}
 
       {subTab === "purchase_debit_notes" && (
-        <ComingSoon
-          title="إشعارات مدينة"
-          description="عكس الإشعار الدائن — لتصحيح أو تخفيض قيمة فاتورة مشتريات مستلمة من مورد بدون حذفها."
+        <DebitNotes
+          accounts={accounts}
+          debitNotes={debitNotes}
+          setDebitNotes={setDebitNotes}
+          vendors={vendors}
+          bills={purchaseInvoices}
+          entries={entries}
+          setEntries={setEntries}
+          canManage={canManagePurchaseInvoices}
+          canApprove={canApprovePurchaseInvoices}
+          currentUserName={currentUserName}
         />
       )}
 
