@@ -23,6 +23,10 @@ import {
   Layers,
 } from "lucide-react";
 import ComingSoon from "./ComingSoon";
+import QuoteProposals from "./QuoteProposals";
+import CashExpenses from "./CashExpenses";
+import { SalesQuote } from "./quoteTypes";
+import { CashExpense } from "./cashExpenseTypes";
 import { Account, JournalEntry, LS_KEYS } from "./types";
 import {
   loadAccounts,
@@ -39,8 +43,12 @@ import {
   loadPayrollEmployees,
   loadPayrollRuns,
   loadPayslips,
+  loadSalesQuotes,
+  loadCashExpenses,
   saveAccountingStorage,
 } from "./storage";
+import { QUOTE_LS_KEYS } from "./quoteTypes";
+import { CASH_EXPENSE_LS_KEYS } from "./cashExpenseTypes";
 import { BankAccount, BankTransaction, BANK_LS_KEYS } from "./bankTypes";
 import { SalesInvoice, SalesPayment, SALES_LS_KEYS } from "./salesTypes";
 import { Vendor, PurchaseInvoice, PurchasePayment, PURCHASE_LS_KEYS } from "./purchaseTypes";
@@ -225,6 +233,8 @@ export default function AccountingModule({
   const [payrollEmployees, setPayrollEmployees] = useState<PayrollEmployee[]>(() => loadPayrollEmployees());
   const [payrollRuns, setPayrollRuns] = useState<PayrollRun[]>(() => loadPayrollRuns());
   const [payslips, setPayslips] = useState<Payslip[]>(() => loadPayslips());
+  const [salesQuotes, setSalesQuotes] = useState<SalesQuote[]>(() => loadSalesQuotes());
+  const [cashExpenses, setCashExpenses] = useState<CashExpense[]>(() => loadCashExpenses());
 
   useEffect(() => saveAccountingStorage(LS_KEYS.accounts, accounts), [accounts]);
   useEffect(() => saveAccountingStorage(LS_KEYS.journalEntries, entries), [entries]);
@@ -240,6 +250,8 @@ export default function AccountingModule({
   useEffect(() => saveAccountingStorage(PAYROLL_LS_KEYS.employees, payrollEmployees), [payrollEmployees]);
   useEffect(() => saveAccountingStorage(PAYROLL_LS_KEYS.runs, payrollRuns), [payrollRuns]);
   useEffect(() => saveAccountingStorage(PAYROLL_LS_KEYS.payslips, payslips), [payslips]);
+  useEffect(() => saveAccountingStorage(QUOTE_LS_KEYS.quotes, salesQuotes), [salesQuotes]);
+  useEffect(() => saveAccountingStorage(CASH_EXPENSE_LS_KEYS.expenses, cashExpenses), [cashExpenses]);
 
   useEffect(() => {
     if (selectedBankId && !bankAccounts.some((b) => b.id === selectedBankId)) setSelectedBankId(null);
@@ -352,9 +364,14 @@ export default function AccountingModule({
       )}
 
       {subTab === "sales_quotes" && (
-        <ComingSoon
-          title="عروض الأسعار والأتعاب"
-          description="عرض أتعاب/نطاق خدمة قانونية للعميل قبل فتح القضية رسمياً، مع إمكانية تحويله مباشرة لفاتورة بيع أو ربطه بالقضية عند الموافقة."
+        <QuoteProposals
+          accounts={accounts}
+          quotes={salesQuotes}
+          setQuotes={setSalesQuotes}
+          invoices={salesInvoices}
+          setInvoices={setSalesInvoices}
+          canManage={canManageSalesInvoices}
+          currentUserName={currentUserName}
         />
       )}
 
@@ -433,9 +450,15 @@ export default function AccountingModule({
       )}
 
       {subTab === "purchase_cash_expenses" && (
-        <ComingSoon
-          title="مصروفات نقدية"
-          description="مصروف صغير متفرق بدون فاتورة مورد رسمية (رسوم كاتب عدل، مواقف، طباعة مستندات محكمة)، مع إمكانية إرفاق صورة الإيصال وربطه بقضية أو مشروع محدد."
+        <CashExpenses
+          accounts={accounts}
+          expenses={cashExpenses}
+          setExpenses={setCashExpenses}
+          entries={entries}
+          setEntries={setEntries}
+          canManage={canManagePurchaseInvoices}
+          canDelete={canDeletePurchaseInvoices}
+          currentUserName={currentUserName}
         />
       )}
 

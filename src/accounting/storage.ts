@@ -5,6 +5,8 @@ import { SalesInvoice, SalesPayment, SALES_LS_KEYS } from "./salesTypes";
 import { Vendor, PurchaseInvoice, PurchasePayment, PURCHASE_LS_KEYS } from "./purchaseTypes";
 import { FixedAsset, DepreciationRun, FIXED_ASSET_LS_KEYS } from "./fixedAssetTypes";
 import { PayrollEmployee, PayrollRun, Payslip, PAYROLL_LS_KEYS } from "./payrollTypes";
+import { SalesQuote, QUOTE_LS_KEYS } from "./quoteTypes";
+import { CashExpense, CASH_EXPENSE_LS_KEYS } from "./cashExpenseTypes";
 
 export function loadAccountingStorage<T>(key: string, fallback: T): T {
   try {
@@ -77,6 +79,14 @@ export function loadPayrollRuns(): PayrollRun[] {
 
 export function loadPayslips(): Payslip[] {
   return loadAccountingStorage<Payslip[]>(PAYROLL_LS_KEYS.payslips, []);
+}
+
+export function loadSalesQuotes(): SalesQuote[] {
+  return loadAccountingStorage<SalesQuote[]>(QUOTE_LS_KEYS.quotes, []);
+}
+
+export function loadCashExpenses(): CashExpense[] {
+  return loadAccountingStorage<CashExpense[]>(CASH_EXPENSE_LS_KEYS.expenses, []);
 }
 
 // توليد رقم قيد تسلسلي بصيغة JE-YYYY-XXXX بحسب السنة الحالية
