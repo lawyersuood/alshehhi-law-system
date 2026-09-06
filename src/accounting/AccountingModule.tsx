@@ -154,6 +154,8 @@ export default function AccountingModule({
 }) {
   const [subTab, setSubTab] = useState<SubTab>("accounts");
   const [activeCategory, setActiveCategory] = useState<string>(SUB_TAB_GROUPS[0].category);
+  // اسم التصنيف المفتوحة قائمته المنسدلة العائمة حالياً (null = كل القوائم مغلقة)
+  const [openFlyout, setOpenFlyout] = useState<string | null>(null);
   const [accounts, setAccounts] = useState<Account[]>(() => loadAccounts());
   const [entries, setEntries] = useState<JournalEntry[]>(() => loadJournalEntries());
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(() => loadBankAccounts());
@@ -203,52 +205,61 @@ export default function AccountingModule({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[92px_1fr] gap-4 items-start">
-        {/* شريط رفيع لتصنيفات النظام المحاسبي الرئيسية (نفس فكرة الشريط الجانبي المضغوط
-            المستخدم بأنظمة المحاسبة الاحترافية) — بدل قائمة مفتوحة بالكامل تاخذ مساحة طولية كبيرة.
-            كل تصنيف يفتح تبويبات أقسامه الفرعية أعلى منطقة المحتوى بدل عرضها كلها دفعة وحدة. */}
+        {/* شريط رفيع لتصنيفات النظام المحاسبي الرئيسية، وكل تصنيف يفتح بجانبه قائمة منسدلة
+            عائمة (Flyout) بأقسامه الفرعية — بنفس أسلوب وافِق تماماً، بدل شريط تبويبات ثابت
+            أو قائمة جانبية مفتوحة بالكامل تاخذ مساحة طولية كبيرة. */}
         <nav className="lg:sticky lg:top-4 app-card p-2 flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible">
           {SUB_TAB_GROUPS.map((group) => {
             const FirstIcon = group.items[0].icon;
             const isActiveGroup = activeCategory === group.category;
+            const isFlyoutOpen = openFlyout === group.category;
             return (
-              <button
-                key={group.category}
-                onClick={() => {
-                  setActiveCategory(group.category);
-                  if (!group.items.some((it) => it.id === subTab)) setSubTab(group.items[0].id);
-                }}
-                className={`shrink-0 flex lg:flex-col items-center justify-center gap-1 px-2.5 py-2.5 rounded-xl text-center transition-colors cursor-pointer ${
-                  isActiveGroup
-                    ? "bg-[#0D382B] text-white shadow-[0_6px_14px_-6px_rgb(13,56,43,0.5)]"
-                    : "text-slate-500 hover:bg-[#0D382B]/[0.06] hover:text-[#0D382B]"
-                }`}
-              >
-                <FirstIcon size={19} />
-                <span className="text-[10px] font-bold leading-tight whitespace-nowrap lg:whitespace-normal">{group.category}</span>
-              </button>
+              <div key={group.category} className="relative shrink-0">
+                <button
+                  onClick={() => setOpenFlyout(isFlyoutOpen ? null : group.category)}
+                  className={`shrink-0 flex lg:flex-col items-center justify-center gap-1 px-2.5 py-2.5 rounded-xl text-center transition-colors cursor-pointer w-full ${
+                    isActiveGroup || isFlyoutOpen
+                      ? "bg-[#0D382B] text-white shadow-[0_6px_14px_-6px_rgb(13,56,43,0.5)]"
+                      : "text-slate-500 hover:bg-[#0D382B]/[0.06] hover:text-[#0D382B]"
+                  }`}
+                >
+                  <FirstIcon size={19} />
+                  <span className="text-[10px] font-bold leading-tight whitespace-nowrap lg:whitespace-normal">{group.category}</span>
+                </button>
+
+                {isFlyoutOpen && (
+                  <>
+                    {/* طبقة شفافة لإغلاق القائمة عند الضغط خارجها */}
+                    <div className="fixed inset-0 z-10" onClick={() => setOpenFlyout(null)} />
+                    <div className="absolute z-20 top-0 right-full mr-2 w-56 app-card p-1.5 space-y-0.5">
+                      {group.items.map(({ id, label, icon: Icon }) => (
+                        <button
+                          key={id}
+                          onClick={() => {
+                            setSubTab(id);
+                            setActiveCategory(group.category);
+                            setOpenFlyout(null);
+                          }}
+                          className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap transition-colors cursor-pointer text-right ${
+                            subTab === id
+                              ? "bg-[#0D382B]/[0.08] text-[#0D382B]"
+                              : "text-slate-600 hover:bg-[#0D382B]/[0.05] hover:text-[#0D382B]"
+                          }`}
+                        >
+                          <Icon size={16} />
+                          <span>{label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             );
           })}
         </nav>
 
-        {/* منطقة المحتوى: تبويبات القسم الفرعي النشط أعلى المحتوى، ثم شاشة القسم المختار */}
+        {/* منطقة المحتوى: شاشة القسم الفرعي المختار حالياً */}
         <div className="min-w-0 space-y-4">
-          <div className="app-card p-1.5 flex flex-wrap gap-1 overflow-x-auto">
-            {(SUB_TAB_GROUPS.find((g) => g.category === activeCategory) || SUB_TAB_GROUPS[0]).items.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setSubTab(id)}
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
-                  subTab === id
-                    ? "bg-[#0D382B]/[0.08] text-[#0D382B]"
-                    : "text-slate-500 hover:bg-[#0D382B]/[0.05] hover:text-[#0D382B]"
-                }`}
-              >
-                <Icon size={15} />
-                <span>{label}</span>
-              </button>
-            ))}
-          </div>
-
           <div className="flex items-center gap-2 px-1">
             <span className="h-4 w-1 rounded-full bg-[#C5A059] shrink-0" />
             <h2 className="text-base font-black text-[#0D382B]">{SUB_TAB_LABELS[subTab]}</h2>
