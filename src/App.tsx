@@ -3192,7 +3192,7 @@ const effectiveInvoiceStatus = (inv: { status: string; due?: string }): string =
 
 // ---------- مكونات عامة ----------
 const Badge = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${className}`}>{children}</span>
+  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-tight ${className}`}>{children}</span>
 );
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
@@ -3371,10 +3371,10 @@ const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onClose }) 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#08130f]/75 p-4 backdrop-blur-xs">
       <div className="w-full max-w-3xl rounded-3xl bg-slate-900 text-slate-100 shadow-2xl border border-slate-700 overflow-hidden flex flex-col max-h-[90vh]">
         {/* رأس المودال */}
-        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+        <div className="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-[#08130f]/85">
           <div className="flex items-center gap-3">
             <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
               <Database size={20} />
@@ -3566,7 +3566,7 @@ const EmptyState = ({ icon: Icon, text }: { icon: any; text: string }) => (
 );
 
 const Modal = ({ title, onClose, children, wide }: { title: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) => (
-  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-900/60 p-2 sm:p-4 backdrop-blur-xs" onClick={onClose}>
+  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#08130f]/65 p-2 sm:p-4 backdrop-blur-xs" onClick={onClose}>
     <div className={`max-h-[92vh] w-full ${wide ? "max-w-4xl" : "max-w-xl"} overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl custom-scrollbar`} onClick={(e) => e.stopPropagation()}>
       <div className="flex items-center justify-between border-b border-slate-100 px-4 sm:px-6 py-3.5 sm:py-4 sticky top-0 bg-white z-10">
         <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{title}</h3>
@@ -4144,7 +4144,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
 
       {/* مودال استعادة كلمة المرور (Forgot Password Modal) */}
       {showForgotModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#08130f]/85 backdrop-blur-sm p-4">
           <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-800 p-6 space-y-4 shadow-2xl text-slate-100">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="font-bold text-base text-white flex items-center gap-2">
@@ -10120,7 +10120,7 @@ export default function App() {
           <div className="fixed inset-0 z-50 flex md:hidden" dir="rtl">
             {/* الخلفية المظلمة الشفافة */}
             <div
-              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+              className="fixed inset-0 bg-[#08130f]/65 backdrop-blur-xs transition-opacity"
               onClick={() => setMobileMenuOpen(false)}
             />
 
@@ -20418,7 +20418,7 @@ export default function App() {
     logAuditAction("UPDATE", "اتفاقيات الأتعاب", `استعادة البنود الافتراضية لاتفاقية رقم: ${oa.agreementNumber}`, `قام المستخدم "${currentUser.name}" باستعادة الشروط والبنود الافتراضية لاتفاقية الأتعاب رقم ${oa.agreementNumber}`, oa.id);
   };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#08130f]/75 p-4 overflow-y-auto">
       <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl print-area">
         {/* شريط الأدوات — لا يظهر عند الطباعة */}
         <div className="no-print flex items-center justify-between border-b border-slate-200 px-6 py-4 sticky top-0 bg-white z-10">
@@ -20712,7 +20712,7 @@ export default function App() {
     printHtmlDocumentInHiddenIframe(html);
   };
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#08130f]/75 p-4 overflow-y-auto">
       <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl print-area">
         <div className="no-print flex items-center justify-between border-b border-slate-200 px-6 py-4 sticky top-0 bg-white z-10">
           <div className="flex items-center gap-2">
@@ -20864,7 +20864,7 @@ export default function App() {
         const currentTabObj = NAV.find((n) => n.id === tab);
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 p-4 no-print overflow-y-auto">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#08130f]/75 p-4 no-print overflow-y-auto">
             <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl print-area">
               {/* شريط الإجراءات العلوي للتقرير (لا يظهر عند الطباعة) */}
               <div className="no-print flex items-center justify-between border-b border-slate-200 px-6 py-4 sticky top-0 bg-white z-10">
@@ -21143,7 +21143,7 @@ export default function App() {
       
       {/* ═══ نافذة تأكيد الحذف الموحدة لجميع الأقسام مع الصلاحيات ═══ */}
       {deleteModalState && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm no-print animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#08130f]/80 p-4 backdrop-blur-sm no-print animate-in fade-in duration-200">
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-red-200 space-y-4 text-slate-900">
             <div className="flex items-center gap-3 text-red-600">
               <div className="rounded-2xl bg-red-100 p-3 flex items-center justify-center shrink-0">
@@ -21214,7 +21214,7 @@ export default function App() {
         const willDeleteClient = cid && !(hasOtherOfficeAgr || hasOtherFeeAgr || hasCases || hasInvoices || hasPoas);
 
         return (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm no-print">
+          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#08130f]/65 p-4 backdrop-blur-sm no-print">
             <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4 text-slate-900">
               <div className="flex items-center gap-3 text-red-600">
                 <div className="rounded-full bg-red-100 p-2.5">
