@@ -10095,7 +10095,7 @@ export default function App() {
 
             <button
               onClick={() => setShowBackupModal(true)}
-              className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 transition mt-2 cursor-pointer"
+              className="flex w-full items-center justify-between rounded-xl px-4 py-2.5 text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 hover:bg-[#0D382B]/[0.08] transition-colors transition mt-2 cursor-pointer"
               title="تصدير واستعادة نسخة احتياطية محلية لقاعدة بيانات النظام"
             >
               <div className="flex items-center gap-2">
@@ -10299,7 +10299,7 @@ export default function App() {
                       setShowBackupModal(true);
                       setMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center justify-between rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 transition"
+                    className="flex w-full items-center justify-between rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 hover:bg-[#0D382B]/[0.08] transition-colors transition"
                   >
                     <div className="flex items-center gap-2">
                       <Database size={16} className="text-[#0D382B]" />
@@ -10313,7 +10313,7 @@ export default function App() {
                       setReport("section");
                       setMobileMenuOpen(false);
                     }}
-                    className="flex w-full items-center justify-between rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 hover:bg-slate-200 transition"
+                    className="flex w-full items-center justify-between rounded-xl px-3.5 py-2 text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 hover:bg-[#0D382B]/[0.08] transition-colors transition"
                   >
                     <div className="flex items-center gap-2">
                       <Printer size={16} className="text-slate-600" />
@@ -10787,7 +10787,7 @@ export default function App() {
                             <p className="text-[11px] text-slate-500">إجمالي {cases.length} قضية مقيدة</p>
                           </div>
                         </div>
-                        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                        <div className="flex items-center bg-slate-100/70 p-1 rounded-xl border border-slate-200/70">
                           <button
                             onClick={() => setDashboardCaseChartMode("bar")}
                             className={`px-2 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${dashboardCaseChartMode === "bar" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"}`}
@@ -10909,7 +10909,7 @@ export default function App() {
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                          <div className="flex items-center bg-slate-100/70 p-1 rounded-xl border border-slate-200/70">
                             <button
                               onClick={() => setDashboardInvoiceChartMode("amount")}
                               className={`px-2 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${dashboardInvoiceChartMode === "amount" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"}`}
@@ -11008,7 +11008,7 @@ export default function App() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center bg-slate-100 p-0.5 rounded-lg border border-slate-200">
+                        <div className="flex items-center bg-slate-100/70 p-1 rounded-xl border border-slate-200/70">
                           <button
                             onClick={() => setDashboardTaskChartMode("status")}
                             className={`px-2 py-1 text-[11px] font-bold rounded-md transition cursor-pointer ${dashboardTaskChartMode === "status" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500 hover:text-slate-800"}`}
@@ -11872,7 +11872,7 @@ export default function App() {
                             isSelected
                               ? "bg-slate-900 text-white border-slate-900 shadow-xs"
                               : s === "الكل"
-                              ? "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
+                              ? "bg-slate-100 text-slate-600 border-slate-200 hover:bg-[#0D382B]/[0.08] transition-colors"
                               : `${statusColor(s)} hover:brightness-95`
                           }`}
                         >
@@ -12321,7 +12321,7 @@ export default function App() {
                           className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition ${
                             isActive
                               ? "bg-slate-900 text-amber-400 font-bold shadow-xs"
-                              : "bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900"
+                              : "bg-slate-100 text-slate-700 hover:bg-[#0D382B]/[0.08] transition-colors hover:text-slate-900"
                           }`}
                         >
                           <IconComp size={14} />
@@ -12683,7 +12683,7 @@ export default function App() {
                     <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
                       <button
                         onClick={() => setDeadlineFilter("all")}
-                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${deadlineFilter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${deadlineFilter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-[#0D382B]/[0.08] transition-colors"}`}
                       >
                         الكل ({deadlines.length})
                       </button>
@@ -13257,7 +13257,7 @@ export default function App() {
                         fetchSupabaseEmailMessages();
                         setPermissionNotice("تمت مزامنة الرسائل بنجاح!");
                       }}
-                      className="flex items-center gap-1.5 rounded-xl bg-slate-100 border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-200 transition"
+                      className="flex items-center gap-1.5 rounded-xl bg-slate-100 border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-[#0D382B]/[0.08] transition-colors transition"
                     >
                       <RefreshCw size={14} /> تحديث
                     </button>
@@ -13416,7 +13416,7 @@ export default function App() {
                                         setComposeBody(`\n\n--- الرسالة الأصلية ---\nمن: ${activeEmail.sender}\nالتاريخ: ${activeEmail.date}\n${activeEmail.body}`);
                                         setShowComposeEmail(true);
                                       }}
-                                      className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1"
+                                      className="text-xs bg-slate-100 hover:bg-[#0D382B]/[0.08] transition-colors text-slate-800 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1"
                                     >
                                       رد على الرسالة
                                     </button>
@@ -15422,7 +15422,7 @@ export default function App() {
                               updateLetterhead({ fullPageImg: "", headerImg: OFFICE_HEADER_IMG, footerImg: OFFICE_FOOTER_IMG });
                               logAuditAction("UPDATE", "الورق الرسمي", "الورق الرسمي الكامل (A4)", `قام المستخدم "${currentUser.name}" باستعادة الورق الرسمي الافتراضي`);
                             }}
-                            className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                            className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-[#0D382B]/[0.08] transition-colors"
                             title="استعادة الورق الرسمي الافتراضي"
                           >
                             استعادة
@@ -15812,7 +15812,7 @@ export default function App() {
                           <button
                             key={tab.val}
                             onClick={() => setKycTypeFilter(tab.val)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${kycTypeFilter === tab.val ? "bg-red-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition ${kycTypeFilter === tab.val ? "bg-red-600 text-white shadow-xs" : "bg-slate-100 text-slate-600 hover:bg-[#0D382B]/[0.08] transition-colors"}`}
                           >
                             {tab.label}
                           </button>
@@ -17027,7 +17027,7 @@ export default function App() {
                                 <td key={u.id} className="p-3 text-center">
                                   <button
                                     onClick={() => toggleUserPermission(u.id, mod.id)}
-                                    className={`w-7 h-7 rounded-lg inline-flex items-center justify-center transition cursor-pointer ${hasIt ? "bg-emerald-500 text-white shadow-sm hover:bg-emerald-600" : "bg-slate-100 text-slate-300 hover:bg-slate-200"}`}
+                                    className={`w-7 h-7 rounded-lg inline-flex items-center justify-center transition cursor-pointer ${hasIt ? "bg-emerald-500 text-white shadow-sm hover:bg-emerald-600" : "bg-slate-100 text-slate-300 hover:bg-[#0D382B]/[0.08] transition-colors"}`}
                                     title={`انقر لتعديل صلاحية قسم [${mod.label}] لـ ${u.name}`}
                                   >
                                     {hasIt ? <Check size={16} /> : <Minus size={16} />}
@@ -17420,7 +17420,7 @@ export default function App() {
                           },
                         });
                       }}
-                      className="flex items-center gap-1.5 rounded-xl bg-slate-100 border border-slate-300 px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 shadow-sm transition"
+                      className="flex items-center gap-1.5 rounded-xl bg-slate-100 border border-slate-300 px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-[#0D382B]/[0.08] transition-colors shadow-sm transition"
                       title="استعادة الدليل النموذجي المعتمد بجميع الأرقام والتمديدات"
                     >
                       <RotateCcw size={15} /> استعادة الدليل النموذجي
@@ -17430,7 +17430,7 @@ export default function App() {
                       onClick={() => {
                         setReport({ type: "court-directory" });
                       }}
-                      className="flex items-center gap-1.5 rounded-xl bg-slate-100 border border-slate-300 px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200 shadow-sm transition"
+                      className="flex items-center gap-1.5 rounded-xl bg-slate-100 border border-slate-300 px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-[#0D382B]/[0.08] transition-colors shadow-sm transition"
                     >
                       <Printer size={15} /> طباعة / تصدير PDF
                     </button>
@@ -20463,7 +20463,7 @@ export default function App() {
                 <button onClick={saveAgreementClauses} className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition">
                   <Save size={15} /> حفظ البنود
                 </button>
-                <button onClick={cancelEditAgreementClauses} className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+                <button onClick={cancelEditAgreementClauses} className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.08] transition-colors transition">
                   إلغاء
                 </button>
               </>
@@ -20731,7 +20731,7 @@ export default function App() {
                 >
                   <Save size={15} /> حفظ الصياغة
                 </button>
-                <button onClick={cancelEditDelegationWording} className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 transition">
+                <button onClick={cancelEditDelegationWording} className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.08] transition-colors transition">
                   إلغاء
                 </button>
               </>
@@ -21649,7 +21649,7 @@ export default function App() {
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition cursor-pointer ${
                   backupActiveTab === "export"
                     ? "bg-[#0a3d3a] text-white shadow-sm"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    : "bg-slate-100 text-slate-600 hover:bg-[#0D382B]/[0.08] transition-colors"
                 }`}
               >
                 <Download size={16} />
@@ -21661,7 +21661,7 @@ export default function App() {
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition cursor-pointer ${
                   backupActiveTab === "restore"
                     ? "bg-[#0a3d3a] text-white shadow-sm"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    : "bg-slate-100 text-slate-600 hover:bg-[#0D382B]/[0.08] transition-colors"
                 }`}
               >
                 <UploadCloud size={16} />
@@ -22008,7 +22008,7 @@ export default function App() {
                       navigator.clipboard.writeText(aiResponse);
                       alert("تم نسخ النص القانوني للحافظة بنجاح!");
                     }}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold transition cursor-pointer"
+                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-[#0D382B]/[0.08] transition-colors text-slate-700 text-[11px] font-bold transition cursor-pointer"
                   >
                     <Copy size={13} />
                     <span>نسخ النص</span>
@@ -22038,7 +22038,7 @@ export default function App() {
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
               <button
                 onClick={downloadCasesExcelTemplate}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-[#0D382B]/[0.08] transition-colors text-slate-800 text-xs font-bold transition cursor-pointer"
               >
                 <Download size={15} /> تنزيل قالب Excel القضايا الاسترشادي
               </button>
@@ -22125,7 +22125,7 @@ export default function App() {
             )}
 
             {poaAiExtracted && (
-              <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+              <div className="space-y-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_6px_16px_-8px_rgb(15,23,42,0.08)]">
                 <h4 className="font-bold text-xs text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-1.5">
                   <CheckCircle2 size={16} className="text-emerald-600" /> البيانات المستخرجة تلقائياً:
                 </h4>
@@ -22192,7 +22192,7 @@ export default function App() {
             )}
 
             {agreementAiExtracted && (
-              <div className="space-y-3 bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
+              <div className="space-y-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_6px_16px_-8px_rgb(15,23,42,0.08)]">
                 <h4 className="font-bold text-xs text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-1.5">
                   <CheckCircle2 size={16} className="text-emerald-600" /> تفاصيل الاتفاقية المستخرجة:
                 </h4>
@@ -22337,7 +22337,7 @@ export default function App() {
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-              <button onClick={downloadKycWatchlistTemplate} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition cursor-pointer">
+              <button onClick={downloadKycWatchlistTemplate} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-[#0D382B]/[0.08] transition-colors text-slate-800 text-xs font-bold transition cursor-pointer">
                 <Download size={15} /> تنزيل قالب قوائم الحظر
               </button>
               <label className="flex items-center gap-2 px-4 py-2 bg-red-700 text-white rounded-xl text-xs font-bold hover:bg-red-800 transition cursor-pointer shadow-sm">
