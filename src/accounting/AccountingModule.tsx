@@ -153,6 +153,7 @@ export default function AccountingModule({
   letterheadFooterImg?: string | null;
 }) {
   const [subTab, setSubTab] = useState<SubTab>("accounts");
+  const [activeCategory, setActiveCategory] = useState<string>(SUB_TAB_GROUPS[0].category);
   const [accounts, setAccounts] = useState<Account[]>(() => loadAccounts());
   const [entries, setEntries] = useState<JournalEntry[]>(() => loadJournalEntries());
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(() => loadBankAccounts());
@@ -201,32 +202,53 @@ export default function AccountingModule({
         </span>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-5 items-start">
-        {/* قائمة جانبية عمودية مصنّفة لأقسام النظام المحاسبي، بديلاً عن شريط تبويبات أفقي طويل */}
-        <nav className="lg:sticky lg:top-4 app-card p-3 space-y-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto custom-scrollbar">
-          {SUB_TAB_GROUPS.map((group) => (
-            <div key={group.category} className="space-y-1">
-              <p className="px-2 text-[10px] font-black uppercase tracking-wide text-slate-400">{group.category}</p>
-              {group.items.map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => setSubTab(id)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer text-right ${
-                    subTab === id
-                      ? "bg-[#0D382B] text-white shadow-[0_6px_14px_-6px_rgb(13,56,43,0.5)]"
-                      : "text-slate-600 hover:bg-[#0D382B]/[0.06] hover:text-[#0D382B]"
-                  }`}
-                >
-                  <Icon size={17} />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </div>
-          ))}
+      <div className="grid grid-cols-1 lg:grid-cols-[92px_1fr] gap-4 items-start">
+        {/* شريط رفيع لتصنيفات النظام المحاسبي الرئيسية (نفس فكرة الشريط الجانبي المضغوط
+            المستخدم بأنظمة المحاسبة الاحترافية) — بدل قائمة مفتوحة بالكامل تاخذ مساحة طولية كبيرة.
+            كل تصنيف يفتح تبويبات أقسامه الفرعية أعلى منطقة المحتوى بدل عرضها كلها دفعة وحدة. */}
+        <nav className="lg:sticky lg:top-4 app-card p-2 flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible">
+          {SUB_TAB_GROUPS.map((group) => {
+            const FirstIcon = group.items[0].icon;
+            const isActiveGroup = activeCategory === group.category;
+            return (
+              <button
+                key={group.category}
+                onClick={() => {
+                  setActiveCategory(group.category);
+                  if (!group.items.some((it) => it.id === subTab)) setSubTab(group.items[0].id);
+                }}
+                className={`shrink-0 flex lg:flex-col items-center justify-center gap-1 px-2.5 py-2.5 rounded-xl text-center transition-colors cursor-pointer ${
+                  isActiveGroup
+                    ? "bg-[#0D382B] text-white shadow-[0_6px_14px_-6px_rgb(13,56,43,0.5)]"
+                    : "text-slate-500 hover:bg-[#0D382B]/[0.06] hover:text-[#0D382B]"
+                }`}
+              >
+                <FirstIcon size={19} />
+                <span className="text-[10px] font-bold leading-tight whitespace-nowrap lg:whitespace-normal">{group.category}</span>
+              </button>
+            );
+          })}
         </nav>
 
-        {/* منطقة المحتوى الرئيسية للقسم المختار */}
+        {/* منطقة المحتوى: تبويبات القسم الفرعي النشط أعلى المحتوى، ثم شاشة القسم المختار */}
         <div className="min-w-0 space-y-4">
+          <div className="app-card p-1.5 flex flex-wrap gap-1 overflow-x-auto">
+            {(SUB_TAB_GROUPS.find((g) => g.category === activeCategory) || SUB_TAB_GROUPS[0]).items.map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setSubTab(id)}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
+                  subTab === id
+                    ? "bg-[#0D382B]/[0.08] text-[#0D382B]"
+                    : "text-slate-500 hover:bg-[#0D382B]/[0.05] hover:text-[#0D382B]"
+                }`}
+              >
+                <Icon size={15} />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+
           <div className="flex items-center gap-2 px-1">
             <span className="h-4 w-1 rounded-full bg-[#C5A059] shrink-0" />
             <h2 className="text-base font-black text-[#0D382B]">{SUB_TAB_LABELS[subTab]}</h2>

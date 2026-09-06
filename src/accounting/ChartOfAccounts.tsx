@@ -175,28 +175,28 @@ export default function ChartOfAccounts({
                 <h3 className="text-sm font-bold text-slate-800">{ACCOUNT_TYPE_LABELS[t]}</h3>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-[13px]">
                   <thead>
-                    <tr className="text-right text-xs text-slate-500 border-b border-slate-100">
-                      <th className="px-4 py-2 font-semibold">الرقم</th>
-                      <th className="px-4 py-2 font-semibold">اسم الحساب</th>
-                      <th className="px-4 py-2 font-semibold">ملاحظات</th>
-                      <th className="px-4 py-2 font-semibold">الحالة</th>
-                      {canManage && <th className="px-4 py-2 font-semibold"></th>}
+                    <tr className="text-right text-[11px] uppercase tracking-wide font-bold text-[#0D382B]/60 border-b border-slate-200 bg-[#0D382B]/[0.02]">
+                      <th className="px-4 py-1.5 font-bold">الرقم</th>
+                      <th className="px-4 py-1.5 font-bold">اسم الحساب</th>
+                      <th className="px-4 py-1.5 font-bold">ملاحظات</th>
+                      <th className="px-4 py-1.5 font-bold">الحالة</th>
+                      {canManage && <th className="px-4 py-1.5 font-bold"></th>}
                     </tr>
                   </thead>
                   <tbody>
                     {list.map((a) => (
-                      <tr key={a.id} className={`border-b border-slate-50 last:border-0 ${!a.isActive ? "opacity-50" : ""}`}>
-                        <td className="px-4 py-2.5 font-mono text-slate-700">{a.code}</td>
-                        <td className="px-4 py-2.5 text-slate-800 font-medium">
+                      <tr key={a.id} className={`border-b border-slate-50 last:border-0 hover:bg-[#0D382B]/[0.02] transition-colors ${!a.isActive ? "opacity-50" : ""}`}>
+                        <td className="px-4 py-1.5 font-mono text-slate-700">{a.code}</td>
+                        <td className="px-4 py-1.5 text-slate-800 font-medium">
                           <span className="inline-flex items-center gap-1.5">
                             {a.name}
                             {a.isSystem && <Lock size={12} className="text-slate-300" title="حساب أساسي من الشجرة الافتراضية" />}
                           </span>
                         </td>
-                        <td className="px-4 py-2.5 text-xs text-slate-500">{a.notes || "—"}</td>
-                        <td className="px-4 py-2.5">
+                        <td className="px-4 py-1.5 text-xs text-slate-500">{a.notes || "—"}</td>
+                        <td className="px-4 py-1.5">
                           <span
                             className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
                               a.isActive ? TYPE_BADGE_CLS[a.type] : "bg-slate-100 text-slate-500 border-slate-200"
@@ -206,7 +206,7 @@ export default function ChartOfAccounts({
                           </span>
                         </td>
                         {canManage && (
-                          <td className="px-4 py-2.5">
+                          <td className="px-4 py-1.5">
                             <div className="flex items-center gap-1 justify-end">
                               <button onClick={() => toggleActive(a)} className="text-xs text-slate-500 hover:text-slate-800 px-2 py-1">
                                 {a.isActive ? "تعطيل" : "تفعيل"}
