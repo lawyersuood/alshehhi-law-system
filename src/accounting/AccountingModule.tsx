@@ -21,8 +21,10 @@ import {
   FilePlus2,
   HandCoins,
   Layers,
+  LayoutDashboard,
 } from "lucide-react";
 import ComingSoon from "./ComingSoon";
+import AccountingDashboard from "./AccountingDashboard";
 import QuoteProposals from "./QuoteProposals";
 import CashExpenses from "./CashExpenses";
 import { SalesQuote } from "./quoteTypes";
@@ -69,6 +71,7 @@ import PayrollEmployees from "./PayrollEmployees";
 import PayrollRuns from "./PayrollRuns";
 
 type SubTab =
+  | "dashboard"
   | "accounts"
   | "bank"
   // المبيعات (قسم مستقل بالكامل عن المشتريات)
@@ -102,6 +105,10 @@ const SUB_TAB_GROUPS: Array<{
   category: string;
   items: Array<{ id: SubTab; label: string; icon: React.ComponentType<{ size?: number }> }>;
 }> = [
+  {
+    category: "لوحة التحكم",
+    items: [{ id: "dashboard", label: "نظرة عامة", icon: LayoutDashboard }],
+  },
   {
     category: "القيود والدفاتر",
     items: [
@@ -214,7 +221,7 @@ export default function AccountingModule({
   letterheadHeaderImg?: string | null;
   letterheadFooterImg?: string | null;
 }) {
-  const [subTab, setSubTab] = useState<SubTab>("accounts");
+  const [subTab, setSubTab] = useState<SubTab>("dashboard");
   const [activeCategory, setActiveCategory] = useState<string>(SUB_TAB_GROUPS[0].category);
   // اسم التصنيف المفتوحة قائمته المنسدلة العائمة حالياً (null = كل القوائم مغلقة)
   const [openFlyout, setOpenFlyout] = useState<string | null>(null);
@@ -326,6 +333,20 @@ export default function AccountingModule({
 
         {/* منطقة المحتوى: شاشة القسم الفرعي المختار حالياً (كل شاشة فرعية تعرض عنوانها الخاص أصلاً) */}
         <div className="min-w-0 space-y-4">
+
+      {subTab === "dashboard" && (
+        <AccountingDashboard
+          accounts={accounts}
+          entries={entries}
+          bankAccounts={bankAccounts}
+          transactions={transactions}
+          salesInvoices={salesInvoices}
+          salesPayments={salesPayments}
+          vendors={vendors}
+          purchaseInvoices={purchaseInvoices}
+          purchasePayments={purchasePayments}
+        />
+      )}
 
       {subTab === "accounts" && <ChartOfAccounts accounts={accounts} setAccounts={setAccounts} canManage={canManageAccounts} />}
 
