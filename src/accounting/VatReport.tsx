@@ -52,7 +52,7 @@ export default function VatReport({ accounts, entries }: { accounts: Account[]; 
       </div>
 
       {(!vatOutputAccount || !vatInputAccount) && (
-        <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800">
+        <div className="flex items-center gap-2 rounded-xl bg-[#0D382B]/[0.05] border border-[#0D382B]/15 px-4 py-3 text-xs text-[#0D382B]">
           <AlertTriangle size={15} />
           تنبيه: لم يتم العثور على حساب ضريبة المخرجات ({VAT_OUTPUT_ACCOUNT_CODE}) أو ضريبة المدخلات ({VAT_INPUT_ACCOUNT_CODE}) في شجرة الحسابات — القيم
           المعروضة قد تكون غير مكتملة.

@@ -5,7 +5,7 @@ import { nextEntryNumber } from "./storage";
 import { BankAccount, BankTransaction, BankTransactionType, computeBankBalance } from "./bankTypes";
 
 const inputCls =
-  "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition";
+  "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0D382B] focus:outline-none focus:ring-2 focus:ring-[#0D382B]/[0.12] transition";
 
 const fmtMoney = (n: number, currency: string) =>
   new Intl.NumberFormat("ar-AE", { style: "currency", currency: currency || "AED", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
@@ -161,7 +161,7 @@ export default function BankAccountLedger({
         {canRecord && (
           <button
             onClick={openNew}
-            className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"
+            className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"
           >
             <Plus size={16} /> تسجيل حركة بنكية
           </button>
@@ -226,7 +226,7 @@ export default function BankAccountLedger({
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
+        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900">تسجيل حركة بنكية جديدة</h3>
@@ -316,7 +316,7 @@ export default function BankAccountLedger({
       )}
 
       {confirmDeleteId && deletingTx && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmDeleteId(null)}>
+        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmDeleteId(null)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-slate-900">تأكيد حذف الحركة البنكية</h3>
             <p className="text-sm text-slate-600">

@@ -4,7 +4,7 @@ import { Account } from "./types";
 import { BankAccount, BankTransaction, CURRENCIES, computeBankBalance } from "./bankTypes";
 
 const inputCls =
-  "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition";
+  "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0D382B] focus:outline-none focus:ring-2 focus:ring-[#0D382B]/[0.12] transition";
 
 const fmtMoney = (n: number, currency: string) =>
   new Intl.NumberFormat("ar-AE", { style: "currency", currency: currency || "AED", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
@@ -162,7 +162,7 @@ export default function BankAccounts({
         {canManage && (
           <button
             onClick={openNew}
-            className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"
+            className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"
           >
             <Plus size={16} /> إضافة حساب بنكي
           </button>
@@ -180,7 +180,7 @@ export default function BankAccounts({
               <button
                 key={b.id}
                 onClick={() => onSelect(b.id)}
-                className={`text-right app-card p-4 space-y-3 transition ${isSelected ? "ring-2 ring-amber-400" : ""} ${!b.isActive ? "opacity-50" : ""}`}
+                className={`text-right app-card p-4 space-y-3 transition-shadow ${isSelected ? "ring-2 ring-[#0D382B]/40" : ""} ${!b.isActive ? "opacity-50" : ""}`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-2">
@@ -200,7 +200,7 @@ export default function BankAccounts({
                           e.stopPropagation();
                           openEdit(b);
                         }}
-                        className="p-1.5 text-slate-400 hover:text-amber-600 rounded-lg hover:bg-amber-50"
+                        className="p-1.5 text-slate-400 hover:text-[#0D382B] rounded-lg hover:bg-[#0D382B]/[0.06]"
                       >
                         <Pencil size={13} />
                       </span>
@@ -232,7 +232,7 @@ export default function BankAccounts({
       )}
 
       {form && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeForm}>
+        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeForm}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900">{form.id ? "تعديل الحساب البنكي" : "إضافة حساب بنكي جديد"}</h3>
@@ -313,7 +313,7 @@ export default function BankAccounts({
               <button onClick={closeForm} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
                 إلغاء
               </button>
-              <button onClick={saveForm} className="px-4 py-2 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-700 rounded-xl">
+              <button onClick={saveForm} className="px-4 py-2 text-sm font-semibold text-white bg-[#0D382B] hover:bg-[#124d40] transition-colors rounded-xl">
                 حفظ
               </button>
             </div>
@@ -322,7 +322,7 @@ export default function BankAccounts({
       )}
 
       {confirmDeleteId && deletingAccount && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmDeleteId(null)}>
+        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmDeleteId(null)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-slate-900">تأكيد حذف الحساب البنكي</h3>
             <p className="text-sm text-slate-600">

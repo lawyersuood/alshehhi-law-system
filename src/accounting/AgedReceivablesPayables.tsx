@@ -83,7 +83,7 @@ function DetailTable({ rows }: { rows: AgingRow[] }) {
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                         : r.bucket === "d90_plus"
                         ? "bg-rose-50 text-rose-700 border-rose-200"
-                        : "bg-amber-50 text-amber-700 border-amber-200"
+                        : "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15"
                     }`}
                   >
                     {AGING_BUCKET_LABELS[r.bucket]}

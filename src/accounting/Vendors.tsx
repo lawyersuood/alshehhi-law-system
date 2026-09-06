@@ -3,7 +3,7 @@ import { Plus, Pencil, Trash2, X, Truck } from "lucide-react";
 import { Vendor } from "./purchaseTypes";
 
 const inputCls =
-  "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition";
+  "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0D382B] focus:outline-none focus:ring-2 focus:ring-[#0D382B]/[0.12] transition";
 
 interface FormState {
   id?: string;
@@ -93,7 +93,7 @@ export default function Vendors({
           <p className="text-xs text-slate-500">سجل موردي وجهات مصروفات المكتب — {vendors.length} مورد مسجّل</p>
         </div>
         {canManage && (
-          <button onClick={openNew} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm">
+          <button onClick={openNew} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]">
             <Plus size={16} /> إضافة مورد
           </button>
         )}
@@ -134,7 +134,7 @@ export default function Vendors({
                             <button onClick={() => toggleActive(v)} className="text-xs text-slate-500 hover:text-slate-800 px-2 py-1">
                               {v.isActive ? "تعطيل" : "تفعيل"}
                             </button>
-                            <button onClick={() => openEdit(v)} className="p-1.5 text-slate-500 hover:text-amber-600 rounded-lg hover:bg-amber-50">
+                            <button onClick={() => openEdit(v)} className="p-1.5 text-slate-500 hover:text-[#0D382B] rounded-lg hover:bg-[#0D382B]/[0.06]">
                               <Pencil size={14} />
                             </button>
                           </>
@@ -162,7 +162,7 @@ export default function Vendors({
       </div>
 
       {form && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setForm(null)}>
+        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setForm(null)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900">{form.id ? "تعديل بيانات المورد" : "إضافة مورد جديد"}</h3>
@@ -197,14 +197,14 @@ export default function Vendors({
             </div>
             <div className="flex gap-2 justify-end pt-2">
               <button onClick={() => setForm(null)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">إلغاء</button>
-              <button onClick={saveForm} className="px-4 py-2 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-700 rounded-xl">حفظ</button>
+              <button onClick={saveForm} className="px-4 py-2 text-sm font-semibold text-white bg-[#0D382B] hover:bg-[#124d40] transition-colors rounded-xl">حفظ</button>
             </div>
           </div>
         </div>
       )}
 
       {confirmDeleteId && deletingVendor && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmDeleteId(null)}>
+        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmDeleteId(null)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-slate-900">تأكيد حذف المورد</h3>
             <p className="text-sm text-slate-600">هل أنت متأكد من حذف <span className="font-bold">{deletingVendor.name}</span>؟</p>

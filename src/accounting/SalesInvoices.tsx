@@ -18,7 +18,7 @@ import {
 } from "./salesTypes";
 
 const inputCls =
-  "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition";
+  "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0D382B] focus:outline-none focus:ring-2 focus:ring-[#0D382B]/[0.12] transition";
 
 const fmtMoney = (n: number) =>
   new Intl.NumberFormat("ar-AE", { style: "currency", currency: "AED", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
@@ -437,14 +437,14 @@ export default function SalesInvoices({
           <p className="text-xs text-slate-500">فوترة ضريبية متعددة البنود، بحقل "مكان التوريد" الإلزامي وربط كل بند بحساب إيراد — {invoices.length} فاتورة</p>
         </div>
         {canManage && (
-          <button onClick={openNew} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm">
+          <button onClick={openNew} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]">
             <Plus size={16} /> فاتورة ضريبية جديدة
           </button>
         )}
       </div>
 
       {(!arAccount || !vatAccount) && (
-        <div className="flex items-center gap-2 rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800">
+        <div className="flex items-center gap-2 rounded-xl bg-[#0D382B]/[0.05] border border-[#0D382B]/15 px-4 py-3 text-xs text-[#0D382B]">
           <AlertTriangle size={15} />
           تنبيه: لم يتم العثور على حساب "ذمم العملاء المدينة" ({AR_ACCOUNT_CODE}) أو حساب "ضريبة القيمة المضافة — مخرجات" ({VAT_OUTPUT_ACCOUNT_CODE}) في
           شجرة الحسابات — لن يمكن اعتماد الفواتير دون هذين الحسابين.
@@ -483,7 +483,7 @@ export default function SalesInvoices({
                           <Eye size={14} />
                         </button>
                         {inv.status === "draft" && canManage && (
-                          <button onClick={() => openEdit(inv)} className="text-xs font-semibold text-amber-700 hover:bg-amber-50 px-2 py-1 rounded-lg">
+                          <button onClick={() => openEdit(inv)} className="text-xs font-semibold text-[#0D382B] hover:bg-[#0D382B]/[0.06] px-2 py-1 rounded-lg">
                             تعديل
                           </button>
                         )}
@@ -516,7 +516,7 @@ export default function SalesInvoices({
 
       {/* نموذج إنشاء / تعديل فاتورة */}
       {showForm && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
+        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900">{draft.id ? "تعديل الفاتورة" : "فاتورة ضريبية جديدة"}</h3>
@@ -613,7 +613,7 @@ export default function SalesInvoices({
                   </button>
                 </div>
               ))}
-              <button onClick={addLine} className="text-xs font-semibold text-amber-700 hover:bg-amber-50 px-2 py-1.5 rounded-lg flex items-center gap-1">
+              <button onClick={addLine} className="text-xs font-semibold text-[#0D382B] hover:bg-[#0D382B]/[0.06] px-2 py-1.5 rounded-lg flex items-center gap-1">
                 <Plus size={13} /> إضافة بند
               </button>
             </div>
@@ -633,7 +633,7 @@ export default function SalesInvoices({
               <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
                 إلغاء
               </button>
-              <button onClick={saveDraft} className="px-4 py-2 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-700 rounded-xl">
+              <button onClick={saveDraft} className="px-4 py-2 text-sm font-semibold text-white bg-[#0D382B] hover:bg-[#124d40] transition-colors rounded-xl">
                 حفظ كمسودة
               </button>
             </div>
@@ -643,7 +643,7 @@ export default function SalesInvoices({
 
       {/* عرض تفاصيل الفاتورة */}
       {viewingInvoice && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setViewingId(null)}>
+        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setViewingId(null)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900">فاتورة {viewingInvoice.invoiceNumber}</h3>
@@ -699,7 +699,7 @@ export default function SalesInvoices({
                   {viewingInvoice.status === "approved" && (
                     <>
                       <div className="flex justify-between text-emerald-700"><span>المحصّل</span><span className="font-mono">{fmtMoney(paid)}</span></div>
-                      <div className="flex justify-between font-bold text-amber-700"><span>المتبقي</span><span className="font-mono">{fmtMoney(due)}</span></div>
+                      <div className="flex justify-between font-bold text-[#0D382B]"><span>المتبقي</span><span className="font-mono">{fmtMoney(due)}</span></div>
                     </>
                   )}
                 </div>
@@ -741,7 +741,7 @@ export default function SalesInvoices({
               {viewingInvoice.status === "approved" && amountDue(viewingInvoice, payments) > 0.005 && canRecordPayment && (
                 <button
                   onClick={() => openPaymentForm(viewingInvoice)}
-                  className="px-4 py-2 text-sm font-semibold text-white bg-slate-900 hover:bg-slate-700 rounded-xl flex items-center gap-1.5"
+                  className="px-4 py-2 text-sm font-semibold text-white bg-[#0D382B] hover:bg-[#124d40] transition-colors rounded-xl flex items-center gap-1.5"
                 >
                   <CreditCard size={14} /> تسجيل دفعة
                 </button>
@@ -792,7 +792,7 @@ export default function SalesInvoices({
       )}
 
       {confirmDeleteId && deletingInvoice && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmDeleteId(null)}>
+        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmDeleteId(null)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-slate-900">تأكيد حذف الفاتورة</h3>
             <p className="text-sm text-slate-600">هل أنت متأكد من حذف مسودة الفاتورة <span className="font-bold">{deletingInvoice.invoiceNumber}</span>؟</p>
@@ -805,7 +805,7 @@ export default function SalesInvoices({
       )}
 
       {confirmCancelId && cancellingInvoice && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmCancelId(null)}>
+        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmCancelId(null)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-slate-900">تأكيد إلغاء الفاتورة</h3>
             <p className="text-sm text-slate-600">هل أنت متأكد من إلغاء الفاتورة <span className="font-bold">{cancellingInvoice.invoiceNumber}</span>؟</p>

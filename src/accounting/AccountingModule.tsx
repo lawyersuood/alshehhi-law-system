@@ -51,20 +51,51 @@ type SubTab =
   | "trial_balance"
   | "reports";
 
-const SUB_TABS: Array<{ id: SubTab; label: string; icon: React.ComponentType<{ size?: number }> }> = [
-  { id: "accounts", label: "شجرة الحسابات", icon: BookOpen },
-  { id: "bank", label: "الحسابات البنكية", icon: Landmark },
-  { id: "sales", label: "المبيعات والفواتير", icon: ReceiptText },
-  { id: "vendors", label: "الموردون", icon: Truck },
-  { id: "purchases", label: "المشتريات والمصروفات", icon: ShoppingCart },
-  { id: "assets", label: "الأصول الثابتة", icon: Boxes },
-  { id: "payroll_employees", label: "سجل موظفي الرواتب", icon: UserRound },
-  { id: "payroll_runs", label: "تشغيل الرواتب", icon: Wallet2 },
-  { id: "journal", label: "القيود اليومية", icon: ListOrdered },
-  { id: "ledger", label: "دفتر الأستاذ", icon: ScrollText },
-  { id: "trial_balance", label: "ميزان المراجعة", icon: Scale },
-  { id: "reports", label: "التقارير المالية", icon: FileBarChart },
+// تُجمّع أقسام النظام المحاسبي في قائمة جانبية عمودية مصنّفة (بنفس منطق القائمة الجانبية
+// الرئيسية للنظام وأسلوب أنظمة المحاسبة الاحترافية)، بدل شريط تبويبات أفقي طويل يمتد للأسفل.
+const SUB_TAB_GROUPS: Array<{
+  category: string;
+  items: Array<{ id: SubTab; label: string; icon: React.ComponentType<{ size?: number }> }>;
+}> = [
+  {
+    category: "القيود والدفاتر",
+    items: [
+      { id: "accounts", label: "شجرة الحسابات", icon: BookOpen },
+      { id: "journal", label: "القيود اليومية", icon: ListOrdered },
+      { id: "ledger", label: "دفتر الأستاذ", icon: ScrollText },
+      { id: "trial_balance", label: "ميزان المراجعة", icon: Scale },
+    ],
+  },
+  {
+    category: "البنوك",
+    items: [{ id: "bank", label: "الحسابات البنكية", icon: Landmark }],
+  },
+  {
+    category: "المبيعات والمشتريات",
+    items: [
+      { id: "sales", label: "المبيعات والفواتير", icon: ReceiptText },
+      { id: "vendors", label: "الموردون", icon: Truck },
+      { id: "purchases", label: "المشتريات والمصروفات", icon: ShoppingCart },
+    ],
+  },
+  {
+    category: "الأصول والرواتب",
+    items: [
+      { id: "assets", label: "الأصول الثابتة", icon: Boxes },
+      { id: "payroll_employees", label: "سجل موظفي الرواتب", icon: UserRound },
+      { id: "payroll_runs", label: "تشغيل الرواتب", icon: Wallet2 },
+    ],
+  },
+  {
+    category: "التقارير",
+    items: [{ id: "reports", label: "التقارير المالية", icon: FileBarChart }],
+  },
 ];
+
+const SUB_TAB_LABELS: Record<SubTab, string> = SUB_TAB_GROUPS.reduce((acc, g) => {
+  g.items.forEach((it) => { acc[it.id] = it.label; });
+  return acc;
+}, {} as Record<SubTab, string>);
 
 export default function AccountingModule({
   canManageAccounts = true,
@@ -161,26 +192,45 @@ export default function AccountingModule({
   const selectedBank = bankAccounts.find((b) => b.id === selectedBankId) || null;
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-amber-200 bg-amber-50/60 px-4 py-3 text-xs text-amber-800">
-        النظام المحاسبي قيد الإنشاء التدريجي (المرحلة 7 والأخيرة من 7: الرواتب والموظفون) — سجل موظفين مستقل خاص بدورة الرواتب (لا علاقة له بسجل
-        "الموظفون والكادر" الحالي في الموقع)، وتشغيل رواتب شهري يولّد قسيمة لكل موظف وقيداً محاسبياً واحداً مجمّعاً. لا يشمل توليد ملف حماية الأجور (WPS).
-        بانتهاء هذه المرحلة تكتمل كل المراحل السبع المخطّطة، وتبقى بانتظار قرارك بشأن موعد تفعيل النظام بالكامل.
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-[#0D382B]/15 bg-[#0D382B]/[0.04] px-4 py-3 text-xs text-[#0D382B] flex items-center gap-2">
+        <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-[#C5A059] text-[#0D382B] text-[10px] font-black shrink-0">تجريبي</span>
+        <span>
+          هذه نسخة تجريبية من النظام المحاسبي لغرض التقييم فقط، وتعتمد حالياً على تخزين المتصفح المحلي دون ربط بقاعدة بيانات خلفية دائمة —
+          لا تُدخل أي بيانات مالية حقيقية للمكتب حتى اكتمال الربط والاختبار الكامل.
+        </span>
       </div>
 
-      <div className="flex border-b border-slate-200 overflow-x-auto">
-        {SUB_TABS.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setSubTab(id)}
-            className={`px-4 py-3 text-sm font-bold border-b-2 whitespace-nowrap transition flex items-center gap-2 ${
-              subTab === id ? "border-amber-500 text-amber-700 bg-amber-50/50" : "border-transparent text-slate-500 hover:text-slate-800"
-            }`}
-          >
-            <Icon size={18} /> {label}
-          </button>
-        ))}
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-5 items-start">
+        {/* قائمة جانبية عمودية مصنّفة لأقسام النظام المحاسبي، بديلاً عن شريط تبويبات أفقي طويل */}
+        <nav className="lg:sticky lg:top-4 app-card p-3 space-y-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto custom-scrollbar">
+          {SUB_TAB_GROUPS.map((group) => (
+            <div key={group.category} className="space-y-1">
+              <p className="px-2 text-[10px] font-black uppercase tracking-wide text-slate-400">{group.category}</p>
+              {group.items.map(({ id, label, icon: Icon }) => (
+                <button
+                  key={id}
+                  onClick={() => setSubTab(id)}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-bold transition-colors cursor-pointer text-right ${
+                    subTab === id
+                      ? "bg-[#0D382B] text-white shadow-[0_6px_14px_-6px_rgb(13,56,43,0.5)]"
+                      : "text-slate-600 hover:bg-[#0D382B]/[0.06] hover:text-[#0D382B]"
+                  }`}
+                >
+                  <Icon size={17} />
+                  <span>{label}</span>
+                </button>
+              ))}
+            </div>
+          ))}
+        </nav>
+
+        {/* منطقة المحتوى الرئيسية للقسم المختار */}
+        <div className="min-w-0 space-y-4">
+          <div className="flex items-center gap-2 px-1">
+            <span className="h-4 w-1 rounded-full bg-[#C5A059] shrink-0" />
+            <h2 className="text-base font-black text-[#0D382B]">{SUB_TAB_LABELS[subTab]}</h2>
+          </div>
 
       {subTab === "accounts" && <ChartOfAccounts accounts={accounts} setAccounts={setAccounts} canManage={canManageAccounts} />}
 
@@ -320,6 +370,8 @@ export default function AccountingModule({
           purchasePayments={purchasePayments}
         />
       )}
+        </div>
+      </div>
     </div>
   );
 }

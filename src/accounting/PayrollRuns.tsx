@@ -14,7 +14,7 @@ import {
 } from "./payrollTypes";
 
 const inputCls =
-  "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition";
+  "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0D382B] focus:outline-none focus:ring-2 focus:ring-[#0D382B]/[0.12] transition";
 
 const fmtMoney = (n: number) =>
   new Intl.NumberFormat("ar-AE", { style: "currency", currency: "AED", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
@@ -290,7 +290,7 @@ export default function PayrollRuns({
                   <td className="px-4 py-2.5">
                     <span
                       className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
-                        r.paid ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
+                        r.paid ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15"
                       }`}
                     >
                       {r.paid ? "تم السداد" : "لم يُسدَّد بعد"}
@@ -323,7 +323,7 @@ export default function PayrollRuns({
       </div>
 
       {viewingRun && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setViewingRunId(null)}>
+        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setViewingRunId(null)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900">قسائم رواتب فترة {fmtPeriodLabel(viewingRun.periodLabel)}</h3>
@@ -360,7 +360,7 @@ export default function PayrollRuns({
       )}
 
       {payingRun && (
-        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setPayingRunId(null)}>
+        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setPayingRunId(null)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900">تسجيل سداد رواتب فترة {fmtPeriodLabel(payingRun.periodLabel)}</h3>

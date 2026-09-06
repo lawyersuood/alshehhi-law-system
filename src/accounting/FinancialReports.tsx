@@ -51,7 +51,7 @@ export default function FinancialReports({
             key={id}
             onClick={() => setReport(id)}
             className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold border transition ${
-              report === id ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+              report === id ? "bg-[#0D382B] text-white border-[#0D382B]" : "bg-white text-slate-600 border-slate-200 hover:border-[#0D382B]/20 hover:bg-[#0D382B]/[0.04]"
             }`}
           >
             <Icon size={14} /> {label}

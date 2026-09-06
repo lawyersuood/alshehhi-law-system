@@ -132,7 +132,7 @@ export default function BalanceSheet({ accounts, entries }: { accounts: Account[
                       <td className="px-4 py-2 font-mono text-left">{fmtMoney(r.amount)}</td>
                     </tr>
                   ))}
-                  <tr className="border-b border-slate-50 last:border-0 bg-amber-50/40">
+                  <tr className="border-b border-slate-50 last:border-0 bg-[#0D382B]/[0.05]/40">
                     <td className="px-4 py-2 font-mono text-xs text-slate-500 w-20">—</td>
                     <td className="px-4 py-2 text-slate-800">الأرباح المرحّلة (صافي الدخل المتراكم)</td>
                     <td className="px-4 py-2 font-mono text-left">{fmtMoney(retainedEarnings)}</td>
