@@ -208,7 +208,7 @@ export default function AccountingModule({
         {/* شريط رفيع لتصنيفات النظام المحاسبي الرئيسية، وكل تصنيف يفتح بجانبه قائمة منسدلة
             عائمة (Flyout) بأقسامه الفرعية — بنفس أسلوب وافِق تماماً، بدل شريط تبويبات ثابت
             أو قائمة جانبية مفتوحة بالكامل تاخذ مساحة طولية كبيرة. */}
-        <nav className="lg:sticky lg:top-4 app-card p-2 flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible">
+        <nav className="relative z-30 lg:sticky lg:top-4 app-card p-2 flex lg:flex-col gap-1.5 overflow-x-auto lg:overflow-visible">
           {SUB_TAB_GROUPS.map((group) => {
             const FirstIcon = group.items[0].icon;
             const isActiveGroup = activeCategory === group.category;
