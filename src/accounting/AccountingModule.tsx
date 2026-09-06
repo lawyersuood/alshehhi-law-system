@@ -1,5 +1,28 @@
 import React, { useEffect, useState } from "react";
-import { BookOpen, ListOrdered, ScrollText, Scale, Landmark, ReceiptText, Truck, ShoppingCart, FileBarChart, Boxes, UserRound, Wallet2 } from "lucide-react";
+import {
+  BookOpen,
+  ListOrdered,
+  ScrollText,
+  Scale,
+  Landmark,
+  ReceiptText,
+  Truck,
+  ShoppingCart,
+  FileBarChart,
+  Boxes,
+  UserRound,
+  Wallet2,
+  Users,
+  FileText,
+  Repeat,
+  FileMinus2,
+  Banknote,
+  ClipboardList,
+  FilePlus2,
+  HandCoins,
+  Layers,
+} from "lucide-react";
+import ComingSoon from "./ComingSoon";
 import { Account, JournalEntry, LS_KEYS } from "./types";
 import {
   loadAccounts,
@@ -40,15 +63,29 @@ import PayrollRuns from "./PayrollRuns";
 type SubTab =
   | "accounts"
   | "bank"
+  // المبيعات (قسم مستقل بالكامل عن المشتريات)
+  | "customers"
+  | "sales_quotes"
   | "sales"
+  | "sales_recurring"
+  | "sales_credit_notes"
+  | "sales_cash_invoices"
+  // المشتريات (قسم مستقل بالكامل عن المبيعات)
   | "vendors"
+  | "purchase_orders"
   | "purchases"
+  | "purchase_debit_notes"
+  | "purchase_cash_expenses"
+  // الأصول والرواتب
   | "assets"
   | "payroll_employees"
   | "payroll_runs"
+  | "employee_claims"
+  // القيود والدفاتر
   | "journal"
   | "ledger"
   | "trial_balance"
+  | "bulk_reclass"
   | "reports";
 
 // تُجمّع أقسام النظام المحاسبي في قائمة جانبية عمودية مصنّفة (بنفس منطق القائمة الجانبية
@@ -64,18 +101,34 @@ const SUB_TAB_GROUPS: Array<{
       { id: "journal", label: "القيود اليومية", icon: ListOrdered },
       { id: "ledger", label: "دفتر الأستاذ", icon: ScrollText },
       { id: "trial_balance", label: "ميزان المراجعة", icon: Scale },
+      { id: "bulk_reclass", label: "إعادة التصنيف الجماعي", icon: Layers },
     ],
   },
   {
     category: "البنوك",
     items: [{ id: "bank", label: "الحسابات البنكية", icon: Landmark }],
   },
+  // المبيعات — قسم مستقل تماماً عن المشتريات (بنفس ترتيب أقسام Wafeq الفرعية)
   {
-    category: "المبيعات والمشتريات",
+    category: "المبيعات",
     items: [
-      { id: "sales", label: "المبيعات والفواتير", icon: ReceiptText },
+      { id: "customers", label: "العملاء", icon: Users },
+      { id: "sales_quotes", label: "عروض الأسعار والأتعاب", icon: FileText },
+      { id: "sales", label: "فواتير البيع", icon: ReceiptText },
+      { id: "sales_recurring", label: "فواتير مجدولة", icon: Repeat },
+      { id: "sales_credit_notes", label: "إشعارات دائنة", icon: FileMinus2 },
+      { id: "sales_cash_invoices", label: "فواتير نقدية", icon: Banknote },
+    ],
+  },
+  // المشتريات — قسم مستقل تماماً عن المبيعات
+  {
+    category: "المشتريات",
+    items: [
       { id: "vendors", label: "الموردون", icon: Truck },
-      { id: "purchases", label: "المشتريات والمصروفات", icon: ShoppingCart },
+      { id: "purchase_orders", label: "أوامر الشراء", icon: ClipboardList },
+      { id: "purchases", label: "فواتير المشتريات", icon: ShoppingCart },
+      { id: "purchase_debit_notes", label: "إشعارات مدينة", icon: FilePlus2 },
+      { id: "purchase_cash_expenses", label: "مصروفات نقدية", icon: HandCoins },
     ],
   },
   {
@@ -84,6 +137,7 @@ const SUB_TAB_GROUPS: Array<{
       { id: "assets", label: "الأصول الثابتة", icon: Boxes },
       { id: "payroll_employees", label: "سجل موظفي الرواتب", icon: UserRound },
       { id: "payroll_runs", label: "تشغيل الرواتب", icon: Wallet2 },
+      { id: "employee_claims", label: "مطالبات الموظفين", icon: HandCoins },
     ],
   },
   {
@@ -290,6 +344,20 @@ export default function AccountingModule({
         </div>
       )}
 
+      {subTab === "customers" && (
+        <ComingSoon
+          title="العملاء"
+          description="سجل عملاء مستقل عن الفواتير (بيانات التواصل، الرصيد، وسجل التعاملات السابقة لكل عميل) — قيد البناء ضمن مرحلة توسعة المبيعات."
+        />
+      )}
+
+      {subTab === "sales_quotes" && (
+        <ComingSoon
+          title="عروض الأسعار والأتعاب"
+          description="عرض أتعاب/نطاق خدمة قانونية للعميل قبل فتح القضية رسمياً، مع إمكانية تحويله مباشرة لفاتورة بيع أو ربطه بالقضية عند الموافقة."
+        />
+      )}
+
       {subTab === "sales" && (
         <SalesInvoices
           accounts={accounts}
@@ -309,7 +377,35 @@ export default function AccountingModule({
         />
       )}
 
+      {subTab === "sales_recurring" && (
+        <ComingSoon
+          title="فواتير مجدولة"
+          description="فاتورة تتكرر تلقائياً بجدول دوري (مثلاً أتعاب شهرية ثابتة لعميل) بدون إعادة إدخالها كل مرة."
+        />
+      )}
+
+      {subTab === "sales_credit_notes" && (
+        <ComingSoon
+          title="إشعارات دائنة"
+          description="لتصحيح أو إلغاء جزء من فاتورة بيع صادرة سابقاً (مثلاً خصم على أتعاب أو تراجع عن بند) بدون حذف الفاتورة الأصلية."
+        />
+      )}
+
+      {subTab === "sales_cash_invoices" && (
+        <ComingSoon
+          title="فواتير نقدية"
+          description="فاتورة تُسدَّد فوراً نقداً وقت إصدارها، بدون دورة استحقاق أو متابعة تحصيل لاحقة."
+        />
+      )}
+
       {subTab === "vendors" && <Vendors vendors={vendors} setVendors={setVendors} canManage={canManageVendors} canDelete={canDeleteVendors} />}
+
+      {subTab === "purchase_orders" && (
+        <ComingSoon
+          title="أوامر الشراء"
+          description="طلب شراء أولي للمورد قبل استلام الفاتورة الرسمية، يتحول لاحقاً لفاتورة مشتريات عند التنفيذ."
+        />
+      )}
 
       {subTab === "purchases" && (
         <PurchaseInvoices
@@ -326,6 +422,34 @@ export default function AccountingModule({
           canRecordPayment={canRecordPurchasePayments}
           canDelete={canDeletePurchaseInvoices}
           currentUserName={currentUserName}
+        />
+      )}
+
+      {subTab === "purchase_debit_notes" && (
+        <ComingSoon
+          title="إشعارات مدينة"
+          description="عكس الإشعار الدائن — لتصحيح أو تخفيض قيمة فاتورة مشتريات مستلمة من مورد بدون حذفها."
+        />
+      )}
+
+      {subTab === "purchase_cash_expenses" && (
+        <ComingSoon
+          title="مصروفات نقدية"
+          description="مصروف صغير متفرق بدون فاتورة مورد رسمية (رسوم كاتب عدل، مواقف، طباعة مستندات محكمة)، مع إمكانية إرفاق صورة الإيصال وربطه بقضية أو مشروع محدد."
+        />
+      )}
+
+      {subTab === "employee_claims" && (
+        <ComingSoon
+          title="مطالبات الموظفين"
+          description="طلب استرداد مصروف دفعه الموظف من جيبه الخاص لصالح المكتب (بدل مواصلات، رسوم عاجلة)، مع مسار اعتماد قبل الصرف."
+        />
+      )}
+
+      {subTab === "bulk_reclass" && (
+        <ComingSoon
+          title="إعادة التصنيف الجماعي"
+          description="تصحيح تصنيف عدة قيود أو معاملات دفعة واحدة (نقلها لحساب آخر) بدل تعديل كل قيد على حدة."
         />
       )}
 
