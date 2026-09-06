@@ -10761,10 +10761,10 @@ export default function App() {
                     canViewFinancials ? { label: "مبالغ مستحقة (شامل الضريبة 5%)", value: fmtAED(stats.dueAmount), icon: TrendingUp, tone: "bg-emerald-100 text-emerald-600" } : null,
                     { label: "وكالات تنتهي خلال 60 يومًا", value: stats.expiringPoa, icon: AlertTriangle, tone: "bg-red-100 text-red-600" },
                   ].filter(Boolean).map((k: any) => (
-                    <div key={k.label} className="app-card p-4">
-                      <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-xl ${k.tone}`}><k.icon size={20} /></div>
-                      <p className="text-xl font-bold">{k.value}</p>
-                      <p className="mt-0.5 text-xs text-slate-500">{k.label}</p>
+                    <div key={k.label} className="app-card p-5">
+                      <div className={`mb-3.5 flex h-11 w-11 items-center justify-center rounded-2xl ${k.tone}`}><k.icon size={20} /></div>
+                      <p className="text-2xl font-black text-slate-900 tracking-tight" style={{ fontFamily: "'IBM Plex Mono', monospace" }}>{k.value}</p>
+                      <p className="mt-1 text-xs text-slate-500 font-medium">{k.label}</p>
                     </div>
                   ))}
                 </div>
@@ -11425,7 +11425,7 @@ export default function App() {
                               className={`p-2.5 rounded-xl border text-right transition flex flex-col justify-between ${
                                 isSelected
                                   ? "bg-amber-500 text-white border-amber-600 shadow-sm ring-2 ring-amber-300"
-                                  : "bg-slate-50 text-slate-800 border-slate-200 hover:bg-amber-50/60 hover:border-amber-300"
+                                  : "bg-slate-50 text-slate-800 border-slate-200 hover:bg-[#0D382B]/[0.025] hover:border-amber-300"
                               }`}
                             >
                               <div className="flex items-center justify-between w-full">
@@ -11991,7 +11991,7 @@ export default function App() {
                   </div>
 
                   <table className="w-full min-w-[750px] text-sm">
-                    <thead className="bg-stone-50 text-right text-xs text-slate-500">
+                    <thead className="bg-[#0D382B]/[0.035] text-right text-[11px] uppercase tracking-wide font-bold text-[#0D382B]/70">
                       <tr>
                         <th className="px-4 py-3 font-semibold">رقم القضية والتصنيف</th>
                         <th className="px-4 py-3 font-semibold">الموكل</th>
@@ -12002,12 +12002,12 @@ export default function App() {
                         <th className="px-4 py-3 font-semibold">مرحلة الدعوى</th>
                         <th className="px-4 py-3 font-semibold">الحالة</th>
                         {/* عمود ثابت (sticky) حتى تبقى أزرار عرض/تعديل/حذف القضية ظاهرة دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
-                        <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-stone-50 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
+                        <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-[#faf9f6] shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100/80">
                       {filteredCases.map((c) => (
-                        <tr key={c.id} className="transition hover:bg-amber-50/60 group">
+                        <tr key={c.id} className="transition hover:bg-[#0D382B]/[0.025] group">
                           <td className="px-4 py-3 font-semibold text-slate-900 cursor-pointer" onClick={() => setCaseView(c.id)}>
                             <div className="flex items-center gap-2.5">
                               {/* مؤشر بصري (نقطة ملونة) يمثل تصنيف القضية */}
@@ -12042,7 +12042,7 @@ export default function App() {
                           <td className="px-4 py-3"><Badge className={stageBadgeColor(getCaseStage(c))}>{getCaseStage(c)}</Badge></td>
                           <td className="px-4 py-3"><Badge className={statusColor(c.status)}>{c.status}</Badge></td>
                           {/* عمود ثابت (sticky) حتى تبقى أزرار عرض/تعديل/حذف القضية ظاهرة دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
-                          <td className="sticky left-0 z-10 bg-white group-hover:bg-amber-50/60 px-4 py-3 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
+                          <td className="sticky left-0 z-10 bg-white group-hover:bg-[#0D382B]/[0.025] px-4 py-3 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
                             <div className="flex items-center justify-center gap-2">
                               <button onClick={() => setCaseView(c.id)} className="text-xs font-semibold text-amber-700 hover:underline">عرض التفاصيل</button>
                               <button
@@ -13340,7 +13340,7 @@ export default function App() {
                   {/* قائمة الرسائل والمعاينة */}
                   <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                     {/* قائمة الرسائل */}
-                    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs divide-y divide-slate-100 overflow-hidden flex flex-col h-[550px]">
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs divide-y divide-slate-100/80 overflow-hidden flex flex-col h-[550px]">
                       <div className="p-3 bg-stone-50 border-b border-slate-200 flex items-center gap-2">
                         <Search size={16} className="text-slate-400 shrink-0" />
                         <input
@@ -13350,7 +13350,7 @@ export default function App() {
                           className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-amber-500"
                         />
                       </div>
-                      <div className="flex-1 overflow-y-auto divide-y divide-slate-100">
+                      <div className="flex-1 overflow-y-auto divide-y divide-slate-100/80">
                         {inAppEmails
                           .filter(e => e.folder === emailFolder)
                           .filter(e => !emailSearch || e.subject.includes(emailSearch) || e.sender.includes(emailSearch) || e.senderEmail.includes(emailSearch))
@@ -14333,7 +14333,7 @@ export default function App() {
                         {/* جدول الدفعات */}
                         <div className="overflow-x-auto custom-scrollbar app-card">
                           <table className="w-full min-w-[700px] text-sm">
-                            <thead className="bg-stone-50 text-right text-xs text-slate-500">
+                            <thead className="bg-[#0D382B]/[0.035] text-right text-[11px] uppercase tracking-wide font-bold text-[#0D382B]/70">
                               <tr>
                                 <th className="px-4 py-3 font-semibold">رقم السند / المرجع</th>
                                 <th className="px-4 py-3 font-semibold">التاريخ</th>
@@ -14343,10 +14343,10 @@ export default function App() {
                                 <th className="px-4 py-3 font-semibold">المبلغ المقبوض</th>
                                 <th className="px-4 py-3 font-semibold">البيان والملاحظات</th>
                                 {/* عمود ثابت (sticky) حتى يبقى زر الحذف ظاهراً دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
-                                <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-stone-50 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
+                                <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-[#faf9f6] shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-slate-100/80">
                               {payments.map((p) => {
                                 const client = clients.find(c => c.id === p.clientId);
                                 const isUnallocated = !p.feeAgreementId || p.feeAgreementId === "unallocated";
@@ -14581,7 +14581,7 @@ export default function App() {
                         </div>
                         <div className="overflow-x-auto custom-scrollbar app-card">
                           <table className="w-full min-w-[700px] text-sm">
-                            <thead className="bg-stone-50 text-right text-xs text-slate-500">
+                            <thead className="bg-[#0D382B]/[0.035] text-right text-[11px] uppercase tracking-wide font-bold text-[#0D382B]/70">
                               <tr>
                                 <th className="px-4 py-3 font-semibold">رقم الفاتورة</th>
                                 <th className="px-4 py-3 font-semibold">الموكل</th>
@@ -14590,10 +14590,10 @@ export default function App() {
                                 <th className="px-4 py-3 font-semibold">الإجمالي</th>
                                 <th className="px-4 py-3 font-semibold">الحالة</th>
                                 {/* عمود ثابت (sticky) حتى تبقى أزرار الفاتورة (تحديد كمسددة، تذكير، طباعة، حذف) ظاهرة دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
-                                <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-stone-50 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات وتصدير FTA</th>
+                                <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-[#faf9f6] shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات وتصدير FTA</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-slate-100/80">
                               {invoices.map((inv) => {
                                 const vat = inv.amount * VAT_RATE;
                                 const total = inv.amount + vat;
@@ -14784,7 +14784,7 @@ export default function App() {
                         {trustTransactions.length > 0 && (
                         <div className="overflow-x-auto custom-scrollbar app-card">
                           <table className="w-full min-w-[650px] text-sm">
-                            <thead className="bg-stone-50 text-right text-xs text-slate-500">
+                            <thead className="bg-[#0D382B]/[0.035] text-right text-[11px] uppercase tracking-wide font-bold text-[#0D382B]/70">
                               <tr>
                                 <th className="px-4 py-3 font-semibold">السند / التاريخ</th>
                                 <th className="px-4 py-3 font-semibold">الموكل والقضية</th>
@@ -14793,7 +14793,7 @@ export default function App() {
                                 <th className="px-4 py-3 font-semibold">البيان والشرح</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-slate-100/80">
                               {trustTransactions.map((tx) => (
                                 <tr key={tx.id} className="hover:bg-amber-50/50">
                                   <td className="px-4 py-3 text-xs">
@@ -15095,7 +15095,7 @@ export default function App() {
               <p className="text-xs text-slate-400 text-center py-6">لم تُنشأ أي اتفاقية بعد</p>
             )}
             {officeAgreements.map((a) => (
-              <div key={a.id} className="group flex items-center gap-1.5 rounded-xl border border-slate-200 bg-stone-50 p-3 hover:border-amber-400 hover:bg-amber-50/60 transition">
+              <div key={a.id} className="group flex items-center gap-1.5 rounded-xl border border-slate-200 bg-stone-50 p-3 hover:border-amber-400 hover:bg-[#0D382B]/[0.025] transition">
                 <button onClick={() => setAgrPreviewId(a.id)} className="flex-1 text-right">
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-[11px] font-bold text-amber-800 bg-white px-2 py-0.5 rounded border border-amber-200">{a.agreementNumber}</span>
@@ -15538,7 +15538,7 @@ export default function App() {
                     <History size={16} className="text-amber-600" />
                     <h3 className="font-bold text-slate-800 text-sm">سجل تتبع الاستخدام — من ومتى استخدم الهوية الرسمية</h3>
                   </div>
-                  <div className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+                  <div className="max-h-80 overflow-y-auto divide-y divide-slate-100/80">
                     {auditLogs.filter((l) => l.targetModule === "الورق الرسمي").length === 0 ? (
                       <p className="p-5 text-center text-xs text-slate-400">لا يوجد أي نشاط مسجل بعد على الهوية الرسمية</p>
                     ) : (
@@ -15856,7 +15856,7 @@ export default function App() {
                         return (
                           <>
                             <table className="w-full text-sm">
-                              <thead className="bg-stone-50 text-right text-xs text-slate-500">
+                              <thead className="bg-[#0D382B]/[0.035] text-right text-[11px] uppercase tracking-wide font-bold text-[#0D382B]/70">
                                 <tr>
                                   <th className="px-4 py-3 font-semibold">اسم الشخص / الجهة</th>
                                   <th className="px-4 py-3 font-semibold">الهوية / الجواز</th>
@@ -15865,10 +15865,10 @@ export default function App() {
                                   <th className="px-4 py-3 font-semibold">الجنسية</th>
                                   <th className="px-4 py-3 font-semibold">تاريخ الإدراج</th>
                                   {/* عمود ثابت (sticky) حتى يبقى زر الحذف ظاهراً دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
-                                  <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-stone-50 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
+                                  <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-[#faf9f6] shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
                                 </tr>
                               </thead>
-                              <tbody className="divide-y divide-slate-100">
+                              <tbody className="divide-y divide-slate-100/80">
                                 {filteredWatchlist.map((item) => (
                                   <tr key={item.id} className="hover:bg-red-50/40 group">
                                     <td className="px-4 py-3 font-bold text-slate-900">{item.fullName}</td>
@@ -15986,7 +15986,7 @@ export default function App() {
                       <div className="app-card overflow-hidden">
                         <div className="overflow-x-auto custom-scrollbar">
                           <table className="w-full min-w-[750px] text-sm">
-                            <thead className="bg-stone-50 text-right text-xs text-slate-500 border-b border-slate-100">
+                            <thead className="bg-[#0D382B]/[0.035] text-right text-[11px] uppercase tracking-wide font-bold text-[#0D382B]/70 border-b border-slate-100">
                               <tr>
                                 <th className="px-4 py-3 font-semibold">الموكل</th>
                                 <th className="px-4 py-3 font-semibold">الجنسية والوثيقة</th>
@@ -15997,10 +15997,10 @@ export default function App() {
                                 <th className="px-4 py-3 font-semibold text-center">الحالة</th>
                                 <th className="px-4 py-3 font-semibold text-center">المراجعة القادمة</th>
                                 {/* عمود ثابت (sticky) حتى تبقى أزرار التعديل والطباعة والحذف ظاهرة دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
-                                <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-stone-50 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
+                                <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-[#faf9f6] shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
                               </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-slate-100/80">
                               {kyc.map((k) => {
                                 const nextRev = nextReviewDate(k.lastReview, k.risk);
                                 const daysToRev = daysUntil(nextRev);
@@ -16245,7 +16245,7 @@ export default function App() {
                               <th className="px-4 py-3.5 text-center">عنوان IP</th>
                             </tr>
                           </thead>
-                          <tbody className="divide-y divide-slate-100 text-slate-700">
+                          <tbody className="divide-y divide-slate-100/80 text-slate-700">
                             {filteredAuditLogs.map((log) => {
                               const isUnauthorized = log.actionType === "UNAUTHORIZED_DELETE" || log.actionType === "UNAUTHORIZED_ACCESS" || log.status === "محاولة غير مصرح بها - مرفوض";
 
@@ -16853,7 +16853,7 @@ export default function App() {
                   </div>
                   <div className="overflow-x-auto custom-scrollbar">
                     <table className="w-full min-w-[700px] text-sm">
-                      <thead className="bg-stone-50 text-right text-xs text-slate-500 border-b border-slate-100">
+                      <thead className="bg-[#0D382B]/[0.035] text-right text-[11px] uppercase tracking-wide font-bold text-[#0D382B]/70 border-b border-slate-100">
                         <tr>
                           <th className="px-4 py-3 font-semibold">المستخدم</th>
                           <th className="px-4 py-3 font-semibold">الوظيفة والدور</th>
@@ -16862,10 +16862,10 @@ export default function App() {
                           <th className="px-4 py-3 font-semibold">الحالة</th>
                           <th className="px-4 py-3 font-semibold text-center">الأقسام المصرح بها</th>
                           {/* عمود ثابت (sticky) حتى تبقى أزرار التعديل والحذف ظاهرة دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
-                          <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-stone-50 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
+                          <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-[#faf9f6] shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-slate-100/80">
                         {users.map((u) => {
                           const openCount = getActivePermissionsCount(u);
                           const totalCount = PERMISSION_MODULES.length;
@@ -17006,7 +17006,7 @@ export default function App() {
                           ))}
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-slate-100">
+                      <tbody className="divide-y divide-slate-100/80">
                         {PERMISSION_MODULES.map((mod) => (
                           <tr key={mod.id} className="hover:bg-slate-50">
                             <td className="p-3 font-semibold text-slate-800">
@@ -18196,7 +18196,7 @@ export default function App() {
                             <th className="p-3.5 text-center rounded-l-xl">الإجراءات</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-100/80">
                           {employees
                             .filter(e => !employeeSearchQuery || e.fullName.includes(employeeSearchQuery) || e.jobTitle.includes(employeeSearchQuery) || e.emiratesId.includes(employeeSearchQuery))
                             .map((emp) => {
@@ -18316,7 +18316,7 @@ export default function App() {
                             <th className="sticky left-0 z-10 p-3.5 text-center bg-slate-900 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.3)]">اعتماد الإدارة</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-100/80">
                           {leaveRequests.length === 0 ? (
                             <tr>
                               <td colSpan={7} className="p-8 text-center text-slate-400">لا توجد طلبات إجازات مسجلة حالياً</td>
@@ -18388,7 +18388,7 @@ export default function App() {
                             <th className="sticky left-0 z-10 p-3.5 text-center bg-slate-900 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.3)]">اعتماد الصرف</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-100/80">
                           {employeeExpenses.length === 0 ? (
                             <tr>
                               <td colSpan={6} className="p-8 text-center text-slate-400">لا توجد مطالبات مصروفات حالياً</td>
@@ -20130,7 +20130,7 @@ export default function App() {
                       <th className="sticky left-0 z-10 p-2.5 text-center bg-slate-100 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراء</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 bg-white">
+                  <tbody className="divide-y divide-slate-100/80 bg-white">
                     {courtImportPreviewList.map((item, idx) => (
                       <tr key={idx} className="hover:bg-slate-50 text-slate-800 group">
                         <td className="p-2.5 font-mono text-slate-400">{idx + 1}</td>
@@ -22066,7 +22066,7 @@ export default function App() {
                         <th className="p-2.5">حالة الموكل</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100/80">
                       {excelCasesParsed.map((item, i) => (
                         <tr key={i} className="hover:bg-amber-50/40">
                           <td className="p-2.5 font-bold">{item.caseNumber}</td>
@@ -22270,7 +22270,7 @@ export default function App() {
                             <th className="p-2">الاستحقاق</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
+                        <tbody className="divide-y divide-slate-100/80">
                           {excelInvoicesParsed.map((inv, idx) => (
                             <tr key={idx}>
                               <td className="p-2 font-mono font-bold">{inv.number}</td>
@@ -22355,7 +22355,7 @@ export default function App() {
                         <th className="p-2">السبب</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100">
+                    <tbody className="divide-y divide-slate-100/80">
                       {kycWatchlistParsed.map((item, i) => (
                         <tr key={i}>
                           <td className="p-2 font-bold">{item.fullName}</td>
