@@ -11,6 +11,7 @@ import { CreditNote, CREDIT_NOTE_LS_KEYS } from "./creditNoteTypes";
 import { DebitNote, DEBIT_NOTE_LS_KEYS } from "./debitNoteTypes";
 import { PurchaseOrder, PURCHASE_ORDER_LS_KEYS } from "./purchaseOrderTypes";
 import { RecurringInvoiceTemplate, RECURRING_LS_KEYS } from "./recurringInvoiceTypes";
+import { Customer, CUSTOMER_LS_KEYS } from "./customerTypes";
 
 export function loadAccountingStorage<T>(key: string, fallback: T): T {
   try {
@@ -107,6 +108,10 @@ export function loadPurchaseOrders(): PurchaseOrder[] {
 
 export function loadRecurringInvoiceTemplates(): RecurringInvoiceTemplate[] {
   return loadAccountingStorage<RecurringInvoiceTemplate[]>(RECURRING_LS_KEYS.templates, []);
+}
+
+export function loadCustomers(): Customer[] {
+  return loadAccountingStorage<Customer[]>(CUSTOMER_LS_KEYS.customers, []);
 }
 
 // توليد رقم قيد تسلسلي بصيغة JE-YYYY-XXXX بحسب السنة الحالية

@@ -31,12 +31,14 @@ import CreditNotes from "./CreditNotes";
 import DebitNotes from "./DebitNotes";
 import PurchaseOrders from "./PurchaseOrders";
 import RecurringInvoices from "./RecurringInvoices";
+import Customers from "./Customers";
 import { SalesQuote } from "./quoteTypes";
 import { CashExpense } from "./cashExpenseTypes";
 import { CreditNote } from "./creditNoteTypes";
 import { DebitNote } from "./debitNoteTypes";
 import { PurchaseOrder } from "./purchaseOrderTypes";
 import { RecurringInvoiceTemplate } from "./recurringInvoiceTypes";
+import { Customer } from "./customerTypes";
 import { Account, JournalEntry, LS_KEYS } from "./types";
 import {
   loadAccounts,
@@ -59,6 +61,7 @@ import {
   loadDebitNotes,
   loadPurchaseOrders,
   loadRecurringInvoiceTemplates,
+  loadCustomers,
   saveAccountingStorage,
 } from "./storage";
 import { QUOTE_LS_KEYS } from "./quoteTypes";
@@ -67,6 +70,7 @@ import { CREDIT_NOTE_LS_KEYS } from "./creditNoteTypes";
 import { DEBIT_NOTE_LS_KEYS } from "./debitNoteTypes";
 import { PURCHASE_ORDER_LS_KEYS } from "./purchaseOrderTypes";
 import { RECURRING_LS_KEYS } from "./recurringInvoiceTypes";
+import { CUSTOMER_LS_KEYS } from "./customerTypes";
 import { BankAccount, BankTransaction, BANK_LS_KEYS } from "./bankTypes";
 import { SalesInvoice, SalesPayment, SALES_LS_KEYS } from "./salesTypes";
 import { Vendor, PurchaseInvoice, PurchasePayment, PURCHASE_LS_KEYS } from "./purchaseTypes";
@@ -262,6 +266,7 @@ export default function AccountingModule({
   const [debitNotes, setDebitNotes] = useState<DebitNote[]>(() => loadDebitNotes());
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => loadPurchaseOrders());
   const [recurringTemplates, setRecurringTemplates] = useState<RecurringInvoiceTemplate[]>(() => loadRecurringInvoiceTemplates());
+  const [customers, setCustomers] = useState<Customer[]>(() => loadCustomers());
 
   useEffect(() => saveAccountingStorage(LS_KEYS.accounts, accounts), [accounts]);
   useEffect(() => saveAccountingStorage(LS_KEYS.journalEntries, entries), [entries]);
@@ -283,6 +288,7 @@ export default function AccountingModule({
   useEffect(() => saveAccountingStorage(DEBIT_NOTE_LS_KEYS.debitNotes, debitNotes), [debitNotes]);
   useEffect(() => saveAccountingStorage(PURCHASE_ORDER_LS_KEYS.orders, purchaseOrders), [purchaseOrders]);
   useEffect(() => saveAccountingStorage(RECURRING_LS_KEYS.templates, recurringTemplates), [recurringTemplates]);
+  useEffect(() => saveAccountingStorage(CUSTOMER_LS_KEYS.customers, customers), [customers]);
 
   useEffect(() => {
     if (selectedBankId && !bankAccounts.some((b) => b.id === selectedBankId)) setSelectedBankId(null);
@@ -402,9 +408,12 @@ export default function AccountingModule({
       )}
 
       {subTab === "customers" && (
-        <ComingSoon
-          title="العملاء"
-          description="سجل عملاء مستقل عن الفواتير (بيانات التواصل، الرصيد، وسجل التعاملات السابقة لكل عميل) — قيد البناء ضمن مرحلة توسعة المبيعات."
+        <Customers
+          customers={customers}
+          setCustomers={setCustomers}
+          invoices={salesInvoices}
+          payments={salesPayments}
+          canManage={canManageSalesInvoices}
         />
       )}
 
