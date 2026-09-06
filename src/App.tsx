@@ -3197,7 +3197,7 @@ const Badge = ({ className, children }: { className?: string; children: React.Re
 
 const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <label className="block">
-    <span className="mb-1 block text-sm font-medium text-slate-600">{label}</span>
+    <span className="mb-1.5 block text-[13px] font-semibold text-slate-600">{label}</span>
     {children}
   </label>
 );
@@ -3557,20 +3557,23 @@ const PendingApprovalScreen = ({
 };
 
 const EmptyState = ({ icon: Icon, text }: { icon: any; text: string }) => (
-  <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center">
-    <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-100 text-slate-400">
-      <Icon size={24} />
+  <div className="flex flex-col items-center justify-center rounded-[20px] border border-dashed border-slate-300/80 bg-slate-50/40 p-14 text-center">
+    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0D382B]/[0.06] text-[#0D382B]/40">
+      <Icon size={26} />
     </div>
     <p className="text-sm font-semibold text-slate-500">{text}</p>
   </div>
 );
 
 const Modal = ({ title, onClose, children, wide }: { title: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) => (
-  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#08130f]/65 p-2 sm:p-4 backdrop-blur-xs" onClick={onClose}>
-    <div className={`max-h-[92vh] w-full ${wide ? "max-w-4xl" : "max-w-xl"} overflow-y-auto rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl custom-scrollbar`} onClick={(e) => e.stopPropagation()}>
-      <div className="flex items-center justify-between border-b border-slate-100 px-4 sm:px-6 py-3.5 sm:py-4 sticky top-0 bg-white z-10">
-        <h3 className="text-base sm:text-lg font-bold text-slate-800 truncate">{title}</h3>
-        <button onClick={onClose} className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 min-h-[36px] min-w-[36px] flex items-center justify-center" aria-label="إغلاق"><X size={20} /></button>
+  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#08130f]/65 p-2 sm:p-4 backdrop-blur-sm animate-in fade-in duration-150" onClick={onClose}>
+    <div className={`max-h-[92vh] w-full ${wide ? "max-w-4xl" : "max-w-xl"} overflow-y-auto rounded-t-[24px] sm:rounded-[24px] bg-white shadow-[0_30px_80px_-20px_rgb(8,19,15,0.45)] custom-scrollbar animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200`} onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-center justify-between border-b border-slate-100 px-4 sm:px-6 py-4 sm:py-5 sticky top-0 bg-white/95 backdrop-blur z-10">
+        <h3 className="text-base sm:text-lg font-black text-[#0D382B] truncate flex items-center gap-2">
+          <span className="h-4 w-1 rounded-full bg-[#C5A059] shrink-0" />
+          {title}
+        </h3>
+        <button onClick={onClose} className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center" aria-label="إغلاق"><X size={20} /></button>
       </div>
       <div className="p-4 sm:p-6">{children}</div>
     </div>
@@ -10535,7 +10538,7 @@ export default function App() {
                         <h2 className="text-2xl font-bold text-slate-900">لوحة التحكم والأداء</h2>
                         <p className="text-xs text-slate-500">نظرة عامة على أعمال المكتب والملفات القانونية والجلسات</p>
                       </div>
-                      <button onClick={() => openModalWithCheck("case", "manageCases")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm">
+                      <button onClick={() => openModalWithCheck("case", "manageCases")} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]">
                         <Plus size={16} /> قضية جديدة
                       </button>
                     </div>
@@ -11279,7 +11282,7 @@ export default function App() {
 
                     <button
                       onClick={() => openModalWithCheck("case", "manageCases")}
-                      className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"
+                      className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"
                     >
                       <Plus size={16} /> قضية جديدة
                     </button>
@@ -12616,7 +12619,7 @@ export default function App() {
                         </button>
                         <button
                           onClick={() => openModalWithCheck("deadline")}
-                          className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"
+                          className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"
                         >
                           <Plus size={16} /> تسجيل حكم قضائي وحساب الميعاد
                         </button>
@@ -13135,7 +13138,7 @@ export default function App() {
                         <Trash2 size={15} /> تفريغ كافة المهام
                       </button>
                     )}
-                    <button onClick={() => openModalWithCheck("task", "manageTasks")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> إضافة مهمة</button>
+                    <button onClick={() => openModalWithCheck("task", "manageTasks")} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"><Plus size={16} /> إضافة مهمة</button>
                   </div>
                 </div>
                 <div className="space-y-3">
@@ -14302,7 +14305,7 @@ export default function App() {
                           </div>
                           <button
                             onClick={() => openModalWithCheck("payment", "manageInvoices")}
-                            className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"
+                            className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"
                           >
                             <Plus size={16} /> تسجيل دفعة / سند قبض جديد
                           </button>
@@ -14417,7 +14420,7 @@ export default function App() {
                           </div>
                           <button
                             onClick={() => openModalWithCheck("payment", "manageInvoices")}
-                            className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"
+                            className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"
                           >
                             <Plus size={16} /> تسجيل دفعة جديدة
                           </button>
@@ -14576,7 +14579,7 @@ export default function App() {
                             >
                               <FileSpreadsheet size={16} /> ارفاق واستيراد الفواتير (Excel / PDF)
                             </button>
-                            <button onClick={() => openModalWithCheck("invoice", "manageInvoices")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> إصدار فاتورة ضريبية</button>
+                            <button onClick={() => openModalWithCheck("invoice", "manageInvoices")} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"><Plus size={16} /> إصدار فاتورة ضريبية</button>
                           </div>
                         </div>
                         <div className="overflow-x-auto custom-scrollbar app-card">
@@ -14664,7 +14667,7 @@ export default function App() {
                             </h2>
                             <p className="text-xs text-slate-500">تسجيل الوقت المستغرق بكل قضية وتحويله تلقائياً لفاتورة أتعاب بالساعة</p>
                           </div>
-                          <button onClick={() => openModalWithCheck("time")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm">
+                          <button onClick={() => openModalWithCheck("time")} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]">
                             <Plus size={16} /> تسجيل ساعات عمل
                           </button>
                         </div>
@@ -14734,7 +14737,7 @@ export default function App() {
                             </h2>
                             <p className="text-xs text-slate-500">تتبع مبالغ أمانات رسوم المحاكم والخبراء منفصلة تماماً عن أتعاب المكتب</p>
                           </div>
-                          <button onClick={() => openModalWithCheck("trust")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm">
+                          <button onClick={() => openModalWithCheck("trust")} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]">
                             <Plus size={16} /> إضافة إيداع / صرف أمانة
                           </button>
                         </div>
@@ -14832,7 +14835,7 @@ export default function App() {
                             </h2>
                             <p className="text-xs text-slate-500">متابعة تكاليف الروم القضائية والخبرة والترجمة وحساب الهامش الصافي لكل قضية</p>
                           </div>
-                          <button onClick={() => openModalWithCheck("expense")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm">
+                          <button onClick={() => openModalWithCheck("expense")} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]">
                             <Plus size={16} /> تسجيل مصروف جديد
                           </button>
                         </div>
@@ -15289,7 +15292,7 @@ export default function App() {
                         <h2 className="text-2xl font-bold">الأرشيف والمستندات</h2>
                         <p className="text-xs text-slate-500">صحائف الدعوى، المذكرات، وعقود الخبرة</p>
                       </div>
-                      <button onClick={() => openModalWithCheck("doc", "manageDocs")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> رفع مستند</button>
+                      <button onClick={() => openModalWithCheck("doc", "manageDocs")} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"><Plus size={16} /> رفع مستند</button>
                     </div>
                     {docs.length === 0 ? (
                       <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-slate-300 bg-white space-y-3">
@@ -15571,7 +15574,7 @@ export default function App() {
                     >
                       <Sparkles size={16} className="text-amber-200 animate-pulse" /> ارفاق وكالة PDF (سحب البيانات آلياً)
                     </button>
-                    <button onClick={() => openModalWithCheck("poa", "manageDocs")} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"><Plus size={16} /> إضافة وكالة</button>
+                    <button onClick={() => openModalWithCheck("poa", "manageDocs")} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"><Plus size={16} /> إضافة وكالة</button>
                   </div>
                 </div>
                 {poas.length === 0 ? (
@@ -15649,7 +15652,7 @@ export default function App() {
                     <p className="text-xs text-slate-500">دليل المحامين المتعاونين للاستعانة بهم في الجلسات، وإصدار إنابات الحضور الرسمية</p>
                   </div>
                   {colleagueSubTab === "directory" ? (
-                    <button onClick={() => openColleagueModal()} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm">
+                    <button onClick={() => openColleagueModal()} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]">
                       <Plus size={16} /> إضافة زميل
                     </button>
                   ) : null}
@@ -15954,7 +15957,7 @@ export default function App() {
                         </h2>
                         <p className="text-xs text-slate-500">سجل التحقق من هويات الموكلين، المستفيد الحقيقي (UBO)، وفحص قوائم العقوبات وفق التشريعات الإماراتية</p>
                       </div>
-                      <button onClick={() => { setForm({}); setModal("kyc"); }} className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm">
+                      <button onClick={() => { setForm({}); setModal("kyc"); }} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]">
                         <Plus size={16} /> إضافة سجل KYC
                       </button>
                     </div>
@@ -16694,7 +16697,7 @@ export default function App() {
                         setForm({});
                         setModal("user");
                       }}
-                      className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-700 shadow-sm"
+                      className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"
                     >
                       <UserPlus size={16} /> إضافة مستخدم جديد
                     </button>
@@ -18704,7 +18707,7 @@ export default function App() {
               <input type="number" value={form.fee ?? ""} onChange={f("fee")} placeholder="0.00" className={inputCls} />
             </Field>
 
-            <button onClick={saveCase} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">
+            <button onClick={saveCase} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">
               {editingCase ? "حفظ التعديلات" : "حفظ وحفظ القضية"}
             </button>
           </div>
@@ -18754,7 +18757,7 @@ export default function App() {
             <Field label="العنوان / تفاصيل إضافية">
               <input onChange={f("address")} placeholder="العنوان التفصيلي" className={inputCls} />
             </Field>
-            <button onClick={saveClient} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-800 transition">
+            <button onClick={saveClient} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">
               حفظ وتأكيد الإضافة
             </button>
           </div>
@@ -18791,7 +18794,7 @@ export default function App() {
             <Field label="ملاحظات وتكليفات الجلسة">
               <textarea onChange={f("notes")} rows={2} placeholder="المطلوب في الجلسة (إيداع مذكرة / حضور الموكل)..." className={inputCls} />
             </Field>
-            <button onClick={saveHearing} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">تأكيد جدولة الجلسة</button>
+            <button onClick={saveHearing} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">تأكيد جدولة الجلسة</button>
           </div>
         </Modal>
       )}
@@ -18825,7 +18828,7 @@ export default function App() {
             <Field label="تاريخ الاستحقاق">
               <input type="date" onChange={f("due")} defaultValue={todayISO()} className={inputCls} />
             </Field>
-            <button onClick={saveTask} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">حفظ المهمة</button>
+            <button onClick={saveTask} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">حفظ المهمة</button>
           </div>
         </Modal>
       )}
@@ -18857,7 +18860,7 @@ export default function App() {
             <Field label="بيان الفاتورة والخدمات القانونية">
               <textarea onChange={f("desc")} rows={2} placeholder="دفعة أتعاب محاماة والاستشارات القانونية..." className={inputCls} />
             </Field>
-            <button onClick={saveInvoice} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">إصدار الفاتورة الضريبية</button>
+            <button onClick={saveInvoice} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">إصدار الفاتورة الضريبية</button>
           </div>
         </Modal>
       )}
@@ -19074,7 +19077,7 @@ export default function App() {
 
             <button
               onClick={savePayment}
-              className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700 shadow-sm"
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors shadow-sm"
             >
               حفظ وتأكيد سند القبض
             </button>
@@ -19101,7 +19104,7 @@ export default function App() {
                 </select>
               </Field>
             </div>
-            <button onClick={saveDoc} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">حفظ المستند الأرشيفي</button>
+            <button onClick={saveDoc} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">حفظ المستند الأرشيفي</button>
           </div>
         </Modal>
       )}
@@ -19129,7 +19132,7 @@ export default function App() {
             <Field label="نطاق الوكالة والتخويل">
               <textarea onChange={f("scope")} rows={2} placeholder="وكالة قضائية عامة والترافع والصلح والإقرار..." className={inputCls} />
             </Field>
-            <button onClick={savePoa} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">حفظ الوكالة</button>
+            <button onClick={savePoa} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">حفظ الوكالة</button>
           </div>
         </Modal>
       )}
@@ -19168,7 +19171,7 @@ export default function App() {
             <Field label="ملاحظات">
               <textarea onChange={f("notes")} defaultValue={form.notes || ""} rows={2} placeholder="ملاحظات حول الموثوقية والتجارب السابقة..." className={inputCls} />
             </Field>
-            <button onClick={saveColleague} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">حفظ بيانات الزميل</button>
+            <button onClick={saveColleague} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">حفظ بيانات الزميل</button>
           </div>
         </Modal>
       )}
@@ -19213,7 +19216,7 @@ export default function App() {
             <Field label="الغرض من الإنابة">
               <textarea onChange={f("purpose")} defaultValue={form.purpose || ""} rows={3} placeholder="حضور الجلسة المحددة نيابة عن المكتب وتقديم المذكرات والمرافعة..." className={inputCls} />
             </Field>
-            <button onClick={issueDelegation} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">إصدار الإنابة</button>
+            <button onClick={issueDelegation} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">إصدار الإنابة</button>
           </div>
         </Modal>
       )}
@@ -19527,7 +19530,7 @@ export default function App() {
               <textarea onChange={f("notes")} defaultValue={form.notes || ""} rows={2} placeholder="أي نتائج فحص أو وثائق إضافية تم الاطلاع عليها..." className={inputCls} />
             </Field>
 
-            <button onClick={saveKyc} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">
+            <button onClick={saveKyc} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">
               حفظ بيانات KYC والتحديث
             </button>
           </div>
@@ -19565,7 +19568,7 @@ export default function App() {
             <Field label="تفاصيل وأنشطة ساعات العمل">
               <textarea onChange={f("description")} rows={3} placeholder="دراسة الأوراق، إعداد المذكرة، حضور الاجتماع..." className={inputCls} />
             </Field>
-            <button onClick={saveTimeLog} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">حفظ ساعات العمل</button>
+            <button onClick={saveTimeLog} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">حفظ ساعات العمل</button>
           </div>
         </Modal>
       )}
@@ -19608,7 +19611,7 @@ export default function App() {
             <Field label="البيان والوصف">
               <textarea onChange={f("description")} rows={2} placeholder="تفاصيل الإيصال والرقم..." className={inputCls} />
             </Field>
-            <button onClick={saveCaseExpense} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">حفظ المصروف</button>
+            <button onClick={saveCaseExpense} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">حفظ المصروف</button>
           </div>
         </Modal>
       )}
@@ -19651,7 +19654,7 @@ export default function App() {
             <Field label="بيان وشرح الأمانة">
               <textarea onChange={f("notes")} rows={2} placeholder="أمانة رسوم خبرة قضائية في دعوى..." className={inputCls} />
             </Field>
-            <button onClick={saveTrustTransaction} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">تأكيد معاملة الأمانات</button>
+            <button onClick={saveTrustTransaction} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">تأكيد معاملة الأمانات</button>
           </div>
         </Modal>
       )}
@@ -19714,7 +19717,7 @@ export default function App() {
             <Field label="منطوق الحكم الصادر وملخص القضية">
               <textarea onChange={f("rulingSummary")} rows={3} placeholder="منطوق الحكم الرسمي الصادر من جلسة اليوم..." className={inputCls} />
             </Field>
-            <button onClick={saveDeadline} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700">حفظ وحساب الميعاد التلقائي</button>
+            <button onClick={saveDeadline} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">حفظ وحساب الميعاد التلقائي</button>
           </div>
         </Modal>
       )}
@@ -19834,7 +19837,7 @@ export default function App() {
                   setReassignDeadlineModal(null);
                 }
               }}
-              className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-700"
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
             >
               تأكيد وإسناد ملف الطعن
             </button>
@@ -20245,7 +20248,7 @@ export default function App() {
               </div>
             </div>
 
-            <button onClick={saveEmployee} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-800 transition">
+            <button onClick={saveEmployee} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">
               حفظ بيانات الموظف
             </button>
           </div>
@@ -20333,7 +20336,7 @@ export default function App() {
               <input onChange={f("receiptUrl")} placeholder="رابط المستند أو رقم الإيصال..." className={inputCls} />
             </Field>
 
-            <button onClick={saveEmployeeExpense} className="w-full rounded-xl bg-slate-900 py-3 font-bold text-white hover:bg-slate-800 transition">
+            <button onClick={saveEmployeeExpense} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">
               تقديم مطالبة المصروفات
             </button>
           </div>
