@@ -29,10 +29,12 @@ import QuoteProposals from "./QuoteProposals";
 import CashExpenses from "./CashExpenses";
 import CreditNotes from "./CreditNotes";
 import DebitNotes from "./DebitNotes";
+import PurchaseOrders from "./PurchaseOrders";
 import { SalesQuote } from "./quoteTypes";
 import { CashExpense } from "./cashExpenseTypes";
 import { CreditNote } from "./creditNoteTypes";
 import { DebitNote } from "./debitNoteTypes";
+import { PurchaseOrder } from "./purchaseOrderTypes";
 import { Account, JournalEntry, LS_KEYS } from "./types";
 import {
   loadAccounts,
@@ -53,12 +55,14 @@ import {
   loadCashExpenses,
   loadCreditNotes,
   loadDebitNotes,
+  loadPurchaseOrders,
   saveAccountingStorage,
 } from "./storage";
 import { QUOTE_LS_KEYS } from "./quoteTypes";
 import { CASH_EXPENSE_LS_KEYS } from "./cashExpenseTypes";
 import { CREDIT_NOTE_LS_KEYS } from "./creditNoteTypes";
 import { DEBIT_NOTE_LS_KEYS } from "./debitNoteTypes";
+import { PURCHASE_ORDER_LS_KEYS } from "./purchaseOrderTypes";
 import { BankAccount, BankTransaction, BANK_LS_KEYS } from "./bankTypes";
 import { SalesInvoice, SalesPayment, SALES_LS_KEYS } from "./salesTypes";
 import { Vendor, PurchaseInvoice, PurchasePayment, PURCHASE_LS_KEYS } from "./purchaseTypes";
@@ -252,6 +256,7 @@ export default function AccountingModule({
   const [cashExpenses, setCashExpenses] = useState<CashExpense[]>(() => loadCashExpenses());
   const [creditNotes, setCreditNotes] = useState<CreditNote[]>(() => loadCreditNotes());
   const [debitNotes, setDebitNotes] = useState<DebitNote[]>(() => loadDebitNotes());
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => loadPurchaseOrders());
 
   useEffect(() => saveAccountingStorage(LS_KEYS.accounts, accounts), [accounts]);
   useEffect(() => saveAccountingStorage(LS_KEYS.journalEntries, entries), [entries]);
@@ -271,6 +276,7 @@ export default function AccountingModule({
   useEffect(() => saveAccountingStorage(CASH_EXPENSE_LS_KEYS.expenses, cashExpenses), [cashExpenses]);
   useEffect(() => saveAccountingStorage(CREDIT_NOTE_LS_KEYS.creditNotes, creditNotes), [creditNotes]);
   useEffect(() => saveAccountingStorage(DEBIT_NOTE_LS_KEYS.debitNotes, debitNotes), [debitNotes]);
+  useEffect(() => saveAccountingStorage(PURCHASE_ORDER_LS_KEYS.orders, purchaseOrders), [purchaseOrders]);
 
   useEffect(() => {
     if (selectedBankId && !bankAccounts.some((b) => b.id === selectedBankId)) setSelectedBankId(null);
@@ -458,9 +464,15 @@ export default function AccountingModule({
       {subTab === "vendors" && <Vendors vendors={vendors} setVendors={setVendors} canManage={canManageVendors} canDelete={canDeleteVendors} />}
 
       {subTab === "purchase_orders" && (
-        <ComingSoon
-          title="أوامر الشراء"
-          description="طلب شراء أولي للمورد قبل استلام الفاتورة الرسمية، يتحول لاحقاً لفاتورة مشتريات عند التنفيذ."
+        <PurchaseOrders
+          accounts={accounts}
+          orders={purchaseOrders}
+          setOrders={setPurchaseOrders}
+          vendors={vendors}
+          bills={purchaseInvoices}
+          setBills={setPurchaseInvoices}
+          canManage={canManagePurchaseInvoices}
+          currentUserName={currentUserName}
         />
       )}
 
