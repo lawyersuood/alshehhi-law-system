@@ -3573,7 +3573,7 @@ const Modal = ({ title, onClose, children, wide }: { title: string; onClose: () 
           <span className="h-4 w-1 rounded-full bg-[#C5A059] shrink-0" />
           {title}
         </h3>
-        <button onClick={onClose} className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center" aria-label="إغلاق"><X size={20} /></button>
+        <button onClick={onClose} className="rounded-full p-1.5 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors hover:text-slate-700 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center" aria-label="إغلاق"><X size={20} /></button>
       </div>
       <div className="p-4 sm:p-6">{children}</div>
     </div>
@@ -10422,7 +10422,7 @@ export default function App() {
                 <span className="hidden sm:inline">النسخ الاحتياطي</span>
               </button>
 
-              <button onClick={() => setReport("section")} className="hidden md:flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100" title="تقرير قابل للطباعة للقسم الحالي">
+              <button onClick={() => setReport("section")} className="hidden md:flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors" title="تقرير قابل للطباعة للقسم الحالي">
                 <Printer size={15} /> <span className="hidden sm:inline">تقرير القسم</span>
               </button>
 
@@ -10434,7 +10434,7 @@ export default function App() {
                 <LogOut size={15} /> <span className="hidden sm:inline">تسجيل الخروج</span>
               </button>
 
-              <button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100" aria-label="التنبيهات">
+              <button className="relative rounded-full p-2 text-slate-500 hover:bg-[#0D382B]/[0.06] transition-colors" aria-label="التنبيهات">
                 <Bell size={18} />
                 {notifCount > 0 && <span className="absolute -left-0.5 -top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">{notifCount}</span>}
               </button>
@@ -11505,7 +11505,7 @@ export default function App() {
                             className={`flex-1 p-2 rounded-lg border text-center transition ${
                               caseClientTypeFilter === "شركة"
                                 ? "bg-amber-600 text-white border-amber-600 shadow-xs"
-                                : "bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100"
+                                : "bg-slate-50 text-slate-800 border-slate-200 hover:bg-[#0D382B]/[0.06] transition-colors"
                             }`}
                           >
                             <p className="text-[10px] font-bold opacity-90">شركات ومؤسسات</p>
@@ -11516,7 +11516,7 @@ export default function App() {
                             className={`flex-1 p-2 rounded-lg border text-center transition ${
                               caseClientTypeFilter === "فرد"
                                 ? "bg-amber-600 text-white border-amber-600 shadow-xs"
-                                : "bg-slate-50 text-slate-800 border-slate-200 hover:bg-slate-100"
+                                : "bg-slate-50 text-slate-800 border-slate-200 hover:bg-[#0D382B]/[0.06] transition-colors"
                             }`}
                           >
                             <p className="text-[10px] font-bold opacity-90">أفراد وأشخاص</p>
@@ -11588,7 +11588,7 @@ export default function App() {
                         )}
                         <button
                           onClick={() => setShowAdvancedFilters(false)}
-                          className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition"
+                          className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-[#0D382B]/[0.06] transition-colors transition"
                           title="إغلاق الفلتر المتقدم"
                         >
                           <X size={16} />
@@ -12568,7 +12568,7 @@ export default function App() {
                         </button>
                         <button
                           onClick={() => setEditingClient(null)}
-                          className="rounded-xl border border-slate-300 px-4 py-2.5 font-bold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                          className="rounded-xl border border-slate-300 px-4 py-2.5 font-bold text-slate-700 hover:bg-[#0D382B]/[0.06] transition-colors transition cursor-pointer"
                         >
                           إلغاء
                         </button>
@@ -12838,7 +12838,7 @@ export default function App() {
                                   </button>
                                   <button
                                     onClick={() => setSelectedDeadlineLogs(d)}
-                                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold transition"
+                                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-[#0D382B]/[0.06] transition-colors text-xs font-semibold transition"
                                   >
                                     <History size={14} /> سجل التنبيهات ({d.autoAlertLogs?.length || 0})
                                   </button>
@@ -12932,19 +12932,19 @@ export default function App() {
                         <div className="lg:col-span-2 flex flex-wrap items-center gap-2">
                           <button
                             onClick={() => setSelectedRollDate(todayISO())}
-                            className={`px-3 py-2 rounded-xl text-xs font-semibold border transition ${selectedRollDate === todayISO() ? "bg-slate-900 text-white border-slate-900" : "bg-stone-50 text-slate-700 border-slate-200 hover:bg-slate-100"}`}
+                            className={`px-3 py-2 rounded-xl text-xs font-semibold border transition ${selectedRollDate === todayISO() ? "bg-slate-900 text-white border-slate-900" : "bg-stone-50 text-slate-700 border-slate-200 hover:bg-[#0D382B]/[0.06] transition-colors"}`}
                           >
                             جلسات اليوم
                           </button>
                           <button
                             onClick={() => setSelectedRollDate(addDays(1))}
-                            className={`px-3 py-2 rounded-xl text-xs font-semibold border transition ${selectedRollDate === addDays(1) ? "bg-slate-900 text-white border-slate-900" : "bg-stone-50 text-slate-700 border-slate-200 hover:bg-slate-100"}`}
+                            className={`px-3 py-2 rounded-xl text-xs font-semibold border transition ${selectedRollDate === addDays(1) ? "bg-slate-900 text-white border-slate-900" : "bg-stone-50 text-slate-700 border-slate-200 hover:bg-[#0D382B]/[0.06] transition-colors"}`}
                           >
                             جلسات غداً
                           </button>
                           <button
                             onClick={() => setSelectedRollDate("")}
-                            className={`px-3 py-2 rounded-xl text-xs font-semibold border transition ${selectedRollDate === "" ? "bg-slate-900 text-white border-slate-900" : "bg-stone-50 text-slate-700 border-slate-200 hover:bg-slate-100"}`}
+                            className={`px-3 py-2 rounded-xl text-xs font-semibold border transition ${selectedRollDate === "" ? "bg-slate-900 text-white border-slate-900" : "bg-stone-50 text-slate-700 border-slate-200 hover:bg-[#0D382B]/[0.06] transition-colors"}`}
                           >
                             عرض جميع الجلسات
                           </button>
@@ -15699,7 +15699,7 @@ export default function App() {
                           <button onClick={() => openIssueDelegationModal(c)} className="flex-1 flex items-center justify-center gap-1.5 rounded-xl bg-amber-50 border border-amber-200 py-2 text-xs font-bold text-amber-800 hover:bg-amber-100 transition">
                             <FileSignature size={14} /> إصدار إنابة
                           </button>
-                          <button onClick={() => openColleagueModal(c)} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition" title="تعديل"><Edit2 size={15} /></button>
+                          <button onClick={() => openColleagueModal(c)} className="p-2 text-slate-400 hover:text-slate-700 hover:bg-[#0D382B]/[0.06] transition-colors rounded-xl transition" title="تعديل"><Edit2 size={15} /></button>
                           <button onClick={() => deleteColleagueHandler(c)} className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition" title="حذف"><Trash2 size={15} /></button>
                         </div>
                       </div>
@@ -15833,7 +15833,7 @@ export default function App() {
                         {kycWatchlistSearch && (
                           <button
                             onClick={() => setKycWatchlistSearch("")}
-                            className="px-3 py-2 text-xs text-slate-500 hover:bg-slate-100 rounded-lg font-bold"
+                            className="px-3 py-2 text-xs text-slate-500 hover:bg-[#0D382B]/[0.06] transition-colors rounded-lg font-bold"
                           >
                             مسح البحث
                           </button>
@@ -16049,14 +16049,14 @@ export default function App() {
                                         </button>
                                         <button
                                           onClick={() => { setForm({ ...k }); setModal("kyc-edit"); }}
-                                          className="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-slate-100 rounded-lg"
+                                          className="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-[#0D382B]/[0.06] transition-colors rounded-lg"
                                           title="تعديل بيانات KYC"
                                         >
                                           <Edit2 size={15} />
                                         </button>
                                         <button
                                           onClick={() => setReport({ kycId: k.id })}
-                                          className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg"
+                                          className="p-1.5 text-slate-500 hover:text-slate-900 hover:bg-[#0D382B]/[0.06] transition-colors rounded-lg"
                                           title="طباعة نموذج العناية الواجبة KYC"
                                         >
                                           <Printer size={15} />
@@ -16224,7 +16224,7 @@ export default function App() {
                               a.download = `audit_log_security_${todayISO()}.csv`;
                               a.click();
                             }}
-                            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-stone-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 transition shadow-2xs"
+                            className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-stone-50 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-[#0D382B]/[0.06] transition-colors transition shadow-2xs"
                           >
                             <Download size={14} /> تصدير السجل الأمني (CSV)
                           </button>
@@ -16641,7 +16641,7 @@ export default function App() {
                               <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-200">
                                 <button
                                   onClick={() => openEditPolicy(policy)}
-                                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100"
+                                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-[#0D382B]/[0.06] transition-colors"
                                 >
                                   <Edit2 size={13} /> تعديل
                                 </button>
@@ -16948,7 +16948,7 @@ export default function App() {
                                       });
                                       setModal("user");
                                     }}
-                                    className="p-1.5 text-slate-600 hover:text-amber-700 hover:bg-slate-100 rounded-lg"
+                                    className="p-1.5 text-slate-600 hover:text-amber-700 hover:bg-[#0D382B]/[0.06] transition-colors rounded-lg"
                                     title="تعديل بيانات الدور"
                                   >
                                     <Edit2 size={16} />
@@ -17524,7 +17524,7 @@ export default function App() {
                     {courtSearchQuery && (
                       <button
                         onClick={() => setCourtSearchQuery("")}
-                        className="absolute left-3 top-2.5 p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition"
+                        className="absolute left-3 top-2.5 p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-[#0D382B]/[0.06] transition-colors transition"
                         title="مسح نص البحث"
                       >
                         <X size={16} />
@@ -17611,7 +17611,7 @@ export default function App() {
                             className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer border ${
                               isSelected
                                 ? "bg-amber-700 text-white border-amber-800 shadow-xs"
-                                : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300"
+                                : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-[#0D382B]/[0.06] transition-colors hover:border-slate-300"
                             }`}
                           >
                             <span>{cat.icon}</span>
@@ -17971,7 +17971,7 @@ export default function App() {
                                         setForm({ ...c });
                                         setModal("courtContact");
                                       }}
-                                      className="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-slate-100 rounded-lg cursor-pointer"
+                                      className="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-[#0D382B]/[0.06] transition-colors rounded-lg cursor-pointer"
                                       title="تعديل بيانات التواصل"
                                     >
                                       <Edit2 size={15} />
@@ -19299,7 +19299,7 @@ export default function App() {
                             <label
                               key={mod.id}
                               className={`flex items-start gap-2 p-2 rounded-xl border transition cursor-pointer ${
-                                isEnabled ? "bg-emerald-50 border-emerald-300 text-slate-900" : "bg-white border-slate-200 text-slate-400 hover:bg-slate-100"
+                                isEnabled ? "bg-emerald-50 border-emerald-300 text-slate-900" : "bg-white border-slate-200 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors"
                               }`}
                             >
                               <input
@@ -19358,7 +19358,7 @@ export default function App() {
                           ? action.isSensitive
                             ? "bg-red-50/60 border-red-300 text-red-900"
                             : "bg-amber-50/60 border-amber-300 text-slate-900"
-                          : "bg-slate-50/60 border-slate-200 text-slate-400 hover:bg-slate-100"
+                          : "bg-slate-50/60 border-slate-200 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors"
                       }`}
                     >
                       <input
@@ -19945,7 +19945,7 @@ export default function App() {
             </Field>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <button onClick={() => setNotifyModal(null)} className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">
+              <button onClick={() => setNotifyModal(null)} className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors">
                 إلغاء
               </button>
               <button
@@ -20060,7 +20060,7 @@ export default function App() {
             </Field>
 
             <div className="flex justify-end gap-2 pt-3">
-              <button onClick={() => setModal(null)} className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100">
+              <button onClick={() => setModal(null)} className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors">
                 إلغاء
               </button>
               <button onClick={saveCourtContact} className="rounded-xl bg-amber-500 px-5 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400">
@@ -20166,7 +20166,7 @@ export default function App() {
             <div className="flex items-center justify-between border-t border-slate-200 pt-3">
               <button
                 onClick={() => setCourtExcelModalOpen(false)}
-                className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100"
+                className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors"
               >
                 إلغاء الأمر
               </button>
@@ -20481,7 +20481,7 @@ export default function App() {
                 </button>
               </>
             )}
-            <button onClick={() => { setAgrPreviewId(null); setEditingAgreementClauses(false); }} className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="إغلاق">
+            <button onClick={() => { setAgrPreviewId(null); setEditingAgreementClauses(false); }} className="rounded-full p-1 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors hover:text-slate-700" aria-label="إغلاق">
               <X size={20} />
             </button>
           </div>
@@ -20765,7 +20765,7 @@ export default function App() {
                 </button>
               </>
             )}
-            <button onClick={() => { setDelegationPreviewId(null); setEditingDelegationWording(false); }} className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="إغلاق"><X size={20} /></button>
+            <button onClick={() => { setDelegationPreviewId(null); setEditingDelegationWording(false); }} className="rounded-full p-1 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors hover:text-slate-700" aria-label="إغلاق"><X size={20} /></button>
           </div>
         </div>
 
@@ -20885,7 +20885,7 @@ export default function App() {
                   <button onClick={() => window.print()} className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400">
                     <Printer size={15} /> طباعة الآن (PDF)
                   </button>
-                  <button onClick={() => setReport(null)} className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="إغلاق">
+                  <button onClick={() => setReport(null)} className="rounded-full p-1 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors hover:text-slate-700" aria-label="إغلاق">
                     <X size={20} />
                   </button>
                 </div>
@@ -21186,7 +21186,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setDeleteModalState(null)}
-                className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors transition cursor-pointer"
               >
                 إلغاء الأمر
               </button>
@@ -21239,7 +21239,7 @@ export default function App() {
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   onClick={() => setDeleteAgrConfirm(null)}
-                  className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                  className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors transition"
                 >
                   إلغاء
                 </button>
@@ -21730,7 +21730,7 @@ export default function App() {
                 <div className="flex items-center justify-end gap-3 pt-2">
                   <button
                     onClick={() => setShowBackupModal(false)}
-                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors transition"
                   >
                     إلغاء
                   </button>
@@ -21837,7 +21837,7 @@ export default function App() {
                 <div className="flex items-center justify-end gap-3 pt-2">
                   <button
                     onClick={() => { setShowBackupModal(false); setRestorePreview(null); }}
-                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition"
+                    className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors transition"
                   >
                     إغلاق
                   </button>
