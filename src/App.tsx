@@ -3202,7 +3202,7 @@ const Field = ({ label, children }: { label: string; children: React.ReactNode }
   </label>
 );
 
-const inputCls = "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-200 transition";
+const inputCls = "w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:border-[#0D382B]/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all";
 
 // ============================================================
 // أكواد وشاشات Supabase RLS و User Approval Flow
@@ -3894,45 +3894,52 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
   };
 
   return (
-    <div dir="rtl" className="min-h-screen w-full bg-gradient-to-br from-[#F4F8F6] via-[#EBF3EE] to-[#E2EFEB] text-slate-800 flex flex-col justify-between selection:bg-[#C5A059] selection:text-white">
+    <div dir="rtl" className="relative min-h-screen w-full overflow-hidden bg-[#F4F8F6] text-slate-800 flex flex-col justify-between selection:bg-[#C5A059] selection:text-white">
+      {/* توهجات خلفية ناعمة لعمق بصري بدون تغيير الهوية اللونية */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-32 -left-24 h-96 w-96 rounded-full bg-[#0D382B]/[0.06] blur-3xl" />
+        <div className="absolute -bottom-40 -right-24 h-[28rem] w-[28rem] rounded-full bg-[#C5A059]/[0.10] blur-3xl" />
+      </div>
+
       {/* الشريط العلوي */}
-      <header className="px-6 py-4 border-b border-emerald-900/10 bg-white/90 backdrop-blur flex items-center justify-between shadow-sm">
+      <header className="relative z-10 px-6 py-4 border-b border-emerald-900/10 bg-white/80 backdrop-blur-md flex items-center justify-between">
         <Logo variant="horizontal" mode="light" size="md" />
-        <span className="hidden sm:inline-block px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-[#0D382B]">
+        <span className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white border border-emerald-900/10 text-[11px] font-bold text-[#0D382B] shadow-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#C5A059]" />
           البوابة الرقمية الموحدة • دولة الإمارات
         </span>
       </header>
 
       {/* محتوى الشاشة */}
-      <main className="flex-1 flex items-center justify-center p-4 sm:p-6 my-6">
-        <div className="w-full max-w-xl rounded-3xl bg-white border border-emerald-900/10 shadow-xl p-6 sm:p-8 space-y-6">
+      <main className="relative z-10 flex-1 flex items-center justify-center p-4 sm:p-6 my-8">
+        <div className="w-full max-w-xl rounded-[28px] bg-white/95 backdrop-blur border border-emerald-900/[0.07] shadow-[0_1px_2px_rgb(13,56,43,0.04),0_24px_60px_-20px_rgb(13,56,43,0.22)] p-7 sm:p-10 space-y-7">
           {/* الشعار الرسمي وعنوان النموذج */}
           <div className="text-center space-y-2 flex flex-col items-center">
             <Logo variant="full" mode="light" size="xl" className="mb-2" />
-            <div className="pt-3 border-t border-slate-100 w-full">
-              <h2 className="text-xl sm:text-2xl font-black text-[#0D382B] flex items-center justify-center gap-2">
+            <div className="pt-4 border-t border-slate-100 w-full">
+              <h2 className="text-xl sm:text-[1.65rem] font-black text-[#0D382B] flex items-center justify-center gap-2 tracking-tight">
                 <Lock size={20} className="text-[#C5A059]" /> الدخول إلى البوابة القانونية
               </h2>
-              <p className="text-xs text-slate-500 max-w-md mx-auto mt-1">
+              <p className="text-[13px] text-slate-500 max-w-md mx-auto mt-1.5 leading-relaxed">
                 يرجى إدخال بيانات حسابك المعتمد للوصول إلى نظام إدارة القضايا والخدمات
               </p>
             </div>
           </div>
 
           {/* تبويب الدخول / التسجيل */}
-          <div className="flex rounded-2xl bg-emerald-50/60 p-1.5 border border-emerald-900/10 text-xs font-bold">
+          <div className="flex rounded-2xl bg-slate-100/70 p-1.5 border border-slate-200/70 text-xs font-bold gap-1">
             <button
               onClick={() => { setAuthMode("login"); setErrorMsg(null); setSuccessMsg(null); }}
-              className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-2 ${
-                authMode === "login" ? "bg-[#0D382B] text-white font-black shadow-md" : "text-slate-600 hover:text-[#0D382B]"
+              className={`flex-1 py-2.5 rounded-[14px] transition-all duration-200 flex items-center justify-center gap-2 ${
+                authMode === "login" ? "bg-[#0D382B] text-white font-black shadow-[0_6px_16px_-6px_rgb(13,56,43,0.5)]" : "text-slate-500 hover:text-[#0D382B]"
               }`}
             >
               <Key size={15} /> تسجيل الدخول
             </button>
             <button
               onClick={() => { setAuthMode("register"); setErrorMsg(null); setSuccessMsg(null); }}
-              className={`flex-1 py-2.5 rounded-xl transition flex items-center justify-center gap-2 ${
-                authMode === "register" ? "bg-[#0D382B] text-white font-black shadow-md" : "text-slate-600 hover:text-[#0D382B]"
+              className={`flex-1 py-2.5 rounded-[14px] transition-all duration-200 flex items-center justify-center gap-2 ${
+                authMode === "register" ? "bg-[#0D382B] text-white font-black shadow-[0_6px_16px_-6px_rgb(13,56,43,0.5)]" : "text-slate-500 hover:text-[#0D382B]"
               }`}
             >
               <UserPlus size={15} /> طلب انضمام جديد
@@ -3969,7 +3976,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                       value={emailInput}
                       onChange={(e) => setEmailInput(e.target.value)}
                       placeholder="info@lawyersuood.com أو الاسم"
-                      className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3 pr-9 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-[#0D382B] focus:bg-white focus:outline-none"
+                      className="w-full rounded-[12px] bg-slate-50/80 border border-slate-200/80 px-3 pr-9 py-2.5 text-xs text-slate-800 placeholder-slate-400 transition-colors focus:border-[#0D382B]/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0D382B]/[0.06]"
                     />
                   </div>
                 </div>
@@ -3995,7 +4002,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                       value={passwordInput}
                       onChange={(e) => setPasswordInput(e.target.value)}
                       placeholder="••••••••"
-                      className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3 pr-9 py-2.5 text-xs text-slate-800 placeholder-slate-400 focus:border-[#0D382B] focus:bg-white focus:outline-none"
+                      className="w-full rounded-[12px] bg-slate-50/80 border border-slate-200/80 px-3 pr-9 py-2.5 text-xs text-slate-800 placeholder-slate-400 transition-colors focus:border-[#0D382B]/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0D382B]/[0.06]"
                     />
                   </div>
                 </div>
@@ -4014,11 +4021,11 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-[11px] text-emerald-900 space-y-1">
-                <p className="font-bold text-[#0D382B] flex items-center gap-1">
+              <div className="p-3.5 rounded-2xl bg-[#0D382B]/[0.04] border border-[#0D382B]/10 text-[11px] text-emerald-900 space-y-1">
+                <p className="font-bold text-[#0D382B] flex items-center gap-1.5">
                   <ShieldCheck size={14} /> بوابة مصرح بها للمستخدمين
                 </p>
-                <p className="leading-normal">
+                <p className="leading-relaxed text-emerald-900/80">
                   يرجى إدخال البريد الإلكتروني وكلمة المرور الخاصة بحسابك المسجل والمعتمد بالمكتب.
                 </p>
               </div>
@@ -4026,7 +4033,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 rounded-xl bg-[#0D382B] text-white font-black hover:bg-[#124d40] transition shadow-md flex items-center justify-center gap-2 text-xs disabled:opacity-50 cursor-pointer"
+                className="w-full py-3.5 rounded-[14px] bg-[#0D382B] text-white font-black hover:bg-[#124d40] active:scale-[0.99] transition-all shadow-[0_10px_24px_-10px_rgb(13,56,43,0.55)] flex items-center justify-center gap-2 text-xs disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? (
                   <>
@@ -4051,7 +4058,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                     value={regName}
                     onChange={(e) => setRegName(e.target.value)}
                     placeholder="مثال: أ. محمد عبدالله الشامسي"
-                    className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-xs text-slate-800 focus:border-[#0D382B] focus:bg-white focus:outline-none"
+                    className="w-full rounded-[12px] bg-slate-50/80 border border-slate-200/80 px-3 py-2.5 text-xs text-slate-800 transition-colors focus:border-[#0D382B]/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0D382B]/[0.06]"
                   />
                 </div>
 
@@ -4064,7 +4071,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                       value={regEmail}
                       onChange={(e) => setRegEmail(e.target.value)}
                       placeholder="name@lawyersuood.com"
-                      className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-xs text-slate-800 focus:border-[#0D382B] focus:bg-white focus:outline-none"
+                      className="w-full rounded-[12px] bg-slate-50/80 border border-slate-200/80 px-3 py-2.5 text-xs text-slate-800 transition-colors focus:border-[#0D382B]/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0D382B]/[0.06]"
                     />
                   </div>
                   <div>
@@ -4074,7 +4081,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                       value={regPhone}
                       onChange={(e) => setRegPhone(e.target.value)}
                       placeholder="+971 50 123 4567"
-                      className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-xs text-slate-800 focus:border-[#0D382B] focus:bg-white focus:outline-none"
+                      className="w-full rounded-[12px] bg-slate-50/80 border border-slate-200/80 px-3 py-2.5 text-xs text-slate-800 transition-colors focus:border-[#0D382B]/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0D382B]/[0.06]"
                     />
                   </div>
                 </div>
@@ -4087,7 +4094,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                     placeholder="أدخل كلمة مرور قوية"
-                    className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-xs text-slate-800 focus:border-[#0D382B] focus:bg-white focus:outline-none"
+                    className="w-full rounded-[12px] bg-slate-50/80 border border-slate-200/80 px-3 py-2.5 text-xs text-slate-800 transition-colors focus:border-[#0D382B]/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0D382B]/[0.06]"
                   />
                 </div>
 
@@ -4096,7 +4103,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
                   <select
                     value={regRoleKey}
                     onChange={(e) => setRegRoleKey(e.target.value as any)}
-                    className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-xs text-slate-800 focus:border-[#0D382B] focus:bg-white focus:outline-none"
+                    className="w-full rounded-[12px] bg-slate-50/80 border border-slate-200/80 px-3 py-2.5 text-xs text-slate-800 transition-colors focus:border-[#0D382B]/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0D382B]/[0.06]"
                   >
                     <option value="lawyer">محامٍ ومستشار قانوني</option>
                     <option value="secretary">إدارة وسكرتارية قانونية</option>
@@ -9985,18 +9992,18 @@ export default function App() {
       `}</style>
       <div className="flex min-h-screen">
         {/* ===== الشريط الجانبي الفخم لسطح المكتب ===== */}
-        <aside className="hidden w-64 shrink-0 flex-col bg-white border-l border-slate-200 text-slate-800 md:flex shadow-lg">
-          <div className="flex items-center justify-center border-b border-slate-100 px-4 py-5 bg-emerald-50/40">
+        <aside className="hidden w-64 shrink-0 flex-col bg-white border-l border-slate-200/80 text-slate-800 md:flex shadow-[1px_0_0_rgb(15,23,42,0.02),4px_0_24px_-8px_rgb(15,23,42,0.06)]">
+          <div className="flex items-center justify-center border-b border-slate-100 px-4 py-5">
             <Logo variant="horizontal" mode="light" size="md" />
           </div>
 
           {/* تبديل سريع للمستخدم الحالي (للمدير فقط) */}
-          <div className="mx-3 my-3 rounded-2xl bg-emerald-50/70 p-3 border border-emerald-900/10">
+          <div className="mx-3 mt-4 mb-2 rounded-2xl bg-[#0D382B]/[0.045] p-3.5 border border-[#0D382B]/[0.08]">
             <div className="flex items-center justify-between mb-1.5">
               <span className="text-[11px] font-semibold text-[#0D382B] flex items-center gap-1">
                 <UserCheck size={13} /> الحساب النشط الآن:
               </span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0D382B] text-white font-mono">
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#0D382B] text-white font-mono tracking-wide">
                 {currentUser.roleKey.toUpperCase()}
               </span>
             </div>
@@ -10019,19 +10026,19 @@ export default function App() {
             )}
           </div>
 
-          <nav className="flex-1 space-y-1 p-3 overflow-y-auto max-h-[calc(100vh-140px)] custom-scrollbar">
+          <nav className="flex-1 space-y-0.5 p-3 overflow-y-auto max-h-[calc(100vh-140px)] custom-scrollbar">
             {NAV.filter(({ id }) => hasTabPermission(currentUser, id)).map(({ id, label, icon: Icon, category }, idx, filteredNav) => {
               const showCategoryHeader = idx === 0 || category !== filteredNav[idx - 1].category;
               return (
                 <React.Fragment key={id}>
                   {showCategoryHeader && category && (
-                    <div className="px-2 pt-3 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[#0D382B] flex items-center gap-1.5 border-b border-slate-100 mb-1">
+                    <div className="px-2.5 pt-4 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 mb-0.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-[#C5A059]" />
                       <span>{category}</span>
                     </div>
                   )}
                   <button onClick={() => { setTab(id); setCaseView(null); }}
-                    className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2 text-xs font-semibold transition ${tab === id ? "bg-[#0D382B] text-white font-black shadow-md" : "text-slate-600 hover:bg-emerald-50 hover:text-[#0D382B]"}`}>
+                    className={`flex w-full items-center gap-3 rounded-[11px] px-3.5 py-2.5 text-xs font-semibold transition-all duration-150 ${tab === id ? "bg-[#0D382B] text-white font-black shadow-[0_6px_14px_-6px_rgb(13,56,43,0.5)]" : "text-slate-600 hover:bg-slate-50"}`}>
                     <Icon size={17} /><span>{label}</span>
                     {id === "poa" && stats.expiringPoa > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{stats.expiringPoa}</span>}
                     {id === "kyc" && kycDue > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{kycDue}</span>}
@@ -11595,7 +11602,7 @@ export default function App() {
                         <select
                           value={caseStageFilter}
                           onChange={(e) => setCaseStageFilter(e.target.value)}
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                          className="w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#0D382B]/40 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all"
                         >
                           <option value="الكل">🏛️ جميع المراحل ودرجات التقاضي ({cases.length})</option>
                           {CASE_STAGES.map((stg) => (
@@ -11612,7 +11619,7 @@ export default function App() {
                         <select
                           value={caseFilter}
                           onChange={(e) => setCaseFilter(e.target.value)}
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                          className="w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#0D382B]/40 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all"
                         >
                           <option value="الكل">📋 جميع الحالات ({cases.length})</option>
                           {CASE_STATUS.map((st) => (
@@ -11629,7 +11636,7 @@ export default function App() {
                         <select
                           value={caseTypeFilter}
                           onChange={(e) => setCaseTypeFilter(e.target.value)}
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                          className="w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#0D382B]/40 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all"
                         >
                           <option value="الكل">⚖️ جميع الأنواع والتخصصات ({uniqueCaseTypes.length})</option>
                           {uniqueCaseTypes.map((t) => (
@@ -11646,7 +11653,7 @@ export default function App() {
                         <select
                           value={caseEmirateFilter}
                           onChange={(e) => setCaseEmirateFilter(e.target.value)}
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                          className="w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#0D382B]/40 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all"
                         >
                           <option value="الكل">📍 جميع الإمارات ({uniqueEmirates.length})</option>
                           {uniqueEmirates.map((em) => (
@@ -11663,7 +11670,7 @@ export default function App() {
                         <select
                           value={caseClientFilter}
                           onChange={(e) => setCaseClientFilter(e.target.value)}
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                          className="w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#0D382B]/40 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all"
                         >
                           <option value="الكل">👥 جميع الموكلين ({uniqueCaseClients.length})</option>
                           {uniqueCaseClients.map((cl) => (
@@ -11680,7 +11687,7 @@ export default function App() {
                         <select
                           value={caseClientTypeFilter}
                           onChange={(e) => setCaseClientTypeFilter(e.target.value)}
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                          className="w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#0D382B]/40 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all"
                         >
                           <option value="الكل">🏢👤 أفراد وشركات (الكل)</option>
                           <option value="شركة">🏢 شركات ومؤسسات تجارية</option>
@@ -11696,7 +11703,7 @@ export default function App() {
                         <select
                           value={caseYearFilter}
                           onChange={(e) => setCaseYearFilter(e.target.value)}
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                          className="w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#0D382B]/40 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all"
                         >
                           <option value="الكل">📅 جميع السنوات ({uniqueCaseYears.length})</option>
                           {uniqueCaseYears.map((yr) => (
@@ -11713,7 +11720,7 @@ export default function App() {
                         <select
                           value={caseSortBy}
                           onChange={(e: any) => setCaseSortBy(e.target.value)}
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                          className="w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#0D382B]/40 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all"
                         >
                           <option value="default">الترتيب الافتراضي</option>
                           <option value="newest">الأحدث قيداً (تنازلي)</option>
@@ -11732,7 +11739,7 @@ export default function App() {
                         <select
                           value={caseCourtFilter}
                           onChange={(e) => setCaseCourtFilter(e.target.value)}
-                          className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                          className="w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#0D382B]/40 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all"
                         >
                           <option value="الكل">🏢 جميع المحاكم ({uniqueCourts.length})</option>
                           {uniqueCourts.map((c) => (
@@ -11885,7 +11892,7 @@ export default function App() {
                     <select
                       value={caseJudgeFilter}
                       onChange={(e) => setCaseJudgeFilter(e.target.value)}
-                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                      className="w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#0D382B]/40 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all"
                     >
                       <option value="الكل">🏛️ جميع الدوائر والقضاة ({uniqueJudges.length})</option>
                       {uniqueJudges.map((j) => (
@@ -11901,7 +11908,7 @@ export default function App() {
                     <select
                       value={caseCourtFilter}
                       onChange={(e) => setCaseCourtFilter(e.target.value)}
-                      className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                      className="w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs font-medium text-slate-900 focus:border-[#0D382B]/40 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all"
                     >
                       <option value="الكل">🏢 جميع المحاكم ({uniqueCourts.length})</option>
                       {uniqueCourts.map((c) => (
@@ -11920,7 +11927,7 @@ export default function App() {
                         value={q}
                         onChange={(e) => setQ(e.target.value)}
                         placeholder="ابحث برقم القضية، الموكل، الخصم، القاضي، أو موضوع الدعوى..."
-                        className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs text-slate-900 focus:border-amber-500 focus:outline-hidden shadow-2xs"
+                        className="w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3 py-2 text-xs text-slate-900 focus:border-[#0D382B]/40 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all"
                       />
                       {activeFiltersCount > 0 && (
                         <button
@@ -21682,35 +21689,35 @@ export default function App() {
                     <span>ملخص السجلات المتاحة للتصدير حالياً:</span>
                   </h4>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                    <div className="p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_8px_20px_-10px_rgb(15,23,42,0.08)]">
                       <span className="text-slate-500 block text-[11px]">💼 القضايا:</span>
                       <span className="font-black text-slate-900 text-sm">{cases.length} قضية</span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                    <div className="p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_8px_20px_-10px_rgb(15,23,42,0.08)]">
                       <span className="text-slate-500 block text-[11px]">👥 الموكلين:</span>
                       <span className="font-black text-slate-900 text-sm">{clients.length} موكل</span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                    <div className="p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_8px_20px_-10px_rgb(15,23,42,0.08)]">
                       <span className="text-slate-500 block text-[11px]">🗓️ الجلسات:</span>
                       <span className="font-black text-slate-900 text-sm">{hearings.length} جلسة</span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                    <div className="p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_8px_20px_-10px_rgb(15,23,42,0.08)]">
                       <span className="text-slate-500 block text-[11px]">📋 المهام:</span>
                       <span className="font-black text-slate-900 text-sm">{tasks.length} مهمة</span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                    <div className="p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_8px_20px_-10px_rgb(15,23,42,0.08)]">
                       <span className="text-slate-500 block text-[11px]">🧾 الفواتير:</span>
                       <span className="font-black text-slate-900 text-sm">{invoices.length} فاتورة</span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                    <div className="p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_8px_20px_-10px_rgb(15,23,42,0.08)]">
                       <span className="text-slate-500 block text-[11px]">📂 المستندات:</span>
                       <span className="font-black text-slate-900 text-sm">{docs.length} مستند</span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                    <div className="p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_8px_20px_-10px_rgb(15,23,42,0.08)]">
                       <span className="text-slate-500 block text-[11px]">👔 الموظفين:</span>
                       <span className="font-black text-slate-900 text-sm">{employees.length} موظف</span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs">
+                    <div className="p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_8px_20px_-10px_rgb(15,23,42,0.08)]">
                       <span className="text-slate-500 block text-[11px]">🔒 المستخدمين:</span>
                       <span className="font-black text-slate-900 text-sm">{users.length} مستخدم</span>
                     </div>
