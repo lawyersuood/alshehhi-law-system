@@ -11454,14 +11454,14 @@ export default function App() {
                     {/* فلتر الإمارات (تصميم دليل المحاكم) */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1.5 pt-2">
                       {[
-                        { id: "الكل", name: "جميع الإمارات", icon: "🌍" },
-                        { id: "أبوظبي", name: "أبوظبي", icon: "🏢" },
-                        { id: "دبي", name: "دبي", icon: "🌆" },
-                        { id: "الشارقة", name: "الشارقة", icon: "🏛️" },
-                        { id: "عجمان", name: "عجمان", icon: "🌴" },
-                        { id: "رأس الخيمة", name: "رأس الخيمة", icon: "⛰️" },
-                        { id: "أم القيوين", name: "أم القيوين", icon: "⛵" },
-                        { id: "الفجيرة", name: "الفجيرة", icon: "🌊" },
+                        { id: "الكل", name: "جميع الإمارات", icon: "" },
+                        { id: "أبوظبي", name: "أبوظبي", icon: "" },
+                        { id: "دبي", name: "دبي", icon: "" },
+                        { id: "الشارقة", name: "الشارقة", icon: "" },
+                        { id: "عجمان", name: "عجمان", icon: "" },
+                        { id: "رأس الخيمة", name: "رأس الخيمة", icon: "" },
+                        { id: "أم القيوين", name: "أم القيوين", icon: "" },
+                        { id: "الفجيرة", name: "الفجيرة", icon: "" },
                       ].map((em) => {
                         const count = em.id === "الكل" ? cases.length : (caseStatsBreakdown.emirateMap[em.id] || 0);
                         const isSelected = caseEmirateFilter === em.id;
@@ -11469,15 +11469,14 @@ export default function App() {
                           <button
                             key={em.id}
                             onClick={() => setCaseEmirateFilter(em.id)}
-                            className={`p-2 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center gap-1 border text-center cursor-pointer ${
+                            className={`p-2 rounded-xl text-xs font-bold transition-colors flex flex-col items-center justify-center gap-1 border text-center cursor-pointer ${
                               isSelected
-                                ? "bg-slate-900 text-white border-slate-900 shadow-sm ring-2 ring-amber-500/50"
-                                : "bg-white text-slate-700 border-slate-200 hover:bg-amber-50 hover:border-amber-300 shadow-2xs"
+                                ? "bg-[#0D382B] text-white border-[#0D382B] shadow-[0_6px_14px_-6px_rgb(13,56,43,0.5)]"
+                                : "bg-white text-slate-700 border-slate-200 hover:bg-[#0D382B]/[0.06] hover:border-[#0D382B]/20 shadow-2xs"
                             }`}
                           >
-                            <span className="text-base">{em.icon}</span>
                             <span className="leading-tight truncate w-full">{em.name}</span>
-                            <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${isSelected ? "bg-amber-500 text-slate-950 font-bold" : "bg-slate-100 text-slate-600"}`}>
+                            <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${isSelected ? "bg-[#C5A059] text-[#0D382B] font-bold" : "bg-slate-100 text-slate-600"}`}>
                               {count}
                             </span>
                           </button>
@@ -17185,84 +17184,84 @@ export default function App() {
               const getBranchesList = (emirate: string) => {
                 if (emirate === "الشارقة") {
                   return [
-                    { id: "الكل", name: "جميع مقار ومحاكم الشارقة", icon: "🏛️" },
-                    { id: "الشارقة الابتدائية", name: "محكمة الشارقة الاتحادية الابتدائية (الخان)", icon: "🏛️" },
-                    { id: "الشارقة الشرعية", name: "محكمة الشارقة الشرعية (الفلج)", icon: "👨‍👩‍👧‍👦" },
-                    { id: "الذيد", name: "محكمة الذيد الجزئية (المنطقة الوسطى)", icon: "🌵" },
-                    { id: "خورفكان", name: "محكمة خورفكان الكلية والاستئنافية (الشرقية)", icon: "🌊" },
-                    { id: "كلباء", name: "محكمة كلباء الجزئية (الشرقية)", icon: "🌊" },
-                    { id: "دبا الحصن", name: "محكمة دبا الحصن الجزئية (الشرقية)", icon: "🌊" },
-                    { id: "المدام", name: "محكمة المدام الجزئية (الوسطى)", icon: "🏜️" },
-                    { id: "فض المنازعات الإيجارية بالشارقة", name: "بلدية الشارقة - لجان فض المنازعات الإيجارية", icon: "🏠" },
-                    { id: "عقابية الشارقة", name: "المؤسسة العقابية ومراكز الشرطة بالشارقة", icon: "🔒" },
+                    { id: "الكل", name: "جميع مقار ومحاكم الشارقة", icon: "" },
+                    { id: "الشارقة الابتدائية", name: "محكمة الشارقة الاتحادية الابتدائية (الخان)", icon: "" },
+                    { id: "الشارقة الشرعية", name: "محكمة الشارقة الشرعية (الفلج)", icon: "" },
+                    { id: "الذيد", name: "محكمة الذيد الجزئية (المنطقة الوسطى)", icon: "" },
+                    { id: "خورفكان", name: "محكمة خورفكان الكلية والاستئنافية (الشرقية)", icon: "" },
+                    { id: "كلباء", name: "محكمة كلباء الجزئية (الشرقية)", icon: "" },
+                    { id: "دبا الحصن", name: "محكمة دبا الحصن الجزئية (الشرقية)", icon: "" },
+                    { id: "المدام", name: "محكمة المدام الجزئية (الوسطى)", icon: "" },
+                    { id: "فض المنازعات الإيجارية بالشارقة", name: "بلدية الشارقة - لجان فض المنازعات الإيجارية", icon: "" },
+                    { id: "عقابية الشارقة", name: "المؤسسة العقابية ومراكز الشرطة بالشارقة", icon: "" },
                   ];
                 }
                 if (emirate === "أبوظبي") {
                   return [
-                    { id: "الكل", name: "جميع مقار ومحاكم أبوظبي", icon: "🏛️" },
-                    { id: "أبوظبي المركزية", name: "محاكم دائرة القضاء المركزية (أبوظبي)", icon: "🏛️" },
-                    { id: "المحكمة الاتحادية العليا", name: "المحكمة الاتحادية العليا", icon: "⚖️" },
-                    { id: "العين", name: "محاكم مدينة العين الابتدائية والاستئنافية", icon: "🌴" },
-                    { id: "الظفرة", name: "محكمة منطقة الظفرة الابتدائية (مدينة زايد)", icon: "🏜️" },
-                    { id: "عقابية أبوظبي", name: "المنشآت العقابية (الوثبة والعين)", icon: "🔒" },
+                    { id: "الكل", name: "جميع مقار ومحاكم أبوظبي", icon: "" },
+                    { id: "أبوظبي المركزية", name: "محاكم دائرة القضاء المركزية (أبوظبي)", icon: "" },
+                    { id: "المحكمة الاتحادية العليا", name: "المحكمة الاتحادية العليا", icon: "" },
+                    { id: "العين", name: "محاكم مدينة العين الابتدائية والاستئنافية", icon: "" },
+                    { id: "الظفرة", name: "محكمة منطقة الظفرة الابتدائية (مدينة زايد)", icon: "" },
+                    { id: "عقابية أبوظبي", name: "المنشآت العقابية (الوثبة والعين)", icon: "" },
                   ];
                 }
                 if (emirate === "دبي") {
                   return [
-                    { id: "الكل", name: "جميع مقار ومحاكم دبي", icon: "🏛️" },
-                    { id: "مجمع محاكم دبي الرئيسي", name: "مجمع محاكم دبي الرئيسي (بر دبي)", icon: "🏛️" },
-                    { id: "المحكمة العمالية العوير", name: "المحكمة العمالية (العوير)", icon: "💼" },
-                    { id: "محكمة الأحوال الشخصية القرهود", name: "محكمة الأحوال الشخصية والتركات (القرهود)", icon: "👨‍👩‍👧‍👦" },
-                    { id: "مركز فض المنازعات الإيجارية", name: "مركز فض المنازعات الإيجارية (RDC)", icon: "🏠" },
-                    { id: "حتا", name: "محكمة حتا الجزئية", icon: "⛰️" },
-                    { id: "عقابية دبي", name: "النيابة العامة والمؤسسة العقابية بدبي", icon: "🔒" },
+                    { id: "الكل", name: "جميع مقار ومحاكم دبي", icon: "" },
+                    { id: "مجمع محاكم دبي الرئيسي", name: "مجمع محاكم دبي الرئيسي (بر دبي)", icon: "" },
+                    { id: "المحكمة العمالية العوير", name: "المحكمة العمالية (العوير)", icon: "" },
+                    { id: "محكمة الأحوال الشخصية القرهود", name: "محكمة الأحوال الشخصية والتركات (القرهود)", icon: "" },
+                    { id: "مركز فض المنازعات الإيجارية", name: "مركز فض المنازعات الإيجارية (RDC)", icon: "" },
+                    { id: "حتا", name: "محكمة حتا الجزئية", icon: "" },
+                    { id: "عقابية دبي", name: "النيابة العامة والمؤسسة العقابية بدبي", icon: "" },
                   ];
                 }
                 if (emirate === "الفجيرة") {
                   return [
-                    { id: "الكل", name: "جميع محاكم الفجيرة", icon: "🏛️" },
-                    { id: "الفجيرة الاتحادية", name: "محكمة الفجيرة الاتحادية الابتدائية والاستئنافية", icon: "🏛️" },
-                    { id: "دبا الفجيرة", name: "محكمة دبا الفجيرة الجزئية", icon: "🌊" },
-                    { id: "عقابية الفجيرة", name: "المؤسسة العقابية بالفجيرة", icon: "🔒" },
+                    { id: "الكل", name: "جميع محاكم الفجيرة", icon: "" },
+                    { id: "الفجيرة الاتحادية", name: "محكمة الفجيرة الاتحادية الابتدائية والاستئنافية", icon: "" },
+                    { id: "دبا الفجيرة", name: "محكمة دبا الفجيرة الجزئية", icon: "" },
+                    { id: "عقابية الفجيرة", name: "المؤسسة العقابية بالفجيرة", icon: "" },
                   ];
                 }
                 if (emirate === "أم القيوين") {
                   return [
-                    { id: "الكل", name: "جميع محاكم أم القيوين", icon: "🏛️" },
-                    { id: "أم القيوين الاتحادية", name: "محكمة أم القيوين الاتحادية", icon: "🏛️" },
-                    { id: "فلج المعلا", name: "محكمة فلج المعلا الجزئية", icon: "🏜️" },
-                    { id: "عقابية أم القيوين", name: "المؤسسة العقابية بأم القيوين", icon: "🔒" },
+                    { id: "الكل", name: "جميع محاكم أم القيوين", icon: "" },
+                    { id: "أم القيوين الاتحادية", name: "محكمة أم القيوين الاتحادية", icon: "" },
+                    { id: "فلج المعلا", name: "محكمة فلج المعلا الجزئية", icon: "" },
+                    { id: "عقابية أم القيوين", name: "المؤسسة العقابية بأم القيوين", icon: "" },
                   ];
                 }
                 if (emirate === "عجمان") {
                   return [
-                    { id: "الكل", name: "جميع محاكم ومراكز عجمان", icon: "🏛️" },
-                    { id: "عجمان الاتحادية", name: "محكمة عجمان الاتحادية الابتدائية والاستئنافية", icon: "🏛️" },
-                    { id: "عقابية ونيابة عجمان", name: "نيابة عجمان الكلية والمؤسسة العقابية", icon: "🏢" },
+                    { id: "الكل", name: "جميع محاكم ومراكز عجمان", icon: "" },
+                    { id: "عجمان الاتحادية", name: "محكمة عجمان الاتحادية الابتدائية والاستئنافية", icon: "" },
+                    { id: "عقابية ونيابة عجمان", name: "نيابة عجمان الكلية والمؤسسة العقابية", icon: "" },
                   ];
                 }
                 if (emirate === "رأس الخيمة") {
                   return [
-                    { id: "الكل", name: "جميع محاكم رأس الخيمة", icon: "🏛️" },
-                    { id: "محاكم رأس الخيمة المركزية", name: "محاكم دائرة محاكم رأس الخيمة المركزية", icon: "🏛️" },
-                    { id: "عقابية ونيابة رأس الخيمة", name: "النيابة العامة والمؤسسة العقابية برأس الخيمة", icon: "🏢" },
+                    { id: "الكل", name: "جميع محاكم رأس الخيمة", icon: "" },
+                    { id: "محاكم رأس الخيمة المركزية", name: "محاكم دائرة محاكم رأس الخيمة المركزية", icon: "" },
+                    { id: "عقابية ونيابة رأس الخيمة", name: "النيابة العامة والمؤسسة العقابية برأس الخيمة", icon: "" },
                   ];
                 }
 
                 // عند اختيار "الكل" للإمارات
                 return [
-                  { id: "الكل", name: "جميع المحاكم والمقار الفرعية", icon: "🏛️" },
-                  { id: "الذيد", name: "محكمة الذيد (الشارقة)", icon: "🌵" },
-                  { id: "خورفكان", name: "محكمة خورفكان (الشارقة)", icon: "🌊" },
-                  { id: "كلباء", name: "محكمة كلباء (الشارقة)", icon: "🌊" },
-                  { id: "دبا الحصن", name: "محكمة دبا الحصن (الشارقة)", icon: "🌊" },
-                  { id: "المدام", name: "محكمة المدام (الشارقة)", icon: "🏜️" },
-                  { id: "الشارقة الشرعية", name: "محكمة الشارقة الشرعية", icon: "👨‍👩‍👧‍👦" },
-                  { id: "العين", name: "محاكم مدينة العين (أبوظبي)", icon: "🌴" },
-                  { id: "الظفرة", name: "محكمة منطقة الظفرة (أبوظبي)", icon: "🏜️" },
-                  { id: "حتا", name: "محكمة حتا (دبي)", icon: "⛰️" },
-                  { id: "دبا الفجيرة", name: "محكمة دبا الفجيرة", icon: "🌊" },
-                  { id: "فلج المعلا", name: "محكمة فلج المعلا (أم القيوين)", icon: "🏜️" },
+                  { id: "الكل", name: "جميع المحاكم والمقار الفرعية", icon: "" },
+                  { id: "الذيد", name: "محكمة الذيد (الشارقة)", icon: "" },
+                  { id: "خورفكان", name: "محكمة خورفكان (الشارقة)", icon: "" },
+                  { id: "كلباء", name: "محكمة كلباء (الشارقة)", icon: "" },
+                  { id: "دبا الحصن", name: "محكمة دبا الحصن (الشارقة)", icon: "" },
+                  { id: "المدام", name: "محكمة المدام (الشارقة)", icon: "" },
+                  { id: "الشارقة الشرعية", name: "محكمة الشارقة الشرعية", icon: "" },
+                  { id: "العين", name: "محاكم مدينة العين (أبوظبي)", icon: "" },
+                  { id: "الظفرة", name: "محكمة منطقة الظفرة (أبوظبي)", icon: "" },
+                  { id: "حتا", name: "محكمة حتا (دبي)", icon: "" },
+                  { id: "دبا الفجيرة", name: "محكمة دبا الفجيرة", icon: "" },
+                  { id: "فلج المعلا", name: "محكمة فلج المعلا (أم القيوين)", icon: "" },
                 ];
               };
 
@@ -17272,77 +17271,77 @@ export default function App() {
                 const courtNorm = normalizeArabicSearch(c.courtName || "");
 
                 if (norm.includes("عقاب") || norm.includes("سجن") || norm.includes("توقيف") || norm.includes("منشات عقابيه") || (norm.includes("اصلاح") && !norm.includes("اسري") && !norm.includes("توجيه"))) {
-                  return { label: "مؤسسة عقابية وسجن", icon: "🔒", bg: "bg-rose-50 text-rose-800 border-rose-200" };
+                  return { label: "مؤسسة عقابية وسجن", icon: "", bg: "bg-amber-50/80 text-amber-900 border-amber-200" };
                 }
                 if (deptNorm.includes("كاتب عدل") || deptNorm.includes("توثيق") || deptNorm.includes("ماذون") || deptNorm.includes("اشهار") || deptNorm.includes("عقود زواج")) {
-                  return { label: "كاتب عدل وتوثيق", icon: "✍️", bg: "bg-amber-50 text-amber-900 border-amber-200" };
+                  return { label: "كاتب عدل وتوثيق", icon: "", bg: "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15" };
                 }
                 if (deptNorm.includes("نياب") || courtNorm.includes("نياب") || norm.includes("امن الدوله")) {
-                  return { label: "نيابة عامة وأمن دولة", icon: "🏢", bg: "bg-purple-50 text-purple-900 border-purple-200" };
+                  return { label: "نيابة عامة وأمن دولة", icon: "", bg: "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15" };
                 }
                 if (deptNorm.includes("توجيه اسري") || deptNorm.includes("اصلاح اسري") || deptNorm.includes("مصلح اسري") || deptNorm.includes("استشارات اسريه") || (deptNorm.includes("توجيه") && deptNorm.includes("اسري"))) {
-                  return { label: "توجيه وإصلاح أسري", icon: "🤝", bg: "bg-emerald-50 text-emerald-900 border-emerald-200" };
+                  return { label: "توجيه وإصلاح أسري", icon: "", bg: "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15" };
                 }
                 if (norm.includes("ايجار") || norm.includes("rdc") || (courtNorm.includes("بلديه") && norm.includes("منازعات"))) {
-                  return { label: "فض منازعات إيجارية", icon: "🏠", bg: "bg-amber-50 text-amber-950 border-amber-300" };
+                  return { label: "فض منازعات إيجارية", icon: "", bg: "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15" };
                 }
                 if (deptNorm.includes("تنفيذ") || deptNorm.includes("انابات") || deptNorm.includes("حجوزات") || deptNorm.includes("مزادات")) {
-                  return { label: "إدارة تنفيذ وإنابات", icon: "📋", bg: "bg-blue-50 text-blue-900 border-blue-200" };
+                  return { label: "إدارة تنفيذ وإنابات", icon: "", bg: "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15" };
                 }
                 if (deptNorm.includes("قيد") || deptNorm.includes("اداره دعو") || deptNorm.includes("اداره الدعو") || deptNorm.includes("تسجيل دعاوى") || deptNorm.includes("جدول") || deptNorm.includes("تحضير")) {
-                  return { label: "قيد وإدارة الدعاوى", icon: "📂", bg: "bg-cyan-50 text-cyan-900 border-cyan-200" };
+                  return { label: "قيد وإدارة الدعاوى", icon: "", bg: "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15" };
                 }
                 if (deptNorm.includes("توفيق") || deptNorm.includes("مصالحه") || deptNorm.includes("خبراء") || deptNorm.includes("تسويات")) {
-                  return { label: "توفيق ومصالحة وخبرة", icon: "📊", bg: "bg-teal-50 text-teal-900 border-teal-200" };
+                  return { label: "توفيق ومصالحة وخبرة", icon: "", bg: "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15" };
                 }
                 if (deptNorm.includes("استئناف") || deptNorm.includes("تمييز") || deptNorm.includes("نقض") || deptNorm.includes("طعون") || courtNorm.includes("محكمه الاستئناف") || courtNorm.includes("محكمه النقض") || courtNorm.includes("محكمه التمييز") || courtNorm.includes("المحكمه الاتحاديه العليا")) {
-                  return { label: "دوائر الاستئناف والتمييز والنقض", icon: "📜", bg: "bg-slate-100 text-slate-900 border-slate-300" };
+                  return { label: "دوائر الاستئناف والتمييز والنقض", icon: "", bg: "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15" };
                 }
                 if (deptNorm.includes("عمال") || courtNorm.includes("محكمه عماليه") || deptNorm.includes("استئناف عمالي")) {
-                  return { label: "دائرة عمالية", icon: "💼", bg: "bg-orange-50 text-orange-900 border-orange-200" };
+                  return { label: "دائرة عمالية", icon: "", bg: "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15" };
                 }
                 if (deptNorm.includes("جزائ") || deptNorm.includes("جناي") || deptNorm.includes("جنح") || deptNorm.includes("مرور")) {
-                  return { label: "دائرة جزائية وجنائية", icon: "⚖️", bg: "bg-indigo-50 text-indigo-900 border-indigo-200" };
+                  return { label: "دائرة جزائية وجنائية", icon: "", bg: "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15" };
                 }
                 if (deptNorm.includes("شرع") || deptNorm.includes("احوال") || deptNorm.includes("تركات") || courtNorm.includes("الشرعيه") || courtNorm.includes("شرعي") || deptNorm.includes("اسري")) {
-                  return { label: "دائرة شرعية وأحوال شخصية", icon: "👨‍👩‍👧‍👦", bg: "bg-teal-50 text-teal-900 border-teal-200" };
+                  return { label: "دائرة شرعية وأحوال شخصية", icon: "", bg: "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15" };
                 }
                 if (deptNorm.includes("مدني") || deptNorm.includes("تجاري") || deptNorm.includes("محضر الدائر")) {
-                  return { label: "دائرة مدنية وتجارية", icon: "🏛️", bg: "bg-sky-50 text-sky-900 border-sky-200" };
+                  return { label: "دائرة مدنية وتجارية", icon: "", bg: "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15" };
                 }
                 if (deptNorm.includes("امين سر") || deptNorm.includes("امناء السر") || deptNorm.includes("سكرتير") || deptNorm.includes("دائره") || deptNorm.includes("دوائر") || deptNorm.includes("جلس")) {
-                  return { label: "دائرة قضائية وأمانة سر", icon: "⚖️", bg: "bg-amber-50 text-amber-900 border-amber-200" };
+                  return { label: "دائرة قضائية وأمانة سر", icon: "", bg: "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15" };
                 }
-                return { label: "جهة قضائية ومساندة", icon: "🏛️", bg: "bg-slate-50 text-slate-800 border-slate-200" };
+                return { label: "جهة قضائية ومساندة", icon: "", bg: "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15" };
               };
 
               const emiratesList = [
-                { id: "الكل", name: "جميع الإمارات", icon: "🌍" },
-                { id: "أبوظبي", name: "أبوظبي (والعين والظفرة)", icon: "🏢" },
-                { id: "دبي", name: "دبي (وحتا)", icon: "🌆" },
-                { id: "الشارقة", name: "الشارقة (والوسطى والشرقية)", icon: "🏛️" },
-                { id: "عجمان", name: "عجمان", icon: "🌴" },
-                { id: "رأس الخيمة", name: "رأس الخيمة", icon: "⛰️" },
-                { id: "أم القيوين", name: "أم القيوين (وفلج المعلا)", icon: "⛵" },
-                { id: "الفجيرة", name: "الفجيرة (ودبا)", icon: "🌊" },
+                { id: "الكل", name: "جميع الإمارات", icon: "" },
+                { id: "أبوظبي", name: "أبوظبي (والعين والظفرة)", icon: "" },
+                { id: "دبي", name: "دبي (وحتا)", icon: "" },
+                { id: "الشارقة", name: "الشارقة (والوسطى والشرقية)", icon: "" },
+                { id: "عجمان", name: "عجمان", icon: "" },
+                { id: "رأس الخيمة", name: "رأس الخيمة", icon: "" },
+                { id: "أم القيوين", name: "أم القيوين (وفلج المعلا)", icon: "" },
+                { id: "الفجيرة", name: "الفجيرة (ودبا)", icon: "" },
               ];
 
               const categoryOptions = [
-                { id: "الكل", label: "جميع الدوائر والتخصصات", icon: "⚖️" },
-                { id: "الدوائر القضائية وأمناء السر", label: "الدوائر القضائية وأمناء السر", icon: "⚖️" },
-                { id: "الدوائر المدنية والتجارية", label: "الدوائر المدنية والتجارية", icon: "🏛️" },
-                { id: "الدوائر العمالية", label: "الدوائر العمالية", icon: "💼" },
-                { id: "الدوائر الجزائية والجنائية", label: "الدوائر الجزائية والجنائية", icon: "⚖️" },
-                { id: "الدوائر الشرعية والأحوال الشخصية", label: "الدوائر الشرعية والأحوال الشخصية", icon: "👨‍👩‍👧‍👦" },
-                { id: "دوائر الاستئناف والتمييز والنقض", label: "الاستئناف والتمييز والنقض", icon: "📜" },
-                { id: "قيد وإدارة الدعاوى", label: "قيد وإدارة الدعاوى", icon: "📂" },
-                { id: "إدارة التنفيذ والإنابات", label: "إدارة التنفيذ والإنابات", icon: "📋" },
-                { id: "التوجيه والإصلاح الأسري", label: "التوجيه والإصلاح الأسري", icon: "🤝" },
-                { id: "المنازعات الإيجارية", label: "فض المنازعات الإيجارية", icon: "🏠" },
-                { id: "الكاتب العدل والتوثيقات", label: "الكاتب العدل والتوثيقات", icon: "✍️" },
-                { id: "التوفيق والمصالحة والخبرة", label: "التوفيق والمصالحة والخبراء", icon: "📊" },
-                { id: "النيابات العامة", label: "النيابات العامة وأمن الدولة", icon: "🏢" },
-                { id: "المؤسسات العقابية والإصلاحية", label: "المؤسسات العقابية والسجون", icon: "🔒" },
+                { id: "الكل", label: "جميع الدوائر والتخصصات", icon: "" },
+                { id: "الدوائر القضائية وأمناء السر", label: "الدوائر القضائية وأمناء السر", icon: "" },
+                { id: "الدوائر المدنية والتجارية", label: "الدوائر المدنية والتجارية", icon: "" },
+                { id: "الدوائر العمالية", label: "الدوائر العمالية", icon: "" },
+                { id: "الدوائر الجزائية والجنائية", label: "الدوائر الجزائية والجنائية", icon: "" },
+                { id: "الدوائر الشرعية والأحوال الشخصية", label: "الدوائر الشرعية والأحوال الشخصية", icon: "" },
+                { id: "دوائر الاستئناف والتمييز والنقض", label: "الاستئناف والتمييز والنقض", icon: "" },
+                { id: "قيد وإدارة الدعاوى", label: "قيد وإدارة الدعاوى", icon: "" },
+                { id: "إدارة التنفيذ والإنابات", label: "إدارة التنفيذ والإنابات", icon: "" },
+                { id: "التوجيه والإصلاح الأسري", label: "التوجيه والإصلاح الأسري", icon: "" },
+                { id: "المنازعات الإيجارية", label: "فض المنازعات الإيجارية", icon: "" },
+                { id: "الكاتب العدل والتوثيقات", label: "الكاتب العدل والتوثيقات", icon: "" },
+                { id: "التوفيق والمصالحة والخبرة", label: "التوفيق والمصالحة والخبراء", icon: "" },
+                { id: "النيابات العامة", label: "النيابات العامة وأمن الدولة", icon: "" },
+                { id: "المؤسسات العقابية والإصلاحية", label: "المؤسسات العقابية والسجون", icon: "" },
               ];
 
               const currentBranches = getBranchesList(courtEmirateFilter);
@@ -17361,14 +17360,14 @@ export default function App() {
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => downloadCourtContactsTemplate()}
-                      className="flex items-center gap-1.5 rounded-xl bg-emerald-50 border border-emerald-300 px-3.5 py-2.5 text-xs font-bold text-emerald-800 hover:bg-emerald-100 shadow-sm transition"
+                      className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-[#0D382B]/[0.06] transition-colors shadow-sm"
                       title="تحميل نموذج ملف إكسل فارغ ومنسق بالأعمدة المعتمدة"
                     >
                       <Download size={15} /> تنزيل نموذج إكسل
                     </button>
 
-                    <label className="flex items-center gap-1.5 rounded-xl bg-amber-50 border border-amber-300 px-3.5 py-2.5 text-xs font-bold text-amber-900 hover:bg-amber-100 cursor-pointer shadow-sm transition">
-                      <FileSpreadsheet size={15} className="text-amber-700" />
+                    <label className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-[#0D382B]/[0.06] transition-colors cursor-pointer shadow-sm">
+                      <FileSpreadsheet size={15} className="text-slate-500" />
                       <span>استيراد أرقام الجهات من إكسل</span>
                       <input
                         type="file"
@@ -17398,10 +17397,10 @@ export default function App() {
                         saveStorage("firm_court_contacts_ver", "v5_hierarchy");
                         alert(`تم فحص الدليل وإزالة ${diff > 0 ? `${diff} سجل مكرر` : "أي سجلات مكررة (الدليل نظيف 100%)"} بنجاح!`);
                       }}
-                      className="flex items-center gap-1.5 rounded-xl bg-teal-50 border border-teal-300 px-3.5 py-2.5 text-xs font-bold text-teal-900 hover:bg-teal-100 shadow-sm transition"
+                      className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-[#0D382B]/[0.06] transition-colors shadow-sm"
                       title="فحص فوري وحذف أي سجلات مكررة"
                     >
-                      <CheckCircle2 size={15} className="text-teal-700" /> تنظيف وإزالة التكرار
+                      <CheckCircle2 size={15} className="text-slate-500" /> تنظيف وإزالة التكرار
                     </button>
 
                     <button
@@ -17444,7 +17443,7 @@ export default function App() {
                         });
                         setModal("courtContact");
                       }}
-                      className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-800 shadow-sm transition"
+                      className="flex items-center gap-1.5 rounded-xl bg-[#0D382B] px-4 py-2.5 text-xs font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"
                     >
                       <Plus size={16} /> إضافة جهة اتصال جديدة
                     </button>
@@ -17555,15 +17554,14 @@ export default function App() {
                               setCourtEmirateFilter(em.id);
                               setCourtBranchFilter("الكل"); // إعادة ضبط الفرع عند تغيير الإمارة
                             }}
-                            className={`p-2 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center gap-1 border text-center cursor-pointer ${
+                            className={`p-2 rounded-xl text-xs font-bold transition-colors flex flex-col items-center justify-center gap-1 border text-center cursor-pointer ${
                               isSelected
-                                ? "bg-slate-900 text-white border-slate-900 shadow-sm ring-2 ring-amber-500/50"
-                                : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-amber-50 hover:border-amber-300"
+                                ? "bg-[#0D382B] text-white border-[#0D382B] shadow-[0_6px_14px_-6px_rgb(13,56,43,0.5)]"
+                                : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-[#0D382B]/[0.06] hover:border-[#0D382B]/20"
                             }`}
                           >
-                            <span className="text-base">{em.icon}</span>
                             <span className="leading-tight truncate w-full">{em.id === "الكل" ? "جميع الإمارات" : em.id}</span>
-                            <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${isSelected ? "bg-amber-500 text-slate-950 font-bold" : "bg-slate-200 text-slate-600"}`}>
+                            <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${isSelected ? "bg-[#C5A059] text-[#0D382B] font-bold" : "bg-slate-200 text-slate-600"}`}>
                               {count}
                             </span>
                           </button>
@@ -17608,15 +17606,14 @@ export default function App() {
                           <button
                             key={cat.id}
                             onClick={() => setCourtCategoryFilter(cat.id)}
-                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer border ${
+                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 cursor-pointer border ${
                               isSelected
-                                ? "bg-amber-700 text-white border-amber-800 shadow-xs"
-                                : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-[#0D382B]/[0.06] transition-colors hover:border-slate-300"
+                                ? "bg-[#0D382B] text-white border-[#0D382B] shadow-xs"
+                                : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-[#0D382B]/[0.06] hover:border-slate-300"
                             }`}
                           >
-                            <span>{cat.icon}</span>
                             <span>{cat.label}</span>
-                            <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${isSelected ? "bg-white text-amber-900 font-bold" : "bg-slate-200/80 text-slate-600"}`}>
+                            <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${isSelected ? "bg-white/20 text-white font-bold" : "bg-slate-200/80 text-slate-600"}`}>
                               {count}
                             </span>
                           </button>
@@ -17626,16 +17623,16 @@ export default function App() {
                   </div>
 
                   {/* المستوى الثالث: المحاكم والمقار الأخرى داخل الإمارة (Other Courts & Specific Branches) */}
-                  <div className="space-y-1.5 pt-3 border-t border-slate-100 bg-amber-50/40 p-3 rounded-xl border border-amber-200/60">
+                  <div className="space-y-1.5 pt-3 border-t border-slate-100 bg-[#0D382B]/[0.035] p-3 rounded-xl border border-[#0D382B]/10">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-amber-950 flex items-center gap-1.5">
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-900 text-amber-400 text-[11px] font-mono">3</span>
+                      <span className="text-xs font-bold text-[#0D382B] flex items-center gap-1.5">
+                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#0D382B] text-[#C5A059] text-[11px] font-mono">3</span>
                         <span>ثالثاً: المحاكم والمقار الفرعية في {courtEmirateFilter === "الكل" ? "الدولة" : `إمارة ${courtEmirateFilter}`} (مثل الذيد، خورفكان، كلباء، الشرعية وغيرها):</span>
                       </span>
                       {courtBranchFilter !== "الكل" && (
                         <button
                           onClick={() => setCourtBranchFilter("الكل")}
-                          className="text-[11px] font-bold text-amber-800 hover:underline flex items-center gap-1 cursor-pointer"
+                          className="text-[11px] font-bold text-[#0D382B]/80 hover:underline flex items-center gap-1 cursor-pointer"
                         >
                           <RotateCcw size={11} /> عرض كافة مقار الإمارة
                         </button>
@@ -17656,15 +17653,14 @@ export default function App() {
                           <button
                             key={branch.id}
                             onClick={() => setCourtBranchFilter(branch.id)}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer border ${
                               isSelected
-                                ? "bg-slate-900 text-amber-400 border-slate-900 shadow-sm"
-                                : "bg-white text-slate-800 border-amber-200 hover:bg-amber-100/70 hover:border-amber-400"
+                                ? "bg-[#0D382B] text-white border-[#0D382B] shadow-xs"
+                                : "bg-white text-slate-700 border-slate-200 hover:bg-[#0D382B]/[0.06] hover:border-[#0D382B]/20"
                             }`}
                           >
-                            <span>{branch.icon}</span>
                             <span>{branch.name}</span>
-                            <span className={`text-[11px] font-mono px-1.5 py-0.2 rounded-full ${isSelected ? "bg-amber-500 text-slate-950 font-bold" : "bg-amber-100 text-amber-900 font-bold"}`}>
+                            <span className={`text-[11px] font-mono px-1.5 py-0.2 rounded-full ${isSelected ? "bg-white/20 text-white font-bold" : "bg-slate-200/80 text-slate-600 font-bold"}`}>
                               {count}
                             </span>
                           </button>
@@ -17727,37 +17723,37 @@ export default function App() {
                       <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-xs text-slate-600 font-medium">
                         <div className="flex items-center gap-2 flex-wrap">
                           <span>
-                            تم العثور على <strong className="text-amber-700 font-bold">{filteredContacts.length}</strong> من أصل <strong className="text-slate-800">{courtContacts.length}</strong> جهة اتصال
+                            تم العثور على <strong className="text-[#0D382B] font-bold">{filteredContacts.length}</strong> من أصل <strong className="text-slate-800">{courtContacts.length}</strong> جهة اتصال
                           </span>
-                          
+
                           {/* مسار المستوى 1: الإمارة */}
                           {courtEmirateFilter !== "الكل" && (
-                            <span className="inline-flex items-center gap-1 bg-indigo-50 text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded-full text-[11px] font-bold">
-                              🏢 إمارة: {courtEmirateFilter}
-                              <button onClick={() => { setCourtEmirateFilter("الكل"); setCourtBranchFilter("الكل"); }} className="hover:text-indigo-950"><X size={12} /></button>
+                            <span className="inline-flex items-center gap-1 bg-[#0D382B]/[0.06] text-[#0D382B] border border-[#0D382B]/15 px-2 py-0.5 rounded-full text-[11px] font-bold">
+                              إمارة: {courtEmirateFilter}
+                              <button onClick={() => { setCourtEmirateFilter("الكل"); setCourtBranchFilter("الكل"); }} className="hover:opacity-70"><X size={12} /></button>
                             </span>
                           )}
 
                           {/* مسار المستوى 2: نوع الدعوى */}
                           {courtCategoryFilter !== "الكل" && (
-                            <span className="inline-flex items-center gap-1 bg-amber-50 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full text-[11px] font-bold">
-                              ⚖️ نوع الدعوى/الدائرة: {courtCategoryFilter}
-                              <button onClick={() => setCourtCategoryFilter("الكل")} className="hover:text-amber-950"><X size={12} /></button>
+                            <span className="inline-flex items-center gap-1 bg-[#0D382B]/[0.06] text-[#0D382B] border border-[#0D382B]/15 px-2 py-0.5 rounded-full text-[11px] font-bold">
+                              نوع الدعوى/الدائرة: {courtCategoryFilter}
+                              <button onClick={() => setCourtCategoryFilter("الكل")} className="hover:opacity-70"><X size={12} /></button>
                             </span>
                           )}
 
                           {/* مسار المستوى 3: المحكمة الفرعية */}
                           {courtBranchFilter !== "الكل" && (
-                            <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded-full text-[11px] font-bold">
-                              🏛️ المحكمة/المقر: {currentBranches.find(b => b.id === courtBranchFilter)?.name || courtBranchFilter}
-                              <button onClick={() => setCourtBranchFilter("الكل")} className="hover:text-emerald-950"><X size={12} /></button>
+                            <span className="inline-flex items-center gap-1 bg-[#0D382B]/[0.06] text-[#0D382B] border border-[#0D382B]/15 px-2 py-0.5 rounded-full text-[11px] font-bold">
+                              المحكمة/المقر: {currentBranches.find(b => b.id === courtBranchFilter)?.name || courtBranchFilter}
+                              <button onClick={() => setCourtBranchFilter("الكل")} className="hover:opacity-70"><X size={12} /></button>
                             </span>
                           )}
 
                           {/* مسار البحث النصي */}
                           {courtSearchQuery && (
                             <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-800 border border-slate-300 px-2 py-0.5 rounded-full text-[11px] font-bold">
-                              🔍 البحث: "{courtSearchQuery}"
+                              البحث: "{courtSearchQuery}"
                               <button onClick={() => setCourtSearchQuery("")} className="hover:text-slate-950"><X size={12} /></button>
                             </span>
                           )}
@@ -17771,7 +17767,7 @@ export default function App() {
                               setCourtCategoryFilter("الكل");
                               setCourtBranchFilter("الكل");
                             }}
-                            className="text-xs font-bold text-amber-700 hover:text-amber-900 flex items-center gap-1 underline underline-offset-2 cursor-pointer"
+                            className="text-xs font-bold text-[#0D382B] hover:opacity-70 flex items-center gap-1 underline underline-offset-2 cursor-pointer"
                           >
                             <RotateCcw size={12} /> إعادة تعيين كافة مستويات التصفية
                           </button>
@@ -17780,7 +17776,7 @@ export default function App() {
 
                       {filteredContacts.length === 0 ? (
                         <div className="bg-white rounded-2xl border border-slate-200 p-8 text-center space-y-3 shadow-sm">
-                          <div className="h-14 w-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto">
+                          <div className="h-14 w-14 rounded-2xl bg-[#0D382B]/[0.06] text-[#0D382B] flex items-center justify-center mx-auto">
                             <Search size={28} />
                           </div>
                           <h3 className="text-base font-bold text-slate-800">لم يتم العثور على نتائج تطابق معايير التصنيف والبحث</h3>
@@ -17821,20 +17817,19 @@ export default function App() {
                                           {isPenalRecord ? (
                                             <Lock size={18} className="text-rose-600 shrink-0" />
                                           ) : (
-                                            <Landmark size={18} className="text-amber-600 shrink-0" />
+                                            <Landmark size={18} className="text-[#0D382B]/70 shrink-0" />
                                           )}
                                           <span>{c.courtName}</span>
                                         </h3>
                                       </div>
                                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                                         <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold border ${circuitBadge.bg}`}>
-                                          <span>{circuitBadge.icon}</span>
                                           <span>{circuitBadge.label}</span>
                                         </span>
-                                        <p className="text-xs font-semibold text-amber-900">{c.department}</p>
+                                        <p className="text-xs font-semibold text-slate-600">{c.department}</p>
                                       </div>
                                     </div>
-                                    <Badge className="bg-slate-900 text-amber-400 shrink-0 font-bold">{c.emirate}</Badge>
+                                    <Badge className="bg-[#0D382B] text-white shrink-0 font-bold">{c.emirate}</Badge>
                                   </div>
 
                                   {/* الموظف والصفة الوظيفية */}
