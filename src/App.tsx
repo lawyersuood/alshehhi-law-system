@@ -5623,6 +5623,7 @@ export default function App() {
   const [courtEmirateFilter, setCourtEmirateFilter] = useState("الكل");
   const [courtCategoryFilter, setCourtCategoryFilter] = useState("الكل");
   const [courtBranchFilter, setCourtBranchFilter] = useState("الكل");
+  const [courtFiltersExpanded, setCourtFiltersExpanded] = useState(false);
   const [editingCourtContact, setEditingCourtContact] = useState<CourtContact | null>(null);
 
   // حالة استيراد ملفات الإكسل لدليل المحاكم والجهات القضائية
@@ -17531,6 +17532,26 @@ export default function App() {
                     )}
                   </div>
 
+                  {/* زر إظهار/إخفاء الفلاتر الهرمية المتقدمة - مغلقة افتراضياً لواجهة أنظف، وتُفتح عند الحاجة فقط */}
+                  <button
+                    type="button"
+                    onClick={() => setCourtFiltersExpanded((v) => !v)}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-[#0D382B]/[0.05] transition-colors cursor-pointer"
+                  >
+                    <span className="text-xs font-bold text-[#0D382B] flex items-center gap-1.5">
+                      <SlidersHorizontal size={14} />
+                      فلاتر متقدمة (الإمارة، نوع الدعوى، المحكمة الفرعية)
+                      {(courtEmirateFilter !== "الكل" || courtCategoryFilter !== "الكل" || courtBranchFilter !== "الكل") && (
+                        <span className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded-full bg-[#0D382B] text-white text-[10px] font-mono">
+                          {[courtEmirateFilter !== "الكل", courtCategoryFilter !== "الكل", courtBranchFilter !== "الكل"].filter(Boolean).length}
+                        </span>
+                      )}
+                    </span>
+                    <ChevronDown size={16} className={`text-slate-500 transition-transform ${courtFiltersExpanded ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {courtFiltersExpanded && (
+                  <>
                   {/* المستوى الأول: تصنيف الإمارة (Emirate) */}
                   <div className="space-y-1.5 pt-1">
                     <div className="flex items-center justify-between">
@@ -17668,6 +17689,8 @@ export default function App() {
                       })}
                     </div>
                   </div>
+                  </>
+                  )}
                 </div>
 
                 {/* قائمة بطاقات وسائل التواصل التفصيلية للمحاكم مع تطبيق التصنيف الهرمي والبحث الذكي المطور */}
