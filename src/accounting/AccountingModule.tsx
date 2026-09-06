@@ -258,12 +258,8 @@ export default function AccountingModule({
           })}
         </nav>
 
-        {/* منطقة المحتوى: شاشة القسم الفرعي المختار حالياً */}
+        {/* منطقة المحتوى: شاشة القسم الفرعي المختار حالياً (كل شاشة فرعية تعرض عنوانها الخاص أصلاً) */}
         <div className="min-w-0 space-y-4">
-          <div className="flex items-center gap-2 px-1">
-            <span className="h-4 w-1 rounded-full bg-[#C5A059] shrink-0" />
-            <h2 className="text-base font-black text-[#0D382B]">{SUB_TAB_LABELS[subTab]}</h2>
-          </div>
 
       {subTab === "accounts" && <ChartOfAccounts accounts={accounts} setAccounts={setAccounts} canManage={canManageAccounts} />}
 
