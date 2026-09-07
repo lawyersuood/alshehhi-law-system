@@ -33,6 +33,7 @@ import PurchaseOrders from "./PurchaseOrders";
 import RecurringInvoices from "./RecurringInvoices";
 import Customers from "./Customers";
 import CashSalesInvoices from "./CashSalesInvoices";
+import EmployeeClaims from "./EmployeeClaims";
 import { SalesQuote } from "./quoteTypes";
 import { CashExpense } from "./cashExpenseTypes";
 import { CreditNote } from "./creditNoteTypes";
@@ -41,6 +42,7 @@ import { PurchaseOrder } from "./purchaseOrderTypes";
 import { RecurringInvoiceTemplate } from "./recurringInvoiceTypes";
 import { Customer } from "./customerTypes";
 import { CashSalesInvoice } from "./cashSalesInvoiceTypes";
+import { EmployeeClaim } from "./employeeClaimTypes";
 import { Account, JournalEntry, LS_KEYS } from "./types";
 import {
   loadAccounts,
@@ -65,6 +67,7 @@ import {
   loadRecurringInvoiceTemplates,
   loadCustomers,
   loadCashSalesInvoices,
+  loadEmployeeClaims,
   saveAccountingStorage,
 } from "./storage";
 import { QUOTE_LS_KEYS } from "./quoteTypes";
@@ -75,6 +78,7 @@ import { PURCHASE_ORDER_LS_KEYS } from "./purchaseOrderTypes";
 import { RECURRING_LS_KEYS } from "./recurringInvoiceTypes";
 import { CUSTOMER_LS_KEYS } from "./customerTypes";
 import { CASH_SALES_INVOICE_LS_KEYS } from "./cashSalesInvoiceTypes";
+import { EMPLOYEE_CLAIM_LS_KEYS } from "./employeeClaimTypes";
 import { BankAccount, BankTransaction, BANK_LS_KEYS } from "./bankTypes";
 import { SalesInvoice, SalesPayment, SALES_LS_KEYS } from "./salesTypes";
 import { Vendor, PurchaseInvoice, PurchasePayment, PURCHASE_LS_KEYS } from "./purchaseTypes";
@@ -272,6 +276,7 @@ export default function AccountingModule({
   const [recurringTemplates, setRecurringTemplates] = useState<RecurringInvoiceTemplate[]>(() => loadRecurringInvoiceTemplates());
   const [customers, setCustomers] = useState<Customer[]>(() => loadCustomers());
   const [cashSalesInvoices, setCashSalesInvoices] = useState<CashSalesInvoice[]>(() => loadCashSalesInvoices());
+  const [employeeClaims, setEmployeeClaims] = useState<EmployeeClaim[]>(() => loadEmployeeClaims());
 
   useEffect(() => saveAccountingStorage(LS_KEYS.accounts, accounts), [accounts]);
   useEffect(() => saveAccountingStorage(LS_KEYS.journalEntries, entries), [entries]);
@@ -295,6 +300,7 @@ export default function AccountingModule({
   useEffect(() => saveAccountingStorage(RECURRING_LS_KEYS.templates, recurringTemplates), [recurringTemplates]);
   useEffect(() => saveAccountingStorage(CUSTOMER_LS_KEYS.customers, customers), [customers]);
   useEffect(() => saveAccountingStorage(CASH_SALES_INVOICE_LS_KEYS.invoices, cashSalesInvoices), [cashSalesInvoices]);
+  useEffect(() => saveAccountingStorage(EMPLOYEE_CLAIM_LS_KEYS.claims, employeeClaims), [employeeClaims]);
 
   useEffect(() => {
     if (selectedBankId && !bankAccounts.some((b) => b.id === selectedBankId)) setSelectedBankId(null);
@@ -555,9 +561,16 @@ export default function AccountingModule({
       )}
 
       {subTab === "employee_claims" && (
-        <ComingSoon
-          title="مطالبات الموظفين"
-          description="طلب استرداد مصروف دفعه الموظف من جيبه الخاص لصالح المكتب (بدل مواصلات، رسوم عاجلة)، مع مسار اعتماد قبل الصرف."
+        <EmployeeClaims
+          accounts={accounts}
+          claims={employeeClaims}
+          setClaims={setEmployeeClaims}
+          entries={entries}
+          setEntries={setEntries}
+          canManage={canManagePayrollEmployees}
+          canApprove={canManagePayrollEmployees}
+          canDelete={canDeletePayrollEmployees}
+          currentUserName={currentUserName}
         />
       )}
 
