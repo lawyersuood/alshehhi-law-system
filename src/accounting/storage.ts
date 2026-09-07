@@ -14,6 +14,7 @@ import { RecurringInvoiceTemplate, RECURRING_LS_KEYS } from "./recurringInvoiceT
 import { Customer, CUSTOMER_LS_KEYS } from "./customerTypes";
 import { CashSalesInvoice, CASH_SALES_INVOICE_LS_KEYS } from "./cashSalesInvoiceTypes";
 import { EmployeeClaim, EMPLOYEE_CLAIM_LS_KEYS } from "./employeeClaimTypes";
+import { BulkReclassLogEntry, BULK_RECLASS_LS_KEYS } from "./bulkReclassTypes";
 
 export function loadAccountingStorage<T>(key: string, fallback: T): T {
   try {
@@ -122,6 +123,10 @@ export function loadCashSalesInvoices(): CashSalesInvoice[] {
 
 export function loadEmployeeClaims(): EmployeeClaim[] {
   return loadAccountingStorage<EmployeeClaim[]>(EMPLOYEE_CLAIM_LS_KEYS.claims, []);
+}
+
+export function loadBulkReclassLog(): BulkReclassLogEntry[] {
+  return loadAccountingStorage<BulkReclassLogEntry[]>(BULK_RECLASS_LS_KEYS.log, []);
 }
 
 // توليد رقم قيد تسلسلي بصيغة JE-YYYY-XXXX بحسب السنة الحالية

@@ -34,6 +34,7 @@ import RecurringInvoices from "./RecurringInvoices";
 import Customers from "./Customers";
 import CashSalesInvoices from "./CashSalesInvoices";
 import EmployeeClaims from "./EmployeeClaims";
+import BulkReclass from "./BulkReclass";
 import { SalesQuote } from "./quoteTypes";
 import { CashExpense } from "./cashExpenseTypes";
 import { CreditNote } from "./creditNoteTypes";
@@ -43,6 +44,7 @@ import { RecurringInvoiceTemplate } from "./recurringInvoiceTypes";
 import { Customer } from "./customerTypes";
 import { CashSalesInvoice } from "./cashSalesInvoiceTypes";
 import { EmployeeClaim } from "./employeeClaimTypes";
+import { BulkReclassLogEntry } from "./bulkReclassTypes";
 import { Account, JournalEntry, LS_KEYS } from "./types";
 import {
   loadAccounts,
@@ -68,6 +70,7 @@ import {
   loadCustomers,
   loadCashSalesInvoices,
   loadEmployeeClaims,
+  loadBulkReclassLog,
   saveAccountingStorage,
 } from "./storage";
 import { QUOTE_LS_KEYS } from "./quoteTypes";
@@ -79,6 +82,7 @@ import { RECURRING_LS_KEYS } from "./recurringInvoiceTypes";
 import { CUSTOMER_LS_KEYS } from "./customerTypes";
 import { CASH_SALES_INVOICE_LS_KEYS } from "./cashSalesInvoiceTypes";
 import { EMPLOYEE_CLAIM_LS_KEYS } from "./employeeClaimTypes";
+import { BULK_RECLASS_LS_KEYS } from "./bulkReclassTypes";
 import { BankAccount, BankTransaction, BANK_LS_KEYS } from "./bankTypes";
 import { SalesInvoice, SalesPayment, SALES_LS_KEYS } from "./salesTypes";
 import { Vendor, PurchaseInvoice, PurchasePayment, PURCHASE_LS_KEYS } from "./purchaseTypes";
@@ -277,6 +281,7 @@ export default function AccountingModule({
   const [customers, setCustomers] = useState<Customer[]>(() => loadCustomers());
   const [cashSalesInvoices, setCashSalesInvoices] = useState<CashSalesInvoice[]>(() => loadCashSalesInvoices());
   const [employeeClaims, setEmployeeClaims] = useState<EmployeeClaim[]>(() => loadEmployeeClaims());
+  const [bulkReclassLog, setBulkReclassLog] = useState<BulkReclassLogEntry[]>(() => loadBulkReclassLog());
 
   useEffect(() => saveAccountingStorage(LS_KEYS.accounts, accounts), [accounts]);
   useEffect(() => saveAccountingStorage(LS_KEYS.journalEntries, entries), [entries]);
@@ -301,6 +306,7 @@ export default function AccountingModule({
   useEffect(() => saveAccountingStorage(CUSTOMER_LS_KEYS.customers, customers), [customers]);
   useEffect(() => saveAccountingStorage(CASH_SALES_INVOICE_LS_KEYS.invoices, cashSalesInvoices), [cashSalesInvoices]);
   useEffect(() => saveAccountingStorage(EMPLOYEE_CLAIM_LS_KEYS.claims, employeeClaims), [employeeClaims]);
+  useEffect(() => saveAccountingStorage(BULK_RECLASS_LS_KEYS.log, bulkReclassLog), [bulkReclassLog]);
 
   useEffect(() => {
     if (selectedBankId && !bankAccounts.some((b) => b.id === selectedBankId)) setSelectedBankId(null);
@@ -575,9 +581,14 @@ export default function AccountingModule({
       )}
 
       {subTab === "bulk_reclass" && (
-        <ComingSoon
-          title="إعادة التصنيف الجماعي"
-          description="تصحيح تصنيف عدة قيود أو معاملات دفعة واحدة (نقلها لحساب آخر) بدل تعديل كل قيد على حدة."
+        <BulkReclass
+          accounts={accounts}
+          entries={entries}
+          setEntries={setEntries}
+          reclassLog={bulkReclassLog}
+          setReclassLog={setBulkReclassLog}
+          canManage={canManageAccounts}
+          currentUserName={currentUserName}
         />
       )}
 
