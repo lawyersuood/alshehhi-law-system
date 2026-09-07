@@ -32,6 +32,7 @@ import DebitNotes from "./DebitNotes";
 import PurchaseOrders from "./PurchaseOrders";
 import RecurringInvoices from "./RecurringInvoices";
 import Customers from "./Customers";
+import CashSalesInvoices from "./CashSalesInvoices";
 import { SalesQuote } from "./quoteTypes";
 import { CashExpense } from "./cashExpenseTypes";
 import { CreditNote } from "./creditNoteTypes";
@@ -39,6 +40,7 @@ import { DebitNote } from "./debitNoteTypes";
 import { PurchaseOrder } from "./purchaseOrderTypes";
 import { RecurringInvoiceTemplate } from "./recurringInvoiceTypes";
 import { Customer } from "./customerTypes";
+import { CashSalesInvoice } from "./cashSalesInvoiceTypes";
 import { Account, JournalEntry, LS_KEYS } from "./types";
 import {
   loadAccounts,
@@ -62,6 +64,7 @@ import {
   loadPurchaseOrders,
   loadRecurringInvoiceTemplates,
   loadCustomers,
+  loadCashSalesInvoices,
   saveAccountingStorage,
 } from "./storage";
 import { QUOTE_LS_KEYS } from "./quoteTypes";
@@ -71,6 +74,7 @@ import { DEBIT_NOTE_LS_KEYS } from "./debitNoteTypes";
 import { PURCHASE_ORDER_LS_KEYS } from "./purchaseOrderTypes";
 import { RECURRING_LS_KEYS } from "./recurringInvoiceTypes";
 import { CUSTOMER_LS_KEYS } from "./customerTypes";
+import { CASH_SALES_INVOICE_LS_KEYS } from "./cashSalesInvoiceTypes";
 import { BankAccount, BankTransaction, BANK_LS_KEYS } from "./bankTypes";
 import { SalesInvoice, SalesPayment, SALES_LS_KEYS } from "./salesTypes";
 import { Vendor, PurchaseInvoice, PurchasePayment, PURCHASE_LS_KEYS } from "./purchaseTypes";
@@ -267,6 +271,7 @@ export default function AccountingModule({
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => loadPurchaseOrders());
   const [recurringTemplates, setRecurringTemplates] = useState<RecurringInvoiceTemplate[]>(() => loadRecurringInvoiceTemplates());
   const [customers, setCustomers] = useState<Customer[]>(() => loadCustomers());
+  const [cashSalesInvoices, setCashSalesInvoices] = useState<CashSalesInvoice[]>(() => loadCashSalesInvoices());
 
   useEffect(() => saveAccountingStorage(LS_KEYS.accounts, accounts), [accounts]);
   useEffect(() => saveAccountingStorage(LS_KEYS.journalEntries, entries), [entries]);
@@ -289,6 +294,7 @@ export default function AccountingModule({
   useEffect(() => saveAccountingStorage(PURCHASE_ORDER_LS_KEYS.orders, purchaseOrders), [purchaseOrders]);
   useEffect(() => saveAccountingStorage(RECURRING_LS_KEYS.templates, recurringTemplates), [recurringTemplates]);
   useEffect(() => saveAccountingStorage(CUSTOMER_LS_KEYS.customers, customers), [customers]);
+  useEffect(() => saveAccountingStorage(CASH_SALES_INVOICE_LS_KEYS.invoices, cashSalesInvoices), [cashSalesInvoices]);
 
   useEffect(() => {
     if (selectedBankId && !bankAccounts.some((b) => b.id === selectedBankId)) setSelectedBankId(null);
@@ -475,9 +481,15 @@ export default function AccountingModule({
       )}
 
       {subTab === "sales_cash_invoices" && (
-        <ComingSoon
-          title="فواتير نقدية"
-          description="فاتورة تُسدَّد فوراً نقداً وقت إصدارها، بدون دورة استحقاق أو متابعة تحصيل لاحقة."
+        <CashSalesInvoices
+          accounts={accounts}
+          invoices={cashSalesInvoices}
+          setInvoices={setCashSalesInvoices}
+          entries={entries}
+          setEntries={setEntries}
+          canManage={canManageSalesInvoices}
+          canDelete={canDeleteSalesInvoices}
+          currentUserName={currentUserName}
         />
       )}
 
