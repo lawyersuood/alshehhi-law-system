@@ -60,7 +60,11 @@ export interface JournalEntry {
 }
 
 export const LS_KEYS = {
-  accounts: "firm_accounting_accounts_v1",
+  // تم ترقية هذا المفتاح إلى v2 عمداً: المتصفح كان قد خزّن شجرة الحسابات الافتراضية القديمة
+  // في localStorage من أول استخدام تجريبي، فتغيير الشجرة في الكود لا يظهر للمستخدم إطلاقاً
+  // لأن loadAccounts() يقرأ من التخزين المحلي أولاً ولا يعود للقيمة الافتراضية الجديدة إلا إذا
+  // كان المفتاح غير موجود. ترقية المفتاح تجبر المتصفح على تحميل شجرة وافق الجديدة من الصفر.
+  accounts: "firm_accounting_accounts_v2",
   journalEntries: "firm_accounting_journal_entries_v1",
   entryCounter: "firm_accounting_entry_counter_v1",
 };
