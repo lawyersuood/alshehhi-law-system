@@ -4,8 +4,8 @@
 // معزول بالكامل، ولا يظهر إلا بعد تفعيل ACCOUNTING_MODULE_ENABLED في App.tsx
 // ============================================================
 
-export const AP_ACCOUNT_CODE = "2010"; // ذمم الموردين الدائنة
-export const VAT_INPUT_ACCOUNT_CODE = "1120"; // ضريبة القيمة المضافة — مدخلات (قابلة للاسترداد)
+export const AP_ACCOUNT_CODE = "211"; // الموردون
+export const VAT_INPUT_ACCOUNT_CODE = "2110"; // ضريبة القيمة المضافة — مدخلات (قابلة للاسترداد)
 
 export interface Vendor {
   id: string;

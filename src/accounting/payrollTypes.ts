@@ -5,8 +5,8 @@
 // معزول بالكامل، ولا يظهر إلا بعد تفعيل ACCOUNTING_MODULE_ENABLED في App.tsx
 // ============================================================
 
-export const SALARY_EXPENSE_ACCOUNT_CODE = "5010"; // رواتب وأجور الموظفين
-export const SALARY_PAYABLE_ACCOUNT_CODE = "2110"; // رواتب ومستحقات الموظفين
+export const SALARY_EXPENSE_ACCOUNT_CODE = "5211"; // رواتب وأجور الموظفين
+export const SALARY_PAYABLE_ACCOUNT_CODE = "213"; // رواتب ومستحقات الموظفين
 
 export interface AllowanceItem {
   id: string;

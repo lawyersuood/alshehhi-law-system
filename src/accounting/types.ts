@@ -22,11 +22,17 @@ export interface Account {
   code: string; // الرقم المحاسبي، مثال: 1010
   name: string; // اسم الحساب بالعربية
   type: AccountType;
-  parentId?: string | null; // لدعم الحسابات الفرعية مستقبلاً
+  parentId?: string | null; // لدعم الحسابات الفرعية
   isActive: boolean;
   isSystem?: boolean; // حسابات أساسية من الشجرة الافتراضية، تمنع من الحذف (يمكن تعطيلها فقط)
+  isGroup?: boolean; // حساب تصنيف/رأس (غير قابل للترحيل إليه مباشرة)، يُستثنى من قوائم الاختيار
   notes?: string;
   createdAt: string;
+}
+
+// يُستخدم في كل قوائم اختيار الحسابات (Dropdowns) لاستبعاد حسابات التصنيف غير القابلة للترحيل
+export function isPostable(a: Pick<Account, "isGroup" | "isActive">): boolean {
+  return a.isActive && !a.isGroup;
 }
 
 export interface JournalLine {

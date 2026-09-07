@@ -61,8 +61,8 @@ export default function CashExpenses({
   const [error, setError] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const expenseAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
-  const paymentAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const expenseAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const paymentAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
 
   const sortedExpenses = useMemo(
     () => [...expenses].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.expenseNumber.localeCompare(a.expenseNumber))),

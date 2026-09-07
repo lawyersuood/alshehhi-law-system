@@ -52,7 +52,7 @@ export default function BankAccountLedger({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const otherAccounts = useMemo(
-    () => accounts.filter((a) => a.isActive && a.id !== bankAccount.linkedAccountId).sort((a, b) => a.code.localeCompare(b.code)),
+    () => accounts.filter((a) => a.isActive && !a.isGroup && a.id !== bankAccount.linkedAccountId).sort((a, b) => a.code.localeCompare(b.code)),
     [accounts, bankAccount.linkedAccountId]
   );
 

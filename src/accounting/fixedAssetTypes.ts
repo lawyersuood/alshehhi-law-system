@@ -3,8 +3,8 @@
 // معزول بالكامل، ولا يظهر إلا بعد تفعيل ACCOUNTING_MODULE_ENABLED في App.tsx
 // ============================================================
 
-export const ACCUMULATED_DEPRECIATION_ACCOUNT_CODE = "1290"; // مجمع إهلاك الأصول الثابتة (حساب مقابل)
-export const DEPRECIATION_EXPENSE_ACCOUNT_CODE = "5090"; // استهلاك الأصول الثابتة
+export const ACCUMULATED_DEPRECIATION_ACCOUNT_CODE = "122"; // مجمع إهلاك الأصول الثابتة (حساب مقابل)
+export const DEPRECIATION_EXPENSE_ACCOUNT_CODE = "5330"; // مصاريف الإهلاك (استهلاك الأصول الثابتة)
 
 export const ASSET_CATEGORIES = ["أثاث وتجهيزات مكتبية", "أجهزة حاسب آلي ومعدات تقنية", "سيارات", "أخرى"];
 

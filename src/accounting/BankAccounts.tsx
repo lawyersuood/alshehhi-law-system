@@ -58,7 +58,7 @@ export default function BankAccounts({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // حسابات الأصول فقط تصلح لتمثيل حساب بنكي في شجرة الحسابات
-  const assetAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const assetAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
 
   const openNew = () => {
     setError("");

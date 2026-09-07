@@ -83,8 +83,8 @@ export default function PurchaseInvoices({
   const [paymentRef, setPaymentRef] = useState("");
   const [paymentError, setPaymentError] = useState("");
 
-  const expenseAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
-  const assetAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const expenseAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const assetAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
   const activeVendors = useMemo(() => vendors.filter((v) => v.isActive).sort((a, b) => a.name.localeCompare(b.name)), [vendors]);
   const apAccount = useMemo(() => accounts.find((a) => a.code === AP_ACCOUNT_CODE), [accounts]);
   const vatInputAccount = useMemo(() => accounts.find((a) => a.code === VAT_INPUT_ACCOUNT_CODE), [accounts]);

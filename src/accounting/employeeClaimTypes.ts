@@ -8,7 +8,7 @@
 
 import { Account } from "./types";
 
-export const EMPLOYEE_CLAIMS_PAYABLE_ACCOUNT_CODE = "2130"; // ذمم دائنة أخرى ومصروفات مستحقة
+export const EMPLOYEE_CLAIMS_PAYABLE_ACCOUNT_CODE = "216"; // ذمم دائنة أخرى ومصروفات مستحقة
 
 export type EmployeeClaimStatus = "pending" | "approved" | "paid" | "rejected";
 

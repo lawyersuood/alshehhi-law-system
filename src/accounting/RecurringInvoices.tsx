@@ -84,7 +84,7 @@ export default function RecurringInvoices({
   const [error, setError] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const revenueAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "revenue").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const revenueAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "revenue").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
 
   const sortedTemplates = useMemo(
     () => [...templates].sort((a, b) => (a.nextRunDate < b.nextRunDate ? -1 : a.nextRunDate > b.nextRunDate ? 1 : 0)),

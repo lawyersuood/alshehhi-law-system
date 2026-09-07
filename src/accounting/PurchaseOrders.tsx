@@ -72,7 +72,7 @@ export default function PurchaseOrders({
   const [error, setError] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const expenseAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const expenseAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
   const vendorName = (id: string) => vendors.find((v) => v.id === id)?.name || "—";
 
   const sortedOrders = useMemo(

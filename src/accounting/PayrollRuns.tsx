@@ -53,7 +53,7 @@ export default function PayrollRuns({
   const [payingAccountId, setPayingAccountId] = useState("");
   const [paymentError, setPaymentError] = useState("");
 
-  const assetTypeAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const assetTypeAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
   const activeEmployees = useMemo(() => employees.filter((e) => e.isActive), [employees]);
   const alreadyRun = hasRunForPeriod(period, runs);
 

@@ -60,8 +60,8 @@ export default function PayrollEmployees({
   canDelete: boolean;
   currentUserName?: string;
 }) {
-  const expenseTypeAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
-  const liabilityTypeAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "liability").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const expenseTypeAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const liabilityTypeAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "liability").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
   const defaultExpAccount = useMemo(() => accounts.find((a) => a.code === SALARY_EXPENSE_ACCOUNT_CODE), [accounts]);
   const defaultPayableAccount = useMemo(() => accounts.find((a) => a.code === SALARY_PAYABLE_ACCOUNT_CODE), [accounts]);
 

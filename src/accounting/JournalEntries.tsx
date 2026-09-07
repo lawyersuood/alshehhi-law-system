@@ -47,7 +47,7 @@ export default function JournalEntries({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [viewingId, setViewingId] = useState<string | null>(null);
 
-  const activeAccounts = useMemo(() => accounts.filter((a) => a.isActive).sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const activeAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup).sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
 
   const sortedEntries = useMemo(() => [...entries].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.entryNumber.localeCompare(a.entryNumber))), [entries]);
 

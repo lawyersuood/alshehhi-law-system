@@ -83,8 +83,8 @@ export default function FixedAssets({
   canDelete: boolean;
   currentUserName?: string;
 }) {
-  const assetTypeAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
-  const expenseTypeAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const assetTypeAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const expenseTypeAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
   const defaultAccDepAccount = useMemo(() => accounts.find((a) => a.code === ACCUMULATED_DEPRECIATION_ACCOUNT_CODE), [accounts]);
   const defaultExpAccount = useMemo(() => accounts.find((a) => a.code === DEPRECIATION_EXPENSE_ACCOUNT_CODE), [accounts]);
 

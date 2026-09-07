@@ -40,7 +40,7 @@ export default function ChartOfAccounts({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
-  const filtered = useMemo(() => {
+  const matches = useMemo(() => {
     return accounts.filter((a) => {
       if (!showInactive && !a.isActive) return false;
       if (typeFilter !== "all" && a.type !== typeFilter) return false;
@@ -52,13 +52,43 @@ export default function ChartOfAccounts({
     });
   }, [accounts, typeFilter, showInactive, query]);
 
+  // نبني معرّفات الحسابات الواجب إظهارها: كل حساب مطابق للفلاتر بالإضافة إلى كل أسلافه
+  // (حتى تبقى الحسابات الفرعية معروضة ضمن سياق فرعها الأصلي في الشجرة)
+  const byId = useMemo(() => new Map(accounts.map((a) => [a.id, a])), [accounts]);
+  const visibleIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const a of matches) {
+      let cur: Account | undefined = a;
+      while (cur && !set.has(cur.id)) {
+        set.add(cur.id);
+        cur = cur.parentId ? byId.get(cur.parentId) : undefined;
+      }
+    }
+    return set;
+  }, [matches, byId]);
+
+  const childrenMap = useMemo(() => {
+    const map = new Map<string, Account[]>();
+    for (const a of accounts) {
+      const key = a.parentId || "__root__";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(a);
+    }
+    for (const arr of map.values()) arr.sort((a, b) => a.code.localeCompare(b.code));
+    return map;
+  }, [accounts]);
+
   const grouped = useMemo(() => {
     const map = new Map<AccountType, Account[]>();
     for (const t of ACCOUNT_TYPE_ORDER) map.set(t, []);
-    for (const a of filtered) map.get(a.type)?.push(a);
-    for (const arr of map.values()) arr.sort((a, b) => a.code.localeCompare(b.code));
+    const roots = childrenMap.get("__root__") || [];
+    for (const a of roots) {
+      if (visibleIds.has(a.id)) map.get(a.type)?.push(a);
+    }
     return map;
-  }, [filtered]);
+  }, [childrenMap, visibleIds]);
+
+  const filtered = matches; // للاستخدام في عداد "لا توجد نتائج" وعنوان القسم
 
   const openNew = () => {
     setError("");
@@ -124,6 +154,58 @@ export default function ChartOfAccounts({
 
   const deletingAccount = accounts.find((a) => a.id === confirmDeleteId);
 
+  const renderNode = (a: Account, depth: number): React.ReactNode => {
+    const kids = (childrenMap.get(a.id) || []).filter((k) => visibleIds.has(k.id));
+    return (
+      <React.Fragment key={a.id}>
+        <tr className={`border-b border-slate-50 last:border-0 hover:bg-[#0D382B]/[0.02] transition-colors ${!a.isActive ? "opacity-50" : ""} ${a.isGroup ? "bg-slate-50/60" : ""}`}>
+          <td className="px-4 py-1.5 font-mono text-slate-700" style={{ paddingRight: `${16 + depth * 18}px` }}>
+            {a.code}
+          </td>
+          <td className={`px-4 py-1.5 ${a.isGroup ? "text-slate-600 font-bold" : "text-slate-800 font-medium"}`}>
+            <span className="inline-flex items-center gap-1.5">
+              {a.name}
+              {a.isGroup && (
+                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold border bg-slate-100 text-slate-500 border-slate-200">
+                  تصنيف
+                </span>
+              )}
+              {a.isSystem && <Lock size={12} className="text-slate-300" title="حساب أساسي من الشجرة الافتراضية" />}
+            </span>
+          </td>
+          <td className="px-4 py-1.5 text-xs text-slate-500">{a.notes || "—"}</td>
+          <td className="px-4 py-1.5">
+            <span
+              className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
+                a.isActive ? TYPE_BADGE_CLS[a.type] : "bg-slate-100 text-slate-500 border-slate-200"
+              }`}
+            >
+              {a.isActive ? "فعّال" : "معطّل"}
+            </span>
+          </td>
+          {canManage && (
+            <td className="px-4 py-1.5">
+              <div className="flex items-center gap-1 justify-end">
+                <button onClick={() => toggleActive(a)} className="text-xs text-slate-500 hover:text-slate-800 px-2 py-1">
+                  {a.isActive ? "تعطيل" : "تفعيل"}
+                </button>
+                <button onClick={() => openEdit(a)} className="p-1.5 text-slate-500 hover:text-[#0D382B] rounded-lg hover:bg-[#0D382B]/[0.06]">
+                  <Pencil size={14} />
+                </button>
+                {!a.isSystem && (
+                  <button onClick={() => requestDelete(a)} className="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50">
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+            </td>
+          )}
+        </tr>
+        {kids.map((k) => renderNode(k, depth + 1))}
+      </React.Fragment>
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -186,44 +268,7 @@ export default function ChartOfAccounts({
                     </tr>
                   </thead>
                   <tbody>
-                    {list.map((a) => (
-                      <tr key={a.id} className={`border-b border-slate-50 last:border-0 hover:bg-[#0D382B]/[0.02] transition-colors ${!a.isActive ? "opacity-50" : ""}`}>
-                        <td className="px-4 py-1.5 font-mono text-slate-700">{a.code}</td>
-                        <td className="px-4 py-1.5 text-slate-800 font-medium">
-                          <span className="inline-flex items-center gap-1.5">
-                            {a.name}
-                            {a.isSystem && <Lock size={12} className="text-slate-300" title="حساب أساسي من الشجرة الافتراضية" />}
-                          </span>
-                        </td>
-                        <td className="px-4 py-1.5 text-xs text-slate-500">{a.notes || "—"}</td>
-                        <td className="px-4 py-1.5">
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
-                              a.isActive ? TYPE_BADGE_CLS[a.type] : "bg-slate-100 text-slate-500 border-slate-200"
-                            }`}
-                          >
-                            {a.isActive ? "فعّال" : "معطّل"}
-                          </span>
-                        </td>
-                        {canManage && (
-                          <td className="px-4 py-1.5">
-                            <div className="flex items-center gap-1 justify-end">
-                              <button onClick={() => toggleActive(a)} className="text-xs text-slate-500 hover:text-slate-800 px-2 py-1">
-                                {a.isActive ? "تعطيل" : "تفعيل"}
-                              </button>
-                              <button onClick={() => openEdit(a)} className="p-1.5 text-slate-500 hover:text-[#0D382B] rounded-lg hover:bg-[#0D382B]/[0.06]">
-                                <Pencil size={14} />
-                              </button>
-                              {!a.isSystem && (
-                                <button onClick={() => requestDelete(a)} className="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50">
-                                  <Trash2 size={14} />
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
+                    {list.map((a) => renderNode(a, 0))}
                   </tbody>
                 </table>
               </div>

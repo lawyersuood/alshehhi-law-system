@@ -72,8 +72,8 @@ export default function CashSalesInvoices({
   const [error, setError] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const revenueAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "revenue").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
-  const receivingAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const revenueAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "revenue").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const receivingAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
   const vatAccount = useMemo(() => accounts.find((a) => a.code === VAT_OUTPUT_ACCOUNT_CODE), [accounts]);
 
   const sortedInvoices = useMemo(

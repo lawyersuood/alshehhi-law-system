@@ -75,7 +75,7 @@ export default function DebitNotes({
   const [error, setError] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const expenseAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const expenseAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
   const apAccount = useMemo(() => accounts.find((a) => a.code === AP_ACCOUNT_CODE), [accounts]);
   const vatInputAccount = useMemo(() => accounts.find((a) => a.code === VAT_INPUT_ACCOUNT_CODE), [accounts]);
 

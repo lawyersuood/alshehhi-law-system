@@ -7,8 +7,8 @@
 
 export const UAE_EMIRATES = ["أبوظبي", "دبي", "الشارقة", "عجمان", "أم القيوين", "رأس الخيمة", "الفجيرة"];
 
-export const AR_ACCOUNT_CODE = "1110"; // ذمم العملاء المدينة
-export const VAT_OUTPUT_ACCOUNT_CODE = "2020"; // ضريبة القيمة المضافة — مخرجات
+export const AR_ACCOUNT_CODE = "112"; // العملاء
+export const VAT_OUTPUT_ACCOUNT_CODE = "218"; // ضريبة القيمة المضافة — مخرجات
 
 export interface InvoiceLineItem {
   id: string;

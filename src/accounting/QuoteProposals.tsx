@@ -79,7 +79,7 @@ export default function QuoteProposals({
   const [error, setError] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const revenueAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "revenue").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const revenueAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "revenue").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
 
   const sortedQuotes = useMemo(
     () => [...quotes].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.quoteNumber.localeCompare(a.quoteNumber))),

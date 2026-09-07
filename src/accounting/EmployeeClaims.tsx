@@ -75,8 +75,8 @@ export default function EmployeeClaims({
   const [payClaim, setPayClaim] = useState<EmployeeClaim | null>(null);
   const [payAccountId, setPayAccountId] = useState("");
 
-  const expenseAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
-  const paymentAccounts = useMemo(() => accounts.filter((a) => a.isActive && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const expenseAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const paymentAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
   const claimsPayableAccount = useMemo(() => accounts.find((a) => a.code === EMPLOYEE_CLAIMS_PAYABLE_ACCOUNT_CODE), [accounts]);
 
   const sortedClaims = useMemo(
