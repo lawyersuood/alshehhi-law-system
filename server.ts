@@ -574,9 +574,17 @@ function getImapConfig() {
 }
 
 let imapPollInProgress = false;
+let imapPollStartedAt = 0;
 
 async function fetchNewInboxEmails(): Promise<{ imported: number; error?: string }> {
+  // شفاء ذاتي: إذا بقيت العملية "قيد التنفيذ" لأكثر من دقيقة (مثلاً بسبب اتصال TCP معلّق
+  // لا يستجيب حتى لإغلاق قسري)، نعتبرها منتهية تلقائياً حتى لا تُحجب كل المحاولات القادمة
+  // إلى الأبد في حال تعطل اتصال IMAP بشكل صامت (كحجب المنفذ 993 من قبل مزود الاستضافة).
+  if (imapPollInProgress && Date.now() - imapPollStartedAt > 60000) {
+    imapPollInProgress = false;
+  }
   if (imapPollInProgress) return { imported: 0, error: 'عملية جلب سابقة لا تزال قيد التنفيذ' };
+  imapPollStartedAt = Date.now();
   const cfg = getImapConfig();
   if (!cfg) {
     return { imported: 0, error: 'إعدادات IMAP غير مكتملة (يلزم بريد وكلمة مرور ومضيف IMAP_HOST أو اشتقاقه من SMTP_HOST)' };
