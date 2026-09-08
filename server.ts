@@ -4,6 +4,7 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import QRCode from 'qrcode';
 import nodemailer from 'nodemailer';
+import { createClient } from '@supabase/supabase-js';
 import { accountingRouter } from './server/accountingApi';
 
 const app = express();
@@ -456,6 +457,62 @@ app.post('/api/notifications/send-email', async (req, res) => {
     res.json({ success: true, messageId: info.messageId });
   } catch (err: any) {
     res.status(500).json({ error: err?.message || 'فشل إرسال البريد الإلكتروني' });
+  }
+});
+
+// ================= استقبال ويب هوك واتساب (الرسائل الواردة من Meta) — يستبدل whatsapp-webhook =================
+// نقل نقطة استقبال الويب هوك من Supabase Edge Function إلى سيرفر الموقع نفسه، حتى تكتمل
+// الهجرة الكاملة لخاصية الواتساب بعيداً عن الاعتماد على Supabase. يجب تحديث رابط الـ Webhook
+// في لوحة تحكم Meta for Developers إلى: https://<دومين الموقع>/api/notifications/whatsapp-webhook
+// نفس رمز التحقق (Verify Token) المستخدم سابقاً في Supabase يمكن إبقاؤه كما هو عبر متغير بيئة
+// WHATSAPP_VERIFY_TOKEN، وإلا يُستخدم نفس النص الافتراضي القديم كقيمة احتياطية.
+const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'my_law_firm_secret_token_123';
+
+function getSupabaseAdminClient() {
+  const url = process.env.SUPABASE_URL || 'https://ywfddjrrgqwxbomjxsgq.supabase.co';
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return null;
+  return createClient(url, serviceKey);
+}
+
+// 1) تحقق Meta من ملكية رابط الويب هوك (GET)
+app.get('/api/notifications/whatsapp-webhook', (req, res) => {
+  const mode = req.query['hub.mode'];
+  const token = req.query['hub.verify_token'];
+  const challenge = req.query['hub.challenge'];
+
+  if (mode === 'subscribe' && token === WHATSAPP_VERIFY_TOKEN) {
+    res.status(200).send(challenge);
+  } else {
+    res.status(403).send('Forbidden');
+  }
+});
+
+// 2) استقبال الرسائل الواردة فعلياً وحفظها في قاعدة البيانات (POST)
+app.post('/api/notifications/whatsapp-webhook', async (req, res) => {
+  try {
+    const body = req.body;
+    const entry = body?.entry?.[0]?.changes?.[0]?.value;
+    const message = entry?.messages?.[0];
+
+    if (message) {
+      const supabaseAdmin = getSupabaseAdminClient();
+      if (!supabaseAdmin) {
+        console.warn('SUPABASE_SERVICE_ROLE_KEY غير معرّف — تعذر حفظ رسالة الواتساب الواردة');
+      } else {
+        await supabaseAdmin.from('whatsapp_messages').insert({
+          whatsapp_id: message.id,
+          sender_phone: message.from,
+          sender_name: entry?.contacts?.[0]?.profile?.name || '',
+          message_text: message.text?.body || '',
+          payload: body
+        });
+      }
+    }
+
+    res.status(200).send('EVENT_RECEIVED');
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'فشل معالجة رسالة الواتساب الواردة' });
   }
 });
 
