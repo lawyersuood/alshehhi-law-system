@@ -4,6 +4,8 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
 import QRCode from 'qrcode';
 import nodemailer from 'nodemailer';
+import { ImapFlow } from 'imapflow';
+import { simpleParser } from 'mailparser';
 import { createClient } from '@supabase/supabase-js';
 import { accountingRouter } from './server/accountingApi';
 
@@ -537,6 +539,123 @@ app.post('/api/notifications/whatsapp-webhook', async (req, res) => {
     res.status(500).json({ error: err?.message || 'فشل معالجة رسالة الواتساب الواردة' });
   }
 });
+
+// ================= استقبال البريد الإلكتروني الوارد فعلياً عبر IMAP =================
+// حتى الآن كان النظام يرسل البريد فقط (SMTP)، ولا يقرأ الرسائل الواردة الحقيقية من صندوق
+// Titan Mail الفعلي. هذا الجزء يضيف اتصال IMAP دوري يجلب الرسائل الجديدة غير المقروءة من
+// صندوق الوارد الحقيقي ويحفظها في جدول email_messages في Supabase (نفس الجدول الذي تعرضه
+// الواجهة الأمامية في صفحة البريد)، حتى تظهر الرسائل الواردة فعلياً داخل النظام.
+function getImapConfig() {
+  const email = activeEmailConfig.password ? activeEmailConfig.email : (process.env.SMTP_EMAIL || activeEmailConfig.email);
+  const password = activeEmailConfig.password || process.env.SMTP_PASSWORD;
+  // نشتق مضيف IMAP من مضيف SMTP نفسه (smtp.titan.email -> imap.titan.email) ما لم يُحدَّد صراحة
+  const envImapHost = process.env.IMAP_HOST;
+  const smtpHost = activeEmailConfig.host || process.env.SMTP_HOST;
+  const derivedHost = smtpHost ? smtpHost.replace(/^smtp\./i, 'imap.') : undefined;
+  const host = envImapHost || derivedHost;
+  const port = process.env.IMAP_PORT ? Number(process.env.IMAP_PORT) : 993;
+
+  if (!email || !password || !host) return null;
+  return { email, password, host, port };
+}
+
+let imapPollInProgress = false;
+
+async function fetchNewInboxEmails(): Promise<{ imported: number; error?: string }> {
+  if (imapPollInProgress) return { imported: 0, error: 'عملية جلب سابقة لا تزال قيد التنفيذ' };
+  const cfg = getImapConfig();
+  if (!cfg) {
+    return { imported: 0, error: 'إعدادات IMAP غير مكتملة (يلزم بريد وكلمة مرور ومضيف IMAP_HOST أو اشتقاقه من SMTP_HOST)' };
+  }
+
+  const supabaseAdmin = getSupabaseAdminClient();
+  if (!supabaseAdmin) {
+    return { imported: 0, error: 'SUPABASE_SERVICE_ROLE_KEY غير معرّف — تعذر حفظ الرسائل الواردة' };
+  }
+
+  imapPollInProgress = true;
+  const client = new ImapFlow({
+    host: cfg.host,
+    port: cfg.port,
+    secure: cfg.port === 993,
+    auth: { user: cfg.email, pass: cfg.password },
+    logger: false,
+    tls: { rejectUnauthorized: false }
+  });
+
+  let imported = 0;
+  try {
+    await client.connect();
+    const lock = await client.getMailboxLock('INBOX');
+    try {
+      const uids = await client.search({ seen: false }, { uid: true });
+      const uidList = Array.isArray(uids) ? uids : [];
+
+      for (const uid of uidList) {
+        try {
+          const raw = await client.download(String(uid), undefined, { uid: true });
+          if (!raw?.content) continue;
+          const parsed = await simpleParser(raw.content as any);
+
+          const messageId = parsed.messageId || `imap-${uid}-${Date.now()}`;
+
+          // تفادي تكرار استيراد نفس الرسالة إذا سبق حفظها
+          const { data: existing } = await supabaseAdmin
+            .from('email_messages')
+            .select('id')
+            .eq('external_message_id', messageId)
+            .maybeSingle();
+
+          if (!existing) {
+            const fromAddr = parsed.from?.value?.[0];
+            await supabaseAdmin.from('email_messages').insert({
+              external_message_id: messageId,
+              folder: 'inbox',
+              sender_name: fromAddr?.name || fromAddr?.address || 'مرسل غير معروف',
+              sender_email: fromAddr?.address || '',
+              recipient_email: cfg.email,
+              subject: parsed.subject || 'بدون موضوع',
+              body: parsed.html || parsed.textAsHtml || parsed.text || '',
+              is_read: false
+            });
+            imported++;
+          }
+
+          await client.messageFlagsAdd(String(uid), ['\\Seen'], { uid: true });
+        } catch (innerErr) {
+          console.warn('IMAP: تعذرت معالجة رسالة واحدة:', innerErr);
+        }
+      }
+    } finally {
+      lock.release();
+    }
+    await client.logout();
+  } catch (err: any) {
+    imapPollInProgress = false;
+    return { imported, error: err?.message || 'فشل الاتصال بخادم IMAP' };
+  }
+
+  imapPollInProgress = false;
+  return { imported };
+}
+
+// نقطة نهاية يمكن للواجهة الأمامية استدعاؤها لتحديث صندوق الوارد يدوياً (زر "تحديث")
+app.post('/api/notifications/fetch-inbox', async (_req, res) => {
+  const result = await fetchNewInboxEmails();
+  if (result.error && result.imported === 0) {
+    res.status(500).json({ success: false, error: result.error });
+    return;
+  }
+  res.json({ success: true, imported: result.imported });
+});
+
+// جلب دوري تلقائي كل 3 دقائق حتى تصل الرسائل الواردة الجديدة إلى النظام دون تدخل يدوي
+setInterval(() => {
+  fetchNewInboxEmails().then(r => {
+    if (r.error) console.warn('IMAP polling note:', r.error);
+    else if (r.imported > 0) console.log(`IMAP polling: تم استيراد ${r.imported} رسالة جديدة`);
+  });
+}, 3 * 60 * 1000);
 
 // Initialize Google GenAI client
 const apiKey = process.env.GEMINI_API_KEY;
