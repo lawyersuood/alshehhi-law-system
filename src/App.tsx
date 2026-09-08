@@ -14,7 +14,7 @@ import AdminConsultationsView from "./components/AdminConsultationsView";
 import GoogleCalendarSyncModal from "./components/GoogleCalendarSyncModal";
 import { initAuth, createGoogleCalendarEvent, formatCalendarDateTime } from "./googleCalendar";
 import { User as FirebaseUser } from "firebase/auth";
-import { supabase, sendWhatsAppViaEdgeFunction } from "./supabaseClient";
+import { supabase, sendWhatsAppViaEdgeFunction, sendEmailViaServer } from "./supabaseClient";
 import {
   Scale, LayoutDashboard, Briefcase, Users, CalendarDays, ListChecks,
   Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, BellRing, Building2,
@@ -3032,17 +3032,15 @@ const sendWhatsAppMsg = (phone: string, text: string) => {
 
 const sendEmailMsg = (email: string, subject: string, body: string) => {
   if (email && email.includes("@")) {
-    supabase.functions.invoke("send-email", {
-      body: {
-        to: email,
-        subject: subject,
-        html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${body}</div>`
-      }
-    }).then(({ error }) => {
-      if (!error) {
-        console.log("Email dispatched via send-email Edge Function successfully");
+    sendEmailViaServer({
+      to: email,
+      subject: subject,
+      html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${body}</div>`
+    }).then(({ success, error }) => {
+      if (success) {
+        console.log("Email dispatched via local server route successfully");
       } else {
-        console.warn("send-email Edge Function returned an error:", error);
+        console.warn("send-email local route returned an error:", error);
       }
     }).catch(err => {
       console.warn("Server email dispatch fallback to mailto:", err);
@@ -7122,12 +7120,10 @@ export default function App() {
     setTestInvoiceResult(null);
 
     try {
-      const { error } = await supabase.functions.invoke("send-email", {
-        body: {
-          to: targetEmail,
-          subject: `📄 [فحص تسليم فاتورة ضريبية] - مكتب سعود أحمد الشحي للمحاماة (${emailConfig.protocol.toUpperCase()})`,
-          html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">الموكل الفاضل / المستلم المحترم،\n\nتحية طيبة وبعد،\n\nهذا بريد فحص آلي صادر من نظام الفواتير والمراسلات الموحد بمكتب المحاماة للتأكد من وصول الفواتير الضريبية والإشعارات القانونية بنجاح إلى صندوق البريد الوارد الخاص بكم.\n\nتفاصيل العينة التجريبية للفاتورة:\n• رقم الفاتورة: INV-2026-TEST-VERIFIED\n• بيان الخدمة: أتعاب استشارة واستحقاق قضائي تجريبي\n• المبلغ الأولي: 5,000 درهم إماراتي\n• ضريبة القيمة المضافة VAT (5%): 250 درهم إماراتي\n• الإجمالي المستحق: 5,250 درهم إماراتي\n\nتاريخ وساعة الإرسال: ${new Date().toLocaleString("ar-AE")}\n\nمع تحيات،\nمكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية</div>`
-        }
+      const { success, error } = await sendEmailViaServer({
+        to: targetEmail,
+        subject: `📄 [فحص تسليم فاتورة ضريبية] - مكتب سعود أحمد الشحي للمحاماة (${emailConfig.protocol.toUpperCase()})`,
+        html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">الموكل الفاضل / المستلم المحترم،\n\nتحية طيبة وبعد،\n\nهذا بريد فحص آلي صادر من نظام الفواتير والمراسلات الموحد بمكتب المحاماة للتأكد من وصول الفواتير الضريبية والإشعارات القانونية بنجاح إلى صندوق البريد الوارد الخاص بكم.\n\nتفاصيل العينة التجريبية للفاتورة:\n• رقم الفاتورة: INV-2026-TEST-VERIFIED\n• بيان الخدمة: أتعاب استشارة واستحقاق قضائي تجريبي\n• المبلغ الأولي: 5,000 درهم إماراتي\n• ضريبة القيمة المضافة VAT (5%): 250 درهم إماراتي\n• الإجمالي المستحق: 5,250 درهم إماراتي\n\nتاريخ وساعة الإرسال: ${new Date().toLocaleString("ar-AE")}\n\nمع تحيات،\nمكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية</div>`
       });
 
       if (!error) {
@@ -7211,14 +7207,12 @@ export default function App() {
     let sendSucceeded = false;
     let sendErrorMessage = "";
     try {
-      const { error } = await supabase.functions.invoke("send-email", {
-        body: {
-          to: composeTo,
-          subject: composeSubject,
-          html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${composeBody}</div>`
-        }
+      const { success, error } = await sendEmailViaServer({
+        to: composeTo,
+        subject: composeSubject,
+        html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${composeBody}</div>`
       });
-      if (error) throw error;
+      if (!success) throw new Error(error || "فشل إرسال البريد");
       sendSucceeded = true;
     } catch (e: any) {
       console.log("Send email via Edge Function note:", e);
@@ -7506,12 +7500,10 @@ export default function App() {
               
               // محاولة إرسال التنبيه التلقائي عبر البريد الإلكتروني أيضاً إذا تم تكوينه
               if (user.email && typeof supabase.functions !== "undefined") {
-                 supabase.functions.invoke("send-email", {
-                    body: {
-                       to: user.email,
-                       subject: `تذكير بمهمة مستحقة: ${t.title}`,
-                       html: `<p>مرحباً ${user.name}،</p><p>نذكرك بضرورة إنجاز المهمة التالية:</p><p><strong>${t.title}</strong></p><p>تاريخ الاستحقاق: ${t.due}</p>`
-                    }
+                 sendEmailViaServer({
+                    to: user.email,
+                    subject: `تذكير بمهمة مستحقة: ${t.title}`,
+                    html: `<p>مرحباً ${user.name}،</p><p>نذكرك بضرورة إنجاز المهمة التالية:</p><p><strong>${t.title}</strong></p><p>تاريخ الاستحقاق: ${t.due}</p>`
                  }).catch(e => console.warn("Email reminder failed or not configured", e));
               }
 
@@ -7963,14 +7955,12 @@ export default function App() {
           const emailContent = `سعادة المحامي / ${lawyerName} المحترم،\n\nتحية طيبة وبعد،\n\nنود لفت عنايتكم العاجلة والشديدة بأنه متبقي (${daysLeft}) أيام فقط على انقضاء المهلة القانونية المقررة للطعن/الاستئناف في الحكم القضائي الصادر بالقضية التالية:\n\n• رقم القضية: ${caseNum}\n• اسم الموكل: ${clientNm}\n• المحكمة: ${cs ? cs.court : "—"}\n• نوع الحكم: ${item.rulingType}\n• تاريخ الحكم: ${fmtDate(item.rulingDate)}\n• آخر موعد قاطع للطعن: ${fmtDate(item.appealDeadlineDate)}\n• منطوق الحكم: ${item.rulingSummary}\n\nيرجى المبادرة المباشرة بإعداد وقيد صحيفة الطعن قبل سقوط الحق القانوني للموكل وتأكيد قيد الطعن بالنظام.\n\nنظام الإشعارات الآلي الموحد\nمكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية`;
 
           try {
-            supabase.functions.invoke("send-email", {
-              body: {
-                to: lawyerEmail,
-                subject,
-                html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${emailContent}</div>`
-              }
-            }).then(({ error }) => {
-              if (error) console.warn("SMTP Auto Dispatch Error (3-day alert):", error);
+            sendEmailViaServer({
+              to: lawyerEmail,
+              subject,
+              html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${emailContent}</div>`
+            }).then(({ success, error }) => {
+              if (!success) console.warn("SMTP Auto Dispatch Error (3-day alert):", error);
             }).catch(e => console.warn("SMTP Auto Dispatch Error (3-day alert):", e));
           } catch (e) {
             console.warn("SMTP Auto Dispatch Error:", e);
@@ -8013,14 +8003,12 @@ export default function App() {
           const emailContent = `سعادة المحامي / ${lawyerName} المحترم،\n\nتحية طيبة وبعد،\n\nنود تذكيركم بموعد قرب انقضاء المهلة القانونية للطعن/الاستئناف في الحكم الصادر في القضية التالية (متبقي 7 أيام):\n\n• رقم القضية: ${caseNum}\n• اسم الموكل: ${clientNm}\n• المحكمة: ${cs ? cs.court : "—"}\n• نوع الحكم: ${item.rulingType}\n• تاريخ الحكم: ${fmtDate(item.rulingDate)}\n• آخر موعد للطعن: ${fmtDate(item.appealDeadlineDate)}\n• منطوق الحكم: ${item.rulingSummary}\n\nنرجو مراجعة ملف القضية وتجهيز لائحة الطعن والتنسيق مع الموكل.\n\nنظام الإشعارات الآلي الموحد\nمكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية`;
 
           try {
-            supabase.functions.invoke("send-email", {
-              body: {
-                to: lawyerEmail,
-                subject,
-                html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${emailContent}</div>`
-              }
-            }).then(({ error }) => {
-              if (error) console.warn("SMTP Auto Dispatch Error (7-day alert):", error);
+            sendEmailViaServer({
+              to: lawyerEmail,
+              subject,
+              html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${emailContent}</div>`
+            }).then(({ success, error }) => {
+              if (!success) console.warn("SMTP Auto Dispatch Error (7-day alert):", error);
             }).catch(e => console.warn("SMTP Auto Dispatch Error (7-day alert):", e));
           } catch (e) {
             console.warn("SMTP Auto Dispatch Error:", e);
