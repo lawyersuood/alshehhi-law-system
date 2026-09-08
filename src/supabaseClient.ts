@@ -62,7 +62,7 @@ export async function sendWhatsAppViaEdgeFunction(payload: {
   contact_name?: string;
 }) {
   try {
-    const res = await fetch("/api/notifications/send-whatsapp", {
+    const res = await fetch("https://api.suoodlawhq.com/api/notifications/send-whatsapp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone: payload.to, message: payload.message }),
@@ -91,7 +91,7 @@ export async function sendEmailViaServer(payload: {
   html: string;
 }) {
   try {
-    const res = await fetch("/api/notifications/send-email", {
+    const res = await fetch("https://api.suoodlawhq.com/api/notifications/send-email", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
