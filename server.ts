@@ -358,6 +358,107 @@ ${invoiceBadge}
   }
 });
 
+// ================= إرسال واتساب وإيميل عبر سيرفر الموقع نفسه (بدون الاعتماد على Supabase) =================
+// نقل وظيفتي الإرسال (واتساب عبر Meta Cloud API، وبريد HTML خام) من Supabase Edge Functions
+// إلى هذا السيرفر مباشرة، حسب طلب المكتب صراحة، حتى لا نعتمد على أسرار Supabase.
+// نفس منطق دالتي send-whatsapp-message و send-email السابقتين تماماً، فقط القيم السرية
+// هنا تُقرأ من متغيرات بيئة Hostinger (WHATSAPP_TOKEN, PHONE_NUMBER_ID, SMTP_EMAIL, SMTP_PASSWORD)
+// بدلاً من أسرار Supabase.
+
+// إرسال رسالة واتساب حقيقية عبر واجهة Meta Cloud API (يستبدل send-whatsapp-message)
+app.post('/api/notifications/send-whatsapp', async (req, res) => {
+  try {
+    const { phone, message } = req.body;
+    if (!phone || !message) {
+      res.status(400).json({ error: 'رقم الهاتف ونص الرسالة مطلوبان' });
+      return;
+    }
+
+    const token = process.env.WHATSAPP_TOKEN;
+    const phoneId = process.env.PHONE_NUMBER_ID;
+
+    if (!token || !phoneId) {
+      res.status(500).json({ error: 'WHATSAPP_TOKEN أو PHONE_NUMBER_ID غير مُعرّفة في متغيرات بيئة السيرفر' });
+      return;
+    }
+
+    const metaRes = await fetch(`https://graph.facebook.com/v18.0/${phoneId}/messages`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to: phone,
+        type: 'text',
+        text: { body: message }
+      })
+    });
+
+    const data = await metaRes.json();
+    res.status(metaRes.status).json(data);
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'فشل إرسال رسالة الواتساب' });
+  }
+});
+
+// إرسال بريد إلكتروني بمحتوى HTML خام مباشرة (يستبدل send-email)
+// يستخدم إعدادات SMTP المفعّلة فعلياً في النظام (activeEmailConfig) إن وُجدت كلمة مرور محفوظة،
+// وإلا يعود تلقائياً لمتغيرات بيئة السيرفر SMTP_EMAIL / SMTP_PASSWORD مع نفس خادم أوفيس 365.
+app.post('/api/notifications/send-email', async (req, res) => {
+  try {
+    const { to, subject, html } = req.body;
+    if (!to || !subject || !html) {
+      res.status(400).json({ error: 'يرجى تقديم كافة الحقول المطلوبة (إلى، الموضوع، محتوى HTML)' });
+      return;
+    }
+
+    const envEmail = process.env.SMTP_EMAIL;
+    const envPassword = process.env.SMTP_PASSWORD;
+
+    const emailToUse = activeEmailConfig.password ? activeEmailConfig.email : (envEmail || activeEmailConfig.email);
+    const passwordToUse = activeEmailConfig.password || envPassword;
+    const hostToUse = activeEmailConfig.host || 'smtp.office365.com';
+    const portToUse = activeEmailConfig.port || 587;
+    const isSslTls = (activeEmailConfig.protocol || 'starttls') === 'ssl_tls';
+    const isStartTls = (activeEmailConfig.protocol || 'starttls') === 'starttls';
+
+    if (!passwordToUse) {
+      res.status(500).json({ error: 'لا توجد كلمة مرور بريد مُعدّة (لا في إعدادات النظام ولا في SMTP_PASSWORD)' });
+      return;
+    }
+
+    const transporter = nodemailer.createTransport({
+      host: hostToUse,
+      port: portToUse,
+      secure: isSslTls,
+      requireTLS: isStartTls,
+      auth: {
+        user: emailToUse,
+        pass: passwordToUse
+      },
+      tls: {
+        rejectUnauthorized: activeEmailConfig.rejectUnauthorized ?? false
+      },
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 10000
+    });
+
+    const info = await transporter.sendMail({
+      from: `"${activeEmailConfig.senderName || emailToUse}" <${emailToUse}>`,
+      to,
+      subject,
+      html
+    });
+
+    res.json({ success: true, messageId: info.messageId });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || 'فشل إرسال البريد الإلكتروني' });
+  }
+});
+
 // Initialize Google GenAI client
 const apiKey = process.env.GEMINI_API_KEY;
 let ai: GoogleGenAI | null = null;
