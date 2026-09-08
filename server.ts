@@ -417,13 +417,16 @@ app.post('/api/notifications/send-email', async (req, res) => {
 
     const envEmail = process.env.SMTP_EMAIL;
     const envPassword = process.env.SMTP_PASSWORD;
+    const envHost = process.env.SMTP_HOST;
+    const envPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
 
     const emailToUse = activeEmailConfig.password ? activeEmailConfig.email : (envEmail || activeEmailConfig.email);
     const passwordToUse = activeEmailConfig.password || envPassword;
-    const hostToUse = activeEmailConfig.host || 'smtp.office365.com';
-    const portToUse = activeEmailConfig.port || 587;
-    const isSslTls = (activeEmailConfig.protocol || 'starttls') === 'ssl_tls';
-    const isStartTls = (activeEmailConfig.protocol || 'starttls') === 'starttls';
+    const hostToUse = activeEmailConfig.host || envHost || 'smtp.office365.com';
+    const portToUse = activeEmailConfig.port || envPort || 587;
+    const protocolToUse = activeEmailConfig.protocol || (portToUse === 465 ? 'ssl_tls' : 'starttls');
+    const isSslTls = protocolToUse === 'ssl_tls';
+    const isStartTls = protocolToUse === 'starttls';
 
     if (!passwordToUse) {
       res.status(500).json({ error: 'لا توجد كلمة مرور بريد مُعدّة (لا في إعدادات النظام ولا في SMTP_PASSWORD)' });
