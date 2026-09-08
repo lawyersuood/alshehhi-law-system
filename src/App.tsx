@@ -13247,9 +13247,22 @@ export default function App() {
                     )}
 
                     <button
-                      onClick={() => {
-                        fetchSupabaseEmailMessages();
-                        setPermissionNotice("تمت مزامنة الرسائل بنجاح!");
+                      onClick={async () => {
+                        // نجلب أولاً أي رسائل واردة حقيقية جديدة من صندوق البريد الفعلي (Titan Mail عبر IMAP)
+                        // ثم نُزامن جدول الرسائل من Supabase لعرضها في الواجهة.
+                        try {
+                          const res = await fetch("https://api.suoodlawhq.com/api/notifications/fetch-inbox", { method: "POST" });
+                          const data = await res.json().catch(() => null);
+                          await fetchSupabaseEmailMessages();
+                          if (data?.success && data.imported > 0) {
+                            setPermissionNotice(`تم جلب ${data.imported} رسالة واردة جديدة ومزامنة البريد بنجاح!`);
+                          } else {
+                            setPermissionNotice("تمت مزامنة الرسائل بنجاح!");
+                          }
+                        } catch (err) {
+                          await fetchSupabaseEmailMessages();
+                          setPermissionNotice("تمت مزامنة الرسائل بنجاح!");
+                        }
                       }}
                       className="flex items-center gap-1.5 rounded-xl bg-slate-100 border border-slate-300 px-3 py-2 text-xs font-bold text-slate-700 hover:bg-[#0D382B]/[0.08] transition-colors transition"
                     >
