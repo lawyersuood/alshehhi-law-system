@@ -436,11 +436,14 @@ app.post('/api/notifications/send-email', async (req, res) => {
     const envHost = process.env.SMTP_HOST;
     const envPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : undefined;
 
-    const emailToUse = activeEmailConfig.password ? activeEmailConfig.email : (envEmail || activeEmailConfig.email);
-    const passwordToUse = activeEmailConfig.password || envPassword;
-    const hostToUse = activeEmailConfig.host || envHost || 'smtp.office365.com';
-    const portToUse = activeEmailConfig.port || envPort || 587;
-    const protocolToUse = activeEmailConfig.protocol || (portToUse === 465 ? 'ssl_tls' : 'starttls');
+    // إذا كان فيه إعداد بريد فعلي محفوظ من داخل النظام (كلمة مرور مضبوطة عبر الواجهة)، نستخدمه بالكامل.
+    // وإلا (وهذا وضعنا الحالي) نعتمد بالكامل على متغيرات بيئة السيرفر SMTP_* بدل الإعداد الافتراضي المُبرمج (Office365).
+    const hasConfiguredAccount = Boolean(activeEmailConfig.password);
+    const emailToUse = hasConfiguredAccount ? activeEmailConfig.email : (envEmail || activeEmailConfig.email);
+    const passwordToUse = hasConfiguredAccount ? activeEmailConfig.password : envPassword;
+    const hostToUse = hasConfiguredAccount ? activeEmailConfig.host : (envHost || activeEmailConfig.host);
+    const portToUse = hasConfiguredAccount ? activeEmailConfig.port : (envPort || activeEmailConfig.port);
+    const protocolToUse = hasConfiguredAccount ? activeEmailConfig.protocol : (portToUse === 465 ? 'ssl_tls' : 'starttls');
     const isSslTls = protocolToUse === 'ssl_tls';
     const isStartTls = protocolToUse === 'starttls';
 
