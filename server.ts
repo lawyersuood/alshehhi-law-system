@@ -603,7 +603,22 @@ async function fetchNewInboxEmails(): Promise<{ imported: number; error?: string
 
   let imported = 0;
   try {
-    await client.connect();
+    // نضع مهلة صريحة يدوية على الاتصال نفسه ونغلق العميل قسراً عند تجاوزها، لأن بعض
+    // بيئات الاستضافة المشتركة تُسقط حزم TCP بصمت لمنفذ IMAP (993) دون رد رفض صريح،
+    // مما يجعل خيارات المهلة الداخلية لمكتبة imapflow غير كافية لإنهاء الاتصال المعلّق.
+    let connectTimedOut = false;
+    const connectTimer = setTimeout(() => {
+      connectTimedOut = true;
+      try { client.close(); } catch { /* تجاهل */ }
+    }, 12000);
+    try {
+      await client.connect();
+    } finally {
+      clearTimeout(connectTimer);
+    }
+    if (connectTimedOut) {
+      throw new Error('انتهت مهلة الاتصال بخادم IMAP (قد يكون المنفذ 993 محجوباً على هذا الاستضافة)');
+    }
     const lock = await client.getMailboxLock('INBOX');
     try {
       const uids = await client.search({ seen: false }, { uid: true });
