@@ -556,11 +556,15 @@ app.post('/api/notifications/whatsapp-webhook', async (req, res) => {
 // صندوق الوارد الحقيقي ويحفظها في جدول email_messages في Supabase (نفس الجدول الذي تعرضه
 // الواجهة الأمامية في صفحة البريد)، حتى تظهر الرسائل الواردة فعلياً داخل النظام.
 function getImapConfig() {
-  const email = activeEmailConfig.password ? activeEmailConfig.email : (process.env.SMTP_EMAIL || activeEmailConfig.email);
-  const password = activeEmailConfig.password || process.env.SMTP_PASSWORD;
+  // نفس منطق الأولوية المستخدم في send-email: لا نعتمد على activeEmailConfig الافتراضي (Office365)
+  // إلا إذا كان هناك فعلاً حساب بريد مُعدّ من واجهة النظام (كلمة مرور محفوظة)، وإلا نعتمد بالكامل
+  // على متغيرات بيئة السيرفر SMTP_* الخاصة بـ Titan Mail.
+  const hasConfiguredAccount = Boolean(activeEmailConfig.password);
+  const email = hasConfiguredAccount ? activeEmailConfig.email : (process.env.SMTP_EMAIL || activeEmailConfig.email);
+  const password = hasConfiguredAccount ? activeEmailConfig.password : process.env.SMTP_PASSWORD;
   // نشتق مضيف IMAP من مضيف SMTP نفسه (smtp.titan.email -> imap.titan.email) ما لم يُحدَّد صراحة
   const envImapHost = process.env.IMAP_HOST;
-  const smtpHost = activeEmailConfig.host || process.env.SMTP_HOST;
+  const smtpHost = hasConfiguredAccount ? activeEmailConfig.host : (process.env.SMTP_HOST || activeEmailConfig.host);
   const derivedHost = smtpHost ? smtpHost.replace(/^smtp\./i, 'imap.') : undefined;
   const host = envImapHost || derivedHost;
   const port = process.env.IMAP_PORT ? Number(process.env.IMAP_PORT) : 993;
