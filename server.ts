@@ -493,8 +493,18 @@ app.post('/api/notifications/send-email', async (req, res) => {
 const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'my_law_firm_secret_token_123';
 
 function getSupabaseAdminClient() {
-  const url = process.env.SUPABASE_URL || 'https://ywfddjrrgqwxbomjxsgq.supabase.co';
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  // تنظيف القيمة من أي مسافات/علامات اقتباس زائدة قد تدخل بالخطأ عبر لوحة تحكم Hostinger
+  // (لوحظ أن قيمًا مشابهة كانت تسبب خطأ "Invalid supabaseUrl" رغم أنها تبدو صحيحة ظاهرياً)
+  const rawUrl = process.env.SUPABASE_URL;
+  let url = 'https://ywfddjrrgqwxbomjxsgq.supabase.co';
+  if (rawUrl && typeof rawUrl === 'string') {
+    const match = rawUrl.match(/https?:\/\/[^\s"']+/);
+    if (match) url = match[0];
+  }
+
+  const rawKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceKey = rawKey ? rawKey.trim().replace(/^['"]|['"]$/g, '') : undefined;
+
   if (!serviceKey) return null;
   return createClient(url, serviceKey);
 }
