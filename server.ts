@@ -579,6 +579,10 @@ async function fetchNewInboxEmails(): Promise<{ imported: number; error?: string
     port: cfg.port,
     secure: cfg.port === 993,
     auth: { user: cfg.email, pass: cfg.password },
+    // مهلات صريحة حتى لا يتعلق الاتصال لفترة طويلة (وتنتهي بذلك مهلة الطلب على مستوى الخادم/الوكيل بدون رد واضح)
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000,
     logger: false,
     tls: { rejectUnauthorized: false }
   });
@@ -640,13 +644,25 @@ async function fetchNewInboxEmails(): Promise<{ imported: number; error?: string
 }
 
 // نقطة نهاية يمكن للواجهة الأمامية استدعاؤها لتحديث صندوق الوارد يدوياً (زر "تحديث")
+// نضع مهلة قصوى صريحة على مستوى الطلب حتى لا يبقى الطلب معلقاً بلا رد إذا تعطل الاتصال
+// بخادم IMAP لأي سبب (مما قد يظهر للمستخدم كخطأ شبكة غامض "Failed to fetch").
 app.post('/api/notifications/fetch-inbox', async (_req, res) => {
-  const result = await fetchNewInboxEmails();
-  if (result.error && result.imported === 0) {
-    res.status(500).json({ success: false, error: result.error });
-    return;
+  try {
+    const result = await Promise.race([
+      fetchNewInboxEmails(),
+      new Promise<{ imported: number; error?: string }>((resolve) =>
+        setTimeout(() => resolve({ imported: 0, error: 'انتهت مهلة الاتصال بخادم البريد (IMAP) — يرجى المحاولة لاحقاً' }), 25000)
+      )
+    ]);
+
+    if (result.error && result.imported === 0) {
+      res.status(500).json({ success: false, error: result.error });
+      return;
+    }
+    res.json({ success: true, imported: result.imported });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'فشل غير متوقع أثناء جلب البريد الوارد' });
   }
-  res.json({ success: true, imported: result.imported });
 });
 
 // جلب دوري تلقائي كل 3 دقائق حتى تصل الرسائل الواردة الجديدة إلى النظام دون تدخل يدوي
