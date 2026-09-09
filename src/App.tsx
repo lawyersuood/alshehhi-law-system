@@ -2747,7 +2747,8 @@ const seedCaseExpenses: CaseExpense[] = [];
 
 const seedTrustTransactions: TrustTransaction[] = [];
 
-const seedDeadlines: JudgmentDeadline[] = [
+const seedDeadlines: JudgmentDeadline[] = [];
+const seedDeadlinesOld_unused: JudgmentDeadline[] = [
   {
     id: 1,
     caseId: 101,
@@ -4792,7 +4793,19 @@ export default function App() {
   const [timeLogs, setTimeLogs] = useState<TimeLog[]>(seedTimeLogs);
   const [caseExpenses, setCaseExpenses] = useState<CaseExpense[]>(seedCaseExpenses);
   const [trustTransactions, setTrustTransactions] = useState<TrustTransaction[]>(seedTrustTransactions);
-  const [deadlines, setDeadlines] = useState<JudgmentDeadline[]>(() => loadStorage("firm_deadlines", seedDeadlines));
+  const [deadlines, setDeadlines] = useState<JudgmentDeadline[]>(() => {
+    const stored = loadStorage("firm_deadlines", seedDeadlines);
+    // تنظيف تلقائي لمرة واحدة: إزالة بيانات الطعون التجريبية الافتراضية غير الصحيحة
+    // (كانت تُضاف تلقائياً كأمثلة عند أول تشغيل — قضايا وهمية بأرقام 101/102/103)
+    const FAKE_DEMO_DEADLINE_IDS = new Set([1, 2, 3]);
+    const FAKE_DEMO_CASE_IDS = new Set([101, 102, 103]);
+    const cleaned = stored.filter((d) => !(FAKE_DEMO_DEADLINE_IDS.has(d.id) && FAKE_DEMO_CASE_IDS.has(d.caseId)));
+    if (cleaned.length !== stored.length) {
+      saveStorage("firm_deadlines", cleaned);
+      return cleaned;
+    }
+    return stored;
+  });
   const [installments, setInstallments] = useState<InvoiceInstallment[]>(seedInstallments);
   const [strReports, setStrReports] = useState<StrReport[]>(seedStrReports);
   const [courtContacts, setCourtContacts] = useState<CourtContact[]>(() => {
@@ -12884,6 +12897,17 @@ export default function App() {
                                       لا حاجة لطعن — إيقاف التنبيه
                                     </button>
                                   )}
+                                  <button
+                                    onClick={() => {
+                                      if (window.confirm("هل أنت متأكد من حذف هذا الموعد نهائياً؟ لا يمكن التراجع عن هذا الإجراء.")) {
+                                        setDeadlines(deadlines.filter((x) => x.id !== d.id));
+                                      }
+                                    }}
+                                    className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 text-xs font-bold transition"
+                                    title="حذف سجل هذا الموعد نهائياً من النظام"
+                                  >
+                                    <Trash2 size={14} /> حذف
+                                  </button>
                                 </div>
                               </div>
                             </div>
