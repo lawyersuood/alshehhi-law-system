@@ -4253,6 +4253,42 @@ function saveStorage<T>(key: string, value: T): void {
   }
 }
 
+// ================= مزامنة قاعدة بيانات Supabase (للبيانات الحساسة: قضايا/موكلين/ماليات) =================
+// كل صف مخزّن كـ {id, data} حيث data تحتوي كامل الكائن كـ JSON — لتفادي مشاكل توافق الأعمدة
+// مع تطور شكل البيانات بمرور الوقت.
+async function fetchSupabaseTable<T>(table: string): Promise<T[] | null> {
+  try {
+    const { data, error } = await supabase.from(table).select("id, data");
+    if (error) {
+      console.warn(`Supabase fetch error (${table}):`, error);
+      return null;
+    }
+    return (data || []).map((r: any) => r.data as T);
+  } catch (e) {
+    console.warn(`Supabase fetch exception (${table}):`, e);
+    return null;
+  }
+}
+
+async function pushSupabaseTable<T extends { id: number }>(table: string, rows: T[]): Promise<void> {
+  try {
+    // مرآة كاملة: نحذف كل الصفوف القديمة ونعيد إدخال القائمة الحالية، لضمان انعكاس الحذف أيضاً
+    // (حجم البيانات صغير جداً بطبيعة هذا النظام، فهذا آمن وبسيط)
+    const { error: delErr } = await supabase.from(table).delete().neq("id", -1);
+    if (delErr) {
+      console.warn(`Supabase delete error (${table}):`, delErr);
+      return;
+    }
+    if (rows && rows.length > 0) {
+      const payload = rows.map((r) => ({ id: r.id, data: r }));
+      const { error: insErr } = await supabase.from(table).insert(payload);
+      if (insErr) console.warn(`Supabase insert error (${table}):`, insErr);
+    }
+  } catch (e) {
+    console.warn(`Supabase push exception (${table}):`, e);
+  }
+}
+
 // ============================================================
 export default function App() {
   const [currentRoute, setCurrentRoute] = useState<"admin" | "public_consultation">(() => {
@@ -4849,6 +4885,75 @@ export default function App() {
   useEffect(() => { saveStorage("firm_invoices", invoices); }, [invoices]);
   useEffect(() => { saveStorage("firm_docs", docs); }, [docs]);
   useEffect(() => { saveStorage("firm_deadlines", deadlines); }, [deadlines]);
+
+  // ================= مزامنة البيانات الحساسة (قضايا/موكلين/ماليات) مع قاعدة بيانات Supabase =================
+  // المتصفح (localStorage) يبقى نسخة سريعة/احتياطية محلية، لكن Supabase أصبح مصدر الحقيقة الأساسي
+  // بحيث تتزامن البيانات بين كل الأجهزة وما تضيع لو انمسحت بيانات المتصفح.
+  const supabaseHydratedRef = React.useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [remoteClients, remoteCases, remoteFeeAgreements, remotePayments, remoteInvoices] = await Promise.all([
+        fetchSupabaseTable<Client>("clients"),
+        fetchSupabaseTable<CaseItem>("cases"),
+        fetchSupabaseTable<FeeAgreement>("fee_agreements"),
+        fetchSupabaseTable<PaymentReceipt>("payments"),
+        fetchSupabaseTable<Invoice>("invoices"),
+      ]);
+      if (cancelled) return;
+
+      if (remoteClients && remoteClients.length > 0) { setClients(remoteClients); saveStorage("firm_clients", remoteClients); }
+      else if (remoteClients !== null && clients.length > 0) { pushSupabaseTable("clients", clients); }
+
+      if (remoteCases && remoteCases.length > 0) { setCases(remoteCases); saveStorage("firm_cases", remoteCases); }
+      else if (remoteCases !== null && cases.length > 0) { pushSupabaseTable("cases", cases); }
+
+      if (remoteFeeAgreements && remoteFeeAgreements.length > 0) { setFeeAgreements(remoteFeeAgreements); saveStorage("firm_fee_agreements", remoteFeeAgreements); }
+      else if (remoteFeeAgreements !== null && feeAgreements.length > 0) { pushSupabaseTable("fee_agreements", feeAgreements); }
+
+      if (remotePayments && remotePayments.length > 0) { setPayments(remotePayments); saveStorage("firm_payments", remotePayments); }
+      else if (remotePayments !== null && payments.length > 0) { pushSupabaseTable("payments", payments); }
+
+      if (remoteInvoices && remoteInvoices.length > 0) { setInvoices(remoteInvoices); saveStorage("firm_invoices", remoteInvoices); }
+      else if (remoteInvoices !== null && invoices.length > 0) { pushSupabaseTable("invoices", invoices); }
+
+      supabaseHydratedRef.current = true;
+    })();
+    return () => { cancelled = true; };
+    // يعمل مرة واحدة فقط عند فتح النظام
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!supabaseHydratedRef.current) return;
+    const t = setTimeout(() => { pushSupabaseTable("clients", clients); }, 1500);
+    return () => clearTimeout(t);
+  }, [clients]);
+
+  useEffect(() => {
+    if (!supabaseHydratedRef.current) return;
+    const t = setTimeout(() => { pushSupabaseTable("cases", cases); }, 1500);
+    return () => clearTimeout(t);
+  }, [cases]);
+
+  useEffect(() => {
+    if (!supabaseHydratedRef.current) return;
+    const t = setTimeout(() => { pushSupabaseTable("fee_agreements", feeAgreements); }, 1500);
+    return () => clearTimeout(t);
+  }, [feeAgreements]);
+
+  useEffect(() => {
+    if (!supabaseHydratedRef.current) return;
+    const t = setTimeout(() => { pushSupabaseTable("payments", payments); }, 1500);
+    return () => clearTimeout(t);
+  }, [payments]);
+
+  useEffect(() => {
+    if (!supabaseHydratedRef.current) return;
+    const t = setTimeout(() => { pushSupabaseTable("invoices", invoices); }, 1500);
+    return () => clearTimeout(t);
+  }, [invoices]);
 
   // دالة تلقائية لدمج وتنظيف الموكلين المكررين
   useEffect(() => {
