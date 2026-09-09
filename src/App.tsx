@@ -5602,6 +5602,7 @@ export default function App() {
       clientNameArFinal = c ? c.name : agrForm.clientNameAr;
     } else {
       clientId = nextId(clients);
+      auditNewClientKyc(agrForm.clientNameAr, agrForm.idNo, clientId);
       setClients((prev) => [
         ...prev,
         {
@@ -5782,6 +5783,32 @@ export default function App() {
       });
     }
     return match;
+  };
+
+  // ---------- 1ب. فحص موكل جديد يُضاف يدوياً (خارج مسارات الاستيراد الآلي) وتسجيله تلقائياً في KYC عند وجود تطابق ----------
+  const auditNewClientKyc = (clientName: string, idNo: string | undefined, clientId: number) => {
+    const matchSanction = checkAndAuditClientKyc(clientName, idNo);
+    if (matchSanction) {
+      setKyc((prev) => [
+        ...prev,
+        {
+          id: nextId(prev),
+          clientId,
+          nationality: "غير محدد",
+          idType: "هوية/جواز",
+          idExpiry: addDays(365),
+          ubo: clientName,
+          sourceOfFunds: "غير محدد",
+          pep: true,
+          sanctions: "تطابق محتمل",
+          risk: "مرتفع",
+          status: "قيد المراجعة",
+          lastReview: todayISO(),
+          notes: `🚫 محظور تلقائياً — تطابق محتمل عند إضافة موكل جديد يدوياً (سبب: ${matchSanction.reason})`
+        }
+      ]);
+    }
+    return matchSanction;
   };
 
   // ---------- 2. معالجة وتفريغ ملف Excel القضايا السابقة ----------
@@ -8648,7 +8675,9 @@ export default function App() {
   const saveClient = () => {
     if (!checkPerm("manageClients", "إضافة موكل")) return;
     if (!form.name) return;
-    setClients([...clients, { id: nextId(clients), name: form.name, type: form.type || "فرد", idNo: form.idNo || "", phone: form.phone || "", email: form.email || "", emirate: form.emirate || "دبي", address: form.address || "" }]);
+    const newClientId = nextId(clients);
+    auditNewClientKyc(form.name, form.idNo, newClientId);
+    setClients([...clients, { id: newClientId, name: form.name, type: form.type || "فرد", idNo: form.idNo || "", phone: form.phone || "", email: form.email || "", emirate: form.emirate || "دبي", address: form.address || "" }]);
     setModal(null);
   };
 
