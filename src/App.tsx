@@ -17,7 +17,7 @@ import { User as FirebaseUser } from "firebase/auth";
 import { supabase, sendWhatsAppViaEdgeFunction, sendEmailViaServer } from "./supabaseClient";
 import {
   Scale, LayoutDashboard, Briefcase, Users, CalendarDays, ListChecks,
-  Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, BellRing, Building2,
+  Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, BellRing, BellOff, Building2,
   Gavel, Clock, AlertTriangle, CheckCircle2, ChevronLeft, Trash2, Printer,
   Phone, Mail, MapPin, TrendingUp, ShieldCheck, Shield, Lock, UserCheck, Key,
   Check, Minus, Info, UserPlus, ShieldAlert, Edit2, User, RefreshCw, Smartphone,
@@ -12603,6 +12603,24 @@ export default function App() {
                         <p className="text-xs text-slate-500">نظام تلقائي يقوم بفحص المواعيد بانتظام وإرسال إشعارات استباقية للمحامي المسؤول عبر البريد والواتساب قبل الانقضاء بـ 7 أيام و 3 أيام</p>
                       </div>
                       <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => {
+                            const openCount = deadlines.filter((d) => isDeadlineOpen(d.status)).length;
+                            if (openCount === 0) {
+                              window.alert("لا توجد تنبيهات مفعّلة حالياً لإيقافها.");
+                              return;
+                            }
+                            if (window.confirm(`سيتم إيقاف كل التنبيهات الآلية الحالية (واتساب/إيميل) لجميع القضايا المفتوحة حالياً وعددها (${openCount})، عن طريق تعليمها كـ"لا حاجة لطعن". يمكنك لاحقاً إعادة أي قضية بعينها إلى المتابعة من قائمة "لا حاجة لطعن". هل تريد المتابعة؟`)) {
+                              setDeadlines(deadlines.map((x) => isDeadlineOpen(x.status) ? { ...x, status: "لا حاجة لطعن" } : x));
+                              setPermissionNotice(`تم إيقاف كل التنبيهات الحالية (${openCount}) بنجاح.`);
+                            }
+                          }}
+                          className="flex items-center gap-2 rounded-xl bg-slate-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-800 shadow-sm transition"
+                          title="إيقاف كل التنبيهات المفعّلة حالياً دفعة واحدة"
+                        >
+                          <BellOff size={16} />
+                          إلغاء كل التنبيهات الحالية
+                        </button>
                         <button
                           onClick={() => runAutoAppealDeadlineChecker(deadlines, true)}
                           disabled={autoCheckStatus.isChecking}
