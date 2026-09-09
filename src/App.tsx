@@ -643,6 +643,7 @@ export interface JudgmentDeadline {
   caseId: number;
   rulingDate: string;
   rulingType: "حكم ابتدائية" | "حكم استئناف" | "قرار لجان";
+  caseNature?: "مدني" | "جزائي";
   rulingSummary: string;
   appealDays: number;
   appealDeadlineDate: string;
@@ -9223,11 +9224,12 @@ export default function App() {
       caseId: +form.caseId,
       rulingDate: form.rulingDate,
       rulingType: form.rulingType || "حكم ابتدائية",
+      caseNature: form.caseNature || "مدني",
       rulingSummary: form.rulingSummary || "صدور حكم قضائي في الدعوى",
       appealDays: days,
       appealDeadlineDate: deadlineStr,
       status: "جارٍ حساب الميعاد",
-      notes: form.notes || `تم احتساب مهلة الطعن تلقائياً (${days} يوماً)`,
+      notes: form.notes || `تم احتساب مهلة الطعن تلقائياً (${days} يوماً) — ${form.caseNature === "جزائي" ? "دعوى جزائية" : "دعوى مدنية/تجارية"}`,
       assignedLawyerId: selUser?.id || 1,
       assignedLawyerName: form.assignedLawyerName || selUser?.name || "المحامي سعود أحمد الشحي",
       assignedLawyerPhone: form.assignedLawyerPhone || selUser?.phone || "0501234567",
@@ -12774,6 +12776,11 @@ export default function App() {
                                   <div className="flex items-center gap-2">
                                     <h3 className="font-bold text-base text-slate-900">{cs ? cs.number : `قضية رقم #${d.caseId}`}</h3>
                                     <Badge className="bg-slate-100 text-slate-800">{d.rulingType}</Badge>
+                                    {d.caseNature && (
+                                      <Badge className={d.caseNature === "جزائي" ? "bg-rose-100 text-rose-800" : "bg-sky-100 text-sky-800"}>
+                                        {d.caseNature === "جزائي" ? "جزائي (15 يوماً)" : "مدني/تجاري (30 يوماً)"}
+                                      </Badge>
+                                    )}
                                     <Badge
                                       className={
                                         d.status === "تم قيد الطعن" || d.status === "تم تقديم الطعن" || d.status === "لا حاجة لطعن"
@@ -19771,9 +19778,34 @@ export default function App() {
               </Field>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="مهلة الطعن القانونية (أيام)">
-                <input type="number" onChange={f("appealDays")} defaultValue="30" className={inputCls} />
+              <Field label="نوع الدعوى (تحدد مهلة الطعن القانونية)">
+                <select
+                  onChange={(e) => {
+                    const nature = e.target.value as "مدني" | "جزائي";
+                    setForm(prev => ({
+                      ...prev,
+                      caseNature: nature,
+                      appealDays: nature === "جزائي" ? 15 : 30
+                    }));
+                  }}
+                  defaultValue="مدني"
+                  className={inputCls}
+                >
+                  <option value="مدني">مدني/تجاري — مهلة الاستئناف 30 يوماً</option>
+                  <option value="جزائي">جزائي — مهلة الطعن 15 يوماً</option>
+                </select>
               </Field>
+              <Field label="مهلة الطعن القانونية (أيام)">
+                <input
+                  type="number"
+                  key={form.caseNature || "مدني"}
+                  onChange={f("appealDays")}
+                  defaultValue={form.caseNature === "جزائي" ? 15 : 30}
+                  className={inputCls}
+                />
+              </Field>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="المحامي المسؤول عن الطعن">
                 <select
                   onChange={(e) => {
