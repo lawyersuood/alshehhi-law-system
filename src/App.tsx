@@ -6635,10 +6635,26 @@ export default function App() {
     }
   };
 
-  const handleExportBackup = () => {
+  const handleExportBackup = async () => {
     const exportDate = new Date();
     const dateStr = exportDate.toISOString().split("T")[0];
     const timeStr = exportDate.toTimeString().split(" ")[0].replace(/:/g, "-");
+
+    // نسحب أحدث نسخة من البيانات "الحساسة" مباشرة من قاعدة بيانات Supabase المركزية وقت التصدير
+    // (بدل الاعتماد على النسخة المحلية بالمتصفح فقط) لضمان أن النسخة الاحتياطية تعكس آخر تحديث
+    // حتى لو تم من جهاز آخر. لو تعذر الاتصال، نستخدم النسخة المحلية كخطة بديلة بدل إيقاف التصدير.
+    const [freshClients, freshCases, freshFeeAgreements, freshPayments, freshInvoices] = await Promise.all([
+      fetchSupabaseTable<Client>("clients"),
+      fetchSupabaseTable<CaseItem>("cases"),
+      fetchSupabaseTable<FeeAgreement>("fee_agreements"),
+      fetchSupabaseTable<PaymentReceipt>("payments"),
+      fetchSupabaseTable<Invoice>("invoices"),
+    ]);
+    const exportClients = freshClients && freshClients.length > 0 ? freshClients : clients;
+    const exportCases = freshCases && freshCases.length > 0 ? freshCases : cases;
+    const exportFeeAgreements = freshFeeAgreements && freshFeeAgreements.length > 0 ? freshFeeAgreements : feeAgreements;
+    const exportPayments = freshPayments && freshPayments.length > 0 ? freshPayments : payments;
+    const exportInvoices = freshInvoices && freshInvoices.length > 0 ? freshInvoices : invoices;
 
     const backupData = {
       appVersion: "1.0.0",
@@ -6652,11 +6668,11 @@ export default function App() {
         roleTitle: currentUser.roleTitle,
       },
       counts: {
-        clients: clients.length,
-        cases: cases.length,
+        clients: exportClients.length,
+        cases: exportCases.length,
         hearings: hearings.length,
         tasks: tasks.length,
-        invoices: invoices.length,
+        invoices: exportInvoices.length,
         docs: docs.length,
         poas: poas.length,
         kyc: kyc.length,
@@ -6670,16 +6686,16 @@ export default function App() {
         precedents: precedents.length,
         policies: policies.length,
         users: users.length,
-        feeAgreements: feeAgreements.length,
-        payments: payments.length,
+        feeAgreements: exportFeeAgreements.length,
+        payments: exportPayments.length,
         consultationBookings: consultationBookings.length,
       },
       database: {
-        clients,
-        cases,
+        clients: exportClients,
+        cases: exportCases,
         hearings,
         tasks,
-        invoices,
+        invoices: exportInvoices,
         docs,
         poas,
         kyc,
@@ -6693,8 +6709,8 @@ export default function App() {
         precedents,
         policies,
         users,
-        feeAgreements,
-        payments,
+        feeAgreements: exportFeeAgreements,
+        payments: exportPayments,
         consultationBookings,
         consultationSettings,
         waChats,
@@ -6715,7 +6731,7 @@ export default function App() {
       "CREATE",
       "النسخ الاحتياطي",
       "تصدير قاعدة البيانات",
-      `تم تصدير نسخة احتياطية كاملة من بيانات النظام بصيغة JSON تحتوي على ${cases.length} قضية و ${clients.length} موكل.`
+      `تم تصدير نسخة احتياطية كاملة من بيانات النظام بصيغة JSON تحتوي على ${exportCases.length} قضية و ${exportClients.length} موكل (مسحوبة مباشرة من قاعدة البيانات المركزية).`
     );
   };
 
