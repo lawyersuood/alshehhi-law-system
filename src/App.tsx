@@ -646,7 +646,7 @@ export interface JudgmentDeadline {
   rulingSummary: string;
   appealDays: number;
   appealDeadlineDate: string;
-  status: "جارٍ حساب الميعاد" | "تم تقديم الطعن" | "انقضى الميعاد القانوني" | "تم قيد الطعن";
+  status: "جارٍ حساب الميعاد" | "تم تقديم الطعن" | "انقضى الميعاد القانوني" | "تم قيد الطعن" | "لا حاجة لطعن";
   notes: string;
   assignedLawyerId?: number;
   assignedLawyerName?: string;
@@ -3063,7 +3063,7 @@ const daysUntil = (d: string) => Math.ceil((new Date(d).getTime() - new Date(tod
 
 // ميعاد الطعن يُعتبر "مغلقاً" (لا يحتاج تنبيهاً عاجلاً) إذا تم قيده أو تقديمه فعلياً بالمحكمة —
 // نفس التعريف المعتمد في محرك التنبيهات التلقائي، موحّد هنا لتفادي تكرار الشرط في أكثر من مكان
-const isDeadlineOpen = (status: string) => status !== "تم قيد الطعن" && status !== "تم تقديم الطعن";
+const isDeadlineOpen = (status: string) => status !== "تم قيد الطعن" && status !== "تم تقديم الطعن" && status !== "لا حاجة لطعن";
 
 const normalizeArabicName = (str: string) => {
   if (!str) return "";
@@ -4815,7 +4815,7 @@ export default function App() {
     message?: string;
     isChecking?: boolean;
   }>({});
-  const [deadlineFilter, setDeadlineFilter] = useState<"all" | "urgent" | "active" | "done">("all");
+  const [deadlineFilter, setDeadlineFilter] = useState<"all" | "urgent" | "active" | "done" | "notneeded">("all");
   const [selectedDeadlineLogs, setSelectedDeadlineLogs] = useState<JudgmentDeadline | null>(null);
   const [reassignDeadlineModal, setReassignDeadlineModal] = useState<JudgmentDeadline | null>(null);
   const [dashboardCaseChartMode, setDashboardCaseChartMode] = useState<"bar" | "donut">("bar");
@@ -7934,7 +7934,7 @@ export default function App() {
 
     for (let i = 0; i < updatedList.length; i++) {
       const item = { ...updatedList[i] };
-      if (item.status === "تم قيد الطعن" || item.status === "تم تقديم الطعن") {
+      if (item.status === "تم قيد الطعن" || item.status === "تم تقديم الطعن" || item.status === "لا حاجة لطعن") {
         continue;
       }
 
@@ -12699,6 +12699,12 @@ export default function App() {
                       >
                         تم قيد الطعن ({deadlines.filter(d => d.status === "تم قيد الطعن" || d.status === "تم تقديم الطعن").length})
                       </button>
+                      <button
+                        onClick={() => setDeadlineFilter("notneeded")}
+                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${deadlineFilter === "notneeded" ? "bg-slate-700 text-white" : "bg-slate-100 text-slate-600 hover:bg-[#0D382B]/[0.08] transition-colors"}`}
+                      >
+                        لا حاجة لطعن ({deadlines.filter(d => d.status === "لا حاجة لطعن").length})
+                      </button>
                     </div>
 
                     {/* قائمة بطاقات المواعيد */}
@@ -12709,6 +12715,7 @@ export default function App() {
                           if (deadlineFilter === "urgent") return isDeadlineOpen(d.status) && daysLeft <= 7;
                           if (deadlineFilter === "active") return d.status === "جارٍ حساب الميعاد";
                           if (deadlineFilter === "done") return d.status === "تم قيد الطعن" || d.status === "تم تقديم الطعن";
+                          if (deadlineFilter === "notneeded") return d.status === "لا حاجة لطعن";
                           return true;
                         })
                         .map((d) => {
@@ -12721,7 +12728,7 @@ export default function App() {
                             <div
                               key={d.id}
                               className={`rounded-2xl border p-5 shadow-sm space-y-4 transition ${
-                                d.status === "تم قيد الطعن" || d.status === "تم تقديم الطعن"
+                                d.status === "تم قيد الطعن" || d.status === "تم تقديم الطعن" || d.status === "لا حاجة لطعن"
                                   ? "border-emerald-300 bg-emerald-50/20"
                                   : isUrgent3
                                   ? "border-2 border-red-500 bg-red-50/20 shadow-md ring-2 ring-red-100"
@@ -12738,7 +12745,7 @@ export default function App() {
                                     <Badge className="bg-slate-100 text-slate-800">{d.rulingType}</Badge>
                                     <Badge
                                       className={
-                                        d.status === "تم قيد الطعن" || d.status === "تم تقديم الطعن"
+                                        d.status === "تم قيد الطعن" || d.status === "تم تقديم الطعن" || d.status === "لا حاجة لطعن"
                                           ? "bg-emerald-100 text-emerald-800 font-bold"
                                           : isUrgent3
                                           ? "bg-red-600 text-white font-bold animate-pulse"
@@ -12759,7 +12766,9 @@ export default function App() {
                                   <p className="text-slate-500">تاريخ صدور الحكم: {fmtDate(d.rulingDate)}</p>
                                   <p className="font-bold text-slate-900 text-sm mt-0.5">آخر موعد قاطع: {fmtDate(d.appealDeadlineDate)}</p>
                                   <div className="mt-1">
-                                    {!isDeadlineOpen(d.status) ? (
+                                    {d.status === "لا حاجة لطعن" ? (
+                                      <span className="text-emerald-700 font-bold px-2 py-0.5 rounded-md bg-emerald-50">✔️ لا حاجة لطعن — تم إيقاف التنبيهات</span>
+                                    ) : !isDeadlineOpen(d.status) ? (
                                       <span className="text-emerald-700 font-bold px-2 py-0.5 rounded-md bg-emerald-50">✔️ تم تقديم/قيد الطعن — لا حاجة لتنبيه</span>
                                     ) : daysLeft < 0 ? (
                                       <span className="text-red-600 font-bold px-2 py-0.5 rounded-md bg-red-100">⚠️ انتهت المهلة القانونية</span>
@@ -12836,12 +12845,25 @@ export default function App() {
                                   >
                                     <History size={14} /> سجل التنبيهات ({d.autoAlertLogs?.length || 0})
                                   </button>
-                                  {d.status !== "تم قيد الطعن" && d.status !== "تم تقديم الطعن" && (
+                                  {d.status !== "تم قيد الطعن" && d.status !== "تم تقديم الطعن" && d.status !== "لا حاجة لطعن" && (
                                     <button
                                       onClick={() => setDeadlines(deadlines.map((x) => x.id === d.id ? { ...x, status: "تم قيد الطعن" } : x))}
                                       className="px-3 py-1.5 rounded-xl border border-emerald-300 text-emerald-800 bg-emerald-50 hover:bg-emerald-100 text-xs font-bold transition"
                                     >
                                       تسجيل قيد الطعن
+                                    </button>
+                                  )}
+                                  {d.status !== "تم قيد الطعن" && d.status !== "تم تقديم الطعن" && d.status !== "لا حاجة لطعن" && (
+                                    <button
+                                      onClick={() => {
+                                        if (window.confirm("هل أنت متأكد أن هذه القضية لا تحتاج لتقديم طعن؟ سيتم إيقاف كل التنبيهات الآلية (واتساب/إيميل) الخاصة بهذا الموعد نهائياً.")) {
+                                          setDeadlines(deadlines.map((x) => x.id === d.id ? { ...x, status: "لا حاجة لطعن" } : x));
+                                        }
+                                      }}
+                                      className="px-3 py-1.5 rounded-xl border border-slate-300 text-slate-600 bg-slate-50 hover:bg-slate-100 text-xs font-bold transition"
+                                      title="إيقاف التنبيهات الآلية عن هذه القضية لأنها لا تحتاج لطعن"
+                                    >
+                                      لا حاجة لطعن — إيقاف التنبيه
                                     </button>
                                   )}
                                 </div>
