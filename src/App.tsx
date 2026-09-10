@@ -3796,6 +3796,27 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
       return;
     }
 
+    // 3. تسجيل دخول Supabase Authentication بصمت في الخلفية لهذا المستخدم المحلي —
+    // بدون هذه الخطوة تبقى كل عمليات الحفظ (القضايا/الموكلين/سجل التدقيق...) تفشل بصمت بعد
+    // تقييد سياسات RLS على "authenticated" فقط، رغم أن تسجيل الدخول المحلي نجح ظاهرياً.
+    // نحاول الدخول أولاً، وإن لم يكن للمستخدم حساب Supabase Auth بعد ننشئه له تلقائياً بنفس بياناته
+    // حتى تُزامن بياناته مع بقية الأجهزة من أول دخول.
+    if (targetUser.email) {
+      try {
+        const silentEmail = targetUser.email.toLowerCase();
+        const silentPass = userPass.length >= 6 ? userPass : `${userPass}-firm2024`;
+        const { error: silentSignInErr } = await supabase.auth.signInWithPassword({
+          email: silentEmail,
+          password: silentPass
+        });
+        if (silentSignInErr) {
+          await supabase.auth.signUp({ email: silentEmail, password: silentPass });
+        }
+      } catch (e) {
+        console.warn("Silent Supabase Auth sync note:", e);
+      }
+    }
+
     onLogin(targetUser.id);
     setIsSubmitting(false);
   };
@@ -4904,6 +4925,30 @@ export default function App() {
   useEffect(() => { saveStorage("firm_invoices", invoices); }, [invoices]);
   useEffect(() => { saveStorage("firm_docs", docs); }, [docs]);
   useEffect(() => { saveStorage("firm_deadlines", deadlines); }, [deadlines]);
+
+  // جلسات الدخول المحفوظة مسبقاً (قبل هذا التحديث) لا تملك جلسة Supabase Authentication فعلية
+  // لأنها أُنشئت عبر تسجيل الدخول المحلي القديم فقط — نصلح هذا تلقائياً عند فتح النظام
+  // حتى لا تفشل عمليات الحفظ بصمت بعد تقييد سياسات RLS على "authenticated" فقط.
+  useEffect(() => {
+    if (!isLoggedIn || !currentUser?.email) return;
+    (async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session) return; // لديه جلسة فعلية بالفعل
+        const email = currentUser.email.toLowerCase();
+        const rawPass = (currentUser as any).password || "123456";
+        const pass = rawPass.length >= 6 ? rawPass : `${rawPass}-firm2024`;
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: pass });
+        if (signInErr) {
+          await supabase.auth.signUp({ email, password: pass });
+        }
+      } catch (e) {
+        console.warn("Startup silent Supabase Auth sync note:", e);
+      }
+    })();
+    // مرة واحدة فقط عند تسجيل الدخول/فتح النظام لهذا المستخدم
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, currentUser?.id]);
 
   // ================= مزامنة البيانات الحساسة (قضايا/موكلين/ماليات) مع قاعدة بيانات Supabase =================
   // المتصفح (localStorage) يبقى نسخة سريعة/احتياطية محلية، لكن Supabase أصبح مصدر الحقيقة الأساسي
