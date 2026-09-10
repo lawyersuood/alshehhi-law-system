@@ -4937,6 +4937,24 @@ export default function App() {
       if (remoteInvoices && remoteInvoices.length > 0) { setInvoices(remoteInvoices); saveStorage("firm_invoices", remoteInvoices); }
       else if (remoteInvoices !== null && invoices.length > 0) { pushSupabaseTable("invoices", invoices); }
 
+      // سجل التدقيق الأمني وقائمة اعرف عميلك/الحظر — نقلناها إلى Supabase أيضاً حتى تكون مركزية
+      // بين كل الموظفين (كانت قبل ذلك محفوظة محلياً فقط في متصفح كل شخص، وهذا خطر على الامتثال).
+      const [remoteAuditLogs, remoteKyc, remoteKycWatchlist] = await Promise.all([
+        fetchSupabaseTable<AuditLogEntry>("audit_logs"),
+        fetchSupabaseTable<KycItem>("kyc_items"),
+        fetchSupabaseTable<KycWatchlistItem>("kyc_watchlist_items"),
+      ]);
+      if (cancelled) return;
+
+      if (remoteAuditLogs && remoteAuditLogs.length > 0) { setAuditLogs(remoteAuditLogs); saveStorage("firm_audit_logs", remoteAuditLogs); }
+      else if (remoteAuditLogs !== null && auditLogs.length > 0) { pushSupabaseTable("audit_logs", auditLogs); }
+
+      if (remoteKyc && remoteKyc.length > 0) { setKyc(remoteKyc); saveStorage("firm_kyc", remoteKyc); }
+      else if (remoteKyc !== null && kyc.length > 0) { pushSupabaseTable("kyc_items", kyc); }
+
+      if (remoteKycWatchlist && remoteKycWatchlist.length > 0) { setKycWatchlist(remoteKycWatchlist); saveStorage("firm_kyc_watchlist", remoteKycWatchlist); }
+      else if (remoteKycWatchlist !== null && kycWatchlist.length > 0) { pushSupabaseTable("kyc_watchlist_items", kycWatchlist); }
+
       supabaseHydratedRef.current = true;
     })();
     return () => { cancelled = true; };
@@ -4973,6 +4991,24 @@ export default function App() {
     const t = setTimeout(() => { pushSupabaseTable("invoices", invoices); }, 1500);
     return () => clearTimeout(t);
   }, [invoices]);
+
+  useEffect(() => {
+    if (!supabaseHydratedRef.current) return;
+    const t = setTimeout(() => { pushSupabaseTable("audit_logs", auditLogs); }, 1500);
+    return () => clearTimeout(t);
+  }, [auditLogs]);
+
+  useEffect(() => {
+    if (!supabaseHydratedRef.current) return;
+    const t = setTimeout(() => { pushSupabaseTable("kyc_items", kyc); }, 1500);
+    return () => clearTimeout(t);
+  }, [kyc]);
+
+  useEffect(() => {
+    if (!supabaseHydratedRef.current) return;
+    const t = setTimeout(() => { pushSupabaseTable("kyc_watchlist_items", kycWatchlist); }, 1500);
+    return () => clearTimeout(t);
+  }, [kycWatchlist]);
 
   // دالة تلقائية لدمج وتنظيف الموكلين المكررين
   useEffect(() => {
