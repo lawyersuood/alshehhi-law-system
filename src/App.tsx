@@ -4316,15 +4316,29 @@ async function pushSupabaseTable<T extends { id: number }>(table: string, rows: 
   try {
     // مرآة كاملة: نحذف كل الصفوف القديمة ونعيد إدخال القائمة الحالية، لضمان انعكاس الحذف أيضاً
     // (حجم البيانات صغير جداً بطبيعة هذا النظام، فهذا آمن وبسيط)
-    const { error: delErr } = await supabase.from(table).delete().neq("id", -1);
-    if (delErr) {
-      console.warn(`Supabase delete error (${table}):`, delErr);
+        const CHUNK_SIZE = 500;
+    if (rows && rows.length > 0) {
+      for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
+        const chunk = rows.slice(i, i + CHUNK_SIZE).map((r) => ({ id: r.id, data: r }));
+        const { error: upsertErr } = await supabase.from(table).upsert(chunk, { onConflict: "id" });
+        if (upsertErr) {
+          console.warn(`Supabase upsert error (${table}):`, upsertErr);
+          return;
+        }
+      }
+    }
+
+    const { data: existingRows, error: fetchIdsErr } = await supabase.from(table).select("id");
+    if (fetchIdsErr) {
+      console.warn(`Supabase fetch-ids error (${table}):`, fetchIdsErr);
       return;
     }
-    if (rows && rows.length > 0) {
-      const payload = rows.map((r) => ({ id: r.id, data: r }));
-      const { error: insErr } = await supabase.from(table).insert(payload);
-      if (insErr) console.warn(`Supabase insert error (${table}):`, insErr);
+    const localIds = new Set(rows.map((r) => r.id));
+    const idsToDelete = (existingRows || []).map((r) => r.id).filter((id) => !localIds.has(id));
+    for (let i = 0; i < idsToDelete.length; i += CHUNK_SIZE) {
+      const idsChunk = idsToDelete.slice(i, i + CHUNK_SIZE);
+      const { error: delErr } = await supabase.from(table).delete().in("id", idsChunk);
+      if (delErr) console.warn(`Supabase delete error (${table}):`, delErr);
     }
   } catch (e) {
     console.warn(`Supabase push exception (${table}):`, e);
