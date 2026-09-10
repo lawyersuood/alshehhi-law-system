@@ -79,6 +79,25 @@ export const normalizePhoneDigits = (phone: string = ""): string => {
     .replace(/[^0-9]/g, "");
 };
 
+// تطبيع الأسماء العربية لأغراض مطابقة KYC/قوائم الحظر: توحيد الألف بجميع أشكال الهمزة (أ/إ/آ) إلى ألف عادية،
+// وتوحيد التاء المربوطة (ة) مع الهاء (ه)، والألف المقصورة (ى) مع الياء (ي)، وحذف التشكيل والمسافات الزائدة،
+// حتى لا يفشل التطابق بسبب اختلافات إملائية شائعة (مثل "فاطمه"/"فاطمة" أو "امنه"/"آمنة") وهي نفس الاسم فعلياً.
+const normalizeArabicNameForMatch = (s: string): string => {
+  return (s || "")
+    .replace(/[ً-ٰٟ]/g, "") // إزالة التشكيل
+    .replace(/[إأآا]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLowerCase();
+};
+// استخراج أول (n) كلمات من الاسم بعد التطبيع — تُستخدم لمطابقة الاسم الثلاثي (أول ثلاث مقاطع من الاسم)
+// بدل الاسم الكامل، لأن قوائم الحظر أو الموكلين قد تحتوي اسم رباعي/خماسي بينما المستخدم يدخل ثلاثة مقاطع فقط.
+const firstNNameTokens = (s: string, n: number = 3): string => {
+  return normalizeArabicNameForMatch(s).split(" ").filter(Boolean).slice(0, n).join(" ");
+};
+
 const todayISO = () => new Date().toISOString().slice(0, 10);
 const addDays = (d: number) => { const t = new Date(); t.setDate(t.getDate() + d); return t.toISOString().slice(0, 10); };
 const addDaysFrom = (baseDate: string, d: number) => { const t = new Date(baseDate); t.setDate(t.getDate() + d); return t.toISOString().slice(0, 10); };
@@ -5766,11 +5785,17 @@ export default function App() {
     if (!clientName || clientName.trim().length < 2) return null;
     const cName = clientName.trim().toLowerCase();
     const cId = idNo ? idNo.trim().toLowerCase() : "";
+    // مطابقة الاسم الثلاثي: تقارن أول ثلاث مقاطع من الاسم بعد تطبيع الفروقات الإملائية الشائعة
+    // (الهمزة على الألف، التاء المربوطة/الهاء، الألف المقصورة/الياء) بدل مطابقة الاسم كنص كامل حرفياً
+    const cNameKey = firstNNameTokens(clientName, 3);
 
     const match = kycWatchlist.find((w) => {
       const wName = w.fullName.trim().toLowerCase();
       const wId = w.idNo ? w.idNo.trim().toLowerCase() : "";
-      const nameMatch = cName.includes(wName) || wName.includes(cName);
+      const wNameKey = firstNNameTokens(w.fullName, 3);
+      const nameMatch =
+        cName.includes(wName) || wName.includes(cName) ||
+        (cNameKey.length > 0 && wNameKey.length > 0 && (cNameKey === wNameKey || cNameKey.includes(wNameKey) || wNameKey.includes(cNameKey)));
       const idMatch = cId.length > 3 && wId.length > 3 && cId === wId;
       return nameMatch || idMatch;
     });
