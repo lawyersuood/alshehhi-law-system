@@ -5075,6 +5075,77 @@ export default function App() {
     return () => clearTimeout(t);
   }, [kycWatchlist]);
 
+  // ================= مزامنة باقي الأقسام (مستندات/وكالات/زملاء/جلسات/مهام/جهات اتصال المحكمة/
+  // اتفاقيات المكتب/السياسات/الإجراءات التأديبية/مواعيد الأحكام/الاستشارات) مع Supabase =================
+  // كانت هذه الأقسام محفوظة محلياً فقط في متصفح كل موظف — لا تنتقل بين الأجهزة ولا تظهر لبقية
+  // الموظفين. نفس نمط المزامنة المستخدم للقضايا/الموكلين أعلاه، مطبّق هنا بشكل عام لتقليل التكرار.
+  const remainingSyncTables: Array<{ table: string; get: () => any[]; set: (v: any[]) => void }> = [
+    { table: "docs", get: () => docs, set: (v) => setDocs(v as DocItem[]) },
+    { table: "poas", get: () => poas, set: (v) => setPoas(v as PoaItem[]) },
+    { table: "colleagues", get: () => colleagues, set: (v) => setColleagues(v as Colleague[]) },
+    { table: "colleague_delegations", get: () => colleagueDelegations, set: (v) => setColleagueDelegations(v as ColleagueDelegation[]) },
+    { table: "office_agreements", get: () => officeAgreements, set: (v) => setOfficeAgreements(v as OfficeAgreement[]) },
+    { table: "hearings", get: () => hearings, set: (v) => setHearings(v as Hearing[]) },
+    { table: "tasks", get: () => tasks, set: (v) => setTasks(v as TaskItem[]) },
+    { table: "court_contacts", get: () => courtContacts, set: (v) => setCourtContacts(v as CourtContact[]) },
+    { table: "internal_policies", get: () => policies, set: (v) => setPolicies(v as InternalPolicy[]) },
+    { table: "disciplinary_actions", get: () => disciplinaryActions, set: (v) => setDisciplinaryActions(v as EmployeeDisciplinaryAction[]) },
+    { table: "judgment_deadlines", get: () => deadlines, set: (v) => setDeadlines(v as JudgmentDeadline[]) },
+    { table: "consultation_bookings", get: () => consultationBookings, set: (v) => setConsultationBookings(v as BookingRecord[]) },
+  ];
+  const remainingSyncHydratedRef = React.useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      for (const entry of remainingSyncTables) {
+        const remote = await fetchSupabaseTable<any>(entry.table);
+        if (cancelled) return;
+        if (remote && remote.length > 0) {
+          entry.set(remote);
+        } else if (remote !== null && entry.get().length > 0) {
+          pushSupabaseTable(entry.table, entry.get());
+        }
+      }
+      // إعدادات الاستشارات صف واحد فقط (ليست مصفوفة) — نتعامل معها بشكل منفصل
+      const remoteSettings = await fetchSupabaseTable<{ id: string; value: ConsultationSettings }>("consultation_settings");
+      if (!cancelled) {
+        if (remoteSettings && remoteSettings.length > 0 && (remoteSettings[0] as any).value) {
+          setConsultationSettings((remoteSettings[0] as any).value);
+        } else if (remoteSettings !== null) {
+          supabase.from("consultation_settings").delete().neq("id", "").then(() => {
+            supabase.from("consultation_settings").insert([{ id: "settings", data: { id: "settings", value: consultationSettings } }]);
+          });
+        }
+      }
+      remainingSyncHydratedRef.current = true;
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("docs", docs), 1500); return () => clearTimeout(t); } }, [docs]);
+  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("poas", poas), 1500); return () => clearTimeout(t); } }, [poas]);
+  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("colleagues", colleagues), 1500); return () => clearTimeout(t); } }, [colleagues]);
+  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("colleague_delegations", colleagueDelegations), 1500); return () => clearTimeout(t); } }, [colleagueDelegations]);
+  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("office_agreements", officeAgreements), 1500); return () => clearTimeout(t); } }, [officeAgreements]);
+  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("hearings", hearings), 1500); return () => clearTimeout(t); } }, [hearings]);
+  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("tasks", tasks), 1500); return () => clearTimeout(t); } }, [tasks]);
+  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("court_contacts", courtContacts), 1500); return () => clearTimeout(t); } }, [courtContacts]);
+  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("internal_policies", policies), 1500); return () => clearTimeout(t); } }, [policies]);
+  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("disciplinary_actions", disciplinaryActions), 1500); return () => clearTimeout(t); } }, [disciplinaryActions]);
+  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("judgment_deadlines", deadlines), 1500); return () => clearTimeout(t); } }, [deadlines]);
+  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("consultation_bookings", consultationBookings), 1500); return () => clearTimeout(t); } }, [consultationBookings]);
+  useEffect(() => {
+    if (!remainingSyncHydratedRef.current) return;
+    const t = setTimeout(() => {
+      supabase.from("consultation_settings").delete().neq("id", "").then(() => {
+        supabase.from("consultation_settings").insert([{ id: "settings", data: { id: "settings", value: consultationSettings } }]);
+      });
+    }, 1500);
+    return () => clearTimeout(t);
+  }, [consultationSettings]);
+
   // دالة تلقائية لدمج وتنظيف الموكلين المكررين
   useEffect(() => {
     const seenMap = new Map<string, number>();
