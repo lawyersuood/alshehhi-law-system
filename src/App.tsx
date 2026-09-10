@@ -4860,11 +4860,31 @@ export default function App() {
   });
   const [kycWatchlist, setKycWatchlist] = useState<KycWatchlistItem[]>(() => {
     const saved = loadStorage<KycWatchlistItem[]>("firm_kyc_watchlist", uaeTerroristList);
-    if (!saved || saved.length < 260) {
-      saveStorage("firm_kyc_watchlist", uaeTerroristList);
-      return uaeTerroristList;
+    let list = (!saved || saved.length < 260) ? uaeTerroristList : saved;
+    // إصلاح معرّفات مكررة موجودة في بيانات القائمة الأساسية (uaeTerroristList) — كانت تمنع
+    // مزامنة القائمة بالكامل مع Supabase لأن المعرّف هو المفتاح الأساسي في الجدول.
+    const seenIds = new Set<number>();
+    let hadDuplicates = false;
+    let maxId = 0;
+    list.forEach((item) => { if (item.id > maxId) maxId = item.id; });
+    const deduped = list.map((item) => {
+      if (seenIds.has(item.id)) {
+        hadDuplicates = true;
+        maxId += 1;
+        seenIds.add(maxId);
+        return { ...item, id: maxId };
+      }
+      seenIds.add(item.id);
+      return item;
+    });
+    if (hadDuplicates) {
+      saveStorage("firm_kyc_watchlist", deduped);
+      return deduped;
     }
-    return saved;
+    if (!saved || saved.length < 260) {
+      saveStorage("firm_kyc_watchlist", list);
+    }
+    return list;
   });
   const [notifications, setNotifications] = useState<NotificationLog[]>(seedNotifications);
   const [timeLogs, setTimeLogs] = useState<TimeLog[]>(seedTimeLogs);
