@@ -98,9 +98,11 @@ const firstNNameTokens = (s: string, n: number = 3): string => {
   return normalizeArabicNameForMatch(s).split(" ").filter(Boolean).slice(0, n).join(" ");
 };
 
-const todayISO = () => new Date().toISOString().slice(0, 10);
-const addDays = (d: number) => { const t = new Date(); t.setDate(t.getDate() + d); return t.toISOString().slice(0, 10); };
-const addDaysFrom = (baseDate: string, d: number) => { const t = new Date(baseDate); t.setDate(t.getDate() + d); return t.toISOString().slice(0, 10); };
+const UAE_TIME_ZONE = "Asia/Dubai";
+const toDubaiISODate = (date: Date): string => new Intl.DateTimeFormat("en-CA", { timeZone: UAE_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
+const todayISO = () => toDubaiISODate(new Date());
+const addDays = (d: number) => { const t = new Date(); t.setDate(t.getDate() + d); return toDubaiISODate(t); };
+const addDaysFrom = (baseDate: string, d: number) => { const t = new Date(baseDate); t.setDate(t.getDate() + d); return toDubaiISODate(t); };
 
 const TASK_TEMPLATES = [
   {
@@ -10014,7 +10016,7 @@ export default function App() {
   };
 
   const filteredCases = useMemo(() => {
-    const query = q.trim().toLowerCase();
+    const query = normalizeArabicSearch(q);
     const result = cases.filter((c) => {
       const matchStage = isCaseMatchingStage(c, caseStageFilter);
       const matchStatus = isCaseMatchingStatus(c, caseFilter);
@@ -10038,15 +10040,15 @@ export default function App() {
 
       const matchQuery =
         !query ||
-        (c.number && c.number.toLowerCase().includes(query)) ||
-        clientName(c.clientId).toLowerCase().includes(query) ||
-        (c.subject && c.subject.toLowerCase().includes(query)) ||
-        (c.opponents && c.opponents.some((o) => o.toLowerCase().includes(query))) ||
-        (c.court && c.court.toLowerCase().includes(query)) ||
-        (c.judge && c.judge.toLowerCase().includes(query)) ||
-        (c.type && c.type.toLowerCase().includes(query)) ||
-        (getCaseStage(c) && getCaseStage(c).toLowerCase().includes(query)) ||
-        (c.status && c.status.toLowerCase().includes(query));
+        (c.number && normalizeArabicSearch(c.number).includes(query)) ||
+        normalizeArabicSearch(clientName(c.clientId)).includes(query) ||
+        (c.subject && normalizeArabicSearch(c.subject).includes(query)) ||
+        (c.opponents && c.opponents.some((o) => normalizeArabicSearch(o).includes(query))) ||
+        (c.court && normalizeArabicSearch(c.court).includes(query)) ||
+        (c.judge && normalizeArabicSearch(c.judge).includes(query)) ||
+        (c.type && normalizeArabicSearch(c.type).includes(query)) ||
+        (getCaseStage(c) && normalizeArabicSearch(getCaseStage(c)).includes(query)) ||
+        (c.status && normalizeArabicSearch(c.status).includes(query));
 
       return (
         matchStage &&
@@ -10091,7 +10093,22 @@ export default function App() {
     clientMap
   ]);
 
-  const activeFiltersCount = useMemo(() => {
+const filteredClientsList = useMemo(() => {
+    const query = normalizeArabicSearch(clientSearch);
+    return clients.filter((c) => {
+      const matchesCategory = clientCategoryFilter === "الكل" || c.type === clientCategoryFilter;
+      const matchesSearch =
+        !query ||
+        (c.name && normalizeArabicSearch(c.name).includes(query)) ||
+        (c.idNo && normalizeArabicSearch(c.idNo).includes(query)) ||
+        (c.phone && c.phone.includes(clientSearch.trim())) ||
+        (c.email && c.email.toLowerCase().includes(clientSearch.trim().toLowerCase())) ||
+        (c.emirate && normalizeArabicSearch(c.emirate).includes(query)) ||
+        (c.address && normalizeArabicSearch(c.address).includes(query));
+      return matchesCategory && matchesSearch;
+      });
+      }, [clients, clientCategoryFilter, clientSearch]);
+const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (caseStageFilter !== "الكل") count++;
     if (caseFilter !== "الكل") count++;
@@ -12713,19 +12730,7 @@ export default function App() {
 
                 {/* قائمة الكروت للمتعاملين */}
                 {(() => {
-                  const filteredList = clients.filter((c) => {
-                    const matchesCategory = clientCategoryFilter === "الكل" || c.type === clientCategoryFilter;
-                    const query = clientSearch.trim().toLowerCase();
-                    const matchesSearch =
-                      !query ||
-                      (c.name && c.name.toLowerCase().includes(query)) ||
-                      (c.idNo && c.idNo.toLowerCase().includes(query)) ||
-                      (c.phone && c.phone.includes(query)) ||
-                      (c.email && c.email.toLowerCase().includes(query)) ||
-                      (c.emirate && c.emirate.toLowerCase().includes(query)) ||
-                      (c.address && c.address.toLowerCase().includes(query));
-                    return matchesCategory && matchesSearch;
-                  });
+                    const filteredList = filteredClientsList;
 
                   if (filteredList.length === 0) {
                     return (
