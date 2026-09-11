@@ -5156,6 +5156,21 @@ export default function App() {
   const [kycWatchlistParsed, setKycWatchlistParsed] = useState<KycWatchlistItem[]>([]);
   const [kycSanctionAlert, setKycSanctionAlert] = useState<{ clientName: string; idNo?: string; watchlistItem: KycWatchlistItem } | null>(null);
 
+    const filteredKycWatchlist = useMemo(() => {
+      return kycWatchlist.filter((item) => {
+        if (kycTypeFilter !== "الكل" && item.type !== kycTypeFilter) return false;
+        if (!kycWatchlistSearch.trim()) return true;
+        const q = kycWatchlistSearch.toLowerCase();
+        return (
+          (item.fullName && item.fullName.toLowerCase().includes(q)) ||
+          (item.idNo && item.idNo.toLowerCase().includes(q)) ||
+          (item.reason && item.reason.toLowerCase().includes(q)) ||
+          (item.type && item.type.toLowerCase().includes(q)) ||
+          (item.nationality && item.nationality.toLowerCase().includes(q))
+        );
+      });
+    }, [kycWatchlist, kycTypeFilter, kycWatchlistSearch]);
+
   // ---------- Google Calendar Integration State ----------
   const [showGoogleCalendarModal, setShowGoogleCalendarModal] = useState(false);
   const [googleUser, setGoogleUser] = useState<FirebaseUser | null>(null);
@@ -16295,18 +16310,7 @@ const activeFiltersCount = useMemo(() => {
 
                     <div className="overflow-x-auto app-card">
                       {(() => {
-                        const filteredWatchlist = kycWatchlist.filter((item) => {
-                          if (kycTypeFilter !== "الكل" && item.type !== kycTypeFilter) return false;
-                          if (!kycWatchlistSearch.trim()) return true;
-                          const q = kycWatchlistSearch.toLowerCase();
-                          return (
-                            (item.fullName && item.fullName.toLowerCase().includes(q)) ||
-                            (item.idNo && item.idNo.toLowerCase().includes(q)) ||
-                            (item.reason && item.reason.toLowerCase().includes(q)) ||
-                            (item.type && item.type.toLowerCase().includes(q)) ||
-                            (item.nationality && item.nationality.toLowerCase().includes(q))
-                          );
-                        });
+      const filteredWatchlist = filteredKycWatchlist;
 
                         return (
                           <>
