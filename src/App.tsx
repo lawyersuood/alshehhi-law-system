@@ -4298,20 +4298,24 @@ function saveStorage<T>(key: string, value: T): void {
 // ================= مزامنة قاعدة بيانات Supabase (للبيانات الحساسة: قضايا/موكلين/ماليات) =================
 // كل صف مخزّن كـ {id, data} حيث data تحتوي كامل الكائن كـ JSON — لتفادي مشاكل توافق الأعمدة
 // مع تطور شكل البيانات بمرور الوقت.
-async function fetchSupabaseTable<T>(table: string): Promise<T[] | null> {
+async function fetchSupabaseTable<T>(table: string, options?: { limit?: number }): Promise<T[] | null> {
   try {
-    const { data, error } = await supabase.from(table).select("id, data");
+    let query = supabase.from(table).select("id, data");
+    if (options?.limit) {
+      query = query.order("id", { ascending: false }).limit(options.limit);
+    }
+    const { data, error } = await query;
     if (error) {
       console.warn(`Supabase fetch error (${table}):`, error);
       return null;
     }
-    return (data || []).map((r: any) => r.data as T);
+    const rows = (data || []).map((r: any) => r.data as T);
+    return options?.limit ? rows.reverse() : rows;
   } catch (e) {
     console.warn(`Supabase fetch exception (${table}):`, e);
     return null;
   }
 }
-
 async function pushSupabaseTable<T extends { id: number }>(table: string, rows: T[]): Promise<void> {
   try {
     // كنا سابقاً نحذف الجدول بالكامل ثم نعيد إدخال القائمة الحالية ("مرآة كاملة")، وهذا كان يعرّض
@@ -5025,7 +5029,7 @@ export default function App() {
       // سجل التدقيق الأمني وقائمة اعرف عميلك/الحظر — نقلناها إلى Supabase أيضاً حتى تكون مركزية
       // بين كل الموظفين (كانت قبل ذلك محفوظة محلياً فقط في متصفح كل شخص، وهذا خطر على الامتثال).
       const [remoteAuditLogs, remoteKyc, remoteKycWatchlist] = await Promise.all([
-        fetchSupabaseTable<AuditLogEntry>("audit_logs"),
+        fetchSupabaseTable<AuditLogEntry>("audit_logs", { limit: 500 }),
         fetchSupabaseTable<KycItem>("kyc_items"),
         fetchSupabaseTable<KycWatchlistItem>("kyc_watchlist_items"),
       ]);
