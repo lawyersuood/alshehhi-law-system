@@ -5980,6 +5980,7 @@ export default function App() {
   const [courtEmirateFilter, setCourtEmirateFilter] = useState("الكل");
   const [courtCategoryFilter, setCourtCategoryFilter] = useState("الكل");
   const [courtBranchFilter, setCourtBranchFilter] = useState("الكل");
+  const courtContactsFilterCache = React.useRef<{ contacts: typeof courtContacts; query: string; emirate: string; category: string; branch: string; result: typeof courtContacts } | null>(null);
   const [courtFiltersExpanded, setCourtFiltersExpanded] = useState(false);
   const [editingCourtContact, setEditingCourtContact] = useState<CourtContact | null>(null);
 
@@ -18155,11 +18156,13 @@ const activeFiltersCount = useMemo(() => {
 
                 {/* قائمة بطاقات وسائل التواصل التفصيلية للمحاكم مع تطبيق التصنيف الهرمي والبحث الذكي المطور */}
                 {(() => {
+                  const cache = courtContactsFilterCache.current;
+                                  const cacheHit = !!(cache && cache.contacts === courtContacts && cache.query === courtSearchQuery && cache.emirate === courtEmirateFilter && cache.category === courtCategoryFilter && cache.branch === courtBranchFilter);
                   const queryNorm = normalizeArabicSearch(courtSearchQuery);
                   const queryDigits = normalizePhoneDigits(courtSearchQuery);
                   const searchTokens = queryNorm ? queryNorm.split(/\s+/).filter(Boolean) : [];
 
-                  const filteredContacts = courtContacts.filter((c) => {
+                  const filteredContacts = cacheHit ? cache!.result : courtContacts.filter((c) => {
                     // 1. فحص البحث الذكي متعدد الكلمات والتشكيل والأرقام المباشرة
                     let matchQ = true;
                     if (searchTokens.length > 0) {
@@ -18197,6 +18200,9 @@ const activeFiltersCount = useMemo(() => {
 
                     return matchQ && matchEmirate && matchCategory && matchBranch;
                   });
+                  if (!cacheHit) {
+                                        courtContactsFilterCache.current = { contacts: courtContacts, query: courtSearchQuery, emirate: courtEmirateFilter, category: courtCategoryFilter, branch: courtBranchFilter, result: filteredContacts };
+                  }
 
                   const hasActiveFilters = courtSearchQuery !== "" || courtEmirateFilter !== "الكل" || courtCategoryFilter !== "الكل" || courtBranchFilter !== "الكل";
 
