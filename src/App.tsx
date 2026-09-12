@@ -8053,7 +8053,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     } catch (e) {
       console.log("Note on Supabase insert:", e);
     }
-    logAuditAction("CREATE", "واتساب الأعمال", \`محادثة: \${activeChat.name}\`, \`إرسال رسالة واتساب إلى \${activeChat.name} (\${activeChat.phone})\`, activeChat.id);
+    logAuditAction("CREATE", "واتساب الأعمال", `محادثة: \${activeChat.name}`, `إرسال رسالة واتساب إلى \${activeChat.name} (\${activeChat.phone})`, activeChat.id);
   };
 
   // دالة إنشاء محادثة جديدة وتفعيلها فوراً
@@ -8113,7 +8113,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       } catch (e) {
         console.log("Note on insert:", e);
       }
-      logAuditAction("CREATE", "واتساب الأعمال", \`محادثة جديدة: \${cleanName}\`, \`بدء محادثة واتساب جديدة مع \${cleanName} (\${cleanPhone}) وإرسال رسالة أولى\`, targetId);
+      logAuditAction("CREATE", "واتساب الأعمال", `محادثة جديدة: \${cleanName}`, `بدء محادثة واتساب جديدة مع \${cleanName} (\${cleanPhone}) وإرسال رسالة أولى`, targetId);
     }
   };
 
@@ -9123,7 +9123,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       console.log("Supabase save leave note:", e);
     }
 
-    logAuditAction("CREATE", "الكادر والرواتب HR", \`طلب إجازة: \${newLeave.employeeName}\`, \`تقديم طلب إجازة جديد (\${newLeave.leaveType}) لمدة \${newLeave.totalDays} يوم\`, newLeave.id);
+    logAuditAction("CREATE", "الكادر والرواتب HR", `طلب إجازة: \${newLeave.employeeName}`, `تقديم طلب إجازة جديد (\${newLeave.leaveType}) لمدة \${newLeave.totalDays} يوم`, newLeave.id);
     setModal(null);
   };
 
@@ -9166,7 +9166,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       console.log("Supabase save expense note:", e);
     }
 
-    logAuditAction("CREATE", "الكادر والرواتب HR", \`مصروف: \${newExp.employeeName}\`, \`تقديم طلب مصروف جديد بمبلغ \${newExp.amount} (\${newExp.category})\`, newExp.id);
+    logAuditAction("CREATE", "الكادر والرواتب HR", `مصروف: \${newExp.employeeName}`, `تقديم طلب مصروف جديد بمبلغ \${newExp.amount} (\${newExp.category})`, newExp.id);
     setModal(null);
   };
 
