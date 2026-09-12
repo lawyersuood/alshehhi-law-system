@@ -6127,6 +6127,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   // ---------- 3. تأكيد واستيراد القضايا لسيستم النظام ----------
   const handleConfirmImportCases = () => {
     if (excelCasesParsed.length === 0) return;
+    if (!checkPerm("manageCases", "استيراد قضايا من ملف Excel")) return;
 
     let updatedClients = [...clients];
     const newCasesList: CaseItem[] = [];
@@ -6285,6 +6286,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   // ---------- 6. تأكيد وحفظ الوكالة المستخرجة بالذكاء الاصطناعي ----------
   const handleSaveExtractedPoa = () => {
     if (!poaAiExtracted) return;
+    if (!checkPerm("manageDocs", "إضافة توكيل")) return;
 
     const targetPoaNumber = (poaAiExtracted.poaNumber || "").trim();
     if (targetPoaNumber && poas.some((p) => p.number.trim().toLowerCase() === targetPoaNumber.toLowerCase())) {
@@ -6465,6 +6467,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   // ---------- 9. تأكيد استيراد الفواتير (Excel أو AI) ----------
   const handleConfirmImportInvoices = () => {
+    if (!checkPerm("manageInvoices", "استيراد فواتير")) return;
     let updatedClients = [...clients];
     const newInvoicesList: Invoice[] = [];
 
@@ -6585,6 +6588,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   // ---------- 11. تأكيد استيراد وتدقيق قائمة المحظورين ----------
   const handleConfirmImportKycWatchlist = () => {
     if (kycWatchlistParsed.length === 0) return;
+    if (!checkPerm("manageKyc", "استيراد قائمة محظورين")) return;
 
     const newWatchlistItems = kycWatchlistParsed.map((item, idx) => ({
       ...item,
@@ -8049,6 +8053,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     } catch (e) {
       console.log("Note on Supabase insert:", e);
     }
+    logAuditAction("CREATE", "واتساب الأعمال", \`محادثة: \${activeChat.name}\`, \`إرسال رسالة واتساب إلى \${activeChat.name} (\${activeChat.phone})\`, activeChat.id);
   };
 
   // دالة إنشاء محادثة جديدة وتفعيلها فوراً
@@ -8108,6 +8113,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       } catch (e) {
         console.log("Note on insert:", e);
       }
+      logAuditAction("CREATE", "واتساب الأعمال", \`محادثة جديدة: \${cleanName}\`, \`بدء محادثة واتساب جديدة مع \${cleanName} (\${cleanPhone}) وإرسال رسالة أولى\`, targetId);
     }
   };
 
@@ -9117,6 +9123,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       console.log("Supabase save leave note:", e);
     }
 
+    logAuditAction("CREATE", "الكادر والرواتب HR", \`طلب إجازة: \${newLeave.employeeName}\`, \`تقديم طلب إجازة جديد (\${newLeave.leaveType}) لمدة \${newLeave.totalDays} يوم\`, newLeave.id);
     setModal(null);
   };
 
@@ -9159,6 +9166,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       console.log("Supabase save expense note:", e);
     }
 
+    logAuditAction("CREATE", "الكادر والرواتب HR", \`مصروف: \${newExp.employeeName}\`, \`تقديم طلب مصروف جديد بمبلغ \${newExp.amount} (\${newExp.category})\`, newExp.id);
     setModal(null);
   };
 
