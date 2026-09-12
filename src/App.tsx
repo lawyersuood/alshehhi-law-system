@@ -5428,9 +5428,7 @@ export default function App() {
   useEffect(() => {
     if (!remainingSyncHydratedRef.current) return;
     const t = setTimeout(() => {
-      supabase.from("consultation_settings").delete().neq("id", "").then(() => {
-        supabase.from("consultation_settings").insert([{ id: "settings", data: { id: "settings", value: consultationSettings } }]);
-      });
+supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "settings", value: consultationSettings } }], { onConflict: "id" });
     }, 1500);
     return () => clearTimeout(t);
   }, [consultationSettings]);
