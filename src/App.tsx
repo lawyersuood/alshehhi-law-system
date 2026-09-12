@@ -5404,9 +5404,7 @@ export default function App() {
         if (remoteSettings && remoteSettings.length > 0 && (remoteSettings[0] as any).value) {
           setConsultationSettings((remoteSettings[0] as any).value);
         } else if (remoteSettings !== null) {
-          supabase.from("consultation_settings").delete().neq("id", "").then(() => {
-            supabase.from("consultation_settings").insert([{ id: "settings", data: { id: "settings", value: consultationSettings } }]);
-          });
+          supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "settings", value: consultationSettings } }], { onConflict: "id" });
         }
       }
       remainingSyncHydratedRef.current = true;
