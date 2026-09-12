@@ -8969,8 +8969,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     logAuditAction("STATUS_CHANGE", "الفواتير", `فاتورة: ${inv.number}`, `تحديث حالة الفاتورة ${inv.number} للموكل ${clientName(inv.clientId)} من "${inv.status}" إلى "${newStatus}"`, inv.id);
   };
 
-  const saveEmployee = async () => {
-    if (!form.fullName || !form.email) return;
+  const saveEmployee = async () => { if (!checkPerm("manageEmployees", "حفظ بيانات الموظف")) return; if (!form.fullName || !form.email) return;
     const isEdit = Boolean(form.id);
     const empId = form.id || `emp-${Date.now()}`;
     const newEmp: Employee = {
@@ -8991,11 +8990,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       createdAt: form.createdAt || todayISO()
     };
 
-    if (isEdit) {
-      setEmployees(employees.map(e => e.id === empId ? newEmp : e));
-    } else {
-      setEmployees([...employees, newEmp]);
-    }
+    if (isEdit) { setEmployees(employees.map(e => e.id === empId ? newEmp : e)); } else { setEmployees([...employees, newEmp]); } logAuditAction(isEdit ? "UPDATE" : "CREATE", "الكادر والرواتب HR", `الموظف: ${newEmp.fullName}`, isEdit ? `تحديث بيانات الموظف ${newEmp.fullName} (الراتب الأساسي: ${newEmp.basicSalary})` : `إضافة موظف جديد ${newEmp.fullName} (${newEmp.jobTitle})`, empId);
 
     try {
       await supabase.from("employees").upsert([{
@@ -9128,8 +9123,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     setModal(null);
   };
 
-  const updateLeaveStatus = async (leaveId: string, newStatus: "APPROVED" | "REJECTED") => {
-    setLeaveRequests(leaveRequests.map(l => l.id === leaveId ? { ...l, status: newStatus, approvedBy: currentUser.name } : l));
+  const updateLeaveStatus = async (leaveId: string, newStatus: "APPROVED" | "REJECTED") => { if (!checkPerm("manageEmployees", "اعتماد/رفض طلب إجازة")) return; const targetLeave = leaveRequests.find(l => l.id === leaveId); setLeaveRequests(leaveRequests.map(l => l.id === leaveId ? { ...l, status: newStatus, approvedBy: currentUser.name } : l)); logAuditAction(newStatus === "APPROVED" ? "APPROVE" : "REJECT", "الكادر والرواتب HR", `طلب إجازة: ${targetLeave?.employeeName || leaveId}`, `${newStatus === "APPROVED" ? "اعتماد" : "رفض"} طلب إجازة الموظف ${targetLeave?.employeeName || ""} (${targetLeave?.leaveType || ""}, ${targetLeave?.totalDays || 0} يوم)`, leaveId);
     try {
       await supabase.from("leave_requests").update({ status: newStatus }).eq("id", leaveId);
     } catch (e) {
@@ -9171,8 +9165,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     setModal(null);
   };
 
-  const updateExpenseStatus = async (expId: string, newStatus: "PAID" | "REJECTED") => {
-    setEmployeeExpenses(employeeExpenses.map(x => x.id === expId ? { ...x, status: newStatus } : x));
+  const updateExpenseStatus = async (expId: string, newStatus: "PAID" | "REJECTED") => { if (!checkPerm("manageEmployees", "اعتماد/رفض مصروف موظف")) return; const targetExp = employeeExpenses.find(x => x.id === expId); setEmployeeExpenses(employeeExpenses.map(x => x.id === expId ? { ...x, status: newStatus } : x)); logAuditAction(newStatus === "PAID" ? "APPROVE" : "REJECT", "الكادر والرواتب HR", `مصروف: ${targetExp?.employeeName || expId}`, `${newStatus === "PAID" ? "اعتماد صرف" : "رفض"} مصروف الموظف ${targetExp?.employeeName || ""} بمبلغ ${targetExp?.amount || 0} (${targetExp?.category || ""})`, expId);
     try {
       await supabase.from("employee_expenses").update({ status: newStatus }).eq("id", expId);
     } catch (e) {
@@ -9286,8 +9279,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     setModal(null);
   };
 
-  const saveKyc = () => {
-    if (!form.clientId) return;
+  const saveKyc = () => { if (!checkPerm("manageKyc", "حفظ استمارة اعرف عميلك KYC")) return; if (!form.clientId) return;
     const rec = {
       clientId: +form.clientId,
       nationality: form.nationality || "الإمارات",
@@ -9302,13 +9294,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       lastReview: form.lastReview || todayISO(),
       notes: form.notes || "",
     };
-    if (modal === "kyc-edit" && form.id) {
-      setKyc(kyc.map((x) => x.id === form.id ? { ...x, ...rec } : x));
-    } else {
-      setKyc([...kyc, { id: nextId(kyc), ...rec }]);
-    }
-    setModal(null);
-  };
+    const isKycEdit = modal === "kyc-edit" && form.id; if (isKycEdit) { setKyc(kyc.map((x) => x.id === form.id ? { ...x, ...rec } : x)); } else { setKyc([...kyc, { id: nextId(kyc), ...rec }]); } logAuditAction(isKycEdit ? "UPDATE" : "CREATE", "الامتثال KYC", `ملف KYC للموكل: ${clientName(rec.clientId)}`, isKycEdit ? `تحديث استمارة KYC للموكل ${clientName(rec.clientId)} (الفحص: ${rec.sanctions}, المخاطر: ${rec.risk})` : `إنشاء استمارة KYC جديدة للموكل ${clientName(rec.clientId)} (الفحص: ${rec.sanctions}, المخاطر: ${rec.risk})`, rec.clientId); setModal(null); };
 
   const savePoa = () => {
     if (!checkPerm("manageDocs", "إضافة توكيل")) return;
