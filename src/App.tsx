@@ -5136,7 +5136,7 @@ export default function App() {
       }
     });
 
-    if (dupes.size > 0) {
+    if (false /* تم تعطيل الدمج التلقائي الصامت للموكلين بعد المراجعة الامنية - اي دمج يتطلب الان تاكيدا صريحا من المستخدم */ && dupes.size > 0) {
       setPoas((prev) => prev.map((p) => remap.has(p.clientId) ? { ...p, clientId: remap.get(p.clientId)! } : p));
       setCases((prev) => prev.map((cs) => remap.has(cs.clientId) ? { ...cs, clientId: remap.get(cs.clientId)! } : cs));
       setInvoices((prev) => prev.map((inv) => remap.has(inv.clientId) ? { ...inv, clientId: remap.get(inv.clientId)! } : inv));
