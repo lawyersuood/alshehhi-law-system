@@ -135,7 +135,7 @@ export default function TasksView({
               </div>
             </div>
           ))
-        }
+        )}
       </div>
     </>
   );
