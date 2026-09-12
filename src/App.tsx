@@ -4777,7 +4777,7 @@ export default function App() {
       const normNum = normalizeCaseNumberKey(c.number);
       const compKey = `${c.clientId}_${String(c.court || "").trim().toLowerCase()}_${String(c.subject || "").trim().toLowerCase()}`;
 
-      if (normNum && seenNumberKeys.has(normNum)) {
+      if (normNum && seenNumberKeys.has(normNum) && seenNumberKeys.get(normNum)!.clientId === c.clientId) {
         const existing = seenNumberKeys.get(normNum)!;
         if ((!existing.opponents || existing.opponents.length === 0) && c.opponents && c.opponents.length > 0) existing.opponents = c.opponents;
         if (!existing.judge && c.judge) existing.judge = c.judge;
