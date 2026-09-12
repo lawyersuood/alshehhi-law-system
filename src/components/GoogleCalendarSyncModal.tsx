@@ -23,7 +23,7 @@ import {
   formatCalendarDateTime,
   GoogleCalendarEventPayload
 } from "../googleCalendar";
-import { Hearing, CaseItem } from "../App";
+import type { Hearing, CaseItem } from "../domain/types";
 
 interface GoogleCalendarSyncModalProps {
   isOpen: boolean;

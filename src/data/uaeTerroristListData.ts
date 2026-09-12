@@ -1,4 +1,4 @@
-import { KycWatchlistItem } from "../App";
+import type { KycWatchlistItem } from "../domain/types";
 
 export const uaeTerroristList: KycWatchlistItem[] = [
   // -------------------------------------------------------------
