@@ -4784,7 +4784,6 @@ export default function App() {
         if ((!existing.court || existing.court === "محاكم دبي") && c.court && c.court !== "محاكم دبي") {
           existing.court = c.court;
         }
-        existing.fee = 0;
         if (!existing.openDate && c.openDate) existing.openDate = c.openDate;
         if (existing.status === "متداولة" && c.status && c.status !== "متداولة") {
           existing.status = c.status;
