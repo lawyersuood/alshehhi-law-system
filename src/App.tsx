@@ -17439,7 +17439,12 @@ const activeFiltersCount = useMemo(() => {
                                     <Edit2 size={16} />
                                   </button>
                                   <button
-                                    onClick={() => setCurrentUserId(u.id)}
+onClick={() => {
+  if (!isSuperAdmin) { alert("هذا الإجراء (تجربة الحساب) متاح فقط لمدير النظام."); return; }
+  if (!window.confirm(`تأكيد: سيتم الآن الدخول باسم المستخدم "${u.name}" (${u.email}). سيُسجَّل هذا الإجراء في سجل التدقيق. هل تريد المتابعة؟`)) return;
+  logAuditAction("UPDATE", "المستخدمون", u.name, `دخول مدير النظام كمستخدم آخر (تجربة الحساب) للمستخدم: ${u.name} (${u.email})`, u.id);
+  setCurrentUserId(u.id);
+}}
                                     className="text-xs bg-stone-100 border border-slate-200 px-2 py-1 rounded-lg hover:bg-amber-50 hover:border-amber-300 font-semibold"
                                   >
                                     تجربة الحساب
