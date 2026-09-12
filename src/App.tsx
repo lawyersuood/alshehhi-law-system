@@ -6641,6 +6641,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
                 });
         }
 
+    logAuditAction("CREATE", "الامتثال KYC/AML", "استيراد قائمة محظورين", `تم استيراد ${newWatchlistItems.length} اسم لقائمة المحظورين`, 0);
     alert(`تم استيراد ${newWatchlistItems.length} اسم لقائمة المحظورين والمنكشفين بنجاح! ${matchedCount > 0 ? `🚨 تم العثور على (${matchedCount}) موكل حالي متطابق مع القائمة!` : "لم يتطابق أي موكل حالي."}`);
     setShowKycWatchlistUploadModal(false);
     setKycWatchlistParsed([]);
