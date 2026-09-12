@@ -6607,44 +6607,47 @@ export default function App() {
     const updatedWatchlist = [...kycWatchlist, ...newWatchlistItems];
     setKycWatchlist(updatedWatchlist);
 
-    // تدقيق فوري ومباشر مع أسماء الموكلين المسجلين بالنظام حالياً
-    let matchedCount = 0;
-    clients.forEach((c) => {
-      const isBlocked = newWatchlistItems.some((w) => {
-        const cName = c.name.toLowerCase().trim();
-        const wName = w.fullName.toLowerCase().trim();
-        return cName.includes(wName) || wName.includes(cName);
-      });
-
-      if (isBlocked) {
-        matchedCount++;
-        setKyc((prev) => {
-          const exists = prev.find((k) => k.clientId === c.id);
-          if (exists) {
-            return prev.map((k) => (k.clientId === c.id ? { ...k, pep: true, sanctions: "تطابق محتمل", risk: "مرتفع", notes: "🚫 محظور تلقائياً — تطابق تلقائي مع القائمة السوداء المستوردة حديثاً!" } : k));
-          } else {
-            return [
-              ...prev,
-              {
-                id: nextId(prev),
-                clientId: c.id,
-                nationality: c.emirate,
-                idType: "هوية إماراتية",
-                idExpiry: addDays(365),
-                ubo: c.name,
-                sourceOfFunds: "نشاط تجاري",
-                pep: true,
-                sanctions: "تطابق محتمل",
-                risk: "مرتفع",
-                status: "قيد المراجعة",
-                lastReview: todayISO(),
-                notes: "🚫 محظور تلقائياً — تطابق تلقائي عند رفع قائمة الحظر الجديدة!"
-              }
-            ];
-          }
+    // تدقيق فوري ومباشر مع أسماء الموكلين المسجلين بالنظام حالياً (نسخة محسّنة الأداء: مسح واحد بدل O(n×m) وتحديث دفعة واحدة لحالة KYC)
+        const normalizedWatchlistNames = newWatchlistItems.map((w) => w.fullName.toLowerCase().trim());
+        let matchedCount = 0;
+        const matchedClientIds = new Set<number>();
+        clients.forEach((c) => {
+                const cName = c.name.toLowerCase().trim();
+                const isBlocked = normalizedWatchlistNames.some((wName) => cName.includes(wName) || wName.includes(cName));
+                if (isBlocked) {
+                          matchedCount++;
+                          matchedClientIds.add(c.id);
+                }
         });
-      }
-    });
+
+        if (matchedClientIds.size > 0) {
+                setKyc((prev) => {
+                          const existingClientIds = new Set(prev.map((k) => k.clientId));
+                          const updated = prev.map((k) =>
+                                      matchedClientIds.has(k.clientId)
+                                        ? { ...k, pep: true, sanctions: "تطابق محتمل", risk: "مرتفع", notes: "🚫 محظور تلقائياً — تطابق تلقائي مع القائمة السوداء المستوردة حديثاً!" }
+                                        : k
+                                    );
+                          const clientsNeedingNewRecord = clients.filter((c) => matchedClientIds.has(c.id) && !existingClientIds.has(c.id));
+                          const baseId = nextId(prev);
+                          const additions = clientsNeedingNewRecord.map((c, idx) => ({
+                                      id: baseId + idx,
+                                      clientId: c.id,
+                                      nationality: c.emirate,
+                                      idType: "هوية إماراتية",
+                                      idExpiry: addDays(365),
+                                      ubo: c.name,
+                                      sourceOfFunds: "نشاط تجاري",
+                                      pep: true,
+                                      sanctions: "تطابق محتمل",
+                                      risk: "مرتفع",
+                                      status: "قيد المراجعة",
+                                      lastReview: todayISO(),
+                                      notes: "🚫 محظور تلقائياً — تطابق تلقائي عند رفع قائمة الحظر الجديدة!"
+                          }));
+                          return [...updated, ...additions];
+                });
+        }
 
     alert(`تم استيراد ${newWatchlistItems.length} اسم لقائمة المحظورين والمنكشفين بنجاح! ${matchedCount > 0 ? `🚨 تم العثور على (${matchedCount}) موكل حالي متطابق مع القائمة!` : "لم يتطابق أي موكل حالي."}`);
     setShowKycWatchlistUploadModal(false);
