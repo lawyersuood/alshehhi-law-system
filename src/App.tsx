@@ -13139,7 +13139,7 @@ const activeFiltersCount = useMemo(() => {
                         onClick={() => setDeadlineFilter("urgent")}
                         className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${deadlineFilter === "urgent" ? "bg-red-600 text-white" : "bg-red-50 text-red-700 hover:bg-red-100"}`}
                       >
-                        ⚠️ تحتاج تنبيه عاجل (أقل من 7 أيام) ({deadlines.filter(d => isDeadlineOpen(d.status) && daysUntil(d.appealDeadlineDate) <= 7).length})
+                        ⚠️ تحتاج تنبيه عاجل (أقل من 7 أيام) ({deadlines.filter(d => isDeadlineOpen(d.status) && daysUntil(d.appealDeadlineDate) <= 7 && daysUntil(d.appealDeadlineDate) >= 0).length})
                       </button>
                       <button
                         onClick={() => setDeadlineFilter("active")}
@@ -13166,7 +13166,7 @@ const activeFiltersCount = useMemo(() => {
                       {deadlines
                         .filter((d) => {
                           const daysLeft = daysUntil(d.appealDeadlineDate);
-                          if (deadlineFilter === "urgent") return isDeadlineOpen(d.status) && daysLeft <= 7;
+                          if (deadlineFilter === "urgent") return isDeadlineOpen(d.status) && daysLeft <= 7 && daysLeft >= 0;
                           if (deadlineFilter === "active") return d.status === "جارٍ حساب الميعاد";
                           if (deadlineFilter === "done") return d.status === "تم قيد الطعن" || d.status === "تم تقديم الطعن";
                           if (deadlineFilter === "notneeded") return d.status === "لا حاجة لطعن";
