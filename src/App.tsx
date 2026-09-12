@@ -6541,6 +6541,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
     setClients(updatedClients);
     setInvoices((prev) => [...prev, ...newInvoicesList]);
+    logAuditAction("CREATE", "الفواتير", "استيراد فواتير", `تم استيراد ${newInvoicesList.length} فاتورة وتحديث الموكلين`, 0);
     alert(`تم استيراد وإدراج ${newInvoicesList.length} فاتورة بنجاح!`);
     setShowInvoiceImportModal(false);
     setExcelInvoicesParsed([]);
