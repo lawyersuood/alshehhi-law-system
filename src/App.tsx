@@ -9406,7 +9406,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     if (!form.colleagueId || !form.purpose) return;
 
     const year = new Date().getFullYear();
-    const seq = colleagueDelegations.filter((d) => d.refNo.includes(String(year))).length + 1;
+    const seq = (colleagueDelegations.filter((d) => d.refNo.startsWith(`INB-${year}-`)).map((d) => parseInt(d.refNo.slice(`INB-${year}-`.length), 10)).filter((n) => !isNaN(n)).reduce((m, n) => Math.max(m, n), 0)) + 1;
     const refNo = `INB-${year}-${String(seq).padStart(3, "0")}`;
     const colleague = colleagues.find((c) => c.id === +form.colleagueId);
 
@@ -14203,7 +14203,7 @@ const activeFiltersCount = useMemo(() => {
                           {/* Plain Connection */}
                           <div
                             onClick={() => {
-                              setEmailConfig(prev => ({ ...prev, protocol: "none", secure: false }));
+                              if (!window.confirm("تحذير: الاتصال بدون تشفير (Plain) يعرض بيانات اعتماد البريد الإلكتروني ومحتوى الرسائل للاعتراض على الشبكة. هذا الخيار مخصص فقط لبيئة تجريبية محلية معزولة ولا يُنصح باستخدامه أبداً في الإنتاج. هل تريد المتابعة فعلاً؟")) return; setEmailConfig(prev => ({ ...prev, protocol: "none", secure: false }));
                               setTestSmtpResult(null);
                             }}
                             className={`p-3 rounded-2xl border cursor-pointer transition relative space-y-1 ${
