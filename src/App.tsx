@@ -5633,9 +5633,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     }
   };
 
-  const handlePrecedentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!precedentForm.title.trim() || !precedentForm.summary_text.trim()) {
+  const handlePrecedentSubmit = async (e: React.FormEvent) => { e.preventDefault(); if (!checkPerm("managePrecedents", "إضافة مبدأ قضائي")) return; if (!precedentForm.title.trim() || !precedentForm.summary_text.trim()) {
       alert("يرجى إدخال عنوان المبدأ ونص القاعدة القانونية");
       return;
     }
@@ -5889,7 +5887,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       installments: feeInstallments,
       notes: `أُنشئت تلقائياً من نموذج اتفاقية المكتب المعتمدة بتاريخ ${fmtDate(todayISO())}`,
     };
-    setFeeAgreements((prev) => [...prev, newFeeAgreement]);
+    setFeeAgreements((prev) => [...prev, newFeeAgreement]); logAuditAction("CREATE", "اتفاقيات الأتعاب", `اتفاقية: ${agreementNumber}`, `إنشاء اتفاقية أتعاب جديدة ${agreementNumber} للموكل ${clientNameArFinal} بإجمالي ${total}`, feeAgrId);
 
     // (3) سندات القبض — كل دفعة "مسددة عند التوقيع" تنزل تلقائياً في تبويب الدفعات
     const paidOnes = feeInstallments.filter((i) => i.status === "مدفوع");
@@ -6783,7 +6781,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const saveEditClient = () => {
     if (!checkPerm("manageClients", "تعديل بيانات الموكل")) return;
     if (!editingClient || !editingClient.name) return;
-    setClients((prev) => prev.map((c) => (c.id === editingClient.id ? editingClient : c)));
+    setClients((prev) => prev.map((c) => (c.id === editingClient.id ? editingClient : c))); logAuditAction("UPDATE", "الموكلين والشركات", `الموكل: ${editingClient.name}`, `تعديل بيانات الموكل ${editingClient.name} من نافذة التعديل السريع`, editingClient.id);
     setEditingClient(null);
     setClientToast(`تم تحديث بيانات "${editingClient.name}" بنجاح`);
     setTimeout(() => setClientToast(null), 4000);
@@ -8848,8 +8846,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   const f = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setForm((prev) => ({ ...prev, [k]: e.target.value }));
 
-  const handleDeduplicateCasesManual = () => {
-    const beforeCount = cases.length;
+  const handleDeduplicateCasesManual = () => { if (!checkPerm("manageCases", "دمج/حذف القضايا المكررة")) return; const beforeCount = cases.length;
     const cleaned = deduplicateCases(cases);
     setCases(cleaned);
     saveStorage("firm_cases", cleaned);
@@ -8934,7 +8931,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     if (!form.name) return;
     const newClientId = nextId(clients);
     auditNewClientKyc(form.name, form.idNo, newClientId);
-    setClients([...clients, { id: newClientId, name: form.name, type: form.type || "فرد", idNo: form.idNo || "", phone: form.phone || "", email: form.email || "", emirate: form.emirate || "دبي", address: form.address || "" }]);
+    setClients([...clients, { id: newClientId, name: form.name, type: form.type || "فرد", idNo: form.idNo || "", phone: form.phone || "", email: form.email || "", emirate: form.emirate || "دبي", address: form.address || "" }]); logAuditAction("CREATE", "الموكلين والشركات", `الموكل: ${form.name}`, `إضافة موكل جديد ${form.name} (${form.type || "فرد"})`, newClientId);
     setModal(null);
   };
 
