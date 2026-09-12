@@ -8955,7 +8955,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const saveInvoice = () => {
     if (!checkPerm("manageInvoices", "إصدار فاتورة")) return;
     if (!form.clientId || !form.amount) return;
-    setInvoices([...invoices, { id: nextId(invoices), number: `INV-2026-${String(60 + nextId(invoices)).padStart(3, "0")}`, clientId: +form.clientId, caseId: form.caseId ? +form.caseId : null, date: todayISO(), due: form.due || addDays(30), amount: +form.amount, status: "مسودة", desc: form.desc || "" }]);
+    const newInvNumber = `INV-2026-${String(60 + nextId(invoices)).padStart(3, "0")}`; setInvoices([...invoices, { id: nextId(invoices), number: newInvNumber, clientId: +form.clientId, caseId: form.caseId ? +form.caseId : null, date: todayISO(), due: form.due || addDays(30), amount: +form.amount, status: "مسودة", desc: form.desc || "" }]); logAuditAction("CREATE", "الفواتير", `فاتورة: ${newInvNumber}`, `إصدار فاتورة جديدة ${newInvNumber} للموكل ${clientName(+form.clientId)} بمبلغ ${+form.amount}`, +form.clientId);
     setModal(null);
   };
 
@@ -9244,7 +9244,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         notes: form.notes || ""
       };
 
-      setPayments((prev) => [...prev, newPayment]);
+const newInv      setPayments((prev) => [...prev, newPayment]); logAuditAction("CREATE", "المدفوعات", `دفعة: ${newPayment.referenceNo}`, `تسجيل دفعة بمبلغ ${amt} من الموكل ${clientName(clientId)} (المرجع: ${newPayment.referenceNo})`, newPayment.id);Number = `INV-2026-${String(60 + nextId(invoices)).padStart(3, "0")}`; setInvoices([...invoices, { id: nextId(invoices), number: newInvNumber, clientId: +form.clientId, caseId: form.caseId ? +form.caseId : null, date: todayISO(), due: form.due || addDays(30), amount: +form.amount, status: "مسودة", desc: form.desc || "" }]); logAuditAction("CREATE", "الفواتير", `فاتورة: ${newInvNumber}`, `إصدار فاتورة جديدة ${newInvNumber} للموكل ${clientName(+form.clientId)} بمبلغ ${+form.amount}`, +form.clientId);
 
       // تحديث حالة الاتفاقية إذا سددت بالكامل
       const totalPaidAfter = getPaidForAgreement(agr.id) + amt;
@@ -9266,7 +9266,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         notes: form.notes || "دفعة غير مخصصة — رصيد معلّق للموكل"
       };
 
-      setPayments((prev) => [...prev, newPayment]);
+const newInv      setPayments((prev) => [...prev, newPayment]); logAuditAction("CREATE", "المدفوعات", `دفعة: ${newPayment.referenceNo}`, `تسجيل دفعة بمبلغ ${amt} من الموكل ${clientName(clientId)} (المرجع: ${newPayment.referenceNo})`, newPayment.id);Number = `INV-2026-${String(60 + nextId(invoices)).padStart(3, "0")}`; setInvoices([...invoices, { id: nextId(invoices), number: newInvNumber, clientId: +form.clientId, caseId: form.caseId ? +form.caseId : null, date: todayISO(), due: form.due || addDays(30), amount: +form.amount, status: "مسودة", desc: form.desc || "" }]); logAuditAction("CREATE", "الفواتير", `فاتورة: ${newInvNumber}`, `إصدار فاتورة جديدة ${newInvNumber} للموكل ${clientName(+form.clientId)} بمبلغ ${+form.amount}`, +form.clientId);
     }
 
     setModal(null);
@@ -9481,8 +9481,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       updatedList = [...users, newUser];
     }
 
-    setUsers(updatedList);
-    saveStorage("firm_users", updatedList);
+    setUsers(updatedList); saveStorage("firm_users", updatedList); logAuditAction(editingUser ? "UPDATE" : "CREATE", "المستخدمون والصلاحيات", `المستخدم: ${form.name}`, editingUser ? `تحديث بيانات/صلاحيات المستخدم ${form.name} (${form.email}) - الدور: ${rKey}` : `إنشاء حساب مستخدم جديد ${form.name} (${form.email}) - الدور: ${rKey}`, editingUser?.id || 0);
 
     // المزامنة الفورية المباشرة مع جدول public.profiles في Supabase
     try {
