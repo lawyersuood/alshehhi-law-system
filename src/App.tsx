@@ -6483,10 +6483,12 @@ export default function App() {
     const newInvoicesList: Invoice[] = [];
 
     if (invoiceImportTab === "excel") {
+      const clientNameToId = new Map<string, number>();
+            updatedClients.forEach((c) => clientNameToId.set(c.name.toLowerCase().trim(), c.id));
       excelInvoicesParsed.forEach((item) => {
-        let matchedC = updatedClients.find((c) => c.name.toLowerCase().trim() === item.clientName.toLowerCase().trim());
-        let cId: number;
-        if (!matchedC) {
+        const key = item.clientName.toLowerCase().trim();
+                let cId: number | undefined = clientNameToId.get(key);
+                if (cId === undefined) {
           cId = nextId(updatedClients);
           checkAndAuditClientKyc(item.clientName);
           updatedClients.push({
@@ -6499,9 +6501,8 @@ export default function App() {
             email: "",
             address: ""
           });
-        } else {
-          cId = matchedC.id;
-        }
+                          clientNameToId.set(key, cId);
+                }
 
         newInvoicesList.push({
           id: nextId(invoices) + newInvoicesList.length,
