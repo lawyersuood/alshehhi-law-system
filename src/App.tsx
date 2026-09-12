@@ -9244,7 +9244,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         notes: form.notes || ""
       };
 
-const newInv      setPayments((prev) => [...prev, newPayment]); logAuditAction("CREATE", "المدفوعات", `دفعة: ${newPayment.referenceNo}`, `تسجيل دفعة بمبلغ ${amt} من الموكل ${clientName(clientId)} (المرجع: ${newPayment.referenceNo})`, newPayment.id);Number = `INV-2026-${String(60 + nextId(invoices)).padStart(3, "0")}`; setInvoices([...invoices, { id: nextId(invoices), number: newInvNumber, clientId: +form.clientId, caseId: form.caseId ? +form.caseId : null, date: todayISO(), due: form.due || addDays(30), amount: +form.amount, status: "مسودة", desc: form.desc || "" }]); logAuditAction("CREATE", "الفواتير", `فاتورة: ${newInvNumber}`, `إصدار فاتورة جديدة ${newInvNumber} للموكل ${clientName(+form.clientId)} بمبلغ ${+form.amount}`, +form.clientId);
+      setPayments((prev) => [...prev, newPayment]); logAuditAction("CREATE", "المدفوعات", `دفعة: ${newPayment.referenceNo}`, `تسجيل دفعة بمبلغ ${amt} من الموكل ${clientName(clientId)} (المرجع: ${newPayment.referenceNo})`, newPayment.id);
 
       // تحديث حالة الاتفاقية إذا سددت بالكامل
       const totalPaidAfter = getPaidForAgreement(agr.id) + amt;
@@ -9266,7 +9266,7 @@ const newInv      setPayments((prev) => [...prev, newPayment]); logAuditAction("
         notes: form.notes || "دفعة غير مخصصة — رصيد معلّق للموكل"
       };
 
-const newInv      setPayments((prev) => [...prev, newPayment]); logAuditAction("CREATE", "المدفوعات", `دفعة: ${newPayment.referenceNo}`, `تسجيل دفعة بمبلغ ${amt} من الموكل ${clientName(clientId)} (المرجع: ${newPayment.referenceNo})`, newPayment.id);Number = `INV-2026-${String(60 + nextId(invoices)).padStart(3, "0")}`; setInvoices([...invoices, { id: nextId(invoices), number: newInvNumber, clientId: +form.clientId, caseId: form.caseId ? +form.caseId : null, date: todayISO(), due: form.due || addDays(30), amount: +form.amount, status: "مسودة", desc: form.desc || "" }]); logAuditAction("CREATE", "الفواتير", `فاتورة: ${newInvNumber}`, `إصدار فاتورة جديدة ${newInvNumber} للموكل ${clientName(+form.clientId)} بمبلغ ${+form.amount}`, +form.clientId);
+      setPayments((prev) => [...prev, newPayment]); logAuditAction("CREATE", "المدفوعات", `دفعة: ${newPayment.referenceNo}`, `تسجيل دفعة بمبلغ ${amt} من الموكل ${clientName(clientId)} (المرجع: ${newPayment.referenceNo})`, newPayment.id);
     }
 
     setModal(null);
