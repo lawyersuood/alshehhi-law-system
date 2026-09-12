@@ -10299,13 +10299,13 @@ const activeFiltersCount = useMemo(() => {
           setConsultationBookings((prev) => [newBooking, ...prev]);
 
           // Automatically record invoice and payment receipt in office financial system
-          const newInvoiceId = invoices.length > 0 ? Math.max(...invoices.map(i => i.id)) + 1 : 1;
+          const normPhone = (p: string) => (p || "").replace(/\D/g, "").slice(-9); let matchedBookingClient = clients.find((c) => normPhone(c.phone) && normPhone(c.phone) === normPhone(newBooking.whatsapp)); if (!matchedBookingClient && newBooking.email) { matchedBookingClient = clients.find((c) => c.email && c.email.trim().toLowerCase() === newBooking.email.trim().toLowerCase()); } if (!matchedBookingClient) { matchedBookingClient = findMatchingClientByName(clients, newBooking.clientName); } let bookingClientId: number; if (matchedBookingClient) { bookingClientId = matchedBookingClient.id; } else { bookingClientId = nextId(clients); setClients((prev) => [...prev, { id: bookingClientId, name: newBooking.clientName || "موكل استشارة أونلاين", type: "فرد", idNo: "", phone: newBooking.whatsapp || "", email: newBooking.email || "", emirate: "", address: "" }]); } const newInvoiceId = invoices.length > 0 ? Math.max(...invoices.map(i => i.id)) + 1 : 1;
           const invoiceNumber = `INV-2026-${String(100 + newInvoiceId).padStart(3, "0")}`;
 
           const newInvoice: Invoice = {
             id: newInvoiceId,
             number: invoiceNumber,
-            clientId: 1,
+            clientId: bookingClientId,
             caseId: null,
             feeAgreementId: "unallocated",
             date: newBooking.date,
@@ -10319,7 +10319,7 @@ const activeFiltersCount = useMemo(() => {
 
           const newPayment: PaymentReceipt = {
             id: payments.length > 0 ? Math.max(...payments.map(p => p.id)) + 1 : 1,
-            clientId: 1,
+            clientId: bookingClientId,
             caseId: null,
             feeAgreementId: "unallocated",
             invoiceId: newInvoiceId,
