@@ -4287,12 +4287,36 @@ function loadStorage<T>(key: string, fallback: T): T {
   }
 }
 
+const saveStorageTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const saveStoragePending = new Map<string, unknown>();
+function flushSaveStorage(key: string): void {
+    const timer = saveStorageTimers.get(key);
+    if (timer) clearTimeout(timer);
+    saveStorageTimers.delete(key);
+    if (saveStoragePending.has(key)) {
+          try {
+                  localStorage.setItem(key, JSON.stringify(saveStoragePending.get(key)));
+          } catch (e) {
+                  console.error("Storage save error:", e);
+          }
+          saveStoragePending.delete(key);
+    }
+}
+if (typeof window !== "undefined") {
+    window.addEventListener("beforeunload", () => {
+          Array.from(saveStorageTimers.keys()).forEach((key) => flushSaveStorage(key));
+    });
+}
 function saveStorage<T>(key: string, value: T): void {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (e) {
-    console.error("Storage save error:", e);
-  }
+    try {
+          const existing = saveStorageTimers.get(key);
+          if (existing) clearTimeout(existing);
+          saveStoragePending.set(key, value);
+          const t = setTimeout(() => flushSaveStorage(key), 400);
+          saveStorageTimers.set(key, t);
+    } catch (e) {
+          console.error("Storage save error:", e);
+    }
 }
 
 // ================= مزامنة قاعدة بيانات Supabase (للبيانات الحساسة: قضايا/موكلين/ماليات) =================
