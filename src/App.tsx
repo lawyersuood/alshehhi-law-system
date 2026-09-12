@@ -3636,13 +3636,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
       return "";
     }
   });
-  const [passwordInput, setPasswordInput] = useState<string>(() => {
-    try {
-      return localStorage.getItem("law_firm_saved_pass") || "";
-    } catch {
-      return "";
-    }
-  });
+  const [passwordInput, setPasswordInput] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -3682,8 +3676,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
       if (rememberMe) {
         localStorage.setItem("law_firm_remember_me", "true");
         localStorage.setItem("law_firm_saved_email", emailInput.trim());
-        localStorage.setItem("law_firm_saved_pass", passwordInput.trim());
-      } else {
+              } else {
         localStorage.removeItem("law_firm_remember_me");
         localStorage.removeItem("law_firm_saved_email");
         localStorage.removeItem("law_firm_saved_pass");
