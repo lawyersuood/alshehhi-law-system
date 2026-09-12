@@ -3792,7 +3792,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, o
     }
 
     const userPass = targetUser.password || "123456";
-    if (cleanedPass !== userPass && cleanedPass !== "123456") {
+    if (cleanedPass !== userPass) {
       setErrorMsg("كلمة المرور غير صحيحة. يرجى التأكد من كلمة المرور المدخلة والتحقق من حسابك.");
       setIsSubmitting(false);
       return;
