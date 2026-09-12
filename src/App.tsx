@@ -7663,6 +7663,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     } else {
       setPermissionNotice(`تنبيه: تعذر إرسال الرسالة فعلياً عبر الخادم (${sendErrorMessage}) — تم حفظ نسخة منها في السجل فقط دون إرسالها. يرجى مراجعة إعدادات خادم البريد أو التواصل مع الدعم الفني.`);
     }
+    logAuditAction("CREATE", "المراسلات والبريد", `بريد إلى: ${composeTo}`, `إرسال رسالة بريد إلكتروني رسمية بموضوع "${composeSubject}" إلى ${composeTo}${sendSucceeded ? "" : " (تنبيه: فشل الإرسال الفعلي عبر الخادم)"}`, newSentMail.id);
     setComposeTo("");
     setComposeSubject("");
     setComposeBody("");
