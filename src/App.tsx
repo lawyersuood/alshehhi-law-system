@@ -9123,7 +9123,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     setModal(null);
   };
 
-  const updateLeaveStatus = async (leaveId: string, newStatus: "APPROVED" | "REJECTED") => { if (!checkPerm("manageEmployees", "اعتماد/رفض طلب إجازة")) return; const targetLeave = leaveRequests.find(l => l.id === leaveId); setLeaveRequests(leaveRequests.map(l => l.id === leaveId ? { ...l, status: newStatus, approvedBy: currentUser.name } : l)); logAuditAction(newStatus === "APPROVED" ? "APPROVE" : "REJECT", "الكادر والرواتب HR", `طلب إجازة: ${targetLeave?.employeeName || leaveId}`, `${newStatus === "APPROVED" ? "اعتماد" : "رفض"} طلب إجازة الموظف ${targetLeave?.employeeName || ""} (${targetLeave?.leaveType || ""}, ${targetLeave?.totalDays || 0} يوم)`, leaveId);
+  const updateLeaveStatus = async (leaveId: string, newStatus: "APPROVED" | "REJECTED") => { if (!checkPerm("manageEmployees", "اعتماد/رفض طلب إجازة")) return; const targetLeave = leaveRequests.find(l => l.id === leaveId); setLeaveRequests(leaveRequests.map(l => l.id === leaveId ? { ...l, status: newStatus, approvedBy: currentUser.name } : l)); logAuditAction("STATUS_CHANGE", "الكادر والرواتب HR", `طلب إجازة: ${targetLeave?.employeeName || leaveId}`, `${newStatus === "APPROVED" ? "اعتماد" : "رفض"} طلب إجازة الموظف ${targetLeave?.employeeName || ""} (${targetLeave?.leaveType || ""}, ${targetLeave?.totalDays || 0} يوم)`, leaveId);
     try {
       await supabase.from("leave_requests").update({ status: newStatus }).eq("id", leaveId);
     } catch (e) {
@@ -9165,7 +9165,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     setModal(null);
   };
 
-  const updateExpenseStatus = async (expId: string, newStatus: "PAID" | "REJECTED") => { if (!checkPerm("manageEmployees", "اعتماد/رفض مصروف موظف")) return; const targetExp = employeeExpenses.find(x => x.id === expId); setEmployeeExpenses(employeeExpenses.map(x => x.id === expId ? { ...x, status: newStatus } : x)); logAuditAction(newStatus === "PAID" ? "APPROVE" : "REJECT", "الكادر والرواتب HR", `مصروف: ${targetExp?.employeeName || expId}`, `${newStatus === "PAID" ? "اعتماد صرف" : "رفض"} مصروف الموظف ${targetExp?.employeeName || ""} بمبلغ ${targetExp?.amount || 0} (${targetExp?.category || ""})`, expId);
+  const updateExpenseStatus = async (expId: string, newStatus: "PAID" | "REJECTED") => { if (!checkPerm("manageEmployees", "اعتماد/رفض مصروف موظف")) return; const targetExp = employeeExpenses.find(x => x.id === expId); setEmployeeExpenses(employeeExpenses.map(x => x.id === expId ? { ...x, status: newStatus } : x)); logAuditAction("STATUS_CHANGE", "الكادر والرواتب HR", `مصروف: ${targetExp?.employeeName || expId}`, `${newStatus === "PAID" ? "اعتماد صرف" : "رفض"} مصروف الموظف ${targetExp?.employeeName || ""} بمبلغ ${targetExp?.amount || 0} (${targetExp?.category || ""})`, expId);
     try {
       await supabase.from("employee_expenses").update({ status: newStatus }).eq("id", expId);
     } catch (e) {
@@ -9637,24 +9637,8 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     runAutoAppealDeadlineChecker(updatedDeadlines);
   };
 
-  const saveStrReport = () => {
-    if (!form.clientId || !form.suspicionReason) return;
-    setStrReports([
-      ...strReports,
-      {
-        id: nextId(strReports),
-        clientId: +form.clientId,
-        caseId: form.caseId ? +form.caseId : null,
-        date: form.date || todayISO(),
-        suspicionReason: form.suspicionReason,
-        amountFlagged: +form.amountFlagged || 0,
-        reportedBy: currentUser.name + " (مسؤول الامتثال)",
-        status: form.status || "تحقيق داخلي",
-        confidentialNotes: form.confidentialNotes || ""
-      }
-    ]);
-    setModal(null);
-  };
+  const saveStrReport = () => { if (!checkPerm("manageKyc", "تسجيل بلاغ اشتباه STR")) return; if (!form.clientId || !form.suspicionReason) return;
+    const newStrId = nextId(strReports); setStrReports([...strReports, { id: newStrId, clientId: +form.clientId, caseId: form.caseId ? +form.caseId : null, date: form.date || todayISO(), suspicionReason: form.suspicionReason, amountFlagged: +form.amountFlagged || 0, reportedBy: currentUser.name + " (مسؤول الامتثال)", status: form.status || "تحقيق داخلي", confidentialNotes: form.confidentialNotes || "" }]); logAuditAction("CREATE", "بلاغات الاشتباه AML/STR", `بلاغ اشتباه: ${clientName(+form.clientId)}`, `تسجيل بلاغ اشتباه (STR) جديد بخصوص الموكل ${clientName(+form.clientId)} - سبب الاشتباه: ${form.suspicionReason} - المبلغ: ${+form.amountFlagged || 0}`, newStrId); setModal(null); };
 
   const saveCourtContact = () => {
     if (!form.courtName || !form.department) return;
