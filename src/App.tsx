@@ -8877,7 +8877,12 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     const openDate = form.openDate || todayISO();
     const stage = form.stage || "الابتدائية";
     const status = form.status || "متداولة";
-    const opponents: string[] = (form.opponents || []).map((o: string) => (o || "").trim()).filter(Boolean);
+    const opponents: string[] = (form.opponents || []).map((o: string) => (o || "").trim()).filter(Boolean); if (!editingCase) { const newClientNameForConflict = clientName(+form.clientId); const conflictReasons: string[] = []; cases.forEach((c) => { if ((c.opponents || []).some((o) => o.trim().toLowerCase() === newClientNameForConflict.trim().toLowerCase())) { conflictReasons.push(`الموكل الجديد "${newClientNameForConflict}" كان خصماً سابقاً في القضية رقم ${c.number}`); } }); opponents.forEach((opp) => { const oppAsClient = clients.find((cl) => cl.name.trim().toLowerCase() === opp.trim().toLowerCase()); if (oppAsClient) { conflictReasons.push(`الخصم "${opp}" مسجل كموكل حالي للمكتب (${oppAsClient.name})`); } }); if (conflictReasons.length > 0) { const proceedDespiteConflict = window.confirm(`⚠️ تنبيه تضارب مصالح محتمل:
+
+${conflictReasons.join("
+")}
+
+هذا قد يشكل تضارب مصالح يستوجب مراجعة قانونية/أخلاقية قبل قبول الوكالة. هل تريد المتابعة رغم ذلك على مسؤوليتك؟`); if (!proceedDespiteConflict) { return; } logAuditAction("CREATE", "تضارب المصالح", `تنبيه عند فتح قضية جديدة رقم ${form.number}`, `تم المتابعة بفتح قضية رقم ${form.number} رغم تنبيه تضارب مصالح محتمل: ${conflictReasons.join(" | ")}`, 0); } }
 
     if (editingCase) {
       setCases(prev => prev.map(c => c.id === editingCase.id ? {
