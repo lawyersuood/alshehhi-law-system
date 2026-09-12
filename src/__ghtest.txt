@@ -1,1 +1,1 @@
-test
+# obsolete probe file, safe to delete manually
