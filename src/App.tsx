@@ -9620,9 +9620,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const saveDeadline = () => {
     if (!form.caseId || !form.rulingDate) return;
     const days = +form.appealDays || 30;
-    const rDate = new Date(form.rulingDate + "T00:00:00");
-    rDate.setDate(rDate.getDate() + days);
-    const deadlineStr = rDate.toISOString().slice(0, 10);
+    const deadlineStr = addDaysFrom(form.rulingDate, days);
 
     const selUser = users.find(u => u.id === Number(form.assignedLawyerId)) || users[0];
 
