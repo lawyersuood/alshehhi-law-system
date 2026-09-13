@@ -1602,7 +1602,7 @@ export default function App() {
   // بدل قائمة ثابتة يدوية كانت لا تطابق نصياً القيم الحقيقية التي تُسجَّل بها الأنشطة (مثال: "سجل الموكلين" في القائمة
   // مقابل "الموكلين" في السجل الفعلي) — ما كان يجعل اختيار أغلب الأقسام من الفلتر يُظهر نتائج فارغة رغم وجود أنشطة فعلية
   const auditModuleOptions = useMemo(() => {
-    return Array.from(new Set(auditLogs.map((a) => a.targetModule))).filter(Boolean).sort((a, b) => a.localeCompare(b, "ar"));
+    return Array.from(new Set(auditLogs.map((a) => a.targetModule))).filter((m): m is string => Boolean(m)).sort((a, b) => a.localeCompare(b, "ar"));
   }, [auditLogs]);
 
   // تبويبات تصنيف قوائم حظر KYC تُبنى ديناميكياً من القيم الفعلية الموجودة بالقائمة، بدل ثلاث قيم ثابتة
@@ -1614,7 +1614,7 @@ export default function App() {
     "تنظيم إرهابي": "تنظيمات إرهابية",
   };
   const kycTypeOptions = useMemo(() => {
-    const distinctTypes = Array.from(new Set(kycWatchlist.map((i) => i.type))).filter(Boolean).sort((a, b) => a.localeCompare(b, "ar"));
+    const distinctTypes = Array.from(new Set(kycWatchlist.map((i) => i.type))).filter((t): t is string => Boolean(t)).sort((a, b) => a.localeCompare(b, "ar"));
     return [{ label: "الكل", val: "الكل" }, ...distinctTypes.map((t) => ({ label: KYC_TYPE_LABELS[t] || t, val: t }))];
   }, [kycWatchlist]);
 

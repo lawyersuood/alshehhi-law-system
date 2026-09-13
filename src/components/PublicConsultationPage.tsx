@@ -49,19 +49,22 @@ interface PublicConsultationPageProps {
   existingBookings?: BookingRecord[];
 }
 
+const DEFAULT_CONSULTATION_SETTINGS: ConsultationSettings = {
+  price30: 525,
+  price60: 945,
+  availableSlots: [
+    "09:00 AM", "10:30 AM", "12:00 PM", "02:00 PM",
+    "03:30 PM", "05:00 PM", "06:30 PM", "08:00 PM"
+  ],
+  blockedDates: [],
+  mbankIban: "AE25 0350 0000 1234 5678 901"
+};
+
 export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
   onNewBooking,
   onNavigateToAdmin,
   existingBookings = [],
-  settings = {
-    price30: 525,
-    price60: 945,
-    availableSlots: [
-      "09:00 AM", "10:30 AM", "12:00 PM", "02:00 PM",
-      "03:30 PM", "05:00 PM", "06:30 PM", "08:00 PM"
-    ],
-    blockedDates: []
-  }
+  settings = DEFAULT_CONSULTATION_SETTINGS
 }) => {
   // Language State
   const [lang, setLang] = useState<"ar" | "en">("ar");

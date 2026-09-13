@@ -11,6 +11,8 @@ import {
 import ReactQuill, { Quill } from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 
+const ReactQuillComponent = ReactQuill as any;
+
 // يقرأ نص تنسيق (سواء من style مضمّن أو من محتوى قاعدة CSS) ويحوّله لصيغ Quill
 // (bold/italic/underline/strike/align). يُستخدم من كلا مصدري التنسيق أدناه.
 function extractFormatsFromDeclarationText(
@@ -1031,7 +1033,7 @@ export default function OfficialLetterComposer({
                 بالمكتبة فقط، ولا تأثير له على سلوك المحرر أو عملية البناء
                 الفعلية (لا يوجد تحقق أنواع صارم ضمن خط أنابيب النشر). */}
             <div className="ollc-quill-editor-wrap bg-white rounded-xl border border-slate-300 overflow-hidden" style={{ fontFamily: LETTER_FONT_STACK }}>
-              <ReactQuill
+              <ReactQuillComponent
                 ref={quillRef}
                 theme="snow"
                 value={bodyHtml}
