@@ -8,7 +8,6 @@ import OfficialLetterComposer, {
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import Logo from "./components/Logo";
-import BookingConsultationView from "./components/BookingConsultationView";
 import PublicConsultationPage, { BookingRecord, ConsultationSettings } from "./components/PublicConsultationPage";
 import AdminConsultationsView from "./components/AdminConsultationsView";
 import GoogleCalendarSyncModal from "./components/GoogleCalendarSyncModal";
