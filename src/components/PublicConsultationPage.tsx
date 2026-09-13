@@ -39,6 +39,8 @@ export interface ConsultationSettings {
   blockedDates: string[];
   videoUrl?: string;
   mbankIban?: string;
+  mbankBankName?: string;
+  mbankAccountName?: string;
   mbankMerchantId?: string;
 }
 
@@ -57,7 +59,11 @@ const DEFAULT_CONSULTATION_SETTINGS: ConsultationSettings = {
     "03:30 PM", "05:00 PM", "06:30 PM", "08:00 PM"
   ],
   blockedDates: [],
-  mbankIban: "AE25 0350 0000 1234 5678 901"
+  // بيانات الحساب البنكي الرسمي المعتمد للمكتب — تُعرض للعملاء في صفحة الحجز العامة.
+  // أي تعديل هنا يجب أن يطابق بيانات الحساب الفعلية لدى البنك، فهذه الأرقام تُستخدم لتحويل أموال حقيقية.
+  mbankIban: "AE260973002451030000001",
+  mbankBankName: "بنك المارية المحلي ذ.م.م.",
+  mbankAccountName: "SUOOD AHMED ALSHEHHI ADVOCATES & LEGAL CONSULTANTS"
 };
 
 export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
@@ -886,7 +892,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                           <span className="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded font-bold">IBAN</span>
                         </div>
                         <p className="text-[11px] text-slate-500">
-                          {lang === "ar" ? "التحويل لحساب بنك الإمارات دبي الوطني" : "Transfer to Emirates NBD"}
+                          {lang === "ar"
+                            ? `التحويل لحساب المكتب الرسمي${settings.mbankBankName ? ` لدى ${settings.mbankBankName}` : ""}`
+                            : `Transfer to the firm's official account${settings.mbankBankName ? ` at ${settings.mbankBankName}` : ""}`}
                         </p>
                       </div>
                     </div>
@@ -981,14 +989,34 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                       <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-2 text-xs">
                         <div className="flex justify-between items-center font-bold text-amber-900">
                           <span>{lang === "ar" ? "حساب التحويل الرسمي للمكتب:" : "Official Firm Bank Account:"}</span>
-                          <span className="font-mono text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Emirates NBD</span>
+                          {settings.mbankBankName && (
+                            <span className="text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">{settings.mbankBankName}</span>
+                          )}
                         </div>
-                        <p className="text-slate-700 font-mono text-[11px]">
-                          <b>IBAN:</b> {settings.mbankIban || "AE25 0350 0000 1234 5678 901"}
-                        </p>
-                        <p className="text-slate-500 text-[10px]">
-                          يرجى إدخال رقم مرجع الحوالة البنكية أو إرفاق إيصال التحويل أدناه:
-                        </p>
+                        {/* لا يُعرض أي رقم حساب افتراضي أو تجريبي إطلاقاً: إن لم تُضبط بيانات الحساب من لوحة
+                            التحكم تُعرض رسالة تواصل بدلاً منها، منعاً لتحويل العملاء أموالاً إلى رقم غير صحيح. */}
+                        {settings.mbankIban ? (
+                          <>
+                            {settings.mbankAccountName && (
+                              <p className="text-slate-700 text-[11px]">
+                                <b>{lang === "ar" ? "اسم المستفيد:" : "Beneficiary:"}</b>{" "}
+                                <span className="font-mono" dir="ltr">{settings.mbankAccountName}</span>
+                              </p>
+                            )}
+                            <p className="text-slate-700 font-mono text-[11px]">
+                              <b>IBAN:</b> <span dir="ltr">{settings.mbankIban}</span>
+                            </p>
+                            <p className="text-slate-500 text-[10px]">
+                              يرجى إدخال رقم مرجع الحوالة البنكية أو إرفاق إيصال التحويل أدناه:
+                            </p>
+                          </>
+                        ) : (
+                          <p className="text-amber-900 text-[11px] font-semibold">
+                            {lang === "ar"
+                              ? "لم تُضبط بيانات الحساب البنكي بعد. يرجى التواصل مع المكتب للحصول على بيانات التحويل الصحيحة."
+                              : "Bank account details are not configured yet. Please contact the firm for the correct transfer details."}
+                          </p>
+                        )}
                         <input
                           type="text"
                           value={bankRef}

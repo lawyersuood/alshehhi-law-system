@@ -37,8 +37,11 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
   // Local state for editing settings
   const [price30, setPrice30] = useState(settings.price30);
   const [price60, setPrice60] = useState(settings.price60);
-  const [mbankIban, setMbankIban] = useState(settings.mbankIban || "AE25 0350 0000 1234 5678 901");
-  const [mbankMerchantId, setMbankMerchantId] = useState(settings.mbankMerchantId || "MBANK-CORP-SUOODLAW-2026");
+  // لا قيم افتراضية وهمية هنا: الحقل يبقى فارغاً إن لم تُضبط بياناته، حتى لا يُحفظ رقم غير صحيح بالخطأ.
+  const [mbankIban, setMbankIban] = useState(settings.mbankIban || "");
+  const [mbankBankName, setMbankBankName] = useState(settings.mbankBankName || "");
+  const [mbankAccountName, setMbankAccountName] = useState(settings.mbankAccountName || "");
+  const [mbankMerchantId, setMbankMerchantId] = useState(settings.mbankMerchantId || "");
   const [newSlotInput, setNewSlotInput] = useState("");
   const [slotsList, setSlotsList] = useState<string[]>(settings.availableSlots);
   const [newBlockedDate, setNewBlockedDate] = useState("");
@@ -69,6 +72,8 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
       availableSlots: slotsList,
       blockedDates: blockedDatesList,
       mbankIban,
+      mbankBankName,
+      mbankAccountName,
       mbankMerchantId
     });
     setSavedSuccess(true);
@@ -605,20 +610,49 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
 
               <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
                 <div className="flex items-center justify-between bg-teal-950/40 p-3 rounded-lg border border-teal-800/60 text-xs text-teal-200">
-                  <span>🏦 حساب الأعمال الرسمي للمكتب المرتبط ببنك المارية لضمان إيداع إيرادات الاستشارات فوراً.</span>
-                  <span className="font-mono bg-teal-900 px-2.5 py-1 rounded text-amber-300 font-bold">Mbank Corporate API Active</span>
+                  <span>🏦 بيانات الحساب البنكي الرسمي للمكتب. هذه البيانات تُعرض للعملاء في صفحة الحجز العامة ويُحوَّل إليها أموال فعلية — يجب أن تطابق بيانات الحساب لدى البنك حرفياً.</span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-300 mb-1">
-                      رقم الآيبان التجاري (Mbank IBAN):
+                      رقم الآيبان (IBAN):
                     </label>
                     <input
                       type="text"
                       value={mbankIban}
                       onChange={(e) => setMbankIban(e.target.value)}
-                      placeholder="AE25 0350 0000 1234 5678 901"
+                      placeholder="AE000000000000000000000"
+                      dir="ltr"
+                      className="bg-slate-900 border border-slate-700 text-xs text-white p-3 rounded-xl w-full font-mono font-bold focus:ring-1 focus:ring-teal-500"
+                    />
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      يُترك فارغاً إن لم يكن معتمداً — ولن يُعرض أي رقم للعملاء حينها.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                      اسم البنك:
+                    </label>
+                    <input
+                      type="text"
+                      value={mbankBankName}
+                      onChange={(e) => setMbankBankName(e.target.value)}
+                      placeholder="بنك المارية المحلي ذ.م.م."
+                      className="bg-slate-900 border border-slate-700 text-xs text-white p-3 rounded-xl w-full font-bold focus:ring-1 focus:ring-teal-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-300 mb-1">
+                      اسم المستفيد (كما هو مسجّل لدى البنك):
+                    </label>
+                    <input
+                      type="text"
+                      value={mbankAccountName}
+                      onChange={(e) => setMbankAccountName(e.target.value)}
+                      placeholder="SUOOD AHMED ALSHEHHI ADVOCATES & LEGAL CONSULTANTS"
                       dir="ltr"
                       className="bg-slate-900 border border-slate-700 text-xs text-white p-3 rounded-xl w-full font-mono font-bold focus:ring-1 focus:ring-teal-500"
                     />
@@ -626,13 +660,13 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
 
                   <div>
                     <label className="block text-xs font-bold text-slate-300 mb-1">
-                      معرف تاجر بنك المارية (Merchant ID / API Key):
+                      معرّف التاجر (Merchant ID) — اختياري:
                     </label>
                     <input
                       type="text"
                       value={mbankMerchantId}
                       onChange={(e) => setMbankMerchantId(e.target.value)}
-                      placeholder="MBANK-CORP-SUOODLAW-2026"
+                      placeholder="يُترك فارغاً إن لم يوجد"
                       dir="ltr"
                       className="bg-slate-900 border border-slate-700 text-xs text-white p-3 rounded-xl w-full font-mono font-bold focus:ring-1 focus:ring-teal-500"
                     />

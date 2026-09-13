@@ -682,8 +682,11 @@ export default function App() {
       "03:30 PM", "05:00 PM", "06:30 PM", "08:00 PM"
     ],
     blockedDates: [],
-    mbankIban: "AE25 0350 0000 1234 5678 901",
-    mbankMerchantId: "MBANK-CORP-SUOODLAW-2026"
+    // بيانات الحساب البنكي الرسمي المعتمد للمكتب — تُعرض للعملاء في صفحة الحجز العامة.
+    // أي تعديل هنا يجب أن يطابق بيانات الحساب الفعلية لدى البنك، فهذه الأرقام تُستخدم لتحويل أموال حقيقية.
+    mbankIban: "AE260973002451030000001",
+    mbankBankName: "بنك المارية المحلي ذ.م.م.",
+    mbankAccountName: "SUOOD AHMED ALSHEHHI ADVOCATES & LEGAL CONSULTANTS"
   };
 
   const [consultationSettings, setConsultationSettings] = useState<ConsultationSettings>(() =>
