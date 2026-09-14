@@ -512,25 +512,21 @@ const sendEmailMsg = (email: string, subject: string, body: string) => {
 // نفس التعريف المعتمد في محرك التنبيهات التلقائي، موحّد هنا لتفادي تكرار الشرط في أكثر من مكان
 
 
+// ملاحظة أمنية (المرحلة 1 / البند 4): كانت هذه الدالة تحتوي على مرحلة مطابقة إضافية ضعيفة
+// جداً (أول كلمتين من الاسم فقط، تُطابق أي عميل يحتوي اسمه على نفس الكلمتين بأي مكان) —
+// كانت تسبب دمج/ربط بيانات موكلين مختلفين تماماً بالخطأ لمجرد تشابه أول اسمين (مثال:
+// "أحمد محمد" تطابق أي عميل اسمه يحتوي "أحمد" و"محمد" ولو كانا شخصين مختلفين كلياً). تم
+// إزالة هذه المرحلة؛ الآن لا مطابقة إلا عند تطابق الاسم الكامل (بعد التطبيع) أو احتواء
+// حقيقي لأحد الاسمين الآخر بالكامل — بدون أي دمج صامت لموكلين مختلفين.
 const findMatchingClientByName = (clientsList: Client[], searchName: string): Client | undefined => {
   if (!searchName || !searchName.trim()) return undefined;
   const targetNorm = normalizeArabicName(searchName);
   if (!targetNorm) return undefined;
 
-  let found = clientsList.find((c) => {
+  return clientsList.find((c) => {
     const cNorm = normalizeArabicName(c.name);
     return cNorm === targetNorm || cNorm.includes(targetNorm) || targetNorm.includes(cNorm);
   });
-  if (found) return found;
-
-  const words = targetNorm.split(" ").filter((w) => w.length > 1);
-  if (words.length >= 2) {
-    const mainTwo = words.slice(0, 2).join(" ");
-    found = clientsList.find((c) => normalizeArabicName(c.name).includes(mainTwo));
-    if (found) return found;
-  }
-
-  return undefined;
 };
 
 
@@ -817,7 +813,10 @@ export default function App() {
       targetId: targetId || "—",
       targetTitle,
       details,
-      ipAddress: "192.168.1.10",
+      // ملاحظة: عنوان IP الحقيقي للجهاز لا يمكن معرفته من كود يعمل في متصفح المستخدم مباشرة (يحتاج استدعاء خادم خلفي)؛
+      // كانت القيمة هنا ثابتة ووهمية (192.168.1.10) لكل السجلات بلا استثناء، ما يوحي بخلاف الواقع بأن العنوان مرصود فعلياً.
+      // نتركها فارغة الآن بصراحة بدل قيمة مضلّلة، لحين ربطها بخدمة خلفية فعلية ترصد عنوان الطلب الحقيقي.
+      ipAddress: "غير متاح (يتطلب تسجيلاً من الخادم)",
       status: statusOverride || defaultStatus,
     };
 
@@ -996,7 +995,7 @@ export default function App() {
     const opponents = rawOpponents.map((o) => (o || "").trim()).filter((o) => o && !PLACEHOLDER_OPPONENTS.has(o));
 
     let judge = c.judge || "";
-    let fee = 0; // حذف وتصفير أي أتعاب افتراضية تم إدخالها على القضايا سابقاً أو افتراضياً
+    let fee = typeof c.fee === "number" && !isNaN(c.fee) ? c.fee : 0; // الإبقاء على الأتعاب الفعلية المدخلة؛ صفر فقط إن لم تكن مُدخلة أصلاً
     let openDate = c.openDate || "";
 
     // تفريغ أي نصوص عشوائية أو افتراضية لاسم القاضي أو الدائرة
@@ -1160,10 +1159,11 @@ export default function App() {
     const saved = loadStorage<CaseItem[]>("firm_cases", seedCases);
     const cleanList = (saved || [])
       .filter(c => !isDemoCase(c))
-      .map(c => ({ ...sanitizeCase(c), fee: 0 }));
-    
-    const combined = [...cleanList, ...seedCases.map(c => ({ ...c, fee: 0 }))];
-    const unique = deduplicateCases(combined).map(c => ({ ...c, fee: 0 }));
+      .map(c => sanitizeCase(c));
+
+    // لا نصفّر أتعاب القضايا بعد الآن — الأتعاب الفعلية المُدخلة تبقى كما هي عبر إعادة التحميل والدمج
+    const combined = [...cleanList, ...seedCases];
+    const unique = deduplicateCases(combined);
     saveStorage("firm_cases", unique);
     return unique;
   });
@@ -5243,14 +5243,18 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const saveHearing = () => {
     if (!checkPerm("manageHearings", "جدولة جلسة")) return;
     if (!form.caseId || !form.date) return;
-    setHearings([...hearings, { id: nextId(hearings), caseId: +form.caseId, date: form.date, time: form.time || "09:00", type: form.type || HEARING_TYPES[0], room: form.room || "", notes: form.notes || "", done: false }]);
+    const newHearingId = nextId(hearings);
+    setHearings([...hearings, { id: newHearingId, caseId: +form.caseId, date: form.date, time: form.time || "09:00", type: form.type || HEARING_TYPES[0], room: form.room || "", notes: form.notes || "", done: false }]);
+    logAuditAction("CREATE", "الجلسات", `جلسة بتاريخ ${form.date}`, `جدولة جلسة جديدة بتاريخ ${form.date} (${form.type || HEARING_TYPES[0]})`, newHearingId);
     setModal(null);
   };
 
   const saveTask = () => {
     if (!checkPerm("manageTasks", "إضافة مهمة")) return;
     if (!form.title) return;
-    setTasks([...tasks, { id: nextId(tasks), title: form.title, caseId: form.caseId ? +form.caseId : null, assignee: form.assignee || currentUser.name, due: form.due || todayISO(), priority: form.priority || "متوسطة", done: false }]);
+    const newTaskId = nextId(tasks);
+    setTasks([...tasks, { id: newTaskId, title: form.title, caseId: form.caseId ? +form.caseId : null, assignee: form.assignee || currentUser.name, due: form.due || todayISO(), priority: form.priority || "متوسطة", done: false }]);
+    logAuditAction("CREATE", "المهام", `مهمة: ${form.title}`, `إضافة مهمة جديدة: ${form.title}`, newTaskId);
     setModal(null);
   };
 
@@ -5579,7 +5583,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const saveDoc = () => {
     if (!checkPerm("manageDocs", "رفع مستند")) return;
     if (!form.name) return;
-    setDocs([...docs, { id: nextId(docs), name: form.name, type: form.type || DOC_TYPES[0], caseId: form.caseId ? +form.caseId : null, date: todayISO(), by: currentUser.name }]);
+    const newDocId = nextId(docs);
+    setDocs([...docs, { id: newDocId, name: form.name, type: form.type || DOC_TYPES[0], caseId: form.caseId ? +form.caseId : null, date: todayISO(), by: currentUser.name }]);
+    logAuditAction("CREATE", "المستندات", `مستند: ${form.name}`, `رفع مستند جديد: ${form.name} (${form.type || DOC_TYPES[0]})`, newDocId);
     setModal(null);
   };
 
@@ -5612,7 +5618,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       return;
     }
 
-    setPoas([...poas, { id: nextId(poas), clientId: +form.clientId, number: poaNum, issuer: form.issuer || "كاتب العدل - دبي", issue: form.issue || todayISO(), expiry: form.expiry || addDays(730), scope: form.scope || "" }]);
+    const newPoaId = nextId(poas);
+    setPoas([...poas, { id: newPoaId, clientId: +form.clientId, number: poaNum, issuer: form.issuer || "كاتب العدل - دبي", issue: form.issue || todayISO(), expiry: form.expiry || addDays(730), scope: form.scope || "" }]);
+    logAuditAction("CREATE", "التوكيلات", `توكيل رقم: ${poaNum}`, `إضافة توكيل جديد رقم ${poaNum} للموكل ${clientName(+form.clientId)}`, newPoaId);
     setModal(null);
   };
 
@@ -5696,29 +5704,40 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     if (!form.colleagueId || !form.purpose) return;
 
     const year = new Date().getFullYear();
-    const seq = (colleagueDelegations.filter((d) => d.refNo.startsWith(`INB-${year}-`)).map((d) => parseInt(d.refNo.slice(`INB-${year}-`.length), 10)).filter((n) => !isNaN(n)).reduce((m, n) => Math.max(m, n), 0)) + 1;
-    const refNo = `INB-${year}-${String(seq).padStart(3, "0")}`;
     const colleague = colleagues.find((c) => c.id === +form.colleagueId);
 
-    const newDelegation: ColleagueDelegation = {
-      id: nextId(colleagueDelegations),
-      refNo,
-      colleagueId: +form.colleagueId,
-      caseId: form.caseId ? +form.caseId : undefined,
-      hearingId: form.hearingId ? +form.hearingId : undefined,
-      caseTitleSnapshot: form.caseTitleSnapshot?.trim() || undefined,
-      purpose: form.purpose.trim(),
-      issuedByName: currentUser?.name || "مكتب سعود أحمد الشحي",
-      issuedAt: new Date().toISOString(),
-      status: "صادرة",
-      sessionDate: form.sessionDate?.trim() || undefined,
-      issuerLicenseNumber: form.issuerLicenseNumber?.trim() || undefined,
-      colleagueLicenseNumber: form.colleagueLicenseNumber?.trim() || undefined,
-    };
-    setColleagueDelegations((prev) => [newDelegation, ...prev]);
-    logAuditAction("CREATE", "الزملاء والإنابات", `إنابة رقم: ${refNo}`, `إصدار إنابة حضور رقم ${refNo} للزميل ${colleague?.name || "—"}`, newDelegation.id);
-    setModal(null);
-    setDelegationPreviewId(newDelegation.id);
+    // نحسب الرقم المرجعي ونضيف السجل داخل نفس دالة تحديث الحالة (setState functional updater)
+    // معتمدين على "prev" الفعلية لحظة التنفيذ بدل قيمة colleagueDelegations من الإغلاق (closure) —
+    // هذا يمنع تكرار نفس الرقم المرجعي لو صدرت إنابتان بسرعة قبل اكتمال إعادة الرسم (race condition).
+    let issuedDelegation: ColleagueDelegation | null = null;
+    setColleagueDelegations((prev) => {
+      const seq = (prev.filter((d) => d.refNo.startsWith(`INB-${year}-`)).map((d) => parseInt(d.refNo.slice(`INB-${year}-`.length), 10)).filter((n) => !isNaN(n)).reduce((m, n) => Math.max(m, n), 0)) + 1;
+      const refNo = `INB-${year}-${String(seq).padStart(3, "0")}`;
+      const newDelegation: ColleagueDelegation = {
+        id: nextId(prev),
+        refNo,
+        colleagueId: +form.colleagueId,
+        caseId: form.caseId ? +form.caseId : undefined,
+        hearingId: form.hearingId ? +form.hearingId : undefined,
+        caseTitleSnapshot: form.caseTitleSnapshot?.trim() || undefined,
+        purpose: form.purpose.trim(),
+        issuedByName: currentUser?.name || "مكتب سعود أحمد الشحي",
+        issuedAt: new Date().toISOString(),
+        status: "صادرة",
+        sessionDate: form.sessionDate?.trim() || undefined,
+        issuerLicenseNumber: form.issuerLicenseNumber?.trim() || undefined,
+        colleagueLicenseNumber: form.colleagueLicenseNumber?.trim() || undefined,
+      };
+      issuedDelegation = newDelegation;
+      return [newDelegation, ...prev];
+    });
+
+    if (issuedDelegation) {
+      const d = issuedDelegation as ColleagueDelegation;
+      logAuditAction("CREATE", "الزملاء والإنابات", `إنابة رقم: ${d.refNo}`, `إصدار إنابة حضور رقم ${d.refNo} للزميل ${colleague?.name || "—"}`, d.id);
+      setModal(null);
+      setDelegationPreviewId(d.id);
+    }
   };
 
   const deleteDelegationHandler = (d: ColleagueDelegation) => {
@@ -5820,6 +5839,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   const toggleUserPermission = (userId: number, permKey: keyof RolePermissions) => {
     if (!checkPerm("manageUsers", "تعديل الصلاحيات")) return;
+    const targetUserForAudit = users.find((u) => u.id === userId);
     setUsers((prevUsers) => {
       const updated = prevUsers.map((u) => {
         if (u.id === userId) {
@@ -5857,14 +5877,17 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       saveStorage("firm_users", updated);
       return updated;
     });
+    logAuditAction("UPDATE", "المستخدمون والصلاحيات", `تعديل صلاحية: ${targetUserForAudit?.name || userId}`, `تبديل صلاحية "${String(permKey)}" للمستخدم ${targetUserForAudit?.name || userId}`, userId);
   };
 
   const saveTimeLog = () => {
+    if (!checkPerm("manageCases", "تسجيل ساعات عمل")) return;
     if (!form.caseId || !form.hours) return;
+    const newTimeLogId = nextId(timeLogs);
     setTimeLogs([
       ...timeLogs,
       {
-        id: nextId(timeLogs),
+        id: newTimeLogId,
         caseId: +form.caseId,
         lawyerName: form.lawyerName || currentUser.name,
         date: form.date || todayISO(),
@@ -5874,15 +5897,18 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         billed: false
       }
     ]);
+    logAuditAction("CREATE", "ساعات العمل", `ساعات عمل: ${form.hours} ساعة`, `تسجيل ${form.hours} ساعة عمل على القضية`, newTimeLogId);
     setModal(null);
   };
 
   const saveCaseExpense = () => {
+    if (!checkPerm("manageCases", "تسجيل مصروف قضية")) return;
     if (!form.caseId || !form.amount) return;
+    const newCaseExpenseId = nextId(caseExpenses);
     setCaseExpenses([
       ...caseExpenses,
       {
-        id: nextId(caseExpenses),
+        id: newCaseExpenseId,
         caseId: +form.caseId,
         date: form.date || todayISO(),
         category: form.category || "رسوم قضائية",
@@ -5892,28 +5918,34 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         billed: false
       }
     ]);
+    logAuditAction("CREATE", "مصاريف القضايا", `مصروف: ${form.amount}`, `تسجيل مصروف قضية بمبلغ ${form.amount} (${form.category || "رسوم قضائية"})`, newCaseExpenseId);
     setModal(null);
   };
 
   const saveTrustTransaction = () => {
+    if (!checkPerm("manageInvoices", "معاملة حساب أمانة")) return;
     if (!form.clientId || !form.amount) return;
+    const newTrustTxId = nextId(trustTransactions);
+    const trustRefNo = form.refNo || `TR-${Math.floor(1000 + Math.random() * 9000)}`;
     setTrustTransactions([
       ...trustTransactions,
       {
-        id: nextId(trustTransactions),
+        id: newTrustTxId,
         clientId: +form.clientId,
         caseId: form.caseId ? +form.caseId : null,
         date: form.date || todayISO(),
         type: form.type || "إيداع أمانة",
         amount: +form.amount,
-        refNo: form.refNo || `TR-${Math.floor(1000 + Math.random() * 9000)}`,
+        refNo: trustRefNo,
         notes: form.notes || ""
       }
     ]);
+    logAuditAction("CREATE", "حساب الأمانة", `معاملة أمانة: ${trustRefNo}`, `تسجيل معاملة حساب أمانة (${form.type || "إيداع أمانة"}) بمبلغ ${form.amount} للموكل ${clientName(+form.clientId)}`, newTrustTxId);
     setModal(null);
   };
 
   const saveDeadline = () => {
+    if (!checkPerm("manageCases", "تسجيل موعد حكم/طعن")) return;
     if (!form.caseId || !form.rulingDate) return;
     const days = +form.appealDays || 30;
     const deadlineStr = addDaysFrom(form.rulingDate, days);
@@ -5943,6 +5975,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
     const updatedDeadlines = [...deadlines, newDeadline];
     setDeadlines(updatedDeadlines);
+    logAuditAction("CREATE", "مواعيد الأحكام والطعون", `موعد طعن للقضية #${form.caseId}`, `تسجيل حكم بتاريخ ${form.rulingDate} واحتساب مهلة طعن ${days} يوماً (آخر موعد: ${deadlineStr})`, newDeadline.id);
     setModal(null);
 
     runAutoAppealDeadlineChecker(updatedDeadlines);
@@ -6579,7 +6612,35 @@ const activeFiltersCount = useMemo(() => {
           setConsultationBookings((prev) => [newBooking, ...prev]);
 
           // Automatically record invoice and payment receipt in office financial system
-          const normPhone = (p: string) => (p || "").replace(/\D/g, "").slice(-9); let matchedBookingClient = clients.find((c) => normPhone(c.phone) && normPhone(c.phone) === normPhone(newBooking.whatsapp)); if (!matchedBookingClient && newBooking.email) { matchedBookingClient = clients.find((c) => c.email && c.email.trim().toLowerCase() === newBooking.email.trim().toLowerCase()); } if (!matchedBookingClient) { matchedBookingClient = findMatchingClientByName(clients, newBooking.clientName); } const bookingClientId: number = matchedBookingClient ? matchedBookingClient.id : 0; const newInvoiceId = invoices.length > 0 ? Math.max(...invoices.map(i => i.id)) + 1 : 1;
+          const normPhone = (p: string) => (p || "").replace(/\D/g, "").slice(-9); let matchedBookingClient = clients.find((c) => normPhone(c.phone) && normPhone(c.phone) === normPhone(newBooking.whatsapp)); if (!matchedBookingClient && newBooking.email) { matchedBookingClient = clients.find((c) => c.email && c.email.trim().toLowerCase() === newBooking.email.trim().toLowerCase()); } if (!matchedBookingClient) { matchedBookingClient = findMatchingClientByName(clients, newBooking.clientName); }
+          // لم يوجد موكل مطابق (لا هاتف ولا بريد ولا اسم) — ننشئ سجل موكل حقيقي جديد بدل استخدام
+          // معرّف ثابت وهمي (0)، حتى ترتبط الفاتورة والدفعة بموكل فعلي موجود في سجلات المكتب.
+          let bookingClientId: number;
+          if (matchedBookingClient) {
+            bookingClientId = matchedBookingClient.id;
+          } else {
+            const newClientId = clients.length > 0 ? Math.max(...clients.map((c) => c.id)) + 1 : 1;
+            const autoClient: Client = {
+              id: newClientId,
+              name: newBooking.clientName || `عميل استشارة مرئية #${newBooking.reference}`,
+              type: "فرد",
+              idNo: "",
+              phone: newBooking.whatsapp || "",
+              email: newBooking.email || "",
+              emirate: "",
+              address: "",
+            };
+            setClients((prev) => [autoClient, ...prev]);
+            logAuditAction(
+              "CREATE",
+              "الموكلون",
+              `إنشاء موكل تلقائي من حجز استشارة مرئية: ${autoClient.name}`,
+              `أُنشئ هذا السجل تلقائياً لعدم وجود موكل مطابق (بالهاتف/البريد/الاسم) عند حجز الاستشارة رقم ${newBooking.reference}`,
+              newClientId
+            );
+            bookingClientId = newClientId;
+          }
+          const newInvoiceId = invoices.length > 0 ? Math.max(...invoices.map(i => i.id)) + 1 : 1;
           const invoiceNumber = `INV-2026-${String(100 + newInvoiceId).padStart(3, "0")}`;
 
           const newInvoice: Invoice = {
