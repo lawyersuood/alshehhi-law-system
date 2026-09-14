@@ -1289,7 +1289,8 @@ export default function App() {
         const { data: sessionData } = await supabase.auth.getSession();
         if (sessionData?.session) return; // لديه جلسة فعلية بالفعل
         const email = currentUser.email.toLowerCase();
-        const rawPass = (currentUser as any).password || "123456";
+        const rawPass = (currentUser as any).password;
+        if (!rawPass) return; // لا يوجد كلمة مرور محفوظة — لا نُنشئ/نستخدم قيمة افتراضية عالمية (ثغرة أمنية سابقة)
         const pass = rawPass.length >= 6 ? rawPass : `${rawPass}-firm2024`;
         const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: pass });
         if (signInErr) {
@@ -3686,7 +3687,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
                 name: pName,
                 email: emailClean,
                 phone: pPhone,
-                password: p.password || "123456",
+                password: p.password || "", // لا نمنح كلمة مرور افتراضية معروفة — الحساب يبقى بلا كلمة مرور صالحة حتى يعيّنها مدير النظام
                 roleKey: roleKey as any,
                 roleTitle: roleTitle,
                 status: pStatus,
@@ -5736,6 +5737,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const saveUser = () => {
     if (!checkPerm("manageUsers", "إدارة المستخدمين")) return;
     if (!form.name || !form.email) return;
+    if (!editingUser && (!form.password || form.password.length < 6)) {
+      alert("يجب تعيين كلمة مرور لا تقل عن 6 أحرف عند إنشاء مستخدم جديد.");
+      return;
+    }
 
     const rKey = (form.roleKey || "lawyer") as "admin" | "lawyer" | "secretary" | "accountant";
     const preset = ROLE_PRESETS[rKey];
@@ -5749,7 +5754,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         name: form.name,
         email: form.email,
         phone: form.phone || u.phone,
-        password: form.password || u.password || "123456",
+        password: form.password || u.password, // إن تُرك حقل كلمة المرور فارغاً تبقى كلمة المرور الحالية كما هي — لا قيمة افتراضية معروفة
         roleKey: rKey,
         roleTitle: form.roleTitle || preset.title,
         status: form.status || u.status,
@@ -5766,7 +5771,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         name: form.name,
         email: form.email,
         phone: form.phone || "050-0000000",
-        password: form.password || "123456",
+        password: form.password, // مطلوب صراحة عند إنشاء مستخدم جديد — تم التحقق أعلاه أنها غير فارغة
         roleKey: rKey,
         roleTitle: form.roleTitle || preset.title,
         status: "نشط",

@@ -333,7 +333,7 @@ export default function UsersView({
                               name: u.name,
                               email: u.email,
                               phone: u.phone,
-                              password: u.password || "123456",
+                              password: u.password || "",
                               roleKey: u.roleKey,
                               roleTitle: u.roleTitle,
                               status: u.status,

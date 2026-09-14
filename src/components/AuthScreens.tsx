@@ -437,7 +437,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
   const [regName, setRegName] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPhone, setRegPhone] = useState("");
-  const [regPassword, setRegPassword] = useState("123456");
+  const [regPassword, setRegPassword] = useState("");
   const [regRoleKey, setRegRoleKey] = useState<"admin" | "lawyer" | "secretary" | "accountant">("lawyer");
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
@@ -571,7 +571,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
       return;
     }
 
-    const userPass = targetUser.password || "123456";
+    // ملاحظة أمنية: لا يوجد أي كلمة مرور افتراضية عالمية — حساب بدون كلمة مرور محفوظة
+    // يُرفض دخوله صراحة بدل قبول قيمة افتراضية معروفة (كانت "123456" سابقاً، وهي ثغرة أمنية حرجة).
+    const userPass = targetUser.password;
+    if (!userPass) {
+      setErrorMsg("هذا الحساب غير مُهيّأ بكلمة مرور صالحة. يرجى التواصل مع مدير النظام لتعيين كلمة مرور.");
+      setIsSubmitting(false);
+      return;
+    }
     if (cleanedPass !== userPass) {
       setErrorMsg("كلمة المرور غير صحيحة. يرجى التأكد من كلمة المرور المدخلة والتحقق من حسابك.");
       setIsSubmitting(false);
@@ -712,7 +719,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
       setRegName("");
       setRegEmail("");
       setRegPhone("");
-      setRegPassword("123456");
+      setRegPassword("");
       setAuthMode("login");
     } catch (err: any) {
       console.error("Registration submission error:", err);
