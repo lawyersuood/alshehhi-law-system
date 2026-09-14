@@ -1,5 +1,75 @@
 export const ENCRYPTION_KEY = "saoud-al-shehhi-law-firm-secret-256";
 
+// ============================================================================
+// تجزئة كلمات المرور (Password Hashing) — PBKDF2/SHA-256 مع ملح عشوائي لكل كلمة مرور
+// ============================================================================
+// السجل السابق كان يخزّن كلمات المرور كنص عادي (plaintext) في قاعدة البيانات.
+// الدوال هنا تُنتج قيمة مجزأة بالصيغة: "pbkdf2:<iterations>:<saltHex>:<hashHex>"
+// وتتحقق من كلمة مرور مدخلة مقابل هذه القيمة. القيم القديمة (نص عادي، بدون هذا
+// البادئة) يتم التعرف عليها تلقائياً في isHashedPassword() حتى يبقى الدخول
+// يعمل للحسابات القديمة إلى أن يُعاد حفظها (عندها تُجزّأ تلقائياً).
+const PBKDF2_ITERATIONS = 150000;
+
+function bufToHex(buf: ArrayBuffer): string {
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function hexToBuf(hex: string): Uint8Array {
+  const matches = hex.match(/.{1,2}/g) || [];
+  return new Uint8Array(matches.map(byte => parseInt(byte, 16)));
+}
+
+/** يُنتج قيمة كلمة مرور مجزأة جاهزة للتخزين بدل النص العادي. */
+export async function hashPassword(plainPassword: string): Promise<string> {
+  const enc = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(plainPassword),
+    { name: "PBKDF2" },
+    false,
+    ["deriveBits"]
+  );
+  const derivedBits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt, iterations: PBKDF2_ITERATIONS, hash: "SHA-256" },
+    keyMaterial,
+    256
+  );
+  return `pbkdf2:${PBKDF2_ITERATIONS}:${bufToHex(salt.buffer)}:${bufToHex(derivedBits)}`;
+}
+
+/** يتحقق ما إذا كانت القيمة المخزّنة مجزأة أصلاً (وليست نصاً عادياً قديماً). */
+export function isHashedPassword(storedValue: string | undefined | null): boolean {
+  return !!storedValue && storedValue.startsWith("pbkdf2:");
+}
+
+/** يقارن كلمة مرور مُدخلة مقابل قيمة مخزّنة (مجزأة أو نص عادي قديم لأغراض التوافق). */
+export async function verifyPassword(plainPassword: string, storedValue: string | undefined | null): Promise<boolean> {
+  if (!storedValue) return false;
+  if (!isHashedPassword(storedValue)) {
+    // توافق مع الحسابات القديمة التي لم تُجزّأ كلمة مرورها بعد
+    return plainPassword === storedValue;
+  }
+  const parts = storedValue.split(":");
+  if (parts.length !== 4) return false;
+  const [, iterationsStr, saltHex, hashHex] = parts;
+  const iterations = parseInt(iterationsStr, 10);
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(plainPassword),
+    { name: "PBKDF2" },
+    false,
+    ["deriveBits"]
+  );
+  const derivedBits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: hexToBuf(saltHex), iterations, hash: "SHA-256" },
+    keyMaterial,
+    256
+  );
+  return bufToHex(derivedBits) === hashHex;
+}
+
 export async function getEncryptionKey(): Promise<CryptoKey> {
   const enc = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import type { UserItem } from "../domain/types";
 import Logo from "./Logo";
 import { supabase } from "../supabaseClient";
+import { hashPassword, verifyPassword, isHashedPassword } from "../cryptoUtils";
 import {
   AlertCircle, CheckCircle2, Hourglass, Key, Lock, RefreshCw, ShieldCheck,
   UserPlus, Eye, EyeOff, Mail, X, Copy, Check, Database, Code,
@@ -579,7 +580,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
       setIsSubmitting(false);
       return;
     }
-    if (cleanedPass !== userPass) {
+    // مقارنة آمنة: تدعم كلمات المرور المُجزّأة (pbkdf2) والحسابات القديمة (نص عادي) للتوافق
+    const passwordMatches = await verifyPassword(cleanedPass, userPass);
+    if (!passwordMatches) {
       setErrorMsg("كلمة المرور غير صحيحة. يرجى التأكد من كلمة المرور المدخلة والتحقق من حسابك.");
       setIsSubmitting(false);
       return;
@@ -593,7 +596,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
     if (targetUser.email) {
       try {
         const silentEmail = targetUser.email.toLowerCase();
-        const silentPass = userPass.length >= 6 ? userPass : `${userPass}-firm2024`;
+        // يجب استخدام كلمة المرور الفعلية التي أدخلها المستخدم (وليست القيمة المخزّنة التي قد تكون مُجزّأة الآن)
+        const silentPass = cleanedPass.length >= 6 ? cleanedPass : `${cleanedPass}-firm2024`;
         const { error: silentSignInErr } = await supabase.auth.signInWithPassword({
           email: silentEmail,
           password: silentPass
@@ -705,11 +709,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
         accountant: "محاسب قانوني"
       };
 
+      // نخزّن كلمة المرور مُجزّأة (pbkdf2) في سجل النظام المحلي بدل النص العادي
+      const hashedPassForStorage = await hashPassword(cleanPass);
+
       onRegister({
         name: cleanName,
         email: cleanEmail,
         phone: cleanPhone || "0500000000",
-        password: cleanPass,
+        password: hashedPassForStorage,
         roleKey: regRoleKey,
         roleTitle: roleTitleMap[regRoleKey]
       });

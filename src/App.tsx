@@ -18,6 +18,7 @@ import GoogleCalendarSyncModal from "./components/GoogleCalendarSyncModal";
 import { initAuth, createGoogleCalendarEvent, formatCalendarDateTime } from "./googleCalendar";
 import { User as FirebaseUser } from "firebase/auth";
 import { supabase, sendWhatsAppViaEdgeFunction, sendEmailViaServer } from "./supabaseClient";
+import { hashPassword, isHashedPassword } from "./cryptoUtils";
 import {
   Scale, LayoutDashboard, Briefcase, Users, CalendarDays, ListChecks,
   Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, BellRing, BellOff, Building2,
@@ -1291,6 +1292,7 @@ export default function App() {
         const email = currentUser.email.toLowerCase();
         const rawPass = (currentUser as any).password;
         if (!rawPass) return; // لا يوجد كلمة مرور محفوظة — لا نُنشئ/نستخدم قيمة افتراضية عالمية (ثغرة أمنية سابقة)
+        if (isHashedPassword(rawPass)) return; // القيمة مُجزّأة (pbkdf2) ولا يمكن استخدامها كنص عادي هنا؛ المزامنة تتم فعلياً عند تسجيل الدخول نفسه
         const pass = rawPass.length >= 6 ? rawPass : `${rawPass}-firm2024`;
         const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: pass });
         if (signInErr) {
@@ -5734,13 +5736,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     });
   };
 
-  const saveUser = () => {
+  const saveUser = async () => {
     if (!checkPerm("manageUsers", "إدارة المستخدمين")) return;
     if (!form.name || !form.email) return;
     if (!editingUser && (!form.password || form.password.length < 6)) {
       alert("يجب تعيين كلمة مرور لا تقل عن 6 أحرف عند إنشاء مستخدم جديد.");
       return;
     }
+
+    // نجزّئ (hash) كلمة المرور الجديدة/المُغيّرة قبل تخزينها — لا نخزّن أي كلمة مرور كنص عادي بعد الآن
+    const hashedFormPassword = form.password ? await hashPassword(form.password) : "";
 
     const rKey = (form.roleKey || "lawyer") as "admin" | "lawyer" | "secretary" | "accountant";
     const preset = ROLE_PRESETS[rKey];
@@ -5754,7 +5759,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         name: form.name,
         email: form.email,
         phone: form.phone || u.phone,
-        password: form.password || u.password, // إن تُرك حقل كلمة المرور فارغاً تبقى كلمة المرور الحالية كما هي — لا قيمة افتراضية معروفة
+        password: hashedFormPassword || u.password, // إن تُرك حقل كلمة المرور فارغاً تبقى كلمة المرور الحالية كما هي — لا قيمة افتراضية معروفة
         roleKey: rKey,
         roleTitle: form.roleTitle || preset.title,
         status: form.status || u.status,
@@ -5771,7 +5776,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         name: form.name,
         email: form.email,
         phone: form.phone || "050-0000000",
-        password: form.password, // مطلوب صراحة عند إنشاء مستخدم جديد — تم التحقق أعلاه أنها غير فارغة
+        password: hashedFormPassword, // مطلوب صراحة عند إنشاء مستخدم جديد — تم التحقق أعلاه أنها غير فارغة، ومُخزّنة مُجزّأة (pbkdf2)
         roleKey: rKey,
         roleTitle: form.roleTitle || preset.title,
         status: "نشط",

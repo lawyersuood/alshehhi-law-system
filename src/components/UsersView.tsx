@@ -333,7 +333,7 @@ export default function UsersView({
                               name: u.name,
                               email: u.email,
                               phone: u.phone,
-                              password: u.password || "",
+                              password: "", // نترك الحقل فارغاً دائماً عند التعديل — القيمة المخزّنة قد تكون مُجزّأة (hash)، وتركه فارغاً يعني "الإبقاء على كلمة المرور الحالية كما هي" (راجع saveUser)
                               roleKey: u.roleKey,
                               roleTitle: u.roleTitle,
                               status: u.status,
