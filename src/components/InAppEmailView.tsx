@@ -19,6 +19,7 @@ import {
   Check,
   Receipt,
 } from "lucide-react";
+import { normalizeArabicSearch } from "../domain/utils";
 import { Modal, Field } from "./AuthScreens";
 
 const inputCls = "w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:border-[#0D382B]/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all";
@@ -106,6 +107,16 @@ export interface InAppEmailViewProps {
   saveStorage: (key: string, value: any) => void;
   setPermissionNotice: (msg: string) => void;
 }
+
+const matchesEmailSearch = (mail: { subject: string; sender: string; senderEmail: string }, search: string): boolean => {
+  if (!search) return true;
+  const q = normalizeArabicSearch(search);
+  return (
+    normalizeArabicSearch(mail.subject).includes(q) ||
+    normalizeArabicSearch(mail.sender).includes(q) ||
+    normalizeArabicSearch(mail.senderEmail).includes(q)
+  );
+};
 
 export default function InAppEmailView({
   emailConfig,
@@ -313,7 +324,7 @@ export default function InAppEmailView({
             <div className="flex-1 overflow-y-auto divide-y divide-slate-100/80">
               {inAppEmails
                 .filter(e => e.folder === emailFolder)
-                .filter(e => !emailSearch || e.subject.includes(emailSearch) || e.sender.includes(emailSearch) || e.senderEmail.includes(emailSearch))
+                .filter(e => matchesEmailSearch(e, emailSearch))
                 .length === 0 ? (
                   <div className="p-8 text-center text-slate-400 text-xs flex flex-col items-center justify-center h-full space-y-2">
                     <Inbox size={28} className="text-slate-300" />
@@ -323,7 +334,7 @@ export default function InAppEmailView({
                 ) : (
                   inAppEmails
                     .filter(e => e.folder === emailFolder)
-                    .filter(e => !emailSearch || e.subject.includes(emailSearch) || e.sender.includes(emailSearch) || e.senderEmail.includes(emailSearch))
+                    .filter(e => matchesEmailSearch(e, emailSearch))
                     .map((mail) => (
                       <div
                         key={mail.id}

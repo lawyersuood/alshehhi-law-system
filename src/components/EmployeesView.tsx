@@ -25,7 +25,7 @@ import {
   EmployeeDisciplinaryAction,
   CaseItem,
 } from "../domain/types";
-import { fmtDate, daysUntil, todayISO } from "../domain/utils";
+import { fmtDate, daysUntil, todayISO, normalizeArabicSearch } from "../domain/utils";
 
 export interface EmployeesViewProps {
   setForm: React.Dispatch<React.SetStateAction<Record<string, any>>>;
@@ -255,7 +255,15 @@ export default function EmployeesView({
               </thead>
               <tbody className="divide-y divide-slate-100/80">
                 {employees
-                  .filter(e => !employeeSearchQuery || e.fullName.includes(employeeSearchQuery) || e.jobTitle.includes(employeeSearchQuery) || e.emiratesId.includes(employeeSearchQuery))
+                  .filter(e => {
+                    if (!employeeSearchQuery) return true;
+                    const q = normalizeArabicSearch(employeeSearchQuery);
+                    return (
+                      normalizeArabicSearch(e.fullName).includes(q) ||
+                      normalizeArabicSearch(e.jobTitle).includes(q) ||
+                      normalizeArabicSearch(e.emiratesId).includes(q)
+                    );
+                  })
                   .map((emp) => {
                     const totalSalary = emp.basicSalary + emp.housingAllowance + emp.transportAllowance;
                     const daysToIdExpiry = emp.idExpiryDate ? daysUntil(emp.idExpiryDate) : 999;
