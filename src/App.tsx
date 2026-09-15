@@ -27,6 +27,9 @@ import { usePolicies } from "./hooks/usePolicies";
 import { usePrecedents } from "./hooks/usePrecedents";
 import { useDisciplinaryActions } from "./hooks/useDisciplinaryActions";
 import { useColleagues } from "./hooks/useColleagues";
+import { useKycWatchlist } from "./hooks/useKycWatchlist";
+import { useDeadlines } from "./hooks/useDeadlines";
+import { useBillingRecords } from "./hooks/useBillingRecords";
 import {
   Scale, LayoutDashboard, Briefcase, Users, CalendarDays, ListChecks,
   Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, BellRing, BellOff, Building2,
@@ -1048,53 +1051,16 @@ export default function App() {
     const saved = loadStorage<KycItem[]>("firm_kyc", seedKyc);
     return saved || [];
   });
-  const [kycWatchlist, setKycWatchlist] = useState<KycWatchlistItem[]>(() => {
-    const saved = loadStorage<KycWatchlistItem[]>("firm_kyc_watchlist", uaeTerroristList);
-    let list = (!saved || saved.length < 260) ? uaeTerroristList : saved;
-    // إصلاح معرّفات مكررة موجودة في بيانات القائمة الأساسية (uaeTerroristList) — كانت تمنع
-    // مزامنة القائمة بالكامل مع Supabase لأن المعرّف هو المفتاح الأساسي في الجدول.
-    const seenIds = new Set<number>();
-    let hadDuplicates = false;
-    let maxId = 0;
-    list.forEach((item) => { if (item.id > maxId) maxId = item.id; });
-    const deduped = list.map((item) => {
-      if (seenIds.has(item.id)) {
-        hadDuplicates = true;
-        maxId += 1;
-        seenIds.add(maxId);
-        return { ...item, id: maxId };
-      }
-      seenIds.add(item.id);
-      return item;
-    });
-    if (hadDuplicates) {
-      saveStorage("firm_kyc_watchlist", deduped);
-      return deduped;
-    }
-    if (!saved || saved.length < 260) {
-      saveStorage("firm_kyc_watchlist", list);
-    }
-    return list;
-  });
+  const { kycWatchlist, setKycWatchlist, kycWatchlistParsed, setKycWatchlistParsed } = useKycWatchlist();
   const [notifications, setNotifications] = useState<NotificationLog[]>(seedNotifications);
-  const [timeLogs, setTimeLogs] = useState<TimeLog[]>(seedTimeLogs);
-  const [caseExpenses, setCaseExpenses] = useState<CaseExpense[]>(seedCaseExpenses);
-  const [trustTransactions, setTrustTransactions] = useState<TrustTransaction[]>(seedTrustTransactions);
-  const [deadlines, setDeadlines] = useState<JudgmentDeadline[]>(() => {
-    const stored = loadStorage("firm_deadlines", seedDeadlines);
-    // تنظيف تلقائي لمرة واحدة: إزالة بيانات الطعون التجريبية الافتراضية غير الصحيحة
-    // (كانت تُضاف تلقائياً كأمثلة عند أول تشغيل — قضايا وهمية بأرقام 101/102/103)
-    const FAKE_DEMO_DEADLINE_IDS = new Set([1, 2, 3]);
-    const FAKE_DEMO_CASE_IDS = new Set([101, 102, 103]);
-    const cleaned = stored.filter((d) => !(FAKE_DEMO_DEADLINE_IDS.has(d.id) && FAKE_DEMO_CASE_IDS.has(d.caseId)));
-    if (cleaned.length !== stored.length) {
-      saveStorage("firm_deadlines", cleaned);
-      return cleaned;
-    }
-    return stored;
-  });
-  const [installments, setInstallments] = useState<InvoiceInstallment[]>(seedInstallments);
-  const [strReports, setStrReports] = useState<StrReport[]>(seedStrReports);
+  const {
+    timeLogs, setTimeLogs,
+    caseExpenses, setCaseExpenses,
+    trustTransactions, setTrustTransactions,
+    installments, setInstallments,
+    strReports, setStrReports,
+  } = useBillingRecords();
+  const { deadlines, setDeadlines } = useDeadlines();
   const [courtContacts, setCourtContacts] = useState<CourtContact[]>(() => {
     const version = loadStorage<string>("firm_court_contacts_ver", "");
     const saved = loadStorage<CourtContact[]>("firm_court_contacts", []);
@@ -1130,7 +1096,6 @@ export default function App() {
   useEffect(() => { saveStorage("firm_office_agreements", officeAgreements); }, [officeAgreements]);
   useEffect(() => { saveStorage("firm_invoices", invoices); }, [invoices]);
   useEffect(() => { saveStorage("firm_docs", docs); }, [docs]);
-  useEffect(() => { saveStorage("firm_deadlines", deadlines); }, [deadlines]);
 
   // جلسات الدخول المحفوظة مسبقاً (قبل هذا التحديث) لا تملك جلسة Supabase Authentication فعلية
   // لأنها أُنشئت عبر تسجيل الدخول المحلي القديم فقط — نصلح هذا تلقائياً عند فتح النظام
@@ -1294,7 +1259,6 @@ export default function App() {
   }, []);
   useEffect(() => { saveStorage("firm_poas", poas); }, [poas]);
   useEffect(() => { saveStorage("firm_kyc", kyc); }, [kyc]);
-  useEffect(() => { saveStorage("firm_kyc_watchlist", kycWatchlist); }, [kycWatchlist]);
   useEffect(() => { saveStorage("firm_court_contacts", courtContacts); }, [courtContacts]);
 
   // ---------- حالات ميزات الاستيراد الذكي واستخراج البيانات ----------
@@ -1321,7 +1285,6 @@ export default function App() {
   const [showKycWatchlistUploadModal, setShowKycWatchlistUploadModal] = useState(false);
   const [kycWatchlistSearch, setKycWatchlistSearch] = useState("");
   const [kycTypeFilter, setKycTypeFilter] = useState<string>("الكل");
-  const [kycWatchlistParsed, setKycWatchlistParsed] = useState<KycWatchlistItem[]>([]);
   const [kycSanctionAlert, setKycSanctionAlert] = useState<{ clientName: string; idNo?: string; watchlistItem: KycWatchlistItem } | null>(null);
   const [kycSanctionAckReason, setKycSanctionAckReason] = useState<string>("");
 
