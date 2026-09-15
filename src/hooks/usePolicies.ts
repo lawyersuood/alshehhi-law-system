@@ -8,6 +8,8 @@ import { useState, useEffect, useMemo } from "react";
 import type { InternalPolicy } from "../domain/types";
 import { seedInternalPolicies } from "../domain/seedData";
 import { loadStorage, saveStorage } from "../domain/storageAndMessaging";
+import { POLICY_CATEGORIES } from "../domain/constants";
+import { todayISO } from "../domain/utils";
 
 export function usePolicies() {
   const [policies, setPolicies] = useState<InternalPolicy[]>(() =>
@@ -18,6 +20,12 @@ export function usePolicies() {
   const [showPolicyModal, setShowPolicyModal] = useState<boolean>(false);
   const [editingPolicy, setEditingPolicy] = useState<InternalPolicy | null>(null);
   const [selectedPolicy, setSelectedPolicy] = useState<InternalPolicy | null>(null);
+  const [policyForm, setPolicyForm] = useState<{ title: string; category: string; content: string; effectiveDate: string }>({
+    title: "",
+    category: POLICY_CATEGORIES[0],
+    content: "",
+    effectiveDate: todayISO(),
+  });
 
   useEffect(() => {
     saveStorage("firm_internal_policies", policies);
@@ -42,5 +50,6 @@ export function usePolicies() {
     editingPolicy, setEditingPolicy,
     selectedPolicy, setSelectedPolicy,
     filteredPolicies,
+    policyForm, setPolicyForm,
   };
 }

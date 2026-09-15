@@ -1,5 +1,6 @@
 /* دوال مساعدة نقية — مستخرجة من App.tsx */
-import { REVIEW_YEARS } from "./constants";
+import { REVIEW_YEARS, LH_KEY, OFFICE_HEADER_IMG, OFFICE_FOOTER_IMG, OFFICE_SIGNATURE_IMG, OFFICE_STAMP_IMG } from "./constants";
+import type { LetterheadConfig } from "./types";
 
 export const normalizeArabicSearch = (text: string = ""): string => {
   if (!text) return "";
@@ -184,3 +185,36 @@ export const effectiveInvoiceStatus = (inv: { status: string; due?: string }): s
   if (inv.status === "مرسلة" && inv.due && inv.due < todayISO()) return "متأخرة";
   return inv.status;
 };
+
+export function loadLetterhead(): LetterheadConfig {
+  try {
+    const raw = localStorage.getItem(LH_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        headerImg: parsed.headerImg || OFFICE_HEADER_IMG,
+        footerImg: parsed.footerImg || OFFICE_FOOTER_IMG,
+        signatureImg: parsed.signatureImg || OFFICE_SIGNATURE_IMG,
+        stampImg: parsed.stampImg || OFFICE_STAMP_IMG,
+        fullPageImg: parsed.fullPageImg || "",
+      };
+    }
+  } catch (e) {
+    // ignore
+  }
+  return {
+    headerImg: OFFICE_HEADER_IMG,
+    footerImg: OFFICE_FOOTER_IMG,
+    signatureImg: OFFICE_SIGNATURE_IMG,
+    stampImg: OFFICE_STAMP_IMG,
+    fullPageImg: "",
+  };
+}
+
+export function saveLetterhead(config: LetterheadConfig) {
+  try {
+    localStorage.setItem(LH_KEY, JSON.stringify(config));
+  } catch (e) {
+    // ignore
+  }
+}

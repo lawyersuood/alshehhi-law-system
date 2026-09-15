@@ -50,6 +50,8 @@ import { useKycWatchlistModal } from "./hooks/useKycWatchlistModal";
 import { useSubTabs } from "./hooks/useSubTabs";
 import { useDocGenState } from "./hooks/useDocGenState";
 import { useAgreementDraftState } from "./hooks/useAgreementDraftState";
+import { useLetterhead } from "./hooks/useLetterhead";
+import { useNotifications } from "./hooks/useNotifications";
 import {
   Scale, LayoutDashboard, Briefcase, Users, CalendarDays, ListChecks,
   Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, BellRing, BellOff, Building2,
@@ -139,6 +141,8 @@ import {
   statusColor,
   toDubaiISODate,
   todayISO,
+  loadLetterhead,
+  saveLetterhead,
 } from "./domain/utils";
 import {
   ACCOUNTING_MODULE_ENABLED,
@@ -428,39 +432,7 @@ function buildDelegationPrintHtml(d: DelegationPrintData): string {
 
 
 
-export function loadLetterhead(): LetterheadConfig {
-  try {
-    const raw = localStorage.getItem(LH_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return {
-        headerImg: parsed.headerImg || OFFICE_HEADER_IMG,
-        footerImg: parsed.footerImg || OFFICE_FOOTER_IMG,
-        signatureImg: parsed.signatureImg || OFFICE_SIGNATURE_IMG,
-        stampImg: parsed.stampImg || OFFICE_STAMP_IMG,
-        fullPageImg: parsed.fullPageImg || "",
-      };
-    }
-  } catch (e) {
-    // ignore
-  }
-  return {
-    headerImg: OFFICE_HEADER_IMG,
-    footerImg: OFFICE_FOOTER_IMG,
-    signatureImg: OFFICE_SIGNATURE_IMG,
-    stampImg: OFFICE_STAMP_IMG,
-    fullPageImg: "",
-  };
-}
-
-export function saveLetterhead(config: LetterheadConfig) {
-  try {
-    localStorage.setItem(LH_KEY, JSON.stringify(config));
-  } catch (e) {
-    // ignore
-  }
-}
-
+// loadLetterhead/saveLetterhead: انتقلت إلى ./domain/utils
 // ---------- مصفوفة أقسام وتبويبات النظام الـ 18 المعتمدة ----------
 
 
@@ -1072,7 +1044,7 @@ export default function App() {
     return saved || [];
   });
   const { kycWatchlist, setKycWatchlist, kycWatchlistParsed, setKycWatchlistParsed } = useKycWatchlist();
-  const [notifications, setNotifications] = useState<NotificationLog[]>(seedNotifications);
+  const { notifications, setNotifications } = useNotifications();
   const {
     timeLogs, setTimeLogs,
     caseExpenses, setCaseExpenses,
@@ -1484,6 +1456,7 @@ export default function App() {
     editingPolicy, setEditingPolicy,
     selectedPolicy, setSelectedPolicy,
     filteredPolicies,
+    policyForm, setPolicyForm,
   } = usePolicies();
 
   // ================= مزامنة باقي الأقسام (مستندات/وكالات/زملاء/جلسات/مهام/جهات اتصال المحكمة/
@@ -1593,13 +1566,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       },
     });
   };
-
-  const [policyForm, setPolicyForm] = useState<{ title: string; category: string; content: string; effectiveDate: string }>({
-    title: "",
-    category: POLICY_CATEGORIES[0],
-    content: "",
-    effectiveDate: todayISO(),
-  });
 
   const openAddPolicy = () => {
     if (!isSuperAdmin) return;
@@ -2080,9 +2046,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     courtCategoryFilter, setCourtCategoryFilter,
     courtBranchFilter, setCourtBranchFilter,
     courtFiltersExpanded, setCourtFiltersExpanded,
+    editingCourtContact, setEditingCourtContact,
   } = useCourtContactFilters();
   const courtContactsFilterCache = React.useRef<{ contacts: typeof courtContacts; query: string; emirate: string; category: string; branch: string; result: typeof courtContacts } | null>(null);
-  const [editingCourtContact, setEditingCourtContact] = useState<CourtContact | null>(null);
 
   // حالة استيراد ملفات الإكسل لدليل المحاكم والجهات القضائية
   const {
@@ -2777,7 +2743,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     XLSX.writeFile(wb, "قالب_استيراد_الأشخاص_المحظورين_KYC.xlsx");
   };
 
-  const [letterhead, setLetterhead] = useState(loadLetterhead);
+  const { letterhead, setLetterhead } = useLetterhead();
 
   const updateLetterhead = (partial: Partial<LetterheadConfig>) => {
     setLetterhead((prev) => {
