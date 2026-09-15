@@ -850,6 +850,32 @@ export default function App() {
     return true;
   };
 
+  // ---------- دالة مركزية موحّدة: تحقق الصلاحية + تنفيذ الإجراء + تسجيل تدقيقي، باستدعاء واحد ----------
+  // (توصية القسم 9 من تقرير التدقيق: بدل تكرار "if (!checkPerm(...)) return; ... logAuditAction(...)"
+  // يدوياً في عشرات الأماكن — وهو تحديداً سبب نسيان بعض الدوال للتسجيل التدقيقي كما وثّق القسم 3.1 —
+  // أي ميزة جديدة تستدعي هذه الدالة فقط، فيستحيل عليها "تنسى" التحقق أو التسجيل لأنهما داخل نفس الاستدعاء.
+  // الدوال القديمة تبقى كما هي بنمطها الحالي (checkPerm + logAuditAction منفصلين) حتى لا نغيّر سلوكها
+  // بدون داعٍ — هذه الدالة للاستخدام التدريجي في أي تطوير أو تعديل مستقبلي بدل تكرار النمط القديم يدوياً.
+  const guardedAction = (
+    permKey: keyof RolePermissions,
+    actionName: string,
+    audit: {
+      actionType?: "CREATE" | "UPDATE" | "DELETE" | "STATUS_CHANGE";
+      section: string;
+      title: string;
+      details: string;
+      targetId?: string | number;
+    },
+    action: () => void
+  ): boolean => {
+    if (!checkPerm(permKey, actionName, { section: audit.section, title: audit.title, details: audit.details, targetId: audit.targetId })) {
+      return false;
+    }
+    action();
+    logAuditAction(audit.actionType || "CREATE", audit.section, audit.title, audit.details, audit.targetId ?? "—");
+    return true;
+  };
+
   // حالة نافذة التحقق الأمني وتأكيد الحذف قبل التنفيذ لجميع الأقسام
   const [deleteModalState, setDeleteModalState] = useState<{
     isOpen: boolean;
@@ -5387,6 +5413,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const saveLeaveRequest = async () => {
     if (!form.employeeId || !form.startDate || !form.endDate) return;
     const emp = employees.find(e => e.id === form.employeeId);
+    // السماح بتقديم طلب إجازة عن النفس دائماً، أو عن موظف آخر فقط لمن يملك صلاحية إدارة الموظفين —
+    // بدون هذا الشرط كان أي مستخدم مسجّل دخول يقدر يختار أي موظف آخر ويقدّم طلبات نيابة عنه.
+    const isOwnRecord = !!emp?.email && !!currentUser?.email && emp.email.trim().toLowerCase() === currentUser.email.trim().toLowerCase();
+    if (!isOwnRecord && !checkPerm("manageEmployees", "تقديم طلب إجازة نيابة عن موظف آخر")) return;
     const start = new Date(form.startDate);
     const end = new Date(form.endDate);
     const diffDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)) + 1);
@@ -5433,6 +5463,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const saveEmployeeExpense = async () => {
     if (!form.employeeId || !form.amount) return;
     const emp = employees.find(e => e.id === form.employeeId);
+    // نفس مبدأ طلب الإجازة: تقديم مصروف عن النفس مسموح دائماً، وعن موظف آخر يتطلب صلاحية إدارة الموظفين
+    const isOwnExpenseRecord = !!emp?.email && !!currentUser?.email && emp.email.trim().toLowerCase() === currentUser.email.trim().toLowerCase();
+    if (!isOwnExpenseRecord && !checkPerm("manageEmployees", "تقديم طلب مصروف نيابة عن موظف آخر")) return;
 
     const newExp: EmployeeExpense = {
       id: `exp-${Date.now()}`,
