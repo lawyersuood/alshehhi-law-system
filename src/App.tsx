@@ -30,6 +30,13 @@ import { useColleagues } from "./hooks/useColleagues";
 import { useKycWatchlist } from "./hooks/useKycWatchlist";
 import { useDeadlines } from "./hooks/useDeadlines";
 import { useBillingRecords } from "./hooks/useBillingRecords";
+import { useCaseFilters } from "./hooks/useCaseFilters";
+import { useCourtContactFilters } from "./hooks/useCourtContactFilters";
+import { useApproveUserModal } from "./hooks/useApproveUserModal";
+import { useClientFilters } from "./hooks/useClientFilters";
+import { useAiAssistantModal } from "./hooks/useAiAssistantModal";
+import { useEmailModule } from "./hooks/useEmailModule";
+import { useWhatsAppModule } from "./hooks/useWhatsAppModule";
 import {
   Scale, LayoutDashboard, Briefcase, Users, CalendarDays, ListChecks,
   Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, BellRing, BellOff, Building2,
@@ -2086,12 +2093,14 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     }
     setDeleteAgrConfirm(null);
   };
-  const [courtSearchQuery, setCourtSearchQuery] = useState("");
-  const [courtEmirateFilter, setCourtEmirateFilter] = useState("الكل");
-  const [courtCategoryFilter, setCourtCategoryFilter] = useState("الكل");
-  const [courtBranchFilter, setCourtBranchFilter] = useState("الكل");
+  const {
+    courtSearchQuery, setCourtSearchQuery,
+    courtEmirateFilter, setCourtEmirateFilter,
+    courtCategoryFilter, setCourtCategoryFilter,
+    courtBranchFilter, setCourtBranchFilter,
+    courtFiltersExpanded, setCourtFiltersExpanded,
+  } = useCourtContactFilters();
   const courtContactsFilterCache = React.useRef<{ contacts: typeof courtContacts; query: string; emirate: string; category: string; branch: string; result: typeof courtContacts } | null>(null);
-  const [courtFiltersExpanded, setCourtFiltersExpanded] = useState(false);
   const [editingCourtContact, setEditingCourtContact] = useState<CourtContact | null>(null);
 
   // حالة استيراد ملفات الإكسل لدليل المحاكم والجهات القضائية
@@ -2861,25 +2870,26 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
   const [caseView, setCaseView] = useState<number | null>(null);
   const [q, setQ] = useState("");
-  const [caseStageFilter, setCaseStageFilter] = useState("الكل");
-  const [caseFilter, setCaseFilter] = useState("الكل");
-  const [caseJudgeFilter, setCaseJudgeFilter] = useState("الكل");
-  const [caseCourtFilter, setCaseCourtFilter] = useState("الكل");
-  const [caseTypeFilter, setCaseTypeFilter] = useState("الكل");
-  const [caseEmirateFilter, setCaseEmirateFilter] = useState("الكل");
-  const [caseClientFilter, setCaseClientFilter] = useState("الكل");
-  const [caseClientTypeFilter, setCaseClientTypeFilter] = useState("الكل");
-  const [caseYearFilter, setCaseYearFilter] = useState("الكل");
-  const [caseSortBy, setCaseSortBy] = useState<"default" | "newest" | "oldest" | "number" | "client" | "court">("default");
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [showCaseStatsOnDemand, setShowCaseStatsOnDemand] = useState(false);
+  const {
+    caseStageFilter, setCaseStageFilter,
+    caseFilter, setCaseFilter,
+    caseJudgeFilter, setCaseJudgeFilter,
+    caseCourtFilter, setCaseCourtFilter,
+    caseTypeFilter, setCaseTypeFilter,
+    caseEmirateFilter, setCaseEmirateFilter,
+    caseClientFilter, setCaseClientFilter,
+    caseClientTypeFilter, setCaseClientTypeFilter,
+    caseYearFilter, setCaseYearFilter,
+    caseSortBy, setCaseSortBy,
+    showAdvancedFilters, setShowAdvancedFilters,
+    showCaseStatsOnDemand, setShowCaseStatsOnDemand,
+  } = useCaseFilters();
 
   // حالة تعديل قضية موجودة (عند عدم التعيين، نافذة القضية تُنشئ قضية جديدة بدلاً من تعديل قضية قائمة)
   const [editingCase, setEditingCase] = useState<CaseItem | null>(null);
 
   // حالات إدارة الموكلين
-  const [clientCategoryFilter, setClientCategoryFilter] = useState<string>("الكل");
-  const [clientSearch, setClientSearch] = useState<string>("");
+  const { clientCategoryFilter, setClientCategoryFilter, clientSearch, setClientSearch } = useClientFilters();
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [clientToast, setClientToast] = useState<string | null>(null);
 
@@ -2947,14 +2957,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const [restoreSuccessMsg, setRestoreSuccessMsg] = useState<string | null>(null);
 
   // حالات المساعد الذكي القانوني لجميع الأقسام (Legal AI Assistant - Gemini 3.6 Flash)
-  const [isAiAssistantEnabled, setIsAiAssistantEnabled] = useState<boolean>(false);
-  const [showAiModal, setShowAiModal] = useState<boolean>(false);
-  const [aiDepartment, setAiDepartment] = useState<string>("عام");
-  const [aiQuery, setAiQuery] = useState<string>("");
-  const [aiResponse, setAiResponse] = useState<string | null>(null);
-  const [aiLoading, setAiLoading] = useState<boolean>(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [aiMode, setAiMode] = useState<string>("advice");
+  const {
+    isAiAssistantEnabled, setIsAiAssistantEnabled,
+    showAiModal, setShowAiModal,
+    aiDepartment, setAiDepartment,
+    aiQuery, setAiQuery,
+    aiResponse, setAiResponse,
+    aiLoading, setAiLoading,
+    aiError, setAiError,
+    aiMode, setAiMode,
+  } = useAiAssistantModal();
 
   // دالة تشغيل المساعد الذكي القانوني لجميع الأقسام
   const handleAskAiAssistant = async (customQuery?: string, customDept?: string, customMode?: string) => {
@@ -3223,105 +3235,36 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   };
 
   // حالات البريد الإلكتروني المدمج (In-App Email & Supabase Sync)
-  const [emailFolder, setEmailFolder] = useState<"inbox" | "sent" | "draft" | "trash">("inbox");
-  const [emailSearch, setEmailSearch] = useState<string>("");
-  const [selectedEmailId, setSelectedEmailId] = useState<number | null>(1);
-  const [showComposeEmail, setShowComposeEmail] = useState<boolean>(false);
-  const [showEmailSettingsModal, setShowEmailSettingsModal] = useState<boolean>(false);
+  const {
+    emailFolder, setEmailFolder,
+    emailSearch, setEmailSearch,
+    selectedEmailId, setSelectedEmailId,
+    showComposeEmail, setShowComposeEmail,
+    showEmailSettingsModal, setShowEmailSettingsModal,
+    composeTo, setComposeTo,
+    composeSubject, setComposeSubject,
+    composeBody, setComposeBody,
+    composeAttachment, setComposeAttachment,
+    emailConfig, setEmailConfig,
+    testSmtpLoading, setTestSmtpLoading,
+    testSmtpResult, setTestSmtpResult,
+    testInvoiceLoading, setTestInvoiceLoading,
+    testInvoiceRecipient, setTestInvoiceRecipient,
+    testInvoiceResult, setTestInvoiceResult,
+    inAppEmails, setInAppEmails,
+  } = useEmailModule(isDemoEmail);
 
-  const [composeTo, setComposeTo] = useState<string>("");
-  const [composeSubject, setComposeSubject] = useState<string>("");
-  const [composeBody, setComposeBody] = useState<string>("");
-  const [composeAttachment, setComposeAttachment] = useState<string>("");
-
-  // إعدادات البريد الإلكتروني (SMTP / IMAP / App Settings)
-  const [emailConfig, setEmailConfig] = useState<{
-    email: string;
-    senderName: string;
-    appPassword?: string;
-    smtpHost: string;
-    smtpPort: number;
-    secure: boolean;
-    protocol: "ssl_tls" | "starttls" | "none";
-    rejectUnauthorized: boolean;
-    isConfigured: boolean;
-    lastTestedAt?: string;
-    lastTestStatus?: "success" | "failed";
-  }>({
-    email: "info@lawyersuood.com",
-    senderName: "المحامي سعود أحمد الشحي",
-    appPassword: "",
-    smtpHost: "smtp.office365.com",
-    smtpPort: 587,
-    secure: false,
-    protocol: "starttls",
-    rejectUnauthorized: false,
-    isConfigured: true
-  });
-
-  // حالة اختبار الاتصال والإرسال الفعلي للفواتير
-  const [testSmtpLoading, setTestSmtpLoading] = useState<boolean>(false);
-  const [testSmtpResult, setTestSmtpResult] = useState<{
-    success: boolean;
-    message: string;
-    latencyMs?: number;
-    code?: string;
-    recommendation?: string;
-    details?: any;
-  } | null>(null);
-
-  const [testInvoiceLoading, setTestInvoiceLoading] = useState<boolean>(false);
-  const [testInvoiceRecipient, setTestInvoiceRecipient] = useState<string>("");
-  const [testInvoiceResult, setTestInvoiceResult] = useState<{
-    success: boolean;
-    message: string;
-  } | null>(null);
-
-  const [inAppEmails, setInAppEmails] = useState<Array<{
-    id: number | string;
-    folder: "inbox" | "sent" | "draft" | "trash";
-    sender: string;
-    senderEmail: string;
-    recipient: string;
-    recipientEmail: string;
-    subject: string;
-    body: string;
-    date: string;
-    isRead: boolean;
-    hasAttachment?: boolean;
-    attachmentName?: string;
-  }>>(() => {
-    try {
-      const saved = loadStorage<any[]>("firm_in_app_emails", []);
-      const clean = (saved || []).filter(e => !isDemoEmail(e));
-      saveStorage("firm_in_app_emails", clean);
-      return clean;
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    saveStorage("firm_in_app_emails", inAppEmails);
-  }, [inAppEmails]);
-
-  const [waBackendSession, setWaBackendSession] = useState<{
-    status: 'disconnected' | 'qr_ready' | 'connected';
-    qrCodeUrl: string | null;
-    pairingCode: string | null;
-    phoneNumber: string | null;
-    connectedAt: string | null;
-    messagesCount: number;
-  }>({
-    status: 'disconnected',
-    qrCodeUrl: null,
-    pairingCode: null,
-    phoneNumber: null,
-    connectedAt: null,
-    messagesCount: 0
-  });
-
-  const [isGeneratingQr, setIsGeneratingQr] = useState<boolean>(false);
+  const {
+    waBackendSession, setWaBackendSession,
+    isGeneratingQr, setIsGeneratingQr,
+    selectedWaChatId, setSelectedWaChatId,
+    waInputText, setWaInputText,
+    waSearchTerm, setWaSearchTerm,
+    showNewWaChatModal, setShowNewWaChatModal,
+    newWaName, setNewWaName,
+    newWaPhone, setNewWaPhone,
+    waChats, setWaChats,
+  } = useWhatsAppModule();
 
   // استعلام حالة واتساب الحقيقية من السيرفر
   const fetchWaStatus = async () => {
@@ -3923,36 +3866,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     };
   }, []);
 
-  // حالات واتساب المكتب المدمج (WhatsApp Office)
-  const [selectedWaChatId, setSelectedWaChatId] = useState<number>(1);
-  const [waInputText, setWaInputText] = useState<string>("");
-  const [waSearchTerm, setWaSearchTerm] = useState<string>("");
-  const [showNewWaChatModal, setShowNewWaChatModal] = useState<boolean>(false);
-  const [newWaName, setNewWaName] = useState<string>("");
-  const [newWaPhone, setNewWaPhone] = useState<string>("");
-  const [waChats, setWaChats] = useState<Array<{
-    id: number;
-    name: string;
-    phone: string;
-    role: string;
-    avatarBg: string;
-    unreadCount: number;
-    messages: Array<{
-      id: number;
-      sender: "me" | "them";
-      text: string;
-      time: string;
-      status?: "sent" | "delivered" | "read";
-    }>;
-  }>>(() => {
-    const loaded = loadStorage<any[]>("firm_wa_chats", []);
-    return loaded.filter(c => c.name !== "فوزية أحمد المهيري" && c.name !== "شركة دار سمرا للكمبيوتر (ممثل الشركة)" && c.name !== "أمانة سر محاكم دبي - كاتب الجلسة");
-  });
-
-  useEffect(() => {
-    saveStorage("firm_wa_chats", waChats);
-  }, [waChats]);
-
   // مزامنة رسائل الواتساب لحظياً مع جدول Supabase (whatsapp_messages) و Edge Function
   const fetchSupabaseWhatsAppMessages = async () => {
     try {
@@ -4223,13 +4136,15 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   };
 
   // حالات مودال تخصيص الصلاحيات عند قبول وتفعيل المستخدم الجدد
-  const [approvingUser, setApprovingUser] = useState<UserItem | null>(null);
-  const [assignRoleTitle, setAssignRoleTitle] = useState<string>("");
-  const [assignRoleKey, setAssignRoleKey] = useState<"admin" | "lawyer" | "secretary" | "accountant">("lawyer");
-  const [assignCanTransfer, setAssignCanTransfer] = useState<boolean>(false);
-  const [assignCanAgreements, setAssignCanAgreements] = useState<boolean>(false);
-  const [assignCanWhatsapp, setAssignCanWhatsapp] = useState<boolean>(false);
-  const [assignCanFinances, setAssignCanFinances] = useState<boolean>(false);
+  const {
+    approvingUser, setApprovingUser,
+    assignRoleTitle, setAssignRoleTitle,
+    assignRoleKey, setAssignRoleKey,
+    assignCanTransfer, setAssignCanTransfer,
+    assignCanAgreements, setAssignCanAgreements,
+    assignCanWhatsapp, setAssignCanWhatsapp,
+    assignCanFinances, setAssignCanFinances,
+  } = useApproveUserModal();
 
   const pendingUsers = useMemo(() => {
     const map = new Map();
