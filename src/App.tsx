@@ -37,6 +37,13 @@ import { useClientFilters } from "./hooks/useClientFilters";
 import { useAiAssistantModal } from "./hooks/useAiAssistantModal";
 import { useEmailModule } from "./hooks/useEmailModule";
 import { useWhatsAppModule } from "./hooks/useWhatsAppModule";
+import { useAiDocExtraction } from "./hooks/useAiDocExtraction";
+import { useCasesExcelImport } from "./hooks/useCasesExcelImport";
+import { useGoogleCalendarModal } from "./hooks/useGoogleCalendarModal";
+import { useAuditFilters } from "./hooks/useAuditFilters";
+import { useCourtExcelImport } from "./hooks/useCourtExcelImport";
+import { usePrecedentForm } from "./hooks/usePrecedentForm";
+import { useBackupRestoreModal } from "./hooks/useBackupRestoreModal";
 import {
   Scale, LayoutDashboard, Briefcase, Users, CalendarDays, ListChecks,
   Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, BellRing, BellOff, Building2,
@@ -1269,25 +1276,23 @@ export default function App() {
   useEffect(() => { saveStorage("firm_court_contacts", courtContacts); }, [courtContacts]);
 
   // ---------- حالات ميزات الاستيراد الذكي واستخراج البيانات ----------
-  const [showCasesExcelModal, setShowCasesExcelModal] = useState(false);
-  const [excelCasesParsed, setExcelCasesParsed] = useState<any[]>([]);
-  const [casesExcelLoading, setCasesExcelLoading] = useState(false);
+  const { showCasesExcelModal, setShowCasesExcelModal, excelCasesParsed, setExcelCasesParsed, casesExcelLoading, setCasesExcelLoading } = useCasesExcelImport();
 
-  const [showPoaAiUploadModal, setShowPoaAiUploadModal] = useState(false);
-  const [poaAiLoading, setPoaAiLoading] = useState(false);
-  const [poaAiExtracted, setPoaAiExtracted] = useState<any | null>(null);
-  const [selectedPoaClientId, setSelectedPoaClientId] = useState<number | "new">("new");
-
-  const [showAgreementAiUploadModal, setShowAgreementAiUploadModal] = useState(false);
-  const [agreementAiLoading, setAgreementAiLoading] = useState(false);
-  const [agreementAiExtracted, setAgreementAiExtracted] = useState<any | null>(null);
-  const [selectedAgrClientId, setSelectedAgrClientId] = useState<number | "new">("new");
-
-  const [showInvoiceImportModal, setShowInvoiceImportModal] = useState(false);
-  const [invoiceImportTab, setInvoiceImportTab] = useState<"excel" | "pdf_ai">("excel");
-  const [invoiceAiLoading, setInvoiceAiLoading] = useState(false);
-  const [invoiceAiExtracted, setInvoiceAiExtracted] = useState<any | null>(null);
-  const [excelInvoicesParsed, setExcelInvoicesParsed] = useState<any[]>([]);
+  const {
+    showPoaAiUploadModal, setShowPoaAiUploadModal,
+    poaAiLoading, setPoaAiLoading,
+    poaAiExtracted, setPoaAiExtracted,
+    selectedPoaClientId, setSelectedPoaClientId,
+    showAgreementAiUploadModal, setShowAgreementAiUploadModal,
+    agreementAiLoading, setAgreementAiLoading,
+    agreementAiExtracted, setAgreementAiExtracted,
+    selectedAgrClientId, setSelectedAgrClientId,
+    showInvoiceImportModal, setShowInvoiceImportModal,
+    invoiceImportTab, setInvoiceImportTab,
+    invoiceAiLoading, setInvoiceAiLoading,
+    invoiceAiExtracted, setInvoiceAiExtracted,
+    excelInvoicesParsed, setExcelInvoicesParsed,
+  } = useAiDocExtraction();
 
   const [showKycWatchlistUploadModal, setShowKycWatchlistUploadModal] = useState(false);
   const [kycWatchlistSearch, setKycWatchlistSearch] = useState("");
@@ -1311,9 +1316,7 @@ export default function App() {
     }, [kycWatchlist, kycTypeFilter, kycWatchlistSearch]);
 
   // ---------- Google Calendar Integration State ----------
-  const [showGoogleCalendarModal, setShowGoogleCalendarModal] = useState(false);
-  const [googleUser, setGoogleUser] = useState<FirebaseUser | null>(null);
-  const [googleToken, setGoogleToken] = useState<string | null>(null);
+  const { showGoogleCalendarModal, setShowGoogleCalendarModal, googleUser, setGoogleUser, googleToken, setGoogleToken } = useGoogleCalendarModal();
 
   useEffect(() => {
     const unsubscribe = initAuth(
@@ -1407,9 +1410,7 @@ export default function App() {
   useEffect(() => { saveStorage("firm_employee_expenses", employeeExpenses); }, [employeeExpenses]);
 
   // ---------- سجل التدقيق والأنشطة (Audit Log Filters & Access) ----------
-  const [auditSearchTerm, setAuditSearchTerm] = useState<string>("");
-  const [auditActionFilter, setAuditActionFilter] = useState<string>("الكل");
-  const [auditModuleFilter, setAuditModuleFilter] = useState<string>("الكل");
+  const { auditSearchTerm, setAuditSearchTerm, auditActionFilter, setAuditActionFilter, auditModuleFilter, setAuditModuleFilter } = useAuditFilters();
 
   const canViewAuditLog = useMemo(() => {
     const activeUser = users.find((u) => u.id === currentUserId);
@@ -1701,18 +1702,12 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   }, []);
 
   // Form State for Add Precedent
-  const [precedentLoading, setPrecedentLoading] = useState(false);
-  const [precedentForm, setPrecedentForm] = useState({
-    title: "",
-    court_name: "المحكمة الاتحادية العليا",
-    ruling_year: new Date().getFullYear(),
-    category: "تجاري",
-    circuit_name: "الدائرة التجارية",
-    appeal_number: "",
-    summary_text: "",
-  });
-  const [precedentPdfFile, setPrecedentPdfFile] = useState<File | null>(null);
-  const [precedentWordFile, setPrecedentWordFile] = useState<File | null>(null);
+  const {
+    precedentLoading, setPrecedentLoading,
+    precedentForm, setPrecedentForm,
+    precedentPdfFile, setPrecedentPdfFile,
+    precedentWordFile, setPrecedentWordFile,
+  } = usePrecedentForm();
 
   // Helper to upload files to Supabase Storage or fallback to ObjectURL
   const uploadPrecedentFile = async (file: File | null, folder: string): Promise<string | null> => {
@@ -2104,11 +2099,13 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const [editingCourtContact, setEditingCourtContact] = useState<CourtContact | null>(null);
 
   // حالة استيراد ملفات الإكسل لدليل المحاكم والجهات القضائية
-  const [courtExcelModalOpen, setCourtExcelModalOpen] = useState(false);
-  const [courtImportPreviewList, setCourtImportPreviewList] = useState<Partial<CourtContact>[]>([]);
-  const [courtExcelImportMode, setCourtExcelImportMode] = useState<"append" | "replace">("append");
-  const [courtExcelFileName, setCourtExcelFileName] = useState<string>("");
-  const [courtExcelImportStatus, setCourtExcelImportStatus] = useState<{ message: string; isError?: boolean } | null>(null);
+  const {
+    courtExcelModalOpen, setCourtExcelModalOpen,
+    courtImportPreviewList, setCourtImportPreviewList,
+    courtExcelImportMode, setCourtExcelImportMode,
+    courtExcelFileName, setCourtExcelFileName,
+    courtExcelImportStatus, setCourtExcelImportStatus,
+  } = useCourtExcelImport();
 
   // Sub-tabs configuration
   const [invoiceSubTab, setInvoiceSubTab] = useState<"invoices" | "agreements" | "payments" | "time" | "trust" | "expenses">("payments");
@@ -2947,14 +2944,14 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   };
 
   // حالة مودال Supabase SQL وتحديد المستخدمين المعلقين
-  const [showSupabaseModal, setShowSupabaseModal] = useState<boolean>(false);
-
-  // حالات تصدير واستعادة النسخة الاحتياطية (Backup & Restore JSON)
-  const [showBackupModal, setShowBackupModal] = useState<boolean>(false);
-  const [backupActiveTab, setBackupActiveTab] = useState<"export" | "restore">("export");
-  const [restorePreview, setRestorePreview] = useState<any | null>(null);
-  const [restoreError, setRestoreError] = useState<string | null>(null);
-  const [restoreSuccessMsg, setRestoreSuccessMsg] = useState<string | null>(null);
+  const {
+    showSupabaseModal, setShowSupabaseModal,
+    showBackupModal, setShowBackupModal,
+    backupActiveTab, setBackupActiveTab,
+    restorePreview, setRestorePreview,
+    restoreError, setRestoreError,
+    restoreSuccessMsg, setRestoreSuccessMsg,
+  } = useBackupRestoreModal();
 
   // حالات المساعد الذكي القانوني لجميع الأقسام (Legal AI Assistant - Gemini 3.6 Flash)
   const {
