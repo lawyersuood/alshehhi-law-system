@@ -418,8 +418,9 @@ export default function InAppEmailView({
                         <span className="text-xs font-bold text-amber-950">{activeEmail.attachmentName}</span>
                       </div>
                       <button
-                        onClick={() => alert(`جاري تحميل المرفق: ${activeEmail.attachmentName}`)}
+                        onClick={() => alert(`تنبيه: النظام لا يخزّن حالياً الملف الفعلي لهذا المرفق (${activeEmail.attachmentName}) — يُعرض اسمه فقط كسجل. للحصول على الملف الفعلي يرجى الرجوع لصندوق البريد الرسمي مباشرة. (هذه الميزة تحتاج ربط النظام بآلية تخزين ملفات حقيقية لاحقاً)`)}
                         className="text-xs bg-amber-500 text-slate-900 px-3 py-1 rounded-lg font-bold hover:bg-amber-400 shadow-xs"
+                        title="لا يوجد تخزين فعلي للملف حالياً — راجع صندوق البريد الرسمي"
                       >
                         تحميل المرفق
                       </button>

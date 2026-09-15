@@ -493,7 +493,6 @@ const sendEmailMsg = (email: string, subject: string, body: string) => {
       html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${body}</div>`
     }).then(({ success, error }) => {
       if (success) {
-        console.log("Email dispatched via local server route successfully");
       } else {
         console.warn("send-email local route returned an error:", error);
       }
@@ -1471,6 +1470,7 @@ export default function App() {
   const [kycTypeFilter, setKycTypeFilter] = useState<string>("الكل");
   const [kycWatchlistParsed, setKycWatchlistParsed] = useState<KycWatchlistItem[]>([]);
   const [kycSanctionAlert, setKycSanctionAlert] = useState<{ clientName: string; idNo?: string; watchlistItem: KycWatchlistItem } | null>(null);
+  const [kycSanctionAckReason, setKycSanctionAckReason] = useState<string>("");
 
     const filteredKycWatchlist = useMemo(() => {
       return kycWatchlist.filter((item) => {
@@ -2328,6 +2328,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         idNo,
         watchlistItem: match
       });
+      // إلزامي: تسجيل كل تطابق مع قوائم العقوبات في سجل التدقيق فوراً وبغض النظر عن نقطة الدخول
+      // (استيراد، اتفاقية أتعاب، إضافة موكل...) — سابقاً كان يكفي ضغط "فهمت" لإغلاق التنبيه دون أي أثر موثّق
+      // يُثبت أن التطابق حدث ورُصد، وهو إخفاق امتثال AML مباشر بحسب تقرير التدقيق.
+      logAuditAction(
+        "CREATE",
+        "الامتثال KYC",
+        `تطابق مع قائمة العقوبات: ${clientName}`,
+        `رُصد تطابق محتمل بين الاسم المُدخل "${clientName}"${idNo ? ` (هوية/جواز: ${idNo})` : ""} وقائمة الأشخاص المحظورين — التصنيف: ${match.type}، السبب: ${match.reason}`,
+        0
+      );
     }
     return match;
   };
@@ -3720,7 +3730,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         });
       }
     } catch (err) {
-      console.log("Supabase profiles sync note:", err);
     }
   };
 
@@ -3770,7 +3779,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         }
       }
     } catch (err) {
-      console.log("Supabase email sync note:", err);
     }
   };
 
@@ -3888,7 +3896,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         })
       });
     } catch (e) {
-      console.log("Save email config note:", e);
     }
 
     setEmailConfig(prev => ({ ...prev, isConfigured: true }));
@@ -3934,7 +3941,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       if (!success) throw new Error(error || "فشل إرسال البريد");
       sendSucceeded = true;
     } catch (e: any) {
-      console.log("Send email via Edge Function note:", e);
       sendErrorMessage = e?.message || "تعذر الاتصال بخادم إرسال البريد";
     }
 
@@ -3951,7 +3957,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         created_at: new Date().toISOString()
       });
     } catch (err) {
-      console.log("Supabase insert email note:", err);
     }
 
     if (sendSucceeded) {
@@ -4191,7 +4196,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         });
       }
     } catch (err) {
-      console.log("Supabase whatsapp_messages sync note:", err);
     }
   };
 
@@ -4350,7 +4354,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         status: "sent"
       });
     } catch (e) {
-      console.log("Note on Supabase insert:", e);
     }
     logAuditAction("CREATE", "واتساب الأعمال", `محادثة: ${activeChat.name}`, `إرسال رسالة واتساب إلى ${activeChat.name} (${activeChat.phone})`, activeChat.id);
   };
@@ -4410,7 +4413,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           status: "sent"
         });
       } catch (e) {
-        console.log("Note on insert:", e);
       }
       logAuditAction("CREATE", "واتساب الأعمال", `محادثة جديدة: ${cleanName}`, `بدء محادثة واتساب جديدة مع ${cleanName} (${cleanPhone}) وإرسال رسالة أولى`, targetId);
     }
@@ -4456,7 +4458,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     const preset = ROLE_PRESETS[assignRoleKey];
     const targetUserId = approvingUser.supabaseId || approvingUser.id;
 
-    console.log("Target User ID for approval:", targetUserId, "Email:", approvingUser.email);
 
     try {
       // Direct update in Supabase profiles by ID
@@ -4470,13 +4471,11 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         .eq("id", targetUserId)
         .select();
 
-      console.log("Update result by ID:", data, "Error:", error);
 
       let isSuccess = !error && data && data.length > 0;
 
       // Fallback update by email if ID update returned empty or error
       if (!isSuccess) {
-        console.log("Attempting fallback update by email:", approvingUser.email);
         const { data: emailData, error: emailError } = await supabase
           .from("profiles")
           .update({
@@ -4487,7 +4486,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           .eq("email", approvingUser.email.toLowerCase())
           .select();
 
-        console.log("Email Update result:", emailData, "Error:", emailError);
 
         if (!emailError && emailData && emailData.length > 0) {
           isSuccess = true;
@@ -4590,14 +4588,12 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
             }
           }
         } catch (e) {
-          console.log("Error during profile deletion:", e);
           try {
             await supabase
               .from("profiles")
               .update({ status: "rejected" })
               .eq("email", target.email.toLowerCase());
           } catch (err) {
-            console.log("Fallback soft delete failed:", err);
           }
         }
 
@@ -5316,7 +5312,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         status: newEmp.status
       }]);
     } catch (e) {
-      console.log("Supabase employee save note:", e);
     }
 
     setModal(null);
@@ -5337,7 +5332,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         try {
           await supabase.from("employees").delete().eq("id", empId);
         } catch (e) {
-          console.log("Supabase delete employee note:", e);
         }
       },
     });
@@ -5423,7 +5417,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         status: "PENDING"
       }]);
     } catch (e) {
-      console.log("Supabase save leave note:", e);
     }
 
     logAuditAction("CREATE", "الكادر والرواتب HR", `طلب إجازة: ${newLeave.employeeName}`, `تقديم طلب إجازة جديد (${newLeave.leaveType}) لمدة ${newLeave.totalDays} يوم`, newLeave.id);
@@ -5434,7 +5427,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     try {
       await supabase.from("leave_requests").update({ status: newStatus }).eq("id", leaveId);
     } catch (e) {
-      console.log("Supabase update leave status note:", e);
     }
   };
 
@@ -5466,7 +5458,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         status: "PENDING"
       }]);
     } catch (e) {
-      console.log("Supabase save expense note:", e);
     }
 
     logAuditAction("CREATE", "الكادر والرواتب HR", `مصروف: ${newExp.employeeName}`, `تقديم طلب مصروف جديد بمبلغ ${newExp.amount} (${newExp.category})`, newExp.id);
@@ -5477,7 +5468,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     try {
       await supabase.from("employee_expenses").update({ status: newStatus }).eq("id", expId);
     } catch (e) {
-      console.log("Supabase update expense status note:", e);
     }
   };
 
@@ -11762,7 +11752,26 @@ const activeFiltersCount = useMemo(() => {
 
       {/* ═══ تنبيه حظر الامتثال والمنع من التعامل (KYC Sanction Alert Modal) ═══ */}
       {kycSanctionAlert && (
-        <Modal title="🚨 تحذير امتثال عاجل: تطابق مع قائمة الأشخاص المحظورين" onClose={() => setKycSanctionAlert(null)}>
+        <Modal
+          title="🚨 تحذير امتثال عاجل: تطابق مع قائمة الأشخاص المحظورين"
+          onClose={() => {
+            // لا يُسمح بإغلاق هذا التنبيه (لا بزر X ولا بالضغط خارج النافذة) دون كتابة سبب — نفس شرط زر التأكيد بالأسفل
+            const reason = kycSanctionAckReason.trim();
+            if (!reason) {
+              alert("يجب كتابة سبب المتابعة أو القرار المتخذ قبل إغلاق هذا التنبيه — هذا سجل امتثال إلزامي.");
+              return;
+            }
+            logAuditAction(
+              "UPDATE",
+              "الامتثال KYC",
+              `إقرار بمتابعة تطابق عقوبات: ${kycSanctionAlert.clientName}`,
+              `تم إقفال تنبيه تطابق العقوبات للاسم "${kycSanctionAlert.clientName}" بالسبب/القرار التالي: ${reason}`,
+              0
+            );
+            setKycSanctionAckReason("");
+            setKycSanctionAlert(null);
+          }}
+        >
           <div className="space-y-4 p-2">
             <div className="p-4 rounded-2xl bg-red-50 border-2 border-red-300 text-red-900 space-y-2">
               <div className="flex items-center gap-2">
@@ -11782,11 +11791,38 @@ const activeFiltersCount = useMemo(() => {
               </p>
             </div>
 
+            {/* إلزامي: لا يمكن إغلاق هذا التنبيه إلا بكتابة سبب صريح يُحفظ في سجل التدقيق — منع تكرار
+                "ضغطة فهمت" بدون أي أثر موثّق يثبت أن المكتب راجع التطابق واتخذ قراراً بشأنه. */}
+            <Field label="سبب المتابعة / القرار المتخذ بشأن هذا التطابق (إلزامي قبل الإغلاق)">
+              <textarea
+                value={kycSanctionAckReason}
+                onChange={(e) => setKycSanctionAckReason(e.target.value)}
+                rows={3}
+                placeholder="مثال: تم التحقق يدوياً وتبيّن أنه تشابه أسماء فقط وليس نفس الشخص، أو: تم رفع بلاغ اشتباه STR رقم..."
+                className="w-full rounded-xl border border-red-300 p-2.5 text-xs focus:ring-2 focus:ring-red-200 focus:border-red-500"
+              />
+            </Field>
+
             <button
-              onClick={() => setKycSanctionAlert(null)}
+              onClick={() => {
+                const reason = kycSanctionAckReason.trim();
+                if (!reason) {
+                  alert("يجب كتابة سبب المتابعة أو القرار المتخذ قبل إغلاق هذا التنبيه — هذا سجل امتثال إلزامي.");
+                  return;
+                }
+                logAuditAction(
+                  "UPDATE",
+                  "الامتثال KYC",
+                  `إقرار بمتابعة تطابق عقوبات: ${kycSanctionAlert.clientName}`,
+                  `تم إقفال تنبيه تطابق العقوبات للاسم "${kycSanctionAlert.clientName}" بالسبب/القرار التالي: ${reason}`,
+                  0
+                );
+                setKycSanctionAckReason("");
+                setKycSanctionAlert(null);
+              }}
               className="w-full py-2.5 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 cursor-pointer"
             >
-              موافق (فهمت التنبيه)
+              تأكيد الإقرار وإغلاق التنبيه
             </button>
           </div>
         </Modal>
