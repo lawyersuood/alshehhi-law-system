@@ -24,6 +24,9 @@ import {
   loadStorage, saveStorage, flushSaveStorage, fetchSupabaseTable, pushSupabaseTable,
 } from "./domain/storageAndMessaging";
 import { usePolicies } from "./hooks/usePolicies";
+import { usePrecedents } from "./hooks/usePrecedents";
+import { useDisciplinaryActions } from "./hooks/useDisciplinaryActions";
+import { useColleagues } from "./hooks/useColleagues";
 import {
   Scale, LayoutDashboard, Briefcase, Users, CalendarDays, ListChecks,
   Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, BellRing, BellOff, Building2,
@@ -1035,12 +1038,12 @@ export default function App() {
   const [invoices, setInvoices] = useState<Invoice[]>(() => loadStorage("firm_invoices", seedInvoices));
   const [docs, setDocs] = useState<DocItem[]>(() => loadStorage("firm_docs", seedDocs));
   const [poas, setPoas] = useState<PoaItem[]>(() => loadStorage("firm_poas", seedPoas));
-  const [colleagues, setColleagues] = useState<Colleague[]>(() => loadStorage<Colleague[]>("firm_colleagues", []));
-  useEffect(() => { saveStorage("firm_colleagues", colleagues); }, [colleagues]);
-  const [colleagueDelegations, setColleagueDelegations] = useState<ColleagueDelegation[]>(() => loadStorage<ColleagueDelegation[]>("firm_colleague_delegations", []));
-  useEffect(() => { saveStorage("firm_colleague_delegations", colleagueDelegations); }, [colleagueDelegations]);
-  const [colleagueSubTab, setColleagueSubTab] = useState<"directory" | "delegations">("directory");
-  const [editingColleagueId, setEditingColleagueId] = useState<number | null>(null);
+  const {
+    colleagues, setColleagues,
+    colleagueDelegations, setColleagueDelegations,
+    colleagueSubTab, setColleagueSubTab,
+    editingColleagueId, setEditingColleagueId,
+  } = useColleagues();
   const [kyc, setKyc] = useState<KycItem[]>(() => {
     const saved = loadStorage<KycItem[]>("firm_kyc", seedKyc);
     return saved || [];
@@ -1425,14 +1428,13 @@ export default function App() {
   const [employees, setEmployees] = useState<Employee[]>(() => loadStorage("firm_employees", seedEmployees));
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(() => loadStorage("firm_leave_requests", seedLeaveRequests));
   const [employeeExpenses, setEmployeeExpenses] = useState<EmployeeExpense[]>(() => loadStorage("firm_employee_expenses", seedEmployeeExpenses));
-  const [disciplinaryActions, setDisciplinaryActions] = useState<EmployeeDisciplinaryAction[]>(() => loadStorage("firm_employee_disciplinary_actions", []));
+  const { disciplinaryActions, setDisciplinaryActions } = useDisciplinaryActions();
   const [hrSubTab, setHrSubTab] = useState<"directory" | "leaves" | "expenses" | "disciplinary">("directory");
   const [employeeSearchQuery, setEmployeeSearchQuery] = useState("");
 
   useEffect(() => { saveStorage("firm_employees", employees); }, [employees]);
   useEffect(() => { saveStorage("firm_leave_requests", leaveRequests); }, [leaveRequests]);
   useEffect(() => { saveStorage("firm_employee_expenses", employeeExpenses); }, [employeeExpenses]);
-  useEffect(() => { saveStorage("firm_employee_disciplinary_actions", disciplinaryActions); }, [disciplinaryActions]);
 
   // ---------- سجل التدقيق والأنشطة (Audit Log Filters & Access) ----------
   const [auditSearchTerm, setAuditSearchTerm] = useState<string>("");
@@ -1488,15 +1490,15 @@ export default function App() {
   }, [kycWatchlist]);
 
   // ---------- المبادئ والأحكام القضائية (Legal Precedents) ----------
-  const [precedents, setPrecedents] = useState<LegalPrecedent[]>(() => loadStorage("firm_legal_precedents", seedLegalPrecedents));
-  const [precedentSearch, setPrecedentSearch] = useState<string>("");
-  const [precedentCourtFilter, setPrecedentCourtFilter] = useState<string>("الكل");
-  const [precedentCategoryFilter, setPrecedentCategoryFilter] = useState<string>("الكل");
-  const [precedentYearFilter, setPrecedentYearFilter] = useState<string>("الكل");
-  const [showAddPrecedentModal, setShowAddPrecedentModal] = useState<boolean>(false);
-  const [selectedPrecedent, setSelectedPrecedent] = useState<LegalPrecedent | null>(null);
-
-  useEffect(() => { saveStorage("firm_legal_precedents", precedents); }, [precedents]);
+  const {
+    precedents, setPrecedents,
+    precedentSearch, setPrecedentSearch,
+    precedentCourtFilter, setPrecedentCourtFilter,
+    precedentCategoryFilter, setPrecedentCategoryFilter,
+    precedentYearFilter, setPrecedentYearFilter,
+    showAddPrecedentModal, setShowAddPrecedentModal,
+    selectedPrecedent, setSelectedPrecedent,
+  } = usePrecedents();
 
   // ---------- السياسات الداخلية للمكتب ----------
   const {
