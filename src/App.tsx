@@ -23,6 +23,7 @@ import {
   sendWhatsAppMsg, sendEmailMsg, findMatchingClientByName, inputCls,
   loadStorage, saveStorage, flushSaveStorage, fetchSupabaseTable, pushSupabaseTable,
 } from "./domain/storageAndMessaging";
+import { usePolicies } from "./hooks/usePolicies";
 import {
   Scale, LayoutDashboard, Briefcase, Users, CalendarDays, ListChecks,
   Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, BellRing, BellOff, Building2,
@@ -1498,7 +1499,15 @@ export default function App() {
   useEffect(() => { saveStorage("firm_legal_precedents", precedents); }, [precedents]);
 
   // ---------- السياسات الداخلية للمكتب ----------
-  const [policies, setPolicies] = useState<InternalPolicy[]>(() => loadStorage("firm_internal_policies", seedInternalPolicies));
+  const {
+    policies, setPolicies,
+    policySearch, setPolicySearch,
+    policyCategoryFilter, setPolicyCategoryFilter,
+    showPolicyModal, setShowPolicyModal,
+    editingPolicy, setEditingPolicy,
+    selectedPolicy, setSelectedPolicy,
+    filteredPolicies,
+  } = usePolicies();
 
   // ================= مزامنة باقي الأقسام (مستندات/وكالات/زملاء/جلسات/مهام/جهات اتصال المحكمة/
   // اتفاقيات المكتب/السياسات/الإجراءات التأديبية/مواعيد الأحكام/الاستشارات) مع Supabase =================
@@ -1569,25 +1578,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     }, 1500);
     return () => clearTimeout(t);
   }, [consultationSettings]);
-
-  const [policySearch, setPolicySearch] = useState<string>("");
-  const [policyCategoryFilter, setPolicyCategoryFilter] = useState<string>("الكل");
-  const [showPolicyModal, setShowPolicyModal] = useState<boolean>(false);
-  const [editingPolicy, setEditingPolicy] = useState<InternalPolicy | null>(null);
-  const [selectedPolicy, setSelectedPolicy] = useState<InternalPolicy | null>(null);
-
-  useEffect(() => { saveStorage("firm_internal_policies", policies); }, [policies]);
-
-  const filteredPolicies = useMemo(() => {
-    return policies
-      .filter((p) => policyCategoryFilter === "الكل" || p.category === policyCategoryFilter)
-      .filter((p) => {
-        const q = policySearch.trim().toLowerCase();
-        if (!q) return true;
-        return p.title.toLowerCase().includes(q) || p.content.toLowerCase().includes(q);
-      })
-      .sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
-  }, [policies, policySearch, policyCategoryFilter]);
 
   const handleSavePolicy = (data: { title: string; category: string; content: string; effectiveDate?: string }) => {
     if (!isSuperAdmin) return;
