@@ -44,6 +44,12 @@ import { useAuditFilters } from "./hooks/useAuditFilters";
 import { useCourtExcelImport } from "./hooks/useCourtExcelImport";
 import { usePrecedentForm } from "./hooks/usePrecedentForm";
 import { useBackupRestoreModal } from "./hooks/useBackupRestoreModal";
+import { useHrRecords } from "./hooks/useHrRecords";
+import { useDeadlineUiState } from "./hooks/useDeadlineUiState";
+import { useKycWatchlistModal } from "./hooks/useKycWatchlistModal";
+import { useSubTabs } from "./hooks/useSubTabs";
+import { useDocGenState } from "./hooks/useDocGenState";
+import { useAgreementDraftState } from "./hooks/useAgreementDraftState";
 import {
   Scale, LayoutDashboard, Briefcase, Users, CalendarDays, ListChecks,
   Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, BellRing, BellOff, Building2,
@@ -1090,14 +1096,12 @@ export default function App() {
   });
   const [officeAgreements, setOfficeAgreements] = useState<OfficeAgreement[]>(() => loadStorage("firm_office_agreements", []));
 
-  const [autoCheckStatus, setAutoCheckStatus] = useState<{
-    lastCheckedAt?: string;
-    message?: string;
-    isChecking?: boolean;
-  }>({});
-  const [deadlineFilter, setDeadlineFilter] = useState<"all" | "urgent" | "active" | "done" | "notneeded">("all");
-  const [selectedDeadlineLogs, setSelectedDeadlineLogs] = useState<JudgmentDeadline | null>(null);
-  const [reassignDeadlineModal, setReassignDeadlineModal] = useState<JudgmentDeadline | null>(null);
+  const {
+    autoCheckStatus, setAutoCheckStatus,
+    deadlineFilter, setDeadlineFilter,
+    selectedDeadlineLogs, setSelectedDeadlineLogs,
+    reassignDeadlineModal, setReassignDeadlineModal,
+  } = useDeadlineUiState();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => { saveStorage("firm_clients", clients); }, [clients]);
@@ -1294,11 +1298,13 @@ export default function App() {
     excelInvoicesParsed, setExcelInvoicesParsed,
   } = useAiDocExtraction();
 
-  const [showKycWatchlistUploadModal, setShowKycWatchlistUploadModal] = useState(false);
-  const [kycWatchlistSearch, setKycWatchlistSearch] = useState("");
-  const [kycTypeFilter, setKycTypeFilter] = useState<string>("الكل");
-  const [kycSanctionAlert, setKycSanctionAlert] = useState<{ clientName: string; idNo?: string; watchlistItem: KycWatchlistItem } | null>(null);
-  const [kycSanctionAckReason, setKycSanctionAckReason] = useState<string>("");
+  const {
+    showKycWatchlistUploadModal, setShowKycWatchlistUploadModal,
+    kycWatchlistSearch, setKycWatchlistSearch,
+    kycTypeFilter, setKycTypeFilter,
+    kycSanctionAlert, setKycSanctionAlert,
+    kycSanctionAckReason, setKycSanctionAckReason,
+  } = useKycWatchlistModal();
 
     const filteredKycWatchlist = useMemo(() => {
       return kycWatchlist.filter((item) => {
@@ -1398,16 +1404,14 @@ export default function App() {
     }
   };
 
-  const [employees, setEmployees] = useState<Employee[]>(() => loadStorage("firm_employees", seedEmployees));
-  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>(() => loadStorage("firm_leave_requests", seedLeaveRequests));
-  const [employeeExpenses, setEmployeeExpenses] = useState<EmployeeExpense[]>(() => loadStorage("firm_employee_expenses", seedEmployeeExpenses));
+  const {
+    employees, setEmployees,
+    leaveRequests, setLeaveRequests,
+    employeeExpenses, setEmployeeExpenses,
+    hrSubTab, setHrSubTab,
+    employeeSearchQuery, setEmployeeSearchQuery,
+  } = useHrRecords();
   const { disciplinaryActions, setDisciplinaryActions } = useDisciplinaryActions();
-  const [hrSubTab, setHrSubTab] = useState<"directory" | "leaves" | "expenses" | "disciplinary">("directory");
-  const [employeeSearchQuery, setEmployeeSearchQuery] = useState("");
-
-  useEffect(() => { saveStorage("firm_employees", employees); }, [employees]);
-  useEffect(() => { saveStorage("firm_leave_requests", leaveRequests); }, [leaveRequests]);
-  useEffect(() => { saveStorage("firm_employee_expenses", employeeExpenses); }, [employeeExpenses]);
 
   // ---------- سجل التدقيق والأنشطة (Audit Log Filters & Access) ----------
   const { auditSearchTerm, setAuditSearchTerm, auditActionFilter, setAuditActionFilter, auditModuleFilter, setAuditModuleFilter } = useAuditFilters();
@@ -1843,36 +1847,18 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       return matchesCourt && matchesCategory && matchesYear && matchesQuery;
     });
   }, [precedents, precedentCourtFilter, precedentCategoryFilter, precedentYearFilter, precedentSearch]);
-  const [agrPreviewId, setAgrPreviewId] = useState<number | null>(null);
-  const [delegationPreviewId, setDelegationPreviewId] = useState<number | null>(null);
-  const [deleteAgrConfirm, setDeleteAgrConfirm] = useState<OfficeAgreement | null>(null);
-  // تعديل صياغة نص الإنابة (خاص بكل إنابة على حدة)
-  const [editingDelegationWording, setEditingDelegationWording] = useState(false);
-  const [delegationDraftHtml, setDelegationDraftHtml] = useState("");
-  const delegationBodyRef = React.useRef<HTMLDivElement>(null);
-  // تعديل بنود اتفاقية الأتعاب (خاص بكل اتفاقية على حدة)
-  const [editingAgreementClauses, setEditingAgreementClauses] = useState(false);
-  const [agreementClausesDraft, setAgreementClausesDraft] = useState<{ ar: string; en: string }[]>([]);
-  const emptyAgrForm = () => ({
-    contractDate: todayISO(),
-    contractCity: "الشارقة",
-    clientMode: "new" as "new" | "existing",
-    existingClientId: "",
-    clientNameAr: "",
-    clientNameEn: "",
-    representativeAr: "",
-    representativeEn: "",
-    clientType: "شركة",
-    idNo: "",
-    phone: "",
-    email: "",
-    emirate: "الشارقة",
-    address: "",
-    caseDetailsAr: "",
-    caseDetailsEn: "",
-    installments: [{ amount: "", dueDate: todayISO(), paidOnSigning: true }] as any[],
-  });
-  const [agrForm, setAgrForm] = useState<any>(emptyAgrForm());
+  const {
+    agrPreviewId, setAgrPreviewId,
+    delegationPreviewId, setDelegationPreviewId,
+    deleteAgrConfirm, setDeleteAgrConfirm,
+    editingDelegationWording, setEditingDelegationWording,
+    delegationDraftHtml, setDelegationDraftHtml,
+    delegationBodyRef,
+    editingAgreementClauses, setEditingAgreementClauses,
+    agreementClausesDraft, setAgreementClausesDraft,
+    agrForm, setAgrForm,
+    emptyAgrForm,
+  } = useAgreementDraftState();
 
   const setAgr = (k: string, v: any) => setAgrForm((prev: any) => ({ ...prev, [k]: v }));
   const setAgrInst = (idx: number, k: string, v: any) =>
@@ -2108,9 +2094,12 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   } = useCourtExcelImport();
 
   // Sub-tabs configuration
-  const [invoiceSubTab, setInvoiceSubTab] = useState<"invoices" | "agreements" | "payments" | "time" | "trust" | "expenses">("payments");
-  const [docSubTab, setDocSubTab] = useState<"archive" | "generator" | "officialLetters">("archive");
-  const [kycSubTab, setKycSubTab] = useState<"kyc" | "watchlist" | "str">("kyc");
+  const {
+    invoiceSubTab, setInvoiceSubTab,
+    docSubTab, setDocSubTab,
+    kycSubTab, setKycSubTab,
+    hearingSubTab, setHearingSubTab,
+  } = useSubTabs();
 
   // ---------- 1. تدقيق ومقارنة أسماء الموكلين مع قائمة الأشخاص المحظورين والمنكشفين (KYC Watchlist Auto-Audit) ----------
   const checkAndAuditClientKyc = (clientName: string, idNo?: string) => {
@@ -2841,26 +2830,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       img.src = fullPageDataUrl;
     });
   };
-  const [hearingSubTab, setHearingSubTab] = useState<"hearings" | "deadlines">("hearings");
 
   // Client portal & Doc generator states
-  const [clientPortalId, setClientPortalId] = useState<number | null>(null);
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("notice");
-  const [selectedGenCaseId, setSelectedGenCaseId] = useState<number>(1);
-
-  const [notifyModal, setNotifyModal] = useState<{
-    recipientName: string;
-    recipientPhone: string;
-    recipientEmail: string;
-    channel: "واتساب" | "إيميل" | "كلاهما";
-    type: "تنبيه جلسة" | "تحديث قضية" | "تذكير فاتورة" | "تجديد وثائق / KYC" | "تجديد وكالة / POA" | "تنبيه ميعاد طعن / استئناف" | "تذكير قسط فاتورة" | "رسالة عامة";
-    subject: string;
-    message: string;
-    relatedRef?: string;
-  } | null>(null);
-
-  const [selectedRollDate, setSelectedRollDate] = useState<string>(todayISO());
-  const [rollCourtFilter, setRollCourtFilter] = useState<string>("الكل");
+  const {
+    clientPortalId, setClientPortalId,
+    selectedTemplateId, setSelectedTemplateId,
+    selectedGenCaseId, setSelectedGenCaseId,
+    notifyModal, setNotifyModal,
+    selectedRollDate, setSelectedRollDate,
+    rollCourtFilter, setRollCourtFilter,
+  } = useDocGenState();
 
   const [report, setReport] = useState<any>(null);
   const [modal, setModal] = useState<string | null>(null);
