@@ -1,6 +1,6 @@
 /* دوال مساعدة نقية — مستخرجة من App.tsx */
 import { REVIEW_YEARS, LH_KEY, OFFICE_HEADER_IMG, OFFICE_FOOTER_IMG, OFFICE_SIGNATURE_IMG, OFFICE_STAMP_IMG } from "./constants";
-import type { LetterheadConfig } from "./types";
+import type { LetterheadConfig, CaseItem, Client } from "./types";
 
 export const normalizeArabicSearch = (text: string = ""): string => {
   if (!text) return "";
@@ -217,4 +217,213 @@ export function saveLetterhead(config: LetterheadConfig) {
   } catch (e) {
     // ignore
   }
+}
+
+// ===== دوال بيانات القضايا/الموكلين (تنظيف/كشف بيانات تجريبية/دمج مكررات) =====
+// انتقلت من App.tsx بنفس المنطق حرفياً — دوال نقية بدون أي استخدام لـ React state،
+// تُستخدم الآن من App.tsx نفسه ومن الهوكس الجديدة (useClientsData/useCasesData) معاً.
+
+export function isDemoCase(c: any): boolean {
+  if (!c) return false;
+  const num = String(c.number || "").toLowerCase();
+  // يدعم الشكل القديم (opponent: نص واحد) والشكل الحالي (opponents: مصفوفة) قبل تطبيع البيانات
+  const opp = String(Array.isArray(c.opponents) ? c.opponents.join(" ") : (c.opponent || "")).toLowerCase();
+  const judge = String(c.judge || "").toLowerCase();
+  const subj = String(c.subject || "").toLowerCase();
+  return (
+    c.id === 101 || c.id === 102 || c.id === 103 || c.id === 104 ||
+    num.includes("458/2026 تجاري دبي") ||
+    num.includes("1024/2026 مدني الشارقة") ||
+    num.includes("308/2026 عمالي أبوظبي") ||
+    num.includes("112/2026 استئناف تجاري دبي") ||
+    opp.includes("شركة النجم الذهبي") ||
+    opp.includes("مؤسسة الأفق") ||
+    opp.includes("مؤسسة الرواد") ||
+    opp.includes("شركة سيركل") ||
+    judge.includes("المنصوري") ||
+    judge.includes("سلطان الشامسي") ||
+    judge.includes("محمد راشد") ||
+    judge.includes("سالم الكعبي") ||
+    subj.includes("نزاع تعاقدي ومطالبة مالية بقيمة 850,000") ||
+    subj.includes("إخلاء للغصب ومطالبة بالتعويض")
+  );
+}
+
+export function sanitizeCase(c: CaseItem): CaseItem {
+  // هجرة الشكل القديم (opponent: نص واحد) إلى الشكل الحالي (opponents: مصفوفة) للبيانات المخزّنة محلياً من إصدار سابق
+  const legacyOpponent = (c as any).opponent;
+  const rawOpponents: string[] = Array.isArray(c.opponents)
+    ? c.opponents
+    : (legacyOpponent ? [legacyOpponent] : []);
+
+  const PLACEHOLDER_OPPONENTS = new Set([
+    "المستأنف ضده",
+    "الخصم المستأنف ضده",
+    "الطرف المقابل في الدعوى الشرعية",
+    "المنفذ ضده / طالب التنفيذ",
+    "المطور / المالك العقاري",
+    "الطرف الآخر في الالتماس",
+    "المدعى عليه في أمر الأداء",
+    "الطرف الآخر في التركة والمواريث",
+    "الطرف الآخر في النزاع الأسري",
+    "النيابة العامة / الشاكي",
+    "الطرف المقابل في الأحوال الشخصية",
+    "المدعى عليه في المطالبة المالية",
+    "الطرف المقابل",
+    "الخصم",
+    "—",
+  ]);
+  // تفريغ أي نصوص عشوائية أو افتراضية للخصم لم ترد في المستند
+  const opponents = rawOpponents.map((o) => (o || "").trim()).filter((o) => o && !PLACEHOLDER_OPPONENTS.has(o));
+
+  let judge = c.judge || "";
+  let fee = typeof c.fee === "number" && !isNaN(c.fee) ? c.fee : 0; // الإبقاء على الأتعاب الفعلية المدخلة؛ صفر فقط إن لم تكن مُدخلة أصلاً
+  let openDate = c.openDate || "";
+
+  // تفريغ أي نصوص عشوائية أو افتراضية لاسم القاضي أو الدائرة
+  if (
+    judge.startsWith("دائرة الاستئناف") ||
+    judge.startsWith("دائرة استئناف") ||
+    judge === "دائرة الأحوال الشخصية الشرعية" ||
+    judge === "دائرة التماسات إعادة النظر التجارية" ||
+    judge === "د. أحمد المنصوري" ||
+    judge === "المستشار سلطان الشامسي" ||
+    judge === "المستشار محمد راشد" ||
+    judge === "د. سالم الكعبي"
+  ) {
+    judge = "";
+  }
+
+  let st = c.status || "متداولة";
+  if (st === "قيد الاستئناف") {
+    st = "منتهية";
+  }
+  const stage = c.stage || getCaseStage({ ...c, status: st });
+  const { opponent: _legacyOpponentField, ...rest } = c as any;
+
+  return {
+    ...rest,
+    stage: stage,
+    status: st,
+    opponents: opponents,
+    judge: judge,
+    fee: fee,
+    openDate: openDate,
+  };
+}
+
+export function isDemoHearing(h: any): boolean {
+  if (!h) return false;
+  const room = String(h.room || "").toLowerCase();
+  const notes = String(h.notes || "").toLowerCase();
+  return (
+    h.caseId === 101 || h.caseId === 102 || h.caseId === 103 || h.caseId === 104 ||
+    room.includes("القاعة 4 (الابتدائية)") ||
+    room.includes("القاعة 2") ||
+    notes.includes("الخبير الحسابي") ||
+    notes.includes("إيداع أصل الوكالة الموثقة ومستخرج السجل") ||
+    notes.includes("الاستعداد لصدور الحكم") ||
+    notes.includes("عرض مسودة اتفاقية التسوية")
+  );
+}
+
+export function normalizeCaseNumberKey(num: string): string {
+  if (!num) return "";
+  const digits = String(num)
+    .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+    .replace(/[^\d]/g, "/")
+    .split("/")
+    .filter(Boolean);
+  if (digits.length === 2) {
+    const sorted = [...digits].sort((a, b) => a.length - b.length || a.localeCompare(b));
+    return sorted.join("-");
+  }
+  return String(num)
+    .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
+    .replace(/[\s\/\-_\.]/g, "")
+    .toLowerCase();
+}
+
+export function deduplicateCases(caseList: CaseItem[]): CaseItem[] {
+  const seenIds = new Set<number>();
+  const seenNumberKeys = new Map<string, CaseItem>();
+  const seenCompositeKeys = new Set<string>();
+  const result: CaseItem[] = [];
+
+  for (const raw of caseList) {
+    if (!raw) continue;
+    const c = typeof sanitizeCase === "function" ? sanitizeCase(raw) : raw;
+    const normNum = normalizeCaseNumberKey(c.number);
+    const compKey = `${c.clientId}_${String(c.court || "").trim().toLowerCase()}_${String(c.subject || "").trim().toLowerCase()}`;
+
+    if (normNum && seenNumberKeys.has(normNum) && seenNumberKeys.get(normNum)!.clientId === c.clientId) {
+      const existing = seenNumberKeys.get(normNum)!;
+      if ((!existing.opponents || existing.opponents.length === 0) && c.opponents && c.opponents.length > 0) existing.opponents = c.opponents;
+      if (!existing.judge && c.judge) existing.judge = c.judge;
+      if ((!existing.court || existing.court === "محاكم دبي") && c.court && c.court !== "محاكم دبي") {
+        existing.court = c.court;
+      }
+      if (!existing.openDate && c.openDate) existing.openDate = c.openDate;
+      if (existing.status === "متداولة" && c.status && c.status !== "متداولة") {
+        existing.status = c.status;
+      }
+      if (!existing.stage && c.stage) existing.stage = c.stage;
+      continue;
+    }
+
+    if (seenIds.has(c.id)) {
+      continue;
+    }
+
+    if (!normNum && compKey && compKey.length > 10 && seenCompositeKeys.has(compKey)) {
+      continue;
+    }
+
+    let finalId = c.id;
+    if (!finalId || seenIds.has(finalId)) {
+      let maxExisting = 500;
+      if (seenIds.size > 0) {
+        maxExisting = Math.max(...Array.from(seenIds));
+      }
+      finalId = Math.max(maxExisting + 1, 501);
+    }
+    seenIds.add(finalId);
+    if (compKey) seenCompositeKeys.add(compKey);
+
+    const item: CaseItem = { ...c, id: finalId };
+    if (normNum) {
+      seenNumberKeys.set(normNum, item);
+    }
+    result.push(item);
+  }
+
+  return result;
+}
+
+export function deduplicateClients(clientList: Client[]): Client[] {
+  const seenIds = new Set<number>();
+  const seenNames = new Set<string>();
+  const result: Client[] = [];
+
+  for (const c of clientList) {
+    if (!c) continue;
+    const cleanName = String(c.name || "").trim().toLowerCase();
+    if (cleanName && seenNames.has(cleanName)) {
+      continue;
+    }
+    if (cleanName) seenNames.add(cleanName);
+
+    let finalId = c.id;
+    if (!finalId || seenIds.has(finalId)) {
+      let maxExisting = 500;
+      if (seenIds.size > 0) {
+        maxExisting = Math.max(...Array.from(seenIds));
+      }
+      finalId = Math.max(maxExisting + 1, 501);
+    }
+    seenIds.add(finalId);
+    result.push({ ...c, id: finalId });
+  }
+
+  return result;
 }

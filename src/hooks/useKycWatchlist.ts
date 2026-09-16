@@ -1,13 +1,17 @@
 // حالة "قائمة العقوبات/الإرهاب" (KYC Watchlist) — مستخرجة من App.tsx بنفس نمط الهوكس السابقة.
-// نفس منطق تهيئة الحالة الأصلي حرفياً (بما فيه إصلاح المعرّفات المكررة عند التحميل الأول) —
-// بدون أي تغيير بالسلوك.
-import { useState, useEffect } from "react";
+// نفس منطق تهيئة الحالة الأصلي حرفياً (بما فيه إصلاح المعرّفات المكررة عند التحميل الأول).
+//
+// تحديث لاحق (ضمن دمج "النواة" المشتركة): أُضيفت مزامنة Supabase (جدول kyc_watchlist_items) عبر
+// هوك useSyncedTable العام، لأن هذه المزامنة كانت أصلاً جزءاً من useEffect الضخم "remainingSyncTables"
+// بـ App.tsx — لم تكن بهذا الهوك سابقاً (كان محلياً فقط). السلوك النهائي مطابق تماماً لما كان بـ App.tsx.
+import { useState } from "react";
 import type { KycWatchlistItem } from "../domain/types";
 import { uaeTerroristList } from "../data/uaeTerroristListData";
 import { loadStorage, saveStorage } from "../domain/storageAndMessaging";
+import { useSyncedTable } from "./useSyncedTable";
 
 export function useKycWatchlist() {
-  const [kycWatchlist, setKycWatchlist] = useState<KycWatchlistItem[]>(() => {
+  const [kycWatchlist, setKycWatchlist] = useSyncedTable<KycWatchlistItem>("firm_kyc_watchlist", "kyc_watchlist_items", () => {
     const saved = loadStorage<KycWatchlistItem[]>("firm_kyc_watchlist", uaeTerroristList);
     let list = (!saved || saved.length < 260) ? uaeTerroristList : saved;
     const seenIds = new Set<number>();
@@ -36,9 +40,8 @@ export function useKycWatchlist() {
 
   const [kycWatchlistParsed, setKycWatchlistParsed] = useState<KycWatchlistItem[]>([]);
 
-  useEffect(() => {
-    saveStorage("firm_kyc_watchlist", kycWatchlist);
-  }, [kycWatchlist]);
+  // ملاحظة: الحفظ المحلي بعد أي تغيير أصبح يتم تلقائياً داخل useSyncedTable أعلاه (بالإضافة
+  // للرفع المؤجل لـ Supabase) — لا حاجة لـ useEffect منفصل هنا بعد الآن.
 
   return { kycWatchlist, setKycWatchlist, kycWatchlistParsed, setKycWatchlistParsed };
 }

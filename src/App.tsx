@@ -28,6 +28,11 @@ import { usePrecedents } from "./hooks/usePrecedents";
 import { useDisciplinaryActions } from "./hooks/useDisciplinaryActions";
 import { useColleagues } from "./hooks/useColleagues";
 import { useKycWatchlist } from "./hooks/useKycWatchlist";
+import { useClientsData } from "./hooks/useClientsData";
+import { useCasesData } from "./hooks/useCasesData";
+import { useFinancialCoreData } from "./hooks/useFinancialCoreData";
+import { useAuditLogsData } from "./hooks/useAuditLogsData";
+import { useKycData } from "./hooks/useKycData";
 import { useDeadlines } from "./hooks/useDeadlines";
 import { useBillingRecords } from "./hooks/useBillingRecords";
 import { useCaseFilters } from "./hooks/useCaseFilters";
@@ -143,6 +148,12 @@ import {
   todayISO,
   loadLetterhead,
   saveLetterhead,
+  isDemoCase,
+  sanitizeCase,
+  isDemoHearing,
+  normalizeCaseNumberKey,
+  deduplicateCases,
+  deduplicateClients,
 } from "./domain/utils";
 import {
   ACCOUNTING_MODULE_ENABLED,
@@ -183,7 +194,6 @@ import {
   hasTabPermission,
 } from "./domain/permissions";
 import {
-  seedAuditLogs,
   seedCaseExpenses,
   seedCases,
   seedClients,
@@ -193,17 +203,13 @@ import {
   seedDocs,
   seedEmployeeExpenses,
   seedEmployees,
-  seedFeeAgreements,
   seedHearings,
   seedInstallments,
   seedInternalPolicies,
-  seedInvoices,
-  seedKyc,
   seedKycWatchlist,
   seedLeaveRequests,
   seedLegalPrecedents,
   seedNotifications,
-  seedPayments,
   seedPoas,
   seedStrReports,
   seedTasks,
@@ -596,8 +602,9 @@ export default function App() {
   }, [currentUser, isAdmin, isSuperAdmin, userPerms]);
 
   // ---------- سجل التدقيق والأنشطة الأمني (Audit Log) ----------
-  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(() => loadStorage("firm_audit_logs", seedAuditLogs));
-  useEffect(() => { saveStorage("firm_audit_logs", auditLogs); }, [auditLogs]);
+  // auditLogs: انتقلت لهوك useAuditLogsData (مع مزامنة Supabase — كانت هذه المزامنة سابقاً جزءاً
+  // من useEffect الضخم "remainingSyncTables" بالأسفل، والحفظ المحلي وحده كان هنا فقط).
+  const { auditLogs, setAuditLogs } = useAuditLogsData();
 
   // دالة توثيق العمليات والأنشطة مع تسجيل معرف المستخدم والتوقيت الكامل
   const logAuditAction = (
@@ -788,232 +795,13 @@ export default function App() {
     );
   };
 
-  const isDemoCase = (c: any): boolean => {
-    if (!c) return false;
-    const num = String(c.number || "").toLowerCase();
-    // يدعم الشكل القديم (opponent: نص واحد) والشكل الحالي (opponents: مصفوفة) قبل تطبيع البيانات
-    const opp = String(Array.isArray(c.opponents) ? c.opponents.join(" ") : (c.opponent || "")).toLowerCase();
-    const judge = String(c.judge || "").toLowerCase();
-    const subj = String(c.subject || "").toLowerCase();
-    return (
-      c.id === 101 || c.id === 102 || c.id === 103 || c.id === 104 ||
-      num.includes("458/2026 تجاري دبي") ||
-      num.includes("1024/2026 مدني الشارقة") ||
-      num.includes("308/2026 عمالي أبوظبي") ||
-      num.includes("112/2026 استئناف تجاري دبي") ||
-      opp.includes("شركة النجم الذهبي") ||
-      opp.includes("مؤسسة الأفق") ||
-      opp.includes("مؤسسة الرواد") ||
-      opp.includes("شركة سيركل") ||
-      judge.includes("المنصوري") ||
-      judge.includes("سلطان الشامسي") ||
-      judge.includes("محمد راشد") ||
-      judge.includes("سالم الكعبي") ||
-      subj.includes("نزاع تعاقدي ومطالبة مالية بقيمة 850,000") ||
-      subj.includes("إخلاء للغصب ومطالبة بالتعويض")
-    );
-  };
-
-  const sanitizeCase = (c: CaseItem): CaseItem => {
-    // هجرة الشكل القديم (opponent: نص واحد) إلى الشكل الحالي (opponents: مصفوفة) للبيانات المخزّنة محلياً من إصدار سابق
-    const legacyOpponent = (c as any).opponent;
-    const rawOpponents: string[] = Array.isArray(c.opponents)
-      ? c.opponents
-      : (legacyOpponent ? [legacyOpponent] : []);
-
-    const PLACEHOLDER_OPPONENTS = new Set([
-      "المستأنف ضده",
-      "الخصم المستأنف ضده",
-      "الطرف المقابل في الدعوى الشرعية",
-      "المنفذ ضده / طالب التنفيذ",
-      "المطور / المالك العقاري",
-      "الطرف الآخر في الالتماس",
-      "المدعى عليه في أمر الأداء",
-      "الطرف الآخر في التركة والمواريث",
-      "الطرف الآخر في النزاع الأسري",
-      "النيابة العامة / الشاكي",
-      "الطرف المقابل في الأحوال الشخصية",
-      "المدعى عليه في المطالبة المالية",
-      "الطرف المقابل",
-      "الخصم",
-      "—",
-    ]);
-    // تفريغ أي نصوص عشوائية أو افتراضية للخصم لم ترد في المستند
-    const opponents = rawOpponents.map((o) => (o || "").trim()).filter((o) => o && !PLACEHOLDER_OPPONENTS.has(o));
-
-    let judge = c.judge || "";
-    let fee = typeof c.fee === "number" && !isNaN(c.fee) ? c.fee : 0; // الإبقاء على الأتعاب الفعلية المدخلة؛ صفر فقط إن لم تكن مُدخلة أصلاً
-    let openDate = c.openDate || "";
-
-    // تفريغ أي نصوص عشوائية أو افتراضية لاسم القاضي أو الدائرة
-    if (
-      judge.startsWith("دائرة الاستئناف") ||
-      judge.startsWith("دائرة استئناف") ||
-      judge === "دائرة الأحوال الشخصية الشرعية" ||
-      judge === "دائرة التماسات إعادة النظر التجارية" ||
-      judge === "د. أحمد المنصوري" ||
-      judge === "المستشار سلطان الشامسي" ||
-      judge === "المستشار محمد راشد" ||
-      judge === "د. سالم الكعبي"
-    ) {
-      judge = "";
-    }
-
-    let st = c.status || "متداولة";
-    if (st === "قيد الاستئناف") {
-      st = "منتهية";
-    }
-    const stage = c.stage || getCaseStage({ ...c, status: st });
-    const { opponent: _legacyOpponentField, ...rest } = c as any;
-
-    return {
-      ...rest,
-      stage: stage,
-      status: st,
-      opponents: opponents,
-      judge: judge,
-      fee: fee,
-      openDate: openDate,
-    };
-  };
-
-  const isDemoHearing = (h: any): boolean => {
-    if (!h) return false;
-    const room = String(h.room || "").toLowerCase();
-    const notes = String(h.notes || "").toLowerCase();
-    return (
-      h.caseId === 101 || h.caseId === 102 || h.caseId === 103 || h.caseId === 104 ||
-      room.includes("القاعة 4 (الابتدائية)") ||
-      room.includes("القاعة 2") ||
-      notes.includes("الخبير الحسابي") ||
-      notes.includes("إيداع أصل الوكالة الموثقة ومستخرج السجل") ||
-      notes.includes("الاستعداد لصدور الحكم") ||
-      notes.includes("عرض مسودة اتفاقية التسوية")
-    );
-  };
-
-  const normalizeCaseNumberKey = (num: string): string => {
-    if (!num) return "";
-    const digits = String(num)
-      .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
-      .replace(/[^\d]/g, "/")
-      .split("/")
-      .filter(Boolean);
-    if (digits.length === 2) {
-      const sorted = [...digits].sort((a, b) => a.length - b.length || a.localeCompare(b));
-      return sorted.join("-");
-    }
-    return String(num)
-      .replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d).toString())
-      .replace(/[\s\/\-_\.]/g, "")
-      .toLowerCase();
-  };
-
-  const deduplicateCases = (caseList: CaseItem[]): CaseItem[] => {
-    const seenIds = new Set<number>();
-    const seenNumberKeys = new Map<string, CaseItem>();
-    const seenCompositeKeys = new Set<string>();
-    const result: CaseItem[] = [];
-
-    for (const raw of caseList) {
-      if (!raw) continue;
-      const c = typeof sanitizeCase === "function" ? sanitizeCase(raw) : raw;
-      const normNum = normalizeCaseNumberKey(c.number);
-      const compKey = `${c.clientId}_${String(c.court || "").trim().toLowerCase()}_${String(c.subject || "").trim().toLowerCase()}`;
-
-      if (normNum && seenNumberKeys.has(normNum) && seenNumberKeys.get(normNum)!.clientId === c.clientId) {
-        const existing = seenNumberKeys.get(normNum)!;
-        if ((!existing.opponents || existing.opponents.length === 0) && c.opponents && c.opponents.length > 0) existing.opponents = c.opponents;
-        if (!existing.judge && c.judge) existing.judge = c.judge;
-        if ((!existing.court || existing.court === "محاكم دبي") && c.court && c.court !== "محاكم دبي") {
-          existing.court = c.court;
-        }
-        if (!existing.openDate && c.openDate) existing.openDate = c.openDate;
-        if (existing.status === "متداولة" && c.status && c.status !== "متداولة") {
-          existing.status = c.status;
-        }
-        if (!existing.stage && c.stage) existing.stage = c.stage;
-        continue;
-      }
-
-      if (seenIds.has(c.id)) {
-        continue;
-      }
-
-      if (!normNum && compKey && compKey.length > 10 && seenCompositeKeys.has(compKey)) {
-        continue;
-      }
-
-      let finalId = c.id;
-      if (!finalId || seenIds.has(finalId)) {
-        let maxExisting = 500;
-        if (seenIds.size > 0) {
-          maxExisting = Math.max(...Array.from(seenIds));
-        }
-        finalId = Math.max(maxExisting + 1, 501);
-      }
-      seenIds.add(finalId);
-      if (compKey) seenCompositeKeys.add(compKey);
-
-      const item: CaseItem = { ...c, id: finalId };
-      if (normNum) {
-        seenNumberKeys.set(normNum, item);
-      }
-      result.push(item);
-    }
-
-    return result;
-  };
-
-  const deduplicateClients = (clientList: Client[]): Client[] => {
-    const seenIds = new Set<number>();
-    const seenNames = new Set<string>();
-    const result: Client[] = [];
-
-    for (const c of clientList) {
-      if (!c) continue;
-      const cleanName = String(c.name || "").trim().toLowerCase();
-      if (cleanName && seenNames.has(cleanName)) {
-        continue;
-      }
-      if (cleanName) seenNames.add(cleanName);
-
-      let finalId = c.id;
-      if (!finalId || seenIds.has(finalId)) {
-        let maxExisting = 500;
-        if (seenIds.size > 0) {
-          maxExisting = Math.max(...Array.from(seenIds));
-        }
-        finalId = Math.max(maxExisting + 1, 501);
-      }
-      seenIds.add(finalId);
-      result.push({ ...c, id: finalId });
-    }
-
-    return result;
-  };
-
-  const [clients, setClients] = useState<Client[]>(() => {
-    const saved = loadStorage<Client[]>("firm_clients", seedClients);
-    const combined = (!saved || saved.length === 0) ? seedClients : [...saved, ...seedClients];
-    const unique = deduplicateClients(combined);
-    saveStorage("firm_clients", unique);
-    return unique;
-  });
-  const [feeAgreements, setFeeAgreements] = useState<FeeAgreement[]>(() => loadStorage("firm_fee_agreements", seedFeeAgreements));
-  const [payments, setPayments] = useState<PaymentReceipt[]>(() => loadStorage("firm_payments", seedPayments));
-  const [cases, setCases] = useState<CaseItem[]>(() => {
-    const saved = loadStorage<CaseItem[]>("firm_cases", seedCases);
-    const cleanList = (saved || [])
-      .filter(c => !isDemoCase(c))
-      .map(c => sanitizeCase(c));
-
-    // لا نصفّر أتعاب القضايا بعد الآن — الأتعاب الفعلية المُدخلة تبقى كما هي عبر إعادة التحميل والدمج
-    const combined = [...cleanList, ...seedCases];
-    const unique = deduplicateCases(combined);
-    saveStorage("firm_cases", unique);
-    return unique;
-  });
+  // isDemoCase/sanitizeCase/isDemoHearing/normalizeCaseNumberKey/deduplicateCases/deduplicateClients: انتقلت إلى ./domain/utils
+  // clients/cases/feeAgreements/payments/invoices: انتقلت لهوكس مستقلة (useClientsData/useCasesData/
+  // useFinancialCoreData) — كل واحدة الآن تُزامن مباشرة مع Supabase (كانت هذه المزامنة سابقاً جزءاً
+  // من useEffect الضخم "remainingSyncTables" بالأسفل)، بنفس منطق التهيئة الأصلي حرفياً.
+  const { clients, setClients } = useClientsData();
+  const { cases, setCases } = useCasesData();
+  const { feeAgreements, setFeeAgreements, payments, setPayments, invoices, setInvoices } = useFinancialCoreData();
   const [hearings, setHearings] = useState<Hearing[]>(() => {
     const saved = loadStorage<Hearing[]>("firm_hearings", []);
     const clean = (saved || []).filter(h => !isDemoHearing(h));
@@ -1030,7 +818,6 @@ export default function App() {
       return [];
     }
   });
-  const [invoices, setInvoices] = useState<Invoice[]>(() => loadStorage("firm_invoices", seedInvoices));
   const [docs, setDocs] = useState<DocItem[]>(() => loadStorage("firm_docs", seedDocs));
   const [poas, setPoas] = useState<PoaItem[]>(() => loadStorage("firm_poas", seedPoas));
   const {
@@ -1039,10 +826,8 @@ export default function App() {
     colleagueSubTab, setColleagueSubTab,
     editingColleagueId, setEditingColleagueId,
   } = useColleagues();
-  const [kyc, setKyc] = useState<KycItem[]>(() => {
-    const saved = loadStorage<KycItem[]>("firm_kyc", seedKyc);
-    return saved || [];
-  });
+  // kyc: انتقلت لهوك useKycData (مزامنة Supabase — نفس الملاحظة أعلاه)
+  const { kyc, setKyc } = useKycData();
   const { kycWatchlist, setKycWatchlist, kycWatchlistParsed, setKycWatchlistParsed } = useKycWatchlist();
   const { notifications, setNotifications } = useNotifications();
   const {
@@ -1076,15 +861,13 @@ export default function App() {
   } = useDeadlineUiState();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  useEffect(() => { saveStorage("firm_clients", clients); }, [clients]);
-  useEffect(() => { saveStorage("firm_cases", cases); }, [cases]);
+  // ملاحظة: الحفظ المحلي + المزامنة مع Supabase لـ clients/cases/feeAgreements/payments/invoices
+  // أصبحت الآن تتم تلقائياً داخل هوكسها الخاصة (useClientsData/useCasesData/useFinancialCoreData) —
+  // لا حاجة لـ useEffect منفصل هنا بعد الآن.
   useEffect(() => { saveStorage("firm_hearings", hearings); }, [hearings]);
   useEffect(() => { saveStorage("firm_tasks", tasks); }, [tasks]);
   useEffect(() => { saveStorage("firm_users", users); }, [users]);
-  useEffect(() => { saveStorage("firm_fee_agreements", feeAgreements); }, [feeAgreements]);
-  useEffect(() => { saveStorage("firm_payments", payments); }, [payments]);
   useEffect(() => { saveStorage("firm_office_agreements", officeAgreements); }, [officeAgreements]);
-  useEffect(() => { saveStorage("firm_invoices", invoices); }, [invoices]);
   useEffect(() => { saveStorage("firm_docs", docs); }, [docs]);
 
   // جلسات الدخول المحفوظة مسبقاً (قبل هذا التحديث) لا تملك جلسة Supabase Authentication فعلية
@@ -1113,111 +896,12 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoggedIn, currentUser?.id]);
 
-  // ================= مزامنة البيانات الحساسة (قضايا/موكلين/ماليات) مع قاعدة بيانات Supabase =================
-  // المتصفح (localStorage) يبقى نسخة سريعة/احتياطية محلية، لكن Supabase أصبح مصدر الحقيقة الأساسي
-  // بحيث تتزامن البيانات بين كل الأجهزة وما تضيع لو انمسحت بيانات المتصفح.
-  const supabaseHydratedRef = React.useRef(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const [remoteClients, remoteCases, remoteFeeAgreements, remotePayments, remoteInvoices] = await Promise.all([
-        fetchSupabaseTable<Client>("clients"),
-        fetchSupabaseTable<CaseItem>("cases"),
-        fetchSupabaseTable<FeeAgreement>("fee_agreements"),
-        fetchSupabaseTable<PaymentReceipt>("payments"),
-        fetchSupabaseTable<Invoice>("invoices"),
-      ]);
-      if (cancelled) return;
-
-      if (remoteClients && remoteClients.length > 0) { setClients(remoteClients); saveStorage("firm_clients", remoteClients); }
-      else if (remoteClients !== null && clients.length > 0) { pushSupabaseTable("clients", clients); }
-
-      if (remoteCases && remoteCases.length > 0) { setCases(remoteCases); saveStorage("firm_cases", remoteCases); }
-      else if (remoteCases !== null && cases.length > 0) { pushSupabaseTable("cases", cases); }
-
-      if (remoteFeeAgreements && remoteFeeAgreements.length > 0) { setFeeAgreements(remoteFeeAgreements); saveStorage("firm_fee_agreements", remoteFeeAgreements); }
-      else if (remoteFeeAgreements !== null && feeAgreements.length > 0) { pushSupabaseTable("fee_agreements", feeAgreements); }
-
-      if (remotePayments && remotePayments.length > 0) { setPayments(remotePayments); saveStorage("firm_payments", remotePayments); }
-      else if (remotePayments !== null && payments.length > 0) { pushSupabaseTable("payments", payments); }
-
-      if (remoteInvoices && remoteInvoices.length > 0) { setInvoices(remoteInvoices); saveStorage("firm_invoices", remoteInvoices); }
-      else if (remoteInvoices !== null && invoices.length > 0) { pushSupabaseTable("invoices", invoices); }
-
-      // سجل التدقيق الأمني وقائمة اعرف عميلك/الحظر — نقلناها إلى Supabase أيضاً حتى تكون مركزية
-      // بين كل الموظفين (كانت قبل ذلك محفوظة محلياً فقط في متصفح كل شخص، وهذا خطر على الامتثال).
-      const [remoteAuditLogs, remoteKyc, remoteKycWatchlist] = await Promise.all([
-        fetchSupabaseTable<AuditLogEntry>("audit_logs", { limit: 500 }),
-        fetchSupabaseTable<KycItem>("kyc_items"),
-        fetchSupabaseTable<KycWatchlistItem>("kyc_watchlist_items"),
-      ]);
-      if (cancelled) return;
-
-      if (remoteAuditLogs && remoteAuditLogs.length > 0) { setAuditLogs(remoteAuditLogs); saveStorage("firm_audit_logs", remoteAuditLogs); }
-      else if (remoteAuditLogs !== null && auditLogs.length > 0) { pushSupabaseTable("audit_logs", auditLogs); }
-
-      if (remoteKyc && remoteKyc.length > 0) { setKyc(remoteKyc); saveStorage("firm_kyc", remoteKyc); }
-      else if (remoteKyc !== null && kyc.length > 0) { pushSupabaseTable("kyc_items", kyc); }
-
-      if (remoteKycWatchlist && remoteKycWatchlist.length > 0) { setKycWatchlist(remoteKycWatchlist); saveStorage("firm_kyc_watchlist", remoteKycWatchlist); }
-      else if (remoteKycWatchlist !== null && kycWatchlist.length > 0) { pushSupabaseTable("kyc_watchlist_items", kycWatchlist); }
-
-      supabaseHydratedRef.current = true;
-    })();
-    return () => { cancelled = true; };
-    // يعمل مرة واحدة فقط عند فتح النظام
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (!supabaseHydratedRef.current) return;
-    const t = setTimeout(() => { pushSupabaseTable("clients", clients); }, 1500);
-    return () => clearTimeout(t);
-  }, [clients]);
-
-  useEffect(() => {
-    if (!supabaseHydratedRef.current) return;
-    const t = setTimeout(() => { pushSupabaseTable("cases", cases); }, 1500);
-    return () => clearTimeout(t);
-  }, [cases]);
-
-  useEffect(() => {
-    if (!supabaseHydratedRef.current) return;
-    const t = setTimeout(() => { pushSupabaseTable("fee_agreements", feeAgreements); }, 1500);
-    return () => clearTimeout(t);
-  }, [feeAgreements]);
-
-  useEffect(() => {
-    if (!supabaseHydratedRef.current) return;
-    const t = setTimeout(() => { pushSupabaseTable("payments", payments); }, 1500);
-    return () => clearTimeout(t);
-  }, [payments]);
-
-  useEffect(() => {
-    if (!supabaseHydratedRef.current) return;
-    const t = setTimeout(() => { pushSupabaseTable("invoices", invoices); }, 1500);
-    return () => clearTimeout(t);
-  }, [invoices]);
-
-  useEffect(() => {
-    if (!supabaseHydratedRef.current) return;
-    const t = setTimeout(() => { pushSupabaseTable("audit_logs", auditLogs); }, 1500);
-    return () => clearTimeout(t);
-  }, [auditLogs]);
-
-  useEffect(() => {
-    if (!supabaseHydratedRef.current) return;
-    const t = setTimeout(() => { pushSupabaseTable("kyc_items", kyc); }, 1500);
-    return () => clearTimeout(t);
-  }, [kyc]);
-
-  useEffect(() => {
-    if (!supabaseHydratedRef.current) return;
-    const t = setTimeout(() => { pushSupabaseTable("kyc_watchlist_items", kycWatchlist); }, 1500);
-    return () => clearTimeout(t);
-  }, [kycWatchlist]);
-
+  // ================= مزامنة البيانات الحساسة مع Supabase =================
+  // كانت هذه الكتلة تجمع مزامنة 8 جداول (clients/cases/feeAgreements/payments/invoices/
+  // auditLogs/kyc/kycWatchlist) في useEffect ضخم واحد مشترك (remainingSyncTables). كل جدول من
+  // هذه الثمانية أصبح الآن يزامن نفسه مباشرة داخل هوكه الخاص (useClientsData/useCasesData/
+  // useFinancialCoreData/useAuditLogsData/useKycData/useKycWatchlist) بنفس منطق الجلب/الرفع
+  // المؤجل (1.5 ثانية) حرفياً — بدون أي تغيير بالسلوك النهائي.
   // دالة تلقائية لدمج وتنظيف الموكلين المكررين
   useEffect(() => {
     const seenMap = new Map<string, number>();
@@ -1248,7 +932,7 @@ export default function App() {
     }
   }, []);
   useEffect(() => { saveStorage("firm_poas", poas); }, [poas]);
-  useEffect(() => { saveStorage("firm_kyc", kyc); }, [kyc]);
+  // kyc: الحفظ + المزامنة أصبحت داخل useKycData
   useEffect(() => { saveStorage("firm_court_contacts", courtContacts); }, [courtContacts]);
 
   // ---------- حالات ميزات الاستيراد الذكي واستخراج البيانات ----------

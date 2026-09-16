@@ -151,7 +151,7 @@ export async function fetchSupabaseTable<T>(table: string, options?: { limit?: n
     return null;
   }
 }
-export async function pushSupabaseTable<T extends { id: number }>(table: string, rows: T[]): Promise<void> {
+export async function pushSupabaseTable<T extends { id: number | string }>(table: string, rows: T[]): Promise<void> {
   try {
     // كنا سابقاً نحذف الجدول بالكامل ثم نعيد إدخال القائمة الحالية ("مرآة كاملة")، وهذا كان يعرّض
     // البيانات لخطرين حقيقيين: (1) لحظة يكون فيها الجدول فارغاً تماماً أثناء الحذف والإدراج، قد يقرأها
