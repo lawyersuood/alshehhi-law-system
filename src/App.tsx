@@ -9,6 +9,7 @@ import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import Logo from "./components/Logo";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import DocModal from "./components/modals/DocModal";
 import DashboardView from "./components/DashboardView";
 import CasesListView from "./components/CasesListView";
 import CaseDetailView from "./components/CaseDetailView";
@@ -9458,42 +9459,7 @@ export default function App() {
       )}
 
       {modal === "doc" && (
-        <Modal title="رفع مستند جديد" onClose={() => setModal(null)}>
-          <div className="space-y-4 text-sm">
-            <Field label="اسم المستند">
-              <input
-                onChange={f("name")}
-                placeholder="مثال: صحيفة الدعوى 2026.pdf"
-                className={inputCls}
-              />
-            </Field>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="نوع المستند">
-                <select onChange={f("type")} className={inputCls}>
-                  {DOC_TYPES.map((t) => (
-                    <option key={t}>{t}</option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="القضية المرتبطة">
-                <select onChange={f("caseId")} className={inputCls}>
-                  <option value="">مستند غير مرتبط بقضية</option>
-                  {cases.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.number}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            </div>
-            <button
-              onClick={saveDoc}
-              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
-            >
-              حفظ المستند الأرشيفي
-            </button>
-          </div>
-        </Modal>
+        <DocModal cases={cases} onFieldChange={f} onSave={saveDoc} onClose={() => setModal(null)} />
       )}
 
       {modal === "poa" && (
