@@ -1,6 +1,15 @@
 /* دوال مساعدة نقية — مستخرجة من App.tsx */
+import DOMPurify from "dompurify";
 import { REVIEW_YEARS, LH_KEY, OFFICE_HEADER_IMG, OFFICE_FOOTER_IMG, OFFICE_SIGNATURE_IMG, OFFICE_STAMP_IMG } from "./constants";
 import type { LetterheadConfig, CaseItem, Client } from "./types";
+
+// تنقية أي HTML قادم من محرر نصوص غني (Quill) قبل عرضه بـ dangerouslySetInnerHTML — إصلاح أمني
+// لثغرة XSS مخزّنة: بدون هذا، موظف يقدر يحفظ كود JavaScript ضمن نص خطاب/إنابة، فيشتغل هذا الكود
+// تلقائياً بجلسة أي زميل أو شريك آخر يفتح نفس المستند لاحقاً (سرقة جلسة، تنفيذ إجراءات باسمه).
+export function sanitizeHtml(html: string | null | undefined): string {
+  if (!html) return "";
+  return DOMPurify.sanitize(html, { USE_PROFILES: { html: true } });
+}
 
 export const normalizeArabicSearch = (text: string = ""): string => {
   if (!text) return "";

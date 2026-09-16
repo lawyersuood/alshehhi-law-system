@@ -20,6 +20,7 @@ import {
   Receipt,
 } from "lucide-react";
 import { normalizeArabicSearch } from "../domain/utils";
+import { authedFetch } from "../supabaseClient";
 import { Modal, Field } from "./AuthScreens";
 
 const inputCls = "w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:border-[#0D382B]/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all";
@@ -212,7 +213,7 @@ export default function InAppEmailView({
               // نجلب أولاً أي رسائل واردة حقيقية جديدة من صندوق البريد الفعلي (Titan Mail عبر IMAP)
               // ثم نُزامن جدول الرسائل من Supabase لعرضها في الواجهة.
               try {
-                const res = await fetch("https://api.suoodlawhq.com/api/notifications/fetch-inbox", { method: "POST" });
+                const res = await authedFetch("https://api.suoodlawhq.com/api/notifications/fetch-inbox", { method: "POST" });
                 const data = await res.json().catch(() => null);
                 await fetchSupabaseEmailMessages();
                 if (data?.success && data.imported > 0) {

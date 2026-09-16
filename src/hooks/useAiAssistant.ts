@@ -3,6 +3,7 @@
 // (قضايا/موكلين/جلسات/فواتير/مهام) لتزويد النموذج بسياق دقيق — نفس نمط useBackupExportRestore:
 // تستقبل كل ما تحتاجه كمعاملات صريحة بدل الاعتماد الضمني على متغيرات App().
 import type { CaseItem, Client, Hearing, Invoice, TaskItem } from "../domain/types";
+import { authedFetch } from "../supabaseClient";
 
 export interface AiAssistantDeps {
   tab: string;
@@ -52,7 +53,7 @@ export function useAiAssistant(deps: AiAssistantDeps) {
     }
 
     try {
-      const res = await fetch("/api/legal-ai-assistant", {
+      const res = await authedFetch("/api/legal-ai-assistant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
