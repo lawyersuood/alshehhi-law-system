@@ -40,6 +40,7 @@ import { useCourtContactFilters } from "./hooks/useCourtContactFilters";
 import { useApproveUserModal } from "./hooks/useApproveUserModal";
 import { useClientFilters } from "./hooks/useClientFilters";
 import { useAiAssistantModal } from "./hooks/useAiAssistantModal";
+import { useAiAssistant } from "./hooks/useAiAssistant";
 import { useEmailModule } from "./hooks/useEmailModule";
 import { useWhatsAppModule } from "./hooks/useWhatsAppModule";
 import { useAiDocExtraction } from "./hooks/useAiDocExtraction";
@@ -2595,82 +2596,12 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     aiMode, setAiMode,
   } = useAiAssistantModal();
 
-  // دالة تشغيل المساعد الذكي القانوني لجميع الأقسام
-  const handleAskAiAssistant = async (customQuery?: string, customDept?: string, customMode?: string) => {
-    const q = (customQuery !== undefined ? customQuery : aiQuery).trim();
-    if (!q) return;
-
-    const deptToUse = customDept || aiDepartment || tab || "general";
-    const modeToUse = customMode || aiMode || "advice";
-
-    setAiLoading(true);
-    setAiError(null);
-    setAiResponse(null);
-
-    // تجهيز سياق بيانات النظام المأخوذة من القسم المختار لتزويد النموذج بإجابة دقيقة
-    let contextData: any = null;
-    if (deptToUse === "cases" || deptToUse.includes("القضايا")) {
-      contextData = cases.slice(0, 6).map(c => ({ كود: c.number, موضوع_القضية: c.subject, المحكمة: c.court, النوع: c.type, الحالة: c.status }));
-    } else if (deptToUse === "clients" || deptToUse.includes("الموكلين")) {
-      contextData = clients.slice(0, 6).map(cl => ({ الاسم: cl.name, النوع: cl.type, الإمارات: cl.emirate, هاتف: cl.phone }));
-    } else if (deptToUse === "hearings" || deptToUse.includes("الجلسات")) {
-      contextData = hearings.slice(0, 6).map(h => ({ التاريخ: h.date, المحكمة: h.type, ملاحظات: h.notes }));
-    } else if (deptToUse === "invoices" || deptToUse.includes("الفواتير")) {
-      contextData = invoices.slice(0, 6).map(inv => ({ رقم_الفاتورة: inv.number, المبلغ: inv.amount, الحالة: inv.status }));
-    } else if (deptToUse === "tasks" || deptToUse.includes("المهام")) {
-      contextData = tasks.slice(0, 6).map(t => ({ المهمة: t.title, الأولوية: t.priority, المكلف: t.assignee }));
-    }
-
-    try {
-      const res = await fetch("/api/legal-ai-assistant", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          department: deptToUse,
-          query: q,
-          contextData,
-          mode: modeToUse
-        })
-      });
-      const data = await res.json();
-      if (data.success && data.answer) {
-        setAiResponse(data.answer);
-      } else {
-        setAiError(data.error || "تعذر الحصول على رد من المساعد الذكي.");
-      }
-    } catch (err: any) {
-      setAiError("حدث خطأ في الاتصال بالذكاء الاصطناعي: " + (err.message || err));
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
-  const openAiForCurrentSection = (promptText?: string, modeName?: string) => {
-    const currentDeptMap: Record<string, string> = {
-      dashboard: "عام",
-      cases: "القضايا والدعاوى",
-      clients: "الموكلين وجهات الاتصال",
-      hearings: "الجلسات والمواعيد",
-      tasks: "المهام والتوكيلات",
-      invoices: "الفواتير والمالية",
-      contracts: "العقود والاتفاقيات",
-      docs: "المستندات والأرشيف",
-      employees: "الموظفين والكادر",
-      consultations: "حجوزات الاستشارات",
-      users: "إدارة المستخدمين"
-    };
-
-    const sectionLabel = currentDeptMap[tab] || "عام";
-    setAiDepartment(sectionLabel);
-    setAiResponse(null);
-    setAiError(null);
-    setShowAiModal(true);
-
-    if (promptText) {
-      setAiQuery(promptText);
-      handleAskAiAssistant(promptText, sectionLabel, modeName || "advice");
-    }
-  };
+  const { handleAskAiAssistant, openAiForCurrentSection } = useAiAssistant({
+    tab, cases, clients, hearings, invoices, tasks,
+    aiQuery, setAiQuery, aiDepartment, setAiDepartment, aiMode,
+    aiResponse, setAiResponse, aiLoading, setAiLoading, aiError, setAiError,
+    setShowAiModal,
+  });
 
   // handleExportBackup/handleFileChangeForRestore/executeRestore: انتقلت لهوك useBackupExportRestore
   // (استدعاؤه أدناه بعد تعريف useWhatsAppModule لأن الدوال تحتاج waChats/setWaChats)
