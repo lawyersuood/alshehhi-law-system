@@ -17,7 +17,7 @@ import AdminConsultationsView from "./components/AdminConsultationsView";
 import GoogleCalendarSyncModal from "./components/GoogleCalendarSyncModal";
 import { initAuth, createGoogleCalendarEvent, formatCalendarDateTime } from "./googleCalendar";
 import { User as FirebaseUser } from "firebase/auth";
-import { supabase, sendWhatsAppViaEdgeFunction, sendEmailViaServer } from "./supabaseClient";
+import { supabase, sendWhatsAppViaEdgeFunction, sendEmailViaServer, authedFetch } from "./supabaseClient";
 import { hashPassword, isHashedPassword } from "./cryptoUtils";
 import {
   sendWhatsAppMsg, sendEmailMsg, findMatchingClientByName, inputCls,
@@ -150,6 +150,7 @@ import {
   todayISO,
   loadLetterhead,
   saveLetterhead,
+  sanitizeHtml,
   isDemoCase,
   sanitizeCase,
   isDemoHearing,
@@ -2002,7 +2003,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       reader.onload = async (e) => {
         const base64Str = e.target?.result as string;
 
-        const response = await fetch("/api/extract-doc", {
+        const response = await authedFetch("/api/extract-doc", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -2652,7 +2653,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   // استعلام حالة واتساب الحقيقية من السيرفر
   const fetchWaStatus = async () => {
     try {
-      const res = await fetch('/api/whatsapp/status');
+      const res = await authedFetch('/api/whatsapp/status');
       if (res.ok) {
         const data = await res.json();
         setWaBackendSession(data);
@@ -2665,7 +2666,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const generateWaQrCode = async () => {
     setIsGeneratingQr(true);
     try {
-      const res = await fetch('/api/whatsapp/generate-qr', { method: 'POST' });
+      const res = await authedFetch('/api/whatsapp/generate-qr', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         setWaBackendSession(data.session);
@@ -2679,7 +2680,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   const simulateScanQr = async () => {
     try {
-      const res = await fetch('/api/whatsapp/connect-simulated', {
+      const res = await authedFetch('/api/whatsapp/connect-simulated', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: '+971 50 889 9123' })
@@ -2696,7 +2697,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   const disconnectWaSession = async () => {
     try {
-      const res = await fetch('/api/whatsapp/disconnect', { method: 'POST' });
+      const res = await authedFetch('/api/whatsapp/disconnect', { method: 'POST' });
       if (res.ok) {
         const data = await res.json();
         setWaBackendSession(data.session);
@@ -2710,7 +2711,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   // ================= محرك البريد الإلكتروني الذكي ومزامنة Supabase =================
   const fetchEmailSettings = async () => {
     try {
-      const res = await fetch('/api/email/settings');
+      const res = await authedFetch('/api/email/settings');
       if (res.ok) {
         const data = await res.json();
         if (data.settings) {
@@ -2921,7 +2922,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     setTestSmtpResult(null);
 
     try {
-      const res = await fetch('/api/email/test-connection', {
+      const res = await authedFetch('/api/email/test-connection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -3011,7 +3012,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     }
 
     try {
-      await fetch('/api/email/settings', {
+      await authedFetch('/api/email/settings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -9269,7 +9270,7 @@ const activeFiltersCount = useMemo(() => {
                 <ReactQuill theme="snow" value={delegationDraftHtml} onChange={setDelegationDraftHtml} />
               </div>
             ) : d.customBodyHtml ? (
-              <div dangerouslySetInnerHTML={{ __html: d.customBodyHtml }} />
+              <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(d.customBodyHtml) }} />
             ) : (
               <>
                 <h2 className="text-xl font-bold text-center tracking-[0.3em]">إنـابـة</h2>

@@ -35,6 +35,19 @@ export async function getSupabaseSession() {
   }
 }
 
+// طلب fetch مع إرفاق رمز دخول Supabase الحالي تلقائياً (Authorization: Bearer <token>) — يستخدم
+// لكل مسارات /api/* الحساسة بالسيرفر بعد ما أصبحت الآن محمية بـ requireSupabaseAuth (كانت بدون
+// أي تحقق من الهوية إطلاقاً، وهذا كان يسمح لأي زائر بالإنترنت —دون تسجيل دخول للنظام أصلاً— بتغيير
+// إعدادات بريد المكتب أو استهلاك حصة الذكاء الاصطناعي). لا يغيّر أي سلوك آخر لدالة fetch العادية.
+export async function authedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const session = await getSupabaseSession();
+  const headers = new Headers(options.headers || {});
+  if (session?.access_token) {
+    headers.set("Authorization", `Bearer ${session.access_token}`);
+  }
+  return fetch(url, { ...options, headers });
+}
+
 export function onSupabaseAuthStateChange(callback: (event: string, session: any) => void) {
   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
     callback(event, session);
@@ -62,7 +75,7 @@ export async function sendWhatsAppViaEdgeFunction(payload: {
   contact_name?: string;
 }) {
   try {
-    const res = await fetch("https://api.suoodlawhq.com/api/notifications/send-whatsapp", {
+    const res = await authedFetch("https://api.suoodlawhq.com/api/notifications/send-whatsapp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ phone: payload.to, message: payload.message }),
@@ -91,7 +104,7 @@ export async function sendEmailViaServer(payload: {
   html: string;
 }) {
   try {
-    const res = await fetch("https://api.suoodlawhq.com/api/notifications/send-email", {
+    const res = await authedFetch("https://api.suoodlawhq.com/api/notifications/send-email", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

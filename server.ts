@@ -8,6 +8,7 @@ import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
 import { createClient } from '@supabase/supabase-js';
 import { accountingRouter } from './server/accountingApi';
+import { requireSupabaseAuth } from './server/auth';
 
 const app = express();
 const PORT = 3000;
@@ -57,7 +58,7 @@ let waSession: WhatsAppSessionState = {
 };
 
 // Generate live QR Code for WhatsApp Web pairing
-app.post('/api/whatsapp/generate-qr', async (req, res) => {
+app.post('/api/whatsapp/generate-qr', requireSupabaseAuth, async (req, res) => {
   try {
     const timestamp = Date.now();
     const sessionId = `wa-office-suood-${timestamp}`;
@@ -88,11 +89,11 @@ app.post('/api/whatsapp/generate-qr', async (req, res) => {
 });
 
 // Check WhatsApp status or simulate scan completion
-app.get('/api/whatsapp/status', (req, res) => {
+app.get('/api/whatsapp/status', requireSupabaseAuth, (req, res) => {
   res.json(waSession);
 });
 
-app.post('/api/whatsapp/connect-simulated', (req, res) => {
+app.post('/api/whatsapp/connect-simulated', requireSupabaseAuth, (req, res) => {
   const { phone } = req.body;
   waSession = {
     status: 'connected',
@@ -105,7 +106,7 @@ app.post('/api/whatsapp/connect-simulated', (req, res) => {
   res.json({ success: true, session: waSession });
 });
 
-app.post('/api/whatsapp/disconnect', (req, res) => {
+app.post('/api/whatsapp/disconnect', requireSupabaseAuth, (req, res) => {
   waSession = {
     status: 'disconnected',
     qrCodeUrl: null,
@@ -143,7 +144,7 @@ let activeEmailConfig: EmailServerConfig = {
   connectedAt: new Date().toLocaleString('ar-AE')
 };
 
-app.get('/api/email/settings', (req, res) => {
+app.get('/api/email/settings', requireSupabaseAuth, (req, res) => {
   res.json({
     connected: !!activeEmailConfig.email,
     settings: {
@@ -161,7 +162,7 @@ app.get('/api/email/settings', (req, res) => {
   });
 });
 
-app.post('/api/email/settings', (req, res) => {
+app.post('/api/email/settings', requireSupabaseAuth, (req, res) => {
   const { email, senderName, password, host, port, secure, protocol, rejectUnauthorized } = req.body;
   if (!email || !host) {
     res.status(400).json({ error: 'البريد الإلكتروني وخادم الإرسال SMTP مطلوبان' });
@@ -202,7 +203,7 @@ app.post('/api/email/settings', (req, res) => {
 });
 
 // اختبار اتصال خادم SMTP واختبار بروتوكول الأمان
-app.post('/api/email/test-connection', async (req, res) => {
+app.post('/api/email/test-connection', requireSupabaseAuth, async (req, res) => {
   const startTime = Date.now();
   try {
     const { email, password, host, port, secure, protocol, rejectUnauthorized, senderName } = req.body;
@@ -299,7 +300,7 @@ app.post('/api/email/test-connection', async (req, res) => {
   }
 });
 
-app.post('/api/email/send', async (req, res) => {
+app.post('/api/email/send', requireSupabaseAuth, async (req, res) => {
   try {
     const { to, subject, body, smtp, isInvoiceTest, invoiceDetails } = req.body;
     if (!to || !subject || !body) {
@@ -385,7 +386,7 @@ ${invoiceBadge}
 // بدلاً من أسرار Supabase.
 
 // إرسال رسالة واتساب حقيقية عبر واجهة Meta Cloud API (يستبدل send-whatsapp-message)
-app.post('/api/notifications/send-whatsapp', async (req, res) => {
+app.post('/api/notifications/send-whatsapp', requireSupabaseAuth, async (req, res) => {
   try {
     const { phone, message } = req.body;
     if (!phone || !message) {
@@ -425,7 +426,7 @@ app.post('/api/notifications/send-whatsapp', async (req, res) => {
 // إرسال بريد إلكتروني بمحتوى HTML خام مباشرة (يستبدل send-email)
 // يستخدم إعدادات SMTP المفعّلة فعلياً في النظام (activeEmailConfig) إن وُجدت كلمة مرور محفوظة،
 // وإلا يعود تلقائياً لمتغيرات بيئة السيرفر SMTP_EMAIL / SMTP_PASSWORD مع نفس خادم أوفيس 365.
-app.post('/api/notifications/send-email', async (req, res) => {
+app.post('/api/notifications/send-email', requireSupabaseAuth, async (req, res) => {
   try {
     const { to, subject, html } = req.body;
     if (!to || !subject || !html) {
@@ -490,7 +491,13 @@ app.post('/api/notifications/send-email', async (req, res) => {
 // في لوحة تحكم Meta for Developers إلى: https://<دومين الموقع>/api/notifications/whatsapp-webhook
 // نفس رمز التحقق (Verify Token) المستخدم سابقاً في Supabase يمكن إبقاؤه كما هو عبر متغير بيئة
 // WHATSAPP_VERIFY_TOKEN، وإلا يُستخدم نفس النص الافتراضي القديم كقيمة احتياطية.
-const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || 'my_law_firm_secret_token_123';
+// إصلاح أمني: لا نستخدم قيمة افتراضية مخمّنة إذا نُسي ضبط متغير البيئة — هذا كان يسمح لأي شخص
+// يعرف القيمة الافتراضية بتمرير تحقق Meta لملكية الويب هوك. الآن: إن لم يُضبط المتغير، يبقى
+// التحقق مرفوضاً دائماً (fail closed) بدل قبول قيمة معروفة مسبقاً.
+const WHATSAPP_VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN || null;
+if (!WHATSAPP_VERIFY_TOKEN) {
+  console.warn('تحذير أمني: WHATSAPP_VERIFY_TOKEN غير مُعرّف في متغيرات البيئة — سيُرفض أي تحقق ويب هوك واتساب حتى يُضبط.');
+}
 
 function getSupabaseAdminClient() {
   // تنظيف القيمة من أي مسافات/علامات اقتباس زائدة قد تدخل بالخطأ عبر لوحة تحكم Hostinger
@@ -683,7 +690,7 @@ async function fetchNewInboxEmails(): Promise<{ imported: number; error?: string
 // نقطة نهاية يمكن للواجهة الأمامية استدعاؤها لتحديث صندوق الوارد يدوياً (زر "تحديث")
 // نضع مهلة قصوى صريحة على مستوى الطلب حتى لا يبقى الطلب معلقاً بلا رد إذا تعطل الاتصال
 // بخادم IMAP لأي سبب (مما قد يظهر للمستخدم كخطأ شبكة غامض "Failed to fetch").
-app.post('/api/notifications/fetch-inbox', async (_req, res) => {
+app.post('/api/notifications/fetch-inbox', requireSupabaseAuth, async (_req, res) => {
   try {
     const result = await Promise.race([
       fetchNewInboxEmails(),
@@ -874,7 +881,7 @@ const appSpecSchema = {
 };
 
 // API Endpoint to generate an app spec with Gemini
-app.post('/api/generate-app', async (req, res) => {
+app.post('/api/generate-app', requireSupabaseAuth, async (req, res) => {
   try {
     const { prompt } = req.body;
     if (!prompt) {
@@ -982,7 +989,7 @@ In codeFiles, provide clean, idiomatic, fully formed React TypeScript components
 });
 
 // API Endpoint to refine or update an app spec with Gemini
-app.post('/api/refine-app', async (req, res) => {
+app.post('/api/refine-app', requireSupabaseAuth, async (req, res) => {
   try {
     const { currentSpec, refinementPrompt } = req.body;
     if (!currentSpec || !refinementPrompt) {
@@ -1069,7 +1076,7 @@ Apply the user's requested changes (e.g. adding dark mode, adding export feature
 });
 
 // API Endpoint for dynamic in-app AI features (e.g. Gemini AI button inside prototype)
-app.post('/api/simulated-ai-action', async (req, res) => {
+app.post('/api/simulated-ai-action', requireSupabaseAuth, async (req, res) => {
   try {
     const { appTitle, actionId, currentData, promptExtra } = req.body;
     if (!ai) {
@@ -1092,7 +1099,7 @@ Return a concise, creative, high-value 1-3 sentence result or item snippet.`
 });
 
 // API Endpoint for Legal AI Assistant across all departments (Gemini 3.6 Flash)
-app.post('/api/legal-ai-assistant', async (req, res) => {
+app.post('/api/legal-ai-assistant', requireSupabaseAuth, async (req, res) => {
   try {
     const { department, query, contextData, mode } = req.body;
 
@@ -1144,7 +1151,7 @@ app.post('/api/legal-ai-assistant', async (req, res) => {
 });
 
 // API Endpoint for AI Document Intelligence (Extracting POA, Agreement, or Invoice data)
-app.post('/api/extract-doc', async (req, res) => {
+app.post('/api/extract-doc', requireSupabaseAuth, async (req, res) => {
   try {
     const { docType, fileBase64, mimeType, fileName, textContent } = req.body;
 

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import ReactQuill, { Quill } from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
+import { sanitizeHtml } from "./domain/utils";
 
 const ReactQuillComponent = ReactQuill as any;
 
@@ -1242,7 +1243,7 @@ export default function OfficialLetterComposer({
                 <div
                   className="ollc-rich-body"
                   dangerouslySetInnerHTML={{
-                    __html: letterPages[currentPageIndex]?.bodyHtml || "",
+                    __html: sanitizeHtml(letterPages[currentPageIndex]?.bodyHtml || ""),
                   }}
                 />
                 {letterPages[currentPageIndex]?.showSignature && (
@@ -1299,7 +1300,7 @@ export default function OfficialLetterComposer({
             <div
               ref={bodyMeasureRef}
               className="text-justify ollc-rich-body"
-              dangerouslySetInnerHTML={{ __html: bodyHtml }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml) }}
             />
             <div ref={signatureMeasureRef} className="mt-8 pl-6 text-left">
               {includeSigStamp && (
