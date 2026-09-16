@@ -1493,7 +1493,7 @@ export default function CourtsDirectoryView({
                               requestDelete({
                                 section: "دليل المحاكم والجهات القضائية",
                                 title: `${c.courtName} - ${c.department}`,
-                                details: `الإمارة: ${c.emirate} | المسؤول: ${c.titleOrEmployee || c.contactPerson || "غير محدد"} | الهاتف: ${c.phone || "—"}`,
+                                details: `الإمارة: ${c.emirate} | المسؤول: ${c.titleOrEmployee || "غير محدد"} | الهاتف: ${c.phone || "—"}`,
                                 permKey: "deleteContacts",
                                 actionName: "حذف جهة الاتصال",
                                 onConfirm: () => {

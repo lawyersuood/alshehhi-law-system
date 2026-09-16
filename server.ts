@@ -495,11 +495,9 @@ app.post("/api/notifications/send-email", requireSupabaseAuth, async (req, res) 
     const isStartTls = protocolToUse === "starttls";
 
     if (!passwordToUse) {
-      res
-        .status(500)
-        .json({
-          error: "لا توجد كلمة مرور بريد مُعدّة (لا في إعدادات النظام ولا في SMTP_PASSWORD)",
-        });
+      res.status(500).json({
+        error: "لا توجد كلمة مرور بريد مُعدّة (لا في إعدادات النظام ولا في SMTP_PASSWORD)",
+      });
       return;
     }
 

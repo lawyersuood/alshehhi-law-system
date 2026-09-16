@@ -194,11 +194,9 @@ export default function ChartOfAccounts({
                 </span>
               )}
               {a.isSystem && (
-                <Lock
-                  size={12}
-                  className="text-slate-300"
-                  title="حساب أساسي من الشجرة الافتراضية"
-                />
+                <span title="حساب أساسي من الشجرة الافتراضية">
+                  <Lock size={12} className="text-slate-300" />
+                </span>
               )}
             </span>
           </td>

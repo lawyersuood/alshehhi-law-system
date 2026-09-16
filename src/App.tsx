@@ -8,6 +8,7 @@ import OfficialLetterComposer, {
 import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import Logo from "./components/Logo";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import DashboardView from "./components/DashboardView";
 import CasesListView from "./components/CasesListView";
 import CaseDetailView from "./components/CaseDetailView";
@@ -757,7 +758,9 @@ export default function App() {
       userEmail: activeUser?.email || "info@lawyersuood.com",
       userRole:
         (activeUser as any)?.roleTitle ||
-        (activeUser?.roleKey === "admin" ? "مدير النظام" : (activeUser as any)?.jobTitle || "موظف"),
+        ((activeUser as any)?.roleKey === "admin"
+          ? "مدير النظام"
+          : (activeUser as any)?.jobTitle || "موظف"),
       actionType,
       targetModule,
       targetId: targetId || "—",
@@ -5544,16 +5547,16 @@ export default function App() {
     if (!targetEmp) return;
     requestDelete({
       section: "الكادر والموظفون HR",
-      title: `الموظف: ${targetEmp.name || targetEmp.fullName}`,
-      details: `المسمى الوظيفي: ${targetEmp.jobTitle || "—"} | القسم: ${targetEmp.department || "—"} | الراتب الأساسي: ${fmtAED(targetEmp.basicSalary || 0)}`,
+      title: `الموظف: ${targetEmp.fullName}`,
+      details: `المسمى الوظيفي: ${targetEmp.jobTitle || "—"} | الراتب الأساسي: ${fmtAED(targetEmp.basicSalary || 0)}`,
       permKey: "deleteEmployees",
       actionName: "حذف موظف من الكادر",
       onConfirm: async () => {
         logAuditAction(
           "DELETE",
           "الكادر والرواتب HR",
-          `الموظف: ${targetEmp.name || targetEmp.fullName || empId}`,
-          `حذف سجّل الموظف ${targetEmp.name || targetEmp.fullName || empId} (${targetEmp.jobTitle || ""}) من كادر العمل`,
+          `الموظف: ${targetEmp.fullName || empId}`,
+          `حذف سجّل الموظف ${targetEmp.fullName || empId} (${targetEmp.jobTitle || ""}) من كادر العمل`,
           empId,
         );
         setEmployees(employees.filter((e) => e.id !== empId));
@@ -6275,10 +6278,10 @@ export default function App() {
           const currentVal = Boolean(
             hasTabPermission(u, permKey as string) || u.permissions?.[permKey],
           );
-          const newPerms = {
+          const newPerms: RolePermissions = {
             ...(u.permissions || {}),
             [permKey]: !currentVal,
-          };
+          } as RolePermissions;
 
           // المزامنة الفورية المباشرة مع جدول public.profiles في Supabase
           if (u.email) {
@@ -7376,6 +7379,9 @@ export default function App() {
               return updated;
             });
             // إضافة إشعار لمدير النظام برغبة مستخدم جديد بالانضمام
+            // ملاحظة: هذا إشعار نظام داخلي (بلا مستلم/قناة إرسال فعلية) وليس سجل إرسال فعلي مثل
+            // NotificationLog القياسي — لذا لا يطابق شكله بالكامل. يُحتفظ بالسلوك كما هو مع تصريح
+            // صريح بالنوع بدل تجاهل الفحص بالكامل؛ إعادة هيكلة نوع الإشعارات بند منفصل لاحق.
             setNotifications((prev) => [
               {
                 id: Date.now(),
@@ -7384,7 +7390,7 @@ export default function App() {
                 date: todayISO(),
                 type: "تأكيد",
                 read: false,
-              },
+              } as unknown as (typeof prev)[number],
               ...prev,
             ]);
             try {
@@ -8076,7 +8082,7 @@ export default function App() {
                 onLogout={() => setIsLoggedIn(false)}
               />
             ) : (
-              <>
+              <ErrorBoundary variant="inline" context="هذه الشاشة" resetKey={tab}>
                 {/* ================= لوحة التحكم ================= */}
                 {tab === "dashboard" && (
                   <DashboardView
@@ -8648,7 +8654,7 @@ export default function App() {
                     employees={users.map((u) => ({
                       id: u.id,
                       name: u.name,
-                      jobTitle: u.jobTitle || u.roleTitle || "محامي ومستشار",
+                      jobTitle: u.roleTitle || "محامي ومستشار",
                     }))}
                     onAssignLawyer={(bookingId, lawyerId, lawyerName) => {
                       setConsultationBookings((prev) =>
@@ -8765,7 +8771,7 @@ export default function App() {
                       letterheadFooterImg={letterhead.footerImg}
                     />
                   )}
-              </>
+              </ErrorBoundary>
             )}
           </div>
         </main>
@@ -11371,7 +11377,7 @@ export default function App() {
                 <option value="">مصروف إداري عام للمكتب</option>
                 {cases.map((c) => (
                   <option key={c.id} value={c.id}>
-                    قضية #{c.number} - {c.title}
+                    قضية #{c.number} - {c.subject}
                   </option>
                 ))}
               </select>

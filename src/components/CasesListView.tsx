@@ -74,8 +74,8 @@ export interface CasesListViewProps {
   caseYearFilter: string;
   setCaseYearFilter: (v: string) => void;
   uniqueCaseYears: string[];
-  caseSortBy: string;
-  setCaseSortBy: (v: string) => void;
+  caseSortBy: "default" | "newest" | "oldest" | "number" | "client" | "court";
+  setCaseSortBy: (v: "default" | "newest" | "oldest" | "number" | "client" | "court") => void;
   caseCourtFilter: string;
   setCaseCourtFilter: (v: string) => void;
   uniqueCourts: string[];

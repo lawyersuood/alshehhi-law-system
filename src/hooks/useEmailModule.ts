@@ -23,7 +23,10 @@ export interface InAppEmail {
 export function useEmailModule(isDemoEmail: (e: InAppEmail) => boolean) {
   const [emailFolder, setEmailFolder] = useState<"inbox" | "sent" | "draft" | "trash">("inbox");
   const [emailSearch, setEmailSearch] = useState<string>("");
-  const [selectedEmailId, setSelectedEmailId] = useState<number | null>(1);
+  // النوع يشمل string لأن معرّف الرسالة (InAppEmail.id) قد يكون نصياً (مثلاً معرّف من خادم بريد
+  // حقيقي) وليس رقمياً فقط دائماً — كان القيد على number فقط هنا فجوة نوع خفية قد تمنع تحديد
+  // الرسالة بشكل صحيح عند استخدام معرّفات نصية.
+  const [selectedEmailId, setSelectedEmailId] = useState<number | string | null>(1);
   const [showComposeEmail, setShowComposeEmail] = useState<boolean>(false);
   const [showEmailSettingsModal, setShowEmailSettingsModal] = useState<boolean>(false);
 

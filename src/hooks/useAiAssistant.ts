@@ -60,15 +60,13 @@ export function useAiAssistant(deps: AiAssistantDeps) {
     // تجهيز سياق بيانات النظام المأخوذة من القسم المختار لتزويد النموذج بإجابة دقيقة
     let contextData: any = null;
     if (deptToUse === "cases" || deptToUse.includes("القضايا")) {
-      contextData = cases
-        .slice(0, 6)
-        .map((c) => ({
-          كود: c.number,
-          موضوع_القضية: c.subject,
-          المحكمة: c.court,
-          النوع: c.type,
-          الحالة: c.status,
-        }));
+      contextData = cases.slice(0, 6).map((c) => ({
+        كود: c.number,
+        موضوع_القضية: c.subject,
+        المحكمة: c.court,
+        النوع: c.type,
+        الحالة: c.status,
+      }));
     } else if (deptToUse === "clients" || deptToUse.includes("الموكلين")) {
       contextData = clients
         .slice(0, 6)

@@ -7,7 +7,7 @@ export function useApproveUserModal() {
   const [approvingUser, setApprovingUser] = useState<UserItem | null>(null);
   const [assignRoleTitle, setAssignRoleTitle] = useState<string>("");
   const [assignRoleKey, setAssignRoleKey] = useState<
-    "admin" | "lawyer" | "secretary" | "accountant"
+    "admin" | "supervisor" | "lawyer" | "secretary" | "accountant"
   >("lawyer");
   const [assignCanTransfer, setAssignCanTransfer] = useState<boolean>(false);
   const [assignCanAgreements, setAssignCanAgreements] = useState<boolean>(false);
