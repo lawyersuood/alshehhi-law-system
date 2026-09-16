@@ -3,7 +3,13 @@ import { TrendingUp, TrendingDown } from "lucide-react";
 import { Account, JournalEntry } from "./types";
 import { accountMovementInRange, netBalance, defaultPeriod, fmtMoney } from "./reportHelpers";
 
-export default function IncomeStatement({ accounts, entries }: { accounts: Account[]; entries: JournalEntry[] }) {
+export default function IncomeStatement({
+  accounts,
+  entries,
+}: {
+  accounts: Account[];
+  entries: JournalEntry[];
+}) {
   const initialPeriod = useMemo(() => defaultPeriod(), []);
   const [from, setFrom] = useState(initialPeriod.from);
   const [to, setTo] = useState(initialPeriod.to);
@@ -32,17 +38,29 @@ export default function IncomeStatement({ accounts, entries }: { accounts: Accou
     <div className="space-y-5">
       <div>
         <h2 className="text-xl font-bold text-slate-900">قائمة الدخل (الأرباح والخسائر)</h2>
-        <p className="text-xs text-slate-500">إجمالي الإيرادات والمصروفات المرحّلة خلال فترة محددة</p>
+        <p className="text-xs text-slate-500">
+          إجمالي الإيرادات والمصروفات المرحّلة خلال فترة محددة
+        </p>
       </div>
 
       <div className="flex flex-wrap items-end gap-3">
         <div>
           <label className="text-xs font-semibold text-slate-600 mb-1 block">من تاريخ</label>
-          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+          />
         </div>
         <div>
           <label className="text-xs font-semibold text-slate-600 mb-1 block">إلى تاريخ</label>
-          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+          />
         </div>
       </div>
 
@@ -55,7 +73,9 @@ export default function IncomeStatement({ accounts, entries }: { accounts: Accou
             <tbody>
               {revenueRows.map((r) => (
                 <tr key={r.account.id} className="border-b border-slate-50 last:border-0">
-                  <td className="px-4 py-2 font-mono text-xs text-slate-500 w-20">{r.account.code}</td>
+                  <td className="px-4 py-2 font-mono text-xs text-slate-500 w-20">
+                    {r.account.code}
+                  </td>
                   <td className="px-4 py-2 text-slate-800">{r.account.name}</td>
                   <td className="px-4 py-2 font-mono text-left">{fmtMoney(r.amount)}</td>
                 </tr>
@@ -89,7 +109,9 @@ export default function IncomeStatement({ accounts, entries }: { accounts: Accou
             <tbody>
               {expenseRows.map((r) => (
                 <tr key={r.account.id} className="border-b border-slate-50 last:border-0">
-                  <td className="px-4 py-2 font-mono text-xs text-slate-500 w-20">{r.account.code}</td>
+                  <td className="px-4 py-2 font-mono text-xs text-slate-500 w-20">
+                    {r.account.code}
+                  </td>
                   <td className="px-4 py-2 text-slate-800">{r.account.name}</td>
                   <td className="px-4 py-2 font-mono text-left">{fmtMoney(r.amount)}</td>
                 </tr>

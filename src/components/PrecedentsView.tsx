@@ -1,5 +1,16 @@
 import React from "react";
-import { BookOpen, Plus, Search, Landmark, Gavel, Scale, Copy, FileText, FileSpreadsheet, Trash2 } from "lucide-react";
+import {
+  BookOpen,
+  Plus,
+  Search,
+  Landmark,
+  Gavel,
+  Scale,
+  Copy,
+  FileText,
+  FileSpreadsheet,
+  Trash2,
+} from "lucide-react";
 import { Badge } from "./AuthScreens";
 import { LegalPrecedent, RolePermissions } from "../domain/types";
 
@@ -47,7 +58,8 @@ export default function PrecedentsView({
                 مكتبة المبادئ والقواعد القضائية
               </h2>
               <p className="text-xs text-slate-500 mt-1">
-                أرشيف ومرجع المبادئ والسوابق القضائية الصادرة عن محاكم التمييز والنقض والمحكمة الاتحادية العليا
+                أرشيف ومرجع المبادئ والسوابق القضائية الصادرة عن محاكم التمييز والنقض والمحكمة
+                الاتحادية العليا
               </p>
             </div>
           </div>
@@ -67,7 +79,10 @@ export default function PrecedentsView({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-1 items-center gap-2 min-w-[280px]">
             <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Search
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={16}
+              />
               <input
                 type="text"
                 value={precedentSearch}
@@ -148,9 +163,7 @@ export default function PrecedentsView({
                 </div>
               </div>
 
-              <h3 className="text-base font-bold text-slate-900 leading-snug mb-2">
-                {prec.title}
-              </h3>
+              <h3 className="text-base font-bold text-slate-900 leading-snug mb-2">{prec.title}</h3>
 
               <div className="flex items-center gap-2 text-xs font-mono text-slate-500 mb-3 bg-stone-50 px-3 py-1.5 rounded-lg border border-slate-100">
                 <Gavel size={14} className="text-amber-600" />
@@ -172,7 +185,9 @@ export default function PrecedentsView({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
-                    navigator.clipboard.writeText(`${prec.title}\nالمحكمة: ${prec.court_name}\nرقم الطعن: ${prec.appeal_number}\nالمبدأ: ${prec.summary_text}`);
+                    navigator.clipboard.writeText(
+                      `${prec.title}\nالمحكمة: ${prec.court_name}\nرقم الطعن: ${prec.appeal_number}\nالمبدأ: ${prec.summary_text}`,
+                    );
                     alert("تم نسخ المبدأ والقاعدة القانونية للحافظة بنجاح!");
                   }}
                   className="flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-slate-700 hover:bg-slate-50 transition font-medium"

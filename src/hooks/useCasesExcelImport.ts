@@ -5,5 +5,12 @@ export function useCasesExcelImport() {
   const [showCasesExcelModal, setShowCasesExcelModal] = useState(false);
   const [excelCasesParsed, setExcelCasesParsed] = useState<any[]>([]);
   const [casesExcelLoading, setCasesExcelLoading] = useState(false);
-  return { showCasesExcelModal, setShowCasesExcelModal, excelCasesParsed, setExcelCasesParsed, casesExcelLoading, setCasesExcelLoading };
+  return {
+    showCasesExcelModal,
+    setShowCasesExcelModal,
+    excelCasesParsed,
+    setExcelCasesParsed,
+    casesExcelLoading,
+    setCasesExcelLoading,
+  };
 }

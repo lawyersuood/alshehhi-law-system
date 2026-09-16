@@ -9,18 +9,23 @@ import { useSyncedTable } from "./useSyncedTable";
 
 export function useFinancialCoreData() {
   const [feeAgreements, setFeeAgreements] = useSyncedTable<FeeAgreement>(
-    "firm_fee_agreements", "fee_agreements", () => loadStorage("firm_fee_agreements", seedFeeAgreements)
+    "firm_fee_agreements",
+    "fee_agreements",
+    () => loadStorage("firm_fee_agreements", seedFeeAgreements),
   );
-  const [payments, setPayments] = useSyncedTable<PaymentReceipt>(
-    "firm_payments", "payments", () => loadStorage("firm_payments", seedPayments)
+  const [payments, setPayments] = useSyncedTable<PaymentReceipt>("firm_payments", "payments", () =>
+    loadStorage("firm_payments", seedPayments),
   );
-  const [invoices, setInvoices] = useSyncedTable<Invoice>(
-    "firm_invoices", "invoices", () => loadStorage("firm_invoices", seedInvoices)
+  const [invoices, setInvoices] = useSyncedTable<Invoice>("firm_invoices", "invoices", () =>
+    loadStorage("firm_invoices", seedInvoices),
   );
 
   return {
-    feeAgreements, setFeeAgreements,
-    payments, setPayments,
-    invoices, setInvoices,
+    feeAgreements,
+    setFeeAgreements,
+    payments,
+    setPayments,
+    invoices,
+    setInvoices,
   };
 }

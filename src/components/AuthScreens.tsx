@@ -5,13 +5,42 @@ import Logo from "./Logo";
 import { supabase } from "../supabaseClient";
 import { hashPassword, verifyPassword, isHashedPassword } from "../cryptoUtils";
 import {
-  AlertCircle, CheckCircle2, Hourglass, Key, Lock, RefreshCw, ShieldCheck,
-  UserPlus, Eye, EyeOff, Mail, X, Copy, Check, Database, Code,
-  MessageSquare, ShieldAlert, Info, LogOut, Clock, User,
+  AlertCircle,
+  CheckCircle2,
+  Hourglass,
+  Key,
+  Lock,
+  RefreshCw,
+  ShieldCheck,
+  UserPlus,
+  Eye,
+  EyeOff,
+  Mail,
+  X,
+  Copy,
+  Check,
+  Database,
+  Code,
+  MessageSquare,
+  ShieldAlert,
+  Info,
+  LogOut,
+  Clock,
+  User,
 } from "lucide-react";
 
-export const Badge = ({ className, children }: { className?: string; children: React.ReactNode }) => (
-  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-tight ${className}`}>{children}</span>
+export const Badge = ({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) => (
+  <span
+    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-tight ${className}`}
+  >
+    {children}
+  </span>
 );
 
 export const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
@@ -162,19 +191,27 @@ export interface SupabaseSqlModalProps {
 }
 
 export const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onClose }) => {
-  const [activeTab, setActiveTab] = useState<"schema" | "rls" | "trigger" | "whatsapp" | "react">("schema");
+  const [activeTab, setActiveTab] = useState<"schema" | "rls" | "trigger" | "whatsapp" | "react">(
+    "schema",
+  );
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
   const getActiveCode = () => {
     switch (activeTab) {
-      case "schema": return SUPABASE_PROFILES_SQL;
-      case "rls": return SUPABASE_RLS_SQL;
-      case "trigger": return SUPABASE_TRIGGER_SQL;
-      case "whatsapp": return SUPABASE_WHATSAPP_MESSAGES_SQL;
-      case "react": return REACT_PROTECTED_ROUTE_SQL;
-      default: return SUPABASE_PROFILES_SQL;
+      case "schema":
+        return SUPABASE_PROFILES_SQL;
+      case "rls":
+        return SUPABASE_RLS_SQL;
+      case "trigger":
+        return SUPABASE_TRIGGER_SQL;
+      case "whatsapp":
+        return SUPABASE_WHATSAPP_MESSAGES_SQL;
+      case "react":
+        return REACT_PROTECTED_ROUTE_SQL;
+      default:
+        return SUPABASE_PROFILES_SQL;
     }
   };
 
@@ -194,11 +231,18 @@ export const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onCl
               <Database size={20} />
             </div>
             <div>
-              <h3 className="font-bold text-white text-base">أكواد Supabase SQL و RLS و WhatsApp Edge Function</h3>
-              <p className="text-xs text-slate-400">نظام إدارة العضويات، حظر الوصول (RLS) ومزامنة جدول whatsapp_messages و Edge Function</p>
+              <h3 className="font-bold text-white text-base">
+                أكواد Supabase SQL و RLS و WhatsApp Edge Function
+              </h3>
+              <p className="text-xs text-slate-400">
+                نظام إدارة العضويات، حظر الوصول (RLS) ومزامنة جدول whatsapp_messages و Edge Function
+              </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <button
+            onClick={onClose}
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+          >
             <X size={20} />
           </button>
         </div>
@@ -230,11 +274,16 @@ export const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onCl
         <div className="p-6 overflow-y-auto flex-1 space-y-4">
           <div className="flex items-center justify-between bg-slate-800/60 p-3 rounded-xl border border-slate-700/60 text-xs text-slate-300">
             <span>
-              {activeTab === "schema" && "أنشئ هذا الجدول في Supabase SQL Editor لربط بيانات البروفايل مع Supabase Auth بحالة افتراضية 'pending'."}
-              {activeTab === "rls" && "تفعيل RLS ودالة is_approved_user() لحظر أي محاولة قراءة أو كتابة على القضايا والجلسات للمستخدمين المعلقين."}
-              {activeTab === "trigger" && "ربط قاعدة البيانات بـ Auth Trigger لإدراج السجل تلقائياً بحالة معلقة بمجرد قيام المستخدم بالتسجيل."}
-              {activeTab === "whatsapp" && "جدول whatsapp_messages مع تفعيل Supabase Realtime ودعم Edge Function: send-whatsapp-message."}
-              {activeTab === "react" && "مكون حماية المسارات (Protected Routes) في React لربط الواجهة وحجب الشاشات عن الحسابات غير المعتمَدة."}
+              {activeTab === "schema" &&
+                "أنشئ هذا الجدول في Supabase SQL Editor لربط بيانات البروفايل مع Supabase Auth بحالة افتراضية 'pending'."}
+              {activeTab === "rls" &&
+                "تفعيل RLS ودالة is_approved_user() لحظر أي محاولة قراءة أو كتابة على القضايا والجلسات للمستخدمين المعلقين."}
+              {activeTab === "trigger" &&
+                "ربط قاعدة البيانات بـ Auth Trigger لإدراج السجل تلقائياً بحالة معلقة بمجرد قيام المستخدم بالتسجيل."}
+              {activeTab === "whatsapp" &&
+                "جدول whatsapp_messages مع تفعيل Supabase Realtime ودعم Edge Function: send-whatsapp-message."}
+              {activeTab === "react" &&
+                "مكون حماية المسارات (Protected Routes) في React لربط الواجهة وحجب الشاشات عن الحسابات غير المعتمَدة."}
             </span>
             <button
               onClick={() => handleCopy(activeTab, getActiveCode())}
@@ -257,7 +306,10 @@ export const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onCl
           <span className="flex items-center gap-1.5 text-amber-400 font-medium">
             <ShieldCheck size={14} /> جاهز للتطبيق المباشر في Supabase SQL Editor
           </span>
-          <button onClick={onClose} className="px-4 py-2 rounded-xl bg-slate-800 text-white font-bold hover:bg-slate-700 transition">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-xl bg-slate-800 text-white font-bold hover:bg-slate-700 transition"
+          >
             إغلاق
           </button>
         </div>
@@ -268,7 +320,7 @@ export const SupabaseSqlModal: React.FC<SupabaseSqlModalProps> = ({ isOpen, onCl
 
 export const PendingApprovalScreen = ({
   currentUser,
-  onLogout
+  onLogout,
 }: {
   currentUser: UserItem;
   onLogout: () => void;
@@ -294,7 +346,9 @@ export const PendingApprovalScreen = ({
               <Hourglass size={30} />
             </div>
             <div>
-              <h2 className="text-xl font-black text-[#0c4a47]">طلب تفعيل الحساب قيد الانتظار والاعتماد</h2>
+              <h2 className="text-xl font-black text-[#0c4a47]">
+                طلب تفعيل الحساب قيد الانتظار والاعتماد
+              </h2>
               <p className="text-xs font-bold text-[#b89b6a] mt-0.5">بانتظار موافقة مدير النظام</p>
             </div>
           </div>
@@ -310,7 +364,9 @@ export const PendingApprovalScreen = ({
             أهلاً بك، {currentUser.name}! تم تقديم طلب تسجيل حسابك بنجاح.
           </p>
           <p>
-            وفقاً لسياسة الأمان والاعتماد المعتمدة في النظام، تظل جميع صلاحيات الوصول ومحتويات النظام محجوبة حتى يتلقى حسابك تفعيلاً وموافقة صريحة من مدير النظام (المحامي سعود أحمد الشحي).
+            وفقاً لسياسة الأمان والاعتماد المعتمدة في النظام، تظل جميع صلاحيات الوصول ومحتويات
+            النظام محجوبة حتى يتلقى حسابك تفعيلاً وموافقة صريحة من مدير النظام (المحامي سعود أحمد
+            الشحي).
           </p>
         </div>
 
@@ -321,12 +377,25 @@ export const PendingApprovalScreen = ({
             <span className="text-slate-400 font-mono font-normal">ID: #{currentUser.id}</span>
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-slate-700 pt-1">
-            <p><b>الاسم الكامل:</b> {currentUser.name}</p>
-            <p><b>البريد الإلكتروني:</b> {currentUser.email}</p>
-            <p><b>رقم الهاتف:</b> {currentUser.phone}</p>
-            <p><b>الدور المخصص:</b> {currentUser.roleTitle}</p>
-            <p><b>حالة الطلب الآن:</b> <span className="text-amber-700 font-bold">معلق بانتظار المدير (Pending)</span></p>
-            <p><b>حالة الوصول:</b> <span className="text-red-600 font-bold">محظور مؤقتاً</span></p>
+            <p>
+              <b>الاسم الكامل:</b> {currentUser.name}
+            </p>
+            <p>
+              <b>البريد الإلكتروني:</b> {currentUser.email}
+            </p>
+            <p>
+              <b>رقم الهاتف:</b> {currentUser.phone}
+            </p>
+            <p>
+              <b>الدور المخصص:</b> {currentUser.roleTitle}
+            </p>
+            <p>
+              <b>حالة الطلب الآن:</b>{" "}
+              <span className="text-amber-700 font-bold">معلق بانتظار المدير (Pending)</span>
+            </p>
+            <p>
+              <b>حالة الوصول:</b> <span className="text-red-600 font-bold">محظور مؤقتاً</span>
+            </p>
           </div>
         </div>
 
@@ -334,7 +403,10 @@ export const PendingApprovalScreen = ({
         {checkState === "still_pending" && (
           <div className="p-3.5 rounded-xl bg-amber-100 border border-amber-300 text-xs text-amber-900 font-bold flex items-center gap-2">
             <Info size={16} className="text-amber-600 shrink-0" />
-            <span>طلبك لا يزال قيد المراجعة والاعتماد لدى مدير النظام. سيتم تفعيل حسابك فور الموافقة عليه من لوحة تحكم المستخدمين والصلاحيات.</span>
+            <span>
+              طلبك لا يزال قيد المراجعة والاعتماد لدى مدير النظام. سيتم تفعيل حسابك فور الموافقة
+              عليه من لوحة تحكم المستخدمين والصلاحيات.
+            </span>
           </div>
         )}
 
@@ -361,7 +433,8 @@ export const PendingApprovalScreen = ({
               <Clock size={16} className="text-[#b89b6a] shrink-0" /> خطوة الاعتماد:
             </p>
             <p>
-              يوجد طلبك الآن في قائمة الطلبات المعلقة داخل لوحة تحكم "المستخدمون والصلاحيات" لدى مدير المكتب. فور الضغط على (قبول وتفعيل الحساب)، ستتمكن فوراً من دخول النظام.
+              يوجد طلبك الآن في قائمة الطلبات المعلقة داخل لوحة تحكم "المستخدمون والصلاحيات" لدى
+              مدير المكتب. فور الضغط على (قبول وتفعيل الحساب)، ستتمكن فوراً من دخول النظام.
             </p>
           </div>
         </div>
@@ -379,15 +452,37 @@ export const EmptyState = ({ icon: Icon, text }: { icon: any; text: string }) =>
   </div>
 );
 
-export const Modal = ({ title, onClose, children, wide }: { title: string; onClose: () => void; children: React.ReactNode; wide?: boolean }) => (
-  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#08130f]/65 p-2 sm:p-4 backdrop-blur-sm animate-in fade-in duration-150" onClick={onClose}>
-    <div className={`max-h-[92vh] w-full ${wide ? "max-w-4xl" : "max-w-xl"} overflow-y-auto rounded-t-[24px] sm:rounded-[24px] bg-white shadow-[0_30px_80px_-20px_rgb(8,19,15,0.45)] custom-scrollbar animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200`} onClick={(e) => e.stopPropagation()}>
+export const Modal = ({
+  title,
+  onClose,
+  children,
+  wide,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+  wide?: boolean;
+}) => (
+  <div
+    className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-[#08130f]/65 p-2 sm:p-4 backdrop-blur-sm animate-in fade-in duration-150"
+    onClick={onClose}
+  >
+    <div
+      className={`max-h-[92vh] w-full ${wide ? "max-w-4xl" : "max-w-xl"} overflow-y-auto rounded-t-[24px] sm:rounded-[24px] bg-white shadow-[0_30px_80px_-20px_rgb(8,19,15,0.45)] custom-scrollbar animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200`}
+      onClick={(e) => e.stopPropagation()}
+    >
       <div className="flex items-center justify-between border-b border-slate-100 px-4 sm:px-6 py-4 sm:py-5 sticky top-0 bg-white/95 backdrop-blur z-10">
         <h3 className="text-base sm:text-lg font-black text-[#0D382B] truncate flex items-center gap-2">
           <span className="h-4 w-1 rounded-full bg-[#C5A059] shrink-0" />
           {title}
         </h3>
-        <button onClick={onClose} className="rounded-full p-1.5 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors hover:text-slate-700 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center" aria-label="إغلاق"><X size={20} /></button>
+        <button
+          onClick={onClose}
+          className="rounded-full p-1.5 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors hover:text-slate-700 transition-colors min-h-[36px] min-w-[36px] flex items-center justify-center"
+          aria-label="إغلاق"
+        >
+          <X size={20} />
+        </button>
       </div>
       <div className="p-4 sm:p-6">{children}</div>
     </div>
@@ -408,7 +503,12 @@ export interface LoginScreenProps {
   onOpenSqlModal: () => void;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegister, onOpenSqlModal }) => {
+export const LoginScreen: React.FC<LoginScreenProps> = ({
+  users,
+  onLogin,
+  onRegister,
+  onOpenSqlModal,
+}) => {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [rememberMe, setRememberMe] = useState<boolean>(() => {
     try {
@@ -439,7 +539,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
   const [regEmail, setRegEmail] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regPassword, setRegPassword] = useState("");
-  const [regRoleKey, setRegRoleKey] = useState<"admin" | "lawyer" | "secretary" | "accountant">("lawyer");
+  const [regRoleKey, setRegRoleKey] = useState<"admin" | "lawyer" | "secretary" | "accountant">(
+    "lawyer",
+  );
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -464,7 +566,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
       if (rememberMe) {
         localStorage.setItem("law_firm_remember_me", "true");
         localStorage.setItem("law_firm_saved_email", emailInput.trim());
-              } else {
+      } else {
         localStorage.removeItem("law_firm_remember_me");
         localStorage.removeItem("law_firm_saved_email");
         localStorage.removeItem("law_firm_saved_pass");
@@ -477,7 +579,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
     try {
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email: cleanedEmail,
-        password: cleanedPass
+        password: cleanedPass,
       });
 
       if (!authError && authData?.user) {
@@ -487,9 +589,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
         let profileFound = false;
 
         const { data: profileRow } = await supabase
-          .from('profiles')
-          .select('status')
-          .eq('id', user.id)
+          .from("profiles")
+          .select("status")
+          .eq("id", user.id)
           .maybeSingle();
 
         if (profileRow) {
@@ -498,9 +600,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
         } else {
           // Fallback query by email if id query did not return
           const { data: profileByEmail } = await supabase
-            .from('profiles')
-            .select('status')
-            .eq('email', user.email?.toLowerCase())
+            .from("profiles")
+            .select("status")
+            .eq("email", user.email?.toLowerCase())
             .maybeSingle();
           if (profileByEmail) {
             statusFromDb = profileByEmail.status;
@@ -509,7 +611,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
         }
 
         // If record was removed from profiles or status is rejected/deleted
-        if (!profileFound || statusFromDb === 'rejected' || statusFromDb === 'deleted' || statusFromDb === 'موقف' || statusFromDb === 'معطل') {
+        if (
+          !profileFound ||
+          statusFromDb === "rejected" ||
+          statusFromDb === "deleted" ||
+          statusFromDb === "موقف" ||
+          statusFromDb === "معطل"
+        ) {
           alert("This account has been revoked or removed by the admin");
           await supabase.auth.signOut();
           setErrorMsg("This account has been revoked or removed by the admin");
@@ -517,7 +625,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
           return;
         }
 
-        if (statusFromDb === 'pending' || statusFromDb === 'معلق') {
+        if (statusFromDb === "pending" || statusFromDb === "معلق") {
           alert("Your account is pending admin approval");
           await supabase.auth.signOut();
           setErrorMsg("Your account is pending admin approval");
@@ -525,7 +633,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
           return;
         }
 
-        if (statusFromDb !== 'approved' && statusFromDb !== 'نشط' && statusFromDb !== 'active') {
+        if (statusFromDb !== "approved" && statusFromDb !== "نشط" && statusFromDb !== "active") {
           alert("This account has been revoked or removed by the admin");
           await supabase.auth.signOut();
           setErrorMsg("This account has been revoked or removed by the admin");
@@ -547,11 +655,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
 
     // 2. المطابقة مع سجل المستخدمين المسجلين في النظام
     const targetUser = users.find(
-      (u) => u.email.toLowerCase() === cleanedEmail || u.name.toLowerCase() === cleanedEmail
+      (u) => u.email.toLowerCase() === cleanedEmail || u.name.toLowerCase() === cleanedEmail,
     );
 
     if (!targetUser) {
-      setErrorMsg("اسم المستخدم أو البريد الإلكتروني غير مسجل بالنظام. يرجى التأكد من بيانات الحساب.");
+      setErrorMsg(
+        "اسم المستخدم أو البريد الإلكتروني غير مسجل بالنظام. يرجى التأكد من بيانات الحساب.",
+      );
       setIsSubmitting(false);
       return;
     }
@@ -576,7 +686,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
     // يُرفض دخوله صراحة بدل قبول قيمة افتراضية معروفة (كانت "123456" سابقاً، وهي ثغرة أمنية حرجة).
     const userPass = targetUser.password;
     if (!userPass) {
-      setErrorMsg("هذا الحساب غير مُهيّأ بكلمة مرور صالحة. يرجى التواصل مع مدير النظام لتعيين كلمة مرور.");
+      setErrorMsg(
+        "هذا الحساب غير مُهيّأ بكلمة مرور صالحة. يرجى التواصل مع مدير النظام لتعيين كلمة مرور.",
+      );
       setIsSubmitting(false);
       return;
     }
@@ -600,7 +712,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
         const silentPass = cleanedPass.length >= 6 ? cleanedPass : `${cleanedPass}-firm2024`;
         const { error: silentSignInErr } = await supabase.auth.signInWithPassword({
           email: silentEmail,
-          password: silentPass
+          password: silentPass,
         });
         if (silentSignInErr) {
           await supabase.auth.signUp({ email: silentEmail, password: silentPass });
@@ -645,9 +757,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
           data: {
             full_name: cleanName,
             phone: cleanPhone,
-            role: regRoleKey || "lawyer"
-          }
-        }
+            role: regRoleKey || "lawyer",
+          },
+        },
       });
 
       if (authError) {
@@ -658,44 +770,53 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
 
       // 2. Direct insertion/upsert into public.profiles table
       if (registeredUserId) {
-        const { error: profileError } = await supabase.from("profiles").upsert([
-          {
-            id: registeredUserId,
-            email: cleanEmail,
-            full_name: cleanName,
-            phone: cleanPhone || "0500000000",
-            status: "pending",
-            role: regRoleKey || "lawyer"
-          }
-        ], { onConflict: "id" });
-
-        if (profileError) {
-          console.warn("Supabase profiles table sync note:", profileError.message);
-          const { error: profileEmailErr } = await supabase.from("profiles").upsert([
+        const { error: profileError } = await supabase.from("profiles").upsert(
+          [
             {
               id: registeredUserId,
               email: cleanEmail,
               full_name: cleanName,
               phone: cleanPhone || "0500000000",
               status: "pending",
-              role: regRoleKey || "lawyer"
-            }
-          ], { onConflict: "email" });
+              role: regRoleKey || "lawyer",
+            },
+          ],
+          { onConflict: "id" },
+        );
+
+        if (profileError) {
+          console.warn("Supabase profiles table sync note:", profileError.message);
+          const { error: profileEmailErr } = await supabase.from("profiles").upsert(
+            [
+              {
+                id: registeredUserId,
+                email: cleanEmail,
+                full_name: cleanName,
+                phone: cleanPhone || "0500000000",
+                status: "pending",
+                role: regRoleKey || "lawyer",
+              },
+            ],
+            { onConflict: "email" },
+          );
 
           if (profileEmailErr) {
             console.warn("Secondary profile sync note:", profileEmailErr.message);
           }
         }
       } else {
-        const { error: profileEmailErr } = await supabase.from("profiles").upsert([
-          {
-            email: cleanEmail,
-            full_name: cleanName,
-            phone: cleanPhone || "0500000000",
-            status: "pending",
-            role: regRoleKey || "lawyer"
-          }
-        ], { onConflict: "email" });
+        const { error: profileEmailErr } = await supabase.from("profiles").upsert(
+          [
+            {
+              email: cleanEmail,
+              full_name: cleanName,
+              phone: cleanPhone || "0500000000",
+              status: "pending",
+              role: regRoleKey || "lawyer",
+            },
+          ],
+          { onConflict: "email" },
+        );
 
         if (profileEmailErr) {
           console.warn("Primary profile email sync note:", profileEmailErr.message);
@@ -706,7 +827,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
         admin: "مدير النظام",
         lawyer: "محامٍ ومستشار",
         secretary: "إدارة وسكرتارية",
-        accountant: "محاسب قانوني"
+        accountant: "محاسب قانوني",
       };
 
       // نخزّن كلمة المرور مُجزّأة (pbkdf2) في سجل النظام المحلي بدل النص العادي
@@ -718,7 +839,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
         phone: cleanPhone || "0500000000",
         password: hashedPassForStorage,
         roleKey: regRoleKey,
-        roleTitle: roleTitleMap[regRoleKey]
+        roleTitle: roleTitleMap[regRoleKey],
       });
 
       setSuccessMsg("✅ تم تسجيل الحساب بنجاح! طلبك الآن في انتظار اعتماد وتفعيل مدير النظام.");
@@ -730,7 +851,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
       setAuthMode("login");
     } catch (err: any) {
       console.error("Registration submission error:", err);
-      alert('Registration Failed: ' + (err?.message || "Error during registration"));
+      alert("Registration Failed: " + (err?.message || "Error during registration"));
       setErrorMsg(err?.message || "حدث خطأ أثناء التواصل مع الخادم.");
     } finally {
       setIsSubmitting(false);
@@ -738,7 +859,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
   };
 
   return (
-    <div dir="rtl" className="relative min-h-screen w-full overflow-hidden bg-[#F4F8F6] text-slate-800 flex flex-col justify-between selection:bg-[#C5A059] selection:text-white">
+    <div
+      dir="rtl"
+      className="relative min-h-screen w-full overflow-hidden bg-[#F4F8F6] text-slate-800 flex flex-col justify-between selection:bg-[#C5A059] selection:text-white"
+    >
       {/* توهجات خلفية ناعمة لعمق بصري بدون تغيير الهوية اللونية */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-32 -left-24 h-96 w-96 rounded-full bg-[#0D382B]/[0.06] blur-3xl" />
@@ -773,17 +897,29 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
           {/* تبويب الدخول / التسجيل */}
           <div className="flex rounded-2xl bg-slate-100/70 p-1.5 border border-slate-200/70 text-xs font-bold gap-1">
             <button
-              onClick={() => { setAuthMode("login"); setErrorMsg(null); setSuccessMsg(null); }}
+              onClick={() => {
+                setAuthMode("login");
+                setErrorMsg(null);
+                setSuccessMsg(null);
+              }}
               className={`flex-1 py-2.5 rounded-[14px] transition-all duration-200 flex items-center justify-center gap-2 ${
-                authMode === "login" ? "bg-[#0D382B] text-white font-black shadow-[0_6px_16px_-6px_rgb(13,56,43,0.5)]" : "text-slate-500 hover:text-[#0D382B]"
+                authMode === "login"
+                  ? "bg-[#0D382B] text-white font-black shadow-[0_6px_16px_-6px_rgb(13,56,43,0.5)]"
+                  : "text-slate-500 hover:text-[#0D382B]"
               }`}
             >
               <Key size={15} /> تسجيل الدخول
             </button>
             <button
-              onClick={() => { setAuthMode("register"); setErrorMsg(null); setSuccessMsg(null); }}
+              onClick={() => {
+                setAuthMode("register");
+                setErrorMsg(null);
+                setSuccessMsg(null);
+              }}
               className={`flex-1 py-2.5 rounded-[14px] transition-all duration-200 flex items-center justify-center gap-2 ${
-                authMode === "register" ? "bg-[#0D382B] text-white font-black shadow-[0_6px_16px_-6px_rgb(13,56,43,0.5)]" : "text-slate-500 hover:text-[#0D382B]"
+                authMode === "register"
+                  ? "bg-[#0D382B] text-white font-black shadow-[0_6px_16px_-6px_rgb(13,56,43,0.5)]"
+                  : "text-slate-500 hover:text-[#0D382B]"
               }`}
             >
               <UserPlus size={15} /> طلب انضمام جديد
@@ -889,13 +1025,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
                   </>
                 )}
               </button>
-
             </form>
           ) : (
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">الاسم الكامل *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    الاسم الكامل *
+                  </label>
                   <input
                     type="text"
                     required
@@ -908,7 +1045,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">البريد الإلكتروني *</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      البريد الإلكتروني *
+                    </label>
                     <input
                       type="email"
                       required
@@ -919,7 +1058,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">رقم الهاتف</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      رقم الهاتف
+                    </label>
                     <input
                       type="tel"
                       value={regPhone}
@@ -931,7 +1072,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">كلمة المرور للحساب *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    كلمة المرور للحساب *
+                  </label>
                   <input
                     type="password"
                     required
@@ -943,7 +1086,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">الصفة الوظيفية المطلوب الانضمام بها *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    الصفة الوظيفية المطلوب الانضمام بها *
+                  </label>
                   <select
                     value={regRoleKey}
                     onChange={(e) => setRegRoleKey(e.target.value as any)}
@@ -960,9 +1105,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
                   <p className="font-bold flex items-center gap-1.5 text-[#e5c388]">
                     <Hourglass size={14} className="shrink-0" /> آلية تفعيل الحساب:
                   </p>
-                  <p>
-                    يتم إنشاء الحساب فوراً وتقديم الطلب لمراجعة واعتماد مدير النظام.
-                  </p>
+                  <p>يتم إنشاء الحساب فوراً وتقديم الطلب لمراجعة واعتماد مدير النظام.</p>
                 </div>
               </div>
 
@@ -995,7 +1138,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
                 <Key className="text-amber-400" size={18} /> استعادة حساب وكلمة المرور
               </h3>
               <button
-                onClick={() => { setShowForgotModal(false); setForgotSuccessMsg(null); }}
+                onClick={() => {
+                  setShowForgotModal(false);
+                  setForgotSuccessMsg(null);
+                }}
                 className="text-slate-400 hover:text-white"
               >
                 <X size={18} />
@@ -1009,7 +1155,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
                 </div>
                 <p className="leading-relaxed">{forgotSuccessMsg}</p>
                 <button
-                  onClick={() => { setShowForgotModal(false); setForgotSuccessMsg(null); }}
+                  onClick={() => {
+                    setShowForgotModal(false);
+                    setForgotSuccessMsg(null);
+                  }}
                   className="w-full mt-2 py-2 rounded-xl bg-emerald-600 text-white font-bold hover:bg-emerald-500 transition"
                 >
                   العودة لتسجيل الدخول
@@ -1021,19 +1170,22 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
                   e.preventDefault();
                   if (!forgotEmail.trim()) return;
                   const matchedUser = users.find(
-                    (u) => u.email.toLowerCase() === forgotEmail.trim().toLowerCase()
+                    (u) => u.email.toLowerCase() === forgotEmail.trim().toLowerCase(),
                   );
                   setForgotSuccessMsg(
-                    `تم إرسال تعليمات ورابط إعادة تعيين كلمة المرور إلى البريد الإلكتروني (${forgotEmail}). يرجى التحقق من صندوق الوارد.`
+                    `تم إرسال تعليمات ورابط إعادة تعيين كلمة المرور إلى البريد الإلكتروني (${forgotEmail}). يرجى التحقق من صندوق الوارد.`,
                   );
                 }}
                 className="space-y-4 text-xs"
               >
                 <p className="text-slate-300 leading-relaxed">
-                  أدخل البريد الإلكتروني المسجل في النظام لتلقي رابط تعيين كلمة المرور والرمز المؤقت للوصول.
+                  أدخل البريد الإلكتروني المسجل في النظام لتلقي رابط تعيين كلمة المرور والرمز المؤقت
+                  للوصول.
                 </p>
                 <div>
-                  <label className="block text-xs font-bold text-slate-300 mb-1">البريد الإلكتروني المسجل *</label>
+                  <label className="block text-xs font-bold text-slate-300 mb-1">
+                    البريد الإلكتروني المسجل *
+                  </label>
                   <input
                     type="email"
                     required
@@ -1066,7 +1218,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin, onRegi
 
       {/* تذييل الصفحة */}
       <footer className="px-6 py-4 border-t border-slate-800/80 bg-slate-900/40 text-center text-xs text-slate-500">
-        <p>© {new Date().getFullYear()} مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية • جميع الحقوق محفوظة</p>
+        <p>
+          © {new Date().getFullYear()} مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية • جميع
+          الحقوق محفوظة
+        </p>
       </footer>
     </div>
   );

@@ -51,7 +51,7 @@ accountingRouter.get("/accounts", async (_req, res) => {
     const [rows] = await pool.query(
       `SELECT id, code, name, type, parent_id AS parentId, is_active AS isActive,
               is_system AS isSystem, notes, created_at AS createdAt
-       FROM accounts ORDER BY code ASC`
+       FROM accounts ORDER BY code ASC`,
     );
     res.json(rows);
   } catch (err: any) {
@@ -71,7 +71,7 @@ accountingRouter.post("/accounts", async (req: AuthedRequest, res) => {
     await pool.query(
       `INSERT INTO accounts (id, code, name, type, parent_id, is_active, is_system, notes, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [id, code, name, type, parentId || null, isActive ? 1 : 0, isSystem ? 1 : 0, notes || null]
+      [id, code, name, type, parentId || null, isActive ? 1 : 0, isSystem ? 1 : 0, notes || null],
     );
     res.status(201).json({ id });
   } catch (err: any) {
@@ -89,7 +89,7 @@ accountingRouter.put("/accounts/:id", async (req: AuthedRequest, res) => {
     const pool = getPool();
     await pool.query(
       `UPDATE accounts SET name = ?, type = ?, parent_id = ?, is_active = ?, notes = ? WHERE id = ?`,
-      [name, type, parentId || null, isActive ? 1 : 0, notes || null, req.params.id]
+      [name, type, parentId || null, isActive ? 1 : 0, notes || null, req.params.id],
     );
     res.json({ success: true });
   } catch (err: any) {
@@ -105,7 +105,7 @@ accountingRouter.get("/journal-entries", async (_req, res) => {
     const [entries]: any = await pool.query(
       `SELECT id, entry_number AS entryNumber, date, description, reference, status,
               created_at AS createdAt, created_by AS createdBy, posted_at AS postedAt, posted_by AS postedBy
-       FROM journal_entries ORDER BY date DESC, entry_number DESC`
+       FROM journal_entries ORDER BY date DESC, entry_number DESC`,
     );
     if (entries.length === 0) {
       res.json([]);
@@ -115,7 +115,7 @@ accountingRouter.get("/journal-entries", async (_req, res) => {
     const [lines]: any = await pool.query(
       `SELECT id, journal_entry_id AS journalEntryId, account_id AS accountId, debit, credit, description
        FROM journal_lines WHERE journal_entry_id IN (?) ORDER BY line_order ASC`,
-      [ids]
+      [ids],
     );
     const linesByEntry = new Map<string, any[]>();
     for (const l of lines) {
@@ -140,7 +140,11 @@ accountingRouter.get("/journal-entries", async (_req, res) => {
 accountingRouter.post("/journal-entries", async (req: AuthedRequest, res) => {
   const { entryNumber, date, description, reference, lines, status } = req.body || {};
   if (!entryNumber || !date || !description || !Array.isArray(lines) || lines.length < 2) {
-    res.status(400).json({ error: "بيانات القيد غير مكتملة (يجب توفر رقم القيد والتاريخ والوصف وسطرين على الأقل)." });
+    res
+      .status(400)
+      .json({
+        error: "بيانات القيد غير مكتملة (يجب توفر رقم القيد والتاريخ والوصف وسطرين على الأقل).",
+      });
     return;
   }
   const totalDebit = lines.reduce((s: number, l: any) => s + (Number(l.debit) || 0), 0);
@@ -169,14 +173,22 @@ accountingRouter.post("/journal-entries", async (req: AuthedRequest, res) => {
         req.authUser?.email || req.authUser?.id || null,
         finalStatus === "posted" ? new Date() : null,
         finalStatus === "posted" ? req.authUser?.email || req.authUser?.id || null : null,
-      ]
+      ],
     );
     let order = 0;
     for (const l of lines) {
       await conn.query(
         `INSERT INTO journal_lines (id, journal_entry_id, account_id, debit, credit, description, line_order)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [randomUUID(), id, l.accountId, Number(l.debit) || 0, Number(l.credit) || 0, l.description || null, order++]
+        [
+          randomUUID(),
+          id,
+          l.accountId,
+          Number(l.debit) || 0,
+          Number(l.credit) || 0,
+          l.description || null,
+          order++,
+        ],
       );
     }
     await conn.commit();

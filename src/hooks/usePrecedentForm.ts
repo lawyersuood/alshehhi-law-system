@@ -16,9 +16,13 @@ export function usePrecedentForm() {
   const [precedentWordFile, setPrecedentWordFile] = useState<File | null>(null);
 
   return {
-    precedentLoading, setPrecedentLoading,
-    precedentForm, setPrecedentForm,
-    precedentPdfFile, setPrecedentPdfFile,
-    precedentWordFile, setPrecedentWordFile,
+    precedentLoading,
+    setPrecedentLoading,
+    precedentForm,
+    setPrecedentForm,
+    precedentPdfFile,
+    setPrecedentPdfFile,
+    precedentWordFile,
+    setPrecedentWordFile,
   };
 }

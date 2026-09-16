@@ -42,7 +42,10 @@ export const BANK_LS_KEYS = {
 export const CURRENCIES = ["AED", "USD", "EUR", "GBP", "SAR"];
 
 // الرصيد الحالي لحساب بنكي = الرصيد الافتتاحي + الإيداعات - السحوبات
-export function computeBankBalance(account: Pick<BankAccount, "id" | "openingBalance">, transactions: BankTransaction[]): number {
+export function computeBankBalance(
+  account: Pick<BankAccount, "id" | "openingBalance">,
+  transactions: BankTransaction[],
+): number {
   let balance = account.openingBalance;
   for (const t of transactions) {
     if (t.bankAccountId !== account.id) continue;

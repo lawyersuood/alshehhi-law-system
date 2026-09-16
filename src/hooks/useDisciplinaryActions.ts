@@ -6,7 +6,7 @@ import { loadStorage, saveStorage } from "../domain/storageAndMessaging";
 
 export function useDisciplinaryActions() {
   const [disciplinaryActions, setDisciplinaryActions] = useState<EmployeeDisciplinaryAction[]>(() =>
-    loadStorage("firm_employee_disciplinary_actions", [])
+    loadStorage("firm_employee_disciplinary_actions", []),
   );
 
   useEffect(() => {

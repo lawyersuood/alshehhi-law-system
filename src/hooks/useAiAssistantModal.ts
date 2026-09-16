@@ -13,13 +13,21 @@ export function useAiAssistantModal() {
   const [aiMode, setAiMode] = useState<string>("advice");
 
   return {
-    isAiAssistantEnabled, setIsAiAssistantEnabled,
-    showAiModal, setShowAiModal,
-    aiDepartment, setAiDepartment,
-    aiQuery, setAiQuery,
-    aiResponse, setAiResponse,
-    aiLoading, setAiLoading,
-    aiError, setAiError,
-    aiMode, setAiMode,
+    isAiAssistantEnabled,
+    setIsAiAssistantEnabled,
+    showAiModal,
+    setShowAiModal,
+    aiDepartment,
+    setAiDepartment,
+    aiQuery,
+    setAiQuery,
+    aiResponse,
+    setAiResponse,
+    aiLoading,
+    setAiLoading,
+    aiError,
+    setAiError,
+    aiMode,
+    setAiMode,
   };
 }

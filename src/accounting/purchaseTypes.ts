@@ -69,7 +69,9 @@ export function lineNetAmount(line: Pick<PurchaseLineItem, "quantity" | "unitPri
   return (Number(line.quantity) || 0) * (Number(line.unitPrice) || 0);
 }
 
-export function lineVatAmount(line: Pick<PurchaseLineItem, "quantity" | "unitPrice" | "vatRate">): number {
+export function lineVatAmount(
+  line: Pick<PurchaseLineItem, "quantity" | "unitPrice" | "vatRate">,
+): number {
   return (lineNetAmount(line) * (Number(line.vatRate) || 0)) / 100;
 }
 
@@ -93,6 +95,9 @@ export function amountPaid(billId: string, payments: PurchasePayment[]): number 
   return payments.filter((p) => p.billId === billId).reduce((sum, p) => sum + p.amount, 0);
 }
 
-export function amountDue(bill: Pick<PurchaseInvoice, "lines" | "id">, payments: PurchasePayment[]): number {
+export function amountDue(
+  bill: Pick<PurchaseInvoice, "lines" | "id">,
+  payments: PurchasePayment[],
+): number {
   return purchaseTotals(bill).grandTotal - amountPaid(bill.id, payments);
 }

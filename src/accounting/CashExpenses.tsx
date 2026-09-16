@@ -8,7 +8,12 @@ const inputCls =
   "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0D382B] focus:outline-none focus:ring-2 focus:ring-[#0D382B]/[0.12] transition";
 
 const fmtMoney = (n: number) =>
-  new Intl.NumberFormat("ar-AE", { style: "currency", currency: "AED", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
+  new Intl.NumberFormat("ar-AE", {
+    style: "currency",
+    currency: "AED",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n || 0);
 
 function nextExpenseNumber(existing: CashExpense[]): string {
   const year = new Date().getFullYear();
@@ -34,7 +39,15 @@ interface DraftForm {
 }
 
 function newDraft(): DraftForm {
-  return { date: new Date().toISOString().slice(0, 10), description: "", vendorName: "", accountId: "", paidFromAccountId: "", amount: "", caseRef: "" };
+  return {
+    date: new Date().toISOString().slice(0, 10),
+    description: "",
+    vendorName: "",
+    accountId: "",
+    paidFromAccountId: "",
+    amount: "",
+    caseRef: "",
+  };
 }
 
 export default function CashExpenses({
@@ -61,12 +74,27 @@ export default function CashExpenses({
   const [error, setError] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const expenseAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
-  const paymentAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const expenseAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.isActive && !a.isGroup && a.type === "expense")
+        .sort((a, b) => a.code.localeCompare(b.code)),
+    [accounts],
+  );
+  const paymentAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.isActive && !a.isGroup && a.type === "asset")
+        .sort((a, b) => a.code.localeCompare(b.code)),
+    [accounts],
+  );
 
   const sortedExpenses = useMemo(
-    () => [...expenses].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.expenseNumber.localeCompare(a.expenseNumber))),
-    [expenses]
+    () =>
+      [...expenses].sort((a, b) =>
+        a.date < b.date ? 1 : a.date > b.date ? -1 : b.expenseNumber.localeCompare(a.expenseNumber),
+      ),
+    [expenses],
   );
 
   const openNew = () => {
@@ -111,7 +139,12 @@ export default function CashExpenses({
       reference: undefined,
       lines: [
         { id: `l-${journalEntryId}-exp`, accountId: draft.accountId, debit: amount, credit: 0 },
-        { id: `l-${journalEntryId}-pay`, accountId: draft.paidFromAccountId, debit: 0, credit: amount },
+        {
+          id: `l-${journalEntryId}-pay`,
+          accountId: draft.paidFromAccountId,
+          debit: 0,
+          credit: amount,
+        },
       ],
       status: "posted",
       createdAt: now,
@@ -158,7 +191,8 @@ export default function CashExpenses({
         <div>
           <h2 className="text-xl font-bold text-slate-900">المصروفات النقدية</h2>
           <p className="text-xs text-slate-500">
-            مصروفات متفرقة بدون فاتورة مورد رسمية (رسوم كاتب عدل، مواقف، طباعة مستندات) — {expenses.length} مصروف مسجّل
+            مصروفات متفرقة بدون فاتورة مورد رسمية (رسوم كاتب عدل، مواقف، طباعة مستندات) —{" "}
+            {expenses.length} مصروف مسجّل
           </p>
         </div>
         {canManage && (
@@ -195,7 +229,10 @@ export default function CashExpenses({
               </tr>
             )}
             {sortedExpenses.map((e) => (
-              <tr key={e.id} className="border-b border-slate-50 last:border-0 hover:bg-[#0D382B]/[0.02] transition-colors">
+              <tr
+                key={e.id}
+                className="border-b border-slate-50 last:border-0 hover:bg-[#0D382B]/[0.02] transition-colors"
+              >
                 <td className="px-4 py-1.5 font-mono text-slate-700">{e.expenseNumber}</td>
                 <td className="px-4 py-1.5 text-slate-600">{e.date}</td>
                 <td className="px-4 py-1.5 text-slate-800 font-medium">{e.description}</td>
@@ -206,7 +243,10 @@ export default function CashExpenses({
                 <td className="px-4 py-1.5 font-bold text-slate-800">{fmtMoney(e.amount)}</td>
                 <td className="px-4 py-1.5">
                   {canDelete && (
-                    <button onClick={() => requestDelete(e.id)} className="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1">
+                    <button
+                      onClick={() => requestDelete(e.id)}
+                      className="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1"
+                    >
                       <Trash2 size={13} />
                     </button>
                   )}
@@ -222,12 +262,17 @@ export default function CashExpenses({
           <div className="app-card w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-black text-[#0D382B]">تسجيل مصروف نقدي</h3>
-              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600">
+              <button
+                onClick={() => setShowForm(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
                 <X size={20} />
               </button>
             </div>
 
-            {error && <div className="rounded-xl bg-rose-50 text-rose-700 text-sm px-4 py-2.5">{error}</div>}
+            {error && (
+              <div className="rounded-xl bg-rose-50 text-rose-700 text-sm px-4 py-2.5">{error}</div>
+            )}
 
             <div>
               <label className="block text-xs font-bold text-slate-600 mb-1.5">الوصف *</label>
@@ -241,19 +286,36 @@ export default function CashExpenses({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">الجهة (اختياري)</label>
-                <input className={inputCls} value={draft.vendorName} onChange={(e) => setDraft((d) => ({ ...d, vendorName: e.target.value }))} />
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  الجهة (اختياري)
+                </label>
+                <input
+                  className={inputCls}
+                  value={draft.vendorName}
+                  onChange={(e) => setDraft((d) => ({ ...d, vendorName: e.target.value }))}
+                />
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-600 mb-1.5">التاريخ *</label>
-                <input type="date" className={inputCls} value={draft.date} onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))} />
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={draft.date}
+                  onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))}
+                />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">حساب المصروف *</label>
-                <select className={inputCls} value={draft.accountId} onChange={(e) => setDraft((d) => ({ ...d, accountId: e.target.value }))}>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  حساب المصروف *
+                </label>
+                <select
+                  className={inputCls}
+                  value={draft.accountId}
+                  onChange={(e) => setDraft((d) => ({ ...d, accountId: e.target.value }))}
+                >
                   <option value="">تحديد</option>
                   {expenseAccounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -263,8 +325,14 @@ export default function CashExpenses({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">تم الدفع من خلال *</label>
-                <select className={inputCls} value={draft.paidFromAccountId} onChange={(e) => setDraft((d) => ({ ...d, paidFromAccountId: e.target.value }))}>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  تم الدفع من خلال *
+                </label>
+                <select
+                  className={inputCls}
+                  value={draft.paidFromAccountId}
+                  onChange={(e) => setDraft((d) => ({ ...d, paidFromAccountId: e.target.value }))}
+                >
                   <option value="">تحديد</option>
                   {paymentAccounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -277,7 +345,9 @@ export default function CashExpenses({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">المبلغ (AED) *</label>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  المبلغ (AED) *
+                </label>
                 <input
                   type="number"
                   className={inputCls}
@@ -286,16 +356,28 @@ export default function CashExpenses({
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">ربط بقضية / مشروع (اختياري)</label>
-                <input className={inputCls} value={draft.caseRef} onChange={(e) => setDraft((d) => ({ ...d, caseRef: e.target.value }))} />
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  ربط بقضية / مشروع (اختياري)
+                </label>
+                <input
+                  className={inputCls}
+                  value={draft.caseRef}
+                  onChange={(e) => setDraft((d) => ({ ...d, caseRef: e.target.value }))}
+                />
               </div>
             </div>
 
             <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
-              <button onClick={() => setShowForm(false)} className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50">
+              <button
+                onClick={() => setShowForm(false)}
+                className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50"
+              >
                 إلغاء
               </button>
-              <button onClick={saveExpense} className="rounded-xl bg-[#0D382B] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors">
+              <button
+                onClick={saveExpense}
+                className="rounded-xl bg-[#0D382B] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors"
+              >
                 حفظ وترحيل المصروف
               </button>
             </div>
@@ -307,12 +389,20 @@ export default function CashExpenses({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="app-card w-full max-w-sm p-6 space-y-4 text-center">
             <Ban className="mx-auto text-rose-500" size={28} />
-            <p className="text-sm text-slate-700">هل تريد حذف هذا المصروف والقيد المحاسبي المرتبط به نهائياً؟</p>
+            <p className="text-sm text-slate-700">
+              هل تريد حذف هذا المصروف والقيد المحاسبي المرتبط به نهائياً؟
+            </p>
             <div className="flex justify-center gap-2">
-              <button onClick={() => setConfirmDeleteId(null)} className="rounded-xl px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="rounded-xl px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50"
+              >
                 تراجع
               </button>
-              <button onClick={confirmDelete} className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white hover:bg-rose-700">
+              <button
+                onClick={confirmDelete}
+                className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white hover:bg-rose-700"
+              >
                 حذف نهائياً
               </button>
             </div>

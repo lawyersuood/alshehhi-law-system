@@ -13,7 +13,12 @@ const inputCls =
   "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0D382B] focus:outline-none focus:ring-2 focus:ring-[#0D382B]/[0.12] transition";
 
 const fmtMoney = (n: number) =>
-  new Intl.NumberFormat("ar-AE", { style: "currency", currency: "AED", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
+  new Intl.NumberFormat("ar-AE", {
+    style: "currency",
+    currency: "AED",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n || 0);
 
 function nextClaimNumber(existing: EmployeeClaim[]): string {
   const year = new Date().getFullYear();
@@ -37,7 +42,13 @@ interface DraftForm {
 }
 
 function newDraft(): DraftForm {
-  return { date: new Date().toISOString().slice(0, 10), employeeName: "", description: "", accountId: "", amount: "" };
+  return {
+    date: new Date().toISOString().slice(0, 10),
+    employeeName: "",
+    description: "",
+    accountId: "",
+    amount: "",
+  };
 }
 
 const STATUS_BADGE: Record<EmployeeClaimStatus, string> = {
@@ -75,13 +86,31 @@ export default function EmployeeClaims({
   const [payClaim, setPayClaim] = useState<EmployeeClaim | null>(null);
   const [payAccountId, setPayAccountId] = useState("");
 
-  const expenseAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
-  const paymentAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
-  const claimsPayableAccount = useMemo(() => accounts.find((a) => a.code === EMPLOYEE_CLAIMS_PAYABLE_ACCOUNT_CODE), [accounts]);
+  const expenseAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.isActive && !a.isGroup && a.type === "expense")
+        .sort((a, b) => a.code.localeCompare(b.code)),
+    [accounts],
+  );
+  const paymentAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.isActive && !a.isGroup && a.type === "asset")
+        .sort((a, b) => a.code.localeCompare(b.code)),
+    [accounts],
+  );
+  const claimsPayableAccount = useMemo(
+    () => accounts.find((a) => a.code === EMPLOYEE_CLAIMS_PAYABLE_ACCOUNT_CODE),
+    [accounts],
+  );
 
   const sortedClaims = useMemo(
-    () => [...claims].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.claimNumber.localeCompare(a.claimNumber))),
-    [claims]
+    () =>
+      [...claims].sort((a, b) =>
+        a.date < b.date ? 1 : a.date > b.date ? -1 : b.claimNumber.localeCompare(a.claimNumber),
+      ),
+    [claims],
   );
 
   const accountName = (id?: string) => {
@@ -147,7 +176,12 @@ export default function EmployeeClaims({
       reference: c.claimNumber,
       lines: [
         { id: `l-${journalEntryId}-exp`, accountId: c.accountId, debit: c.amount, credit: 0 },
-        { id: `l-${journalEntryId}-pay`, accountId: claimsPayableAccount.id, debit: 0, credit: c.amount },
+        {
+          id: `l-${journalEntryId}-pay`,
+          accountId: claimsPayableAccount.id,
+          debit: 0,
+          credit: c.amount,
+        },
       ],
       status: "posted",
       createdAt: now,
@@ -157,12 +191,26 @@ export default function EmployeeClaims({
     };
     setEntries((prev) => [...prev, newEntry]);
     setClaims((prev) =>
-      prev.map((x) => (x.id === c.id ? { ...x, status: "approved", journalEntryId, approvedAt: now, approvedBy: currentUserName } : x))
+      prev.map((x) =>
+        x.id === c.id
+          ? {
+              ...x,
+              status: "approved",
+              journalEntryId,
+              approvedAt: now,
+              approvedBy: currentUserName,
+            }
+          : x,
+      ),
     );
   };
 
   const rejectClaim = (c: EmployeeClaim) =>
-    setClaims((prev) => prev.map((x) => (x.id === c.id ? { ...x, status: "rejected", rejectedAt: new Date().toISOString() } : x)));
+    setClaims((prev) =>
+      prev.map((x) =>
+        x.id === c.id ? { ...x, status: "rejected", rejectedAt: new Date().toISOString() } : x,
+      ),
+    );
 
   const openPay = (c: EmployeeClaim) => {
     setPayAccountId("");
@@ -180,8 +228,18 @@ export default function EmployeeClaims({
       description: `سداد مطالبة موظف رقم ${payClaim.claimNumber} — ${payClaim.employeeName}`,
       reference: payClaim.claimNumber,
       lines: [
-        { id: `l-${journalEntryId}-pay`, accountId: claimsPayableAccount.id, debit: payClaim.amount, credit: 0 },
-        { id: `l-${journalEntryId}-cash`, accountId: payAccountId, debit: 0, credit: payClaim.amount },
+        {
+          id: `l-${journalEntryId}-pay`,
+          accountId: claimsPayableAccount.id,
+          debit: payClaim.amount,
+          credit: 0,
+        },
+        {
+          id: `l-${journalEntryId}-cash`,
+          accountId: payAccountId,
+          debit: 0,
+          credit: payClaim.amount,
+        },
       ],
       status: "posted",
       createdAt: now,
@@ -193,9 +251,15 @@ export default function EmployeeClaims({
     setClaims((prev) =>
       prev.map((x) =>
         x.id === payClaim.id
-          ? { ...x, status: "paid", paymentJournalEntryId: journalEntryId, payingAccountId: payAccountId, paidAt: now }
-          : x
-      )
+          ? {
+              ...x,
+              status: "paid",
+              paymentJournalEntryId: journalEntryId,
+              payingAccountId: payAccountId,
+              paidAt: now,
+            }
+          : x,
+      ),
     );
     setPayClaim(null);
   };
@@ -207,7 +271,8 @@ export default function EmployeeClaims({
     setClaims((prev) => prev.filter((x) => x.id !== confirmDeleteId));
     if (c) {
       const idsToRemove = [c.journalEntryId, c.paymentJournalEntryId].filter(Boolean) as string[];
-      if (idsToRemove.length) setEntries((prev) => prev.filter((en) => !idsToRemove.includes(en.id)));
+      if (idsToRemove.length)
+        setEntries((prev) => prev.filter((en) => !idsToRemove.includes(en.id)));
     }
     setConfirmDeleteId(null);
   };
@@ -217,7 +282,9 @@ export default function EmployeeClaims({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-slate-900">مطالبات الموظفين</h2>
-          <p className="text-xs text-slate-500">مبالغ دفعها موظف من جيبه لصالح المكتب ويطلب استردادها — {claims.length} مطالبة مسجّلة</p>
+          <p className="text-xs text-slate-500">
+            مبالغ دفعها موظف من جيبه لصالح المكتب ويطلب استردادها — {claims.length} مطالبة مسجّلة
+          </p>
         </div>
         {canManage && (
           <button
@@ -252,7 +319,10 @@ export default function EmployeeClaims({
               </tr>
             )}
             {sortedClaims.map((c) => (
-              <tr key={c.id} className="border-b border-slate-50 last:border-0 hover:bg-[#0D382B]/[0.02] transition-colors">
+              <tr
+                key={c.id}
+                className="border-b border-slate-50 last:border-0 hover:bg-[#0D382B]/[0.02] transition-colors"
+              >
                 <td className="px-4 py-1.5 font-mono text-slate-700">{c.claimNumber}</td>
                 <td className="px-4 py-1.5 text-slate-800 font-medium">{c.employeeName}</td>
                 <td className="px-4 py-1.5 text-slate-600">{c.description}</td>
@@ -260,7 +330,9 @@ export default function EmployeeClaims({
                 <td className="px-4 py-1.5 text-slate-600">{accountName(c.accountId)}</td>
                 <td className="px-4 py-1.5 font-bold text-slate-800">{fmtMoney(c.amount)}</td>
                 <td className="px-4 py-1.5">
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${STATUS_BADGE[c.status]}`}>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${STATUS_BADGE[c.status]}`}
+                  >
                     {EMPLOYEE_CLAIM_STATUS_LABELS[c.status]}
                   </span>
                 </td>
@@ -268,21 +340,33 @@ export default function EmployeeClaims({
                   <div className="flex items-center justify-end gap-1.5">
                     {canApprove && c.status === "pending" && (
                       <>
-                        <button onClick={() => approveClaim(c)} className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1">
+                        <button
+                          onClick={() => approveClaim(c)}
+                          className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1"
+                        >
                           <CheckCircle2 size={13} /> اعتماد
                         </button>
-                        <button onClick={() => rejectClaim(c)} className="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1">
+                        <button
+                          onClick={() => rejectClaim(c)}
+                          className="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1"
+                        >
                           <XCircle size={13} /> رفض
                         </button>
                       </>
                     )}
                     {canApprove && c.status === "approved" && (
-                      <button onClick={() => openPay(c)} className="text-xs font-bold text-[#C5A059] hover:underline flex items-center gap-1">
+                      <button
+                        onClick={() => openPay(c)}
+                        className="text-xs font-bold text-[#C5A059] hover:underline flex items-center gap-1"
+                      >
                         <Wallet size={13} /> تسديد
                       </button>
                     )}
                     {canDelete && c.status !== "paid" && (
-                      <button onClick={() => requestDelete(c.id)} className="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1">
+                      <button
+                        onClick={() => requestDelete(c.id)}
+                        className="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1"
+                      >
                         <Trash2 size={13} />
                       </button>
                     )}
@@ -299,21 +383,37 @@ export default function EmployeeClaims({
           <div className="app-card w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-black text-[#0D382B]">تسجيل مطالبة موظف</h3>
-              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600">
+              <button
+                onClick={() => setShowForm(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
                 <X size={20} />
               </button>
             </div>
 
-            {error && <div className="rounded-xl bg-rose-50 text-rose-700 text-sm px-4 py-2.5">{error}</div>}
+            {error && (
+              <div className="rounded-xl bg-rose-50 text-rose-700 text-sm px-4 py-2.5">{error}</div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">اسم الموظف *</label>
-                <input className={inputCls} value={draft.employeeName} onChange={(e) => setDraft((d) => ({ ...d, employeeName: e.target.value }))} />
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  اسم الموظف *
+                </label>
+                <input
+                  className={inputCls}
+                  value={draft.employeeName}
+                  onChange={(e) => setDraft((d) => ({ ...d, employeeName: e.target.value }))}
+                />
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-600 mb-1.5">التاريخ *</label>
-                <input type="date" className={inputCls} value={draft.date} onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))} />
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={draft.date}
+                  onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))}
+                />
               </div>
             </div>
 
@@ -329,8 +429,14 @@ export default function EmployeeClaims({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">حساب المصروف *</label>
-                <select className={inputCls} value={draft.accountId} onChange={(e) => setDraft((d) => ({ ...d, accountId: e.target.value }))}>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  حساب المصروف *
+                </label>
+                <select
+                  className={inputCls}
+                  value={draft.accountId}
+                  onChange={(e) => setDraft((d) => ({ ...d, accountId: e.target.value }))}
+                >
                   <option value="">تحديد</option>
                   {expenseAccounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -340,16 +446,29 @@ export default function EmployeeClaims({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">المبلغ (AED) *</label>
-                <input type="number" className={inputCls} value={draft.amount} onChange={(e) => setDraft((d) => ({ ...d, amount: e.target.value }))} />
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  المبلغ (AED) *
+                </label>
+                <input
+                  type="number"
+                  className={inputCls}
+                  value={draft.amount}
+                  onChange={(e) => setDraft((d) => ({ ...d, amount: e.target.value }))}
+                />
               </div>
             </div>
 
             <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
-              <button onClick={() => setShowForm(false)} className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50">
+              <button
+                onClick={() => setShowForm(false)}
+                className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50"
+              >
                 إلغاء
               </button>
-              <button onClick={saveClaim} className="rounded-xl bg-[#0D382B] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors">
+              <button
+                onClick={saveClaim}
+                className="rounded-xl bg-[#0D382B] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors"
+              >
                 حفظ المطالبة
               </button>
             </div>
@@ -361,18 +480,30 @@ export default function EmployeeClaims({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="app-card w-full max-w-sm p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-black text-[#0D382B]">تسديد المطالبة {payClaim.claimNumber}</h3>
-              <button onClick={() => setPayClaim(null)} className="text-slate-400 hover:text-slate-600">
+              <h3 className="text-lg font-black text-[#0D382B]">
+                تسديد المطالبة {payClaim.claimNumber}
+              </h3>
+              <button
+                onClick={() => setPayClaim(null)}
+                className="text-slate-400 hover:text-slate-600"
+              >
                 <X size={20} />
               </button>
             </div>
             <p className="text-sm text-slate-600">
-              سيتم سداد <span className="font-bold text-slate-800">{fmtMoney(payClaim.amount)}</span> للموظف{" "}
+              سيتم سداد{" "}
+              <span className="font-bold text-slate-800">{fmtMoney(payClaim.amount)}</span> للموظف{" "}
               <span className="font-bold text-slate-800">{payClaim.employeeName}</span>
             </p>
             <div>
-              <label className="block text-xs font-bold text-slate-600 mb-1.5">السداد من خلال (نقد أو بنك) *</label>
-              <select className={inputCls} value={payAccountId} onChange={(e) => setPayAccountId(e.target.value)}>
+              <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                السداد من خلال (نقد أو بنك) *
+              </label>
+              <select
+                className={inputCls}
+                value={payAccountId}
+                onChange={(e) => setPayAccountId(e.target.value)}
+              >
                 <option value="">تحديد</option>
                 {paymentAccounts.map((a) => (
                   <option key={a.id} value={a.id}>
@@ -382,7 +513,10 @@ export default function EmployeeClaims({
               </select>
             </div>
             <div className="flex justify-end gap-2 border-t border-slate-100 pt-4">
-              <button onClick={() => setPayClaim(null)} className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50">
+              <button
+                onClick={() => setPayClaim(null)}
+                className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50"
+              >
                 إلغاء
               </button>
               <button
@@ -401,12 +535,20 @@ export default function EmployeeClaims({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="app-card w-full max-w-sm p-6 space-y-4 text-center">
             <Ban className="mx-auto text-rose-500" size={28} />
-            <p className="text-sm text-slate-700">هل تريد حذف هذه المطالبة وأي قيود محاسبية مرتبطة بها نهائياً؟</p>
+            <p className="text-sm text-slate-700">
+              هل تريد حذف هذه المطالبة وأي قيود محاسبية مرتبطة بها نهائياً؟
+            </p>
             <div className="flex justify-center gap-2">
-              <button onClick={() => setConfirmDeleteId(null)} className="rounded-xl px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="rounded-xl px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50"
+              >
                 تراجع
               </button>
-              <button onClick={confirmDelete} className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white hover:bg-rose-700">
+              <button
+                onClick={confirmDelete}
+                className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white hover:bg-rose-700"
+              >
                 حذف نهائياً
               </button>
             </div>

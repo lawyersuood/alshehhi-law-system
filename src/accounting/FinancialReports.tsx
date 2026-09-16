@@ -12,7 +12,11 @@ import AgedReceivablesPayables from "./AgedReceivablesPayables";
 
 type ReportId = "income_statement" | "balance_sheet" | "cash_flow" | "vat" | "aging";
 
-const REPORTS: Array<{ id: ReportId; label: string; icon: React.ComponentType<{ size?: number }> }> = [
+const REPORTS: Array<{
+  id: ReportId;
+  label: string;
+  icon: React.ComponentType<{ size?: number }>;
+}> = [
   { id: "income_statement", label: "قائمة الدخل", icon: TrendingUp },
   { id: "balance_sheet", label: "الميزانية العمومية", icon: PieChart },
   { id: "cash_flow", label: "التدفق النقدي", icon: Wallet },
@@ -51,7 +55,9 @@ export default function FinancialReports({
             key={id}
             onClick={() => setReport(id)}
             className={`flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold border transition ${
-              report === id ? "bg-[#0D382B] text-white border-[#0D382B]" : "bg-white text-slate-600 border-slate-200 hover:border-[#0D382B]/20 hover:bg-[#0D382B]/[0.04]"
+              report === id
+                ? "bg-[#0D382B] text-white border-[#0D382B]"
+                : "bg-white text-slate-600 border-slate-200 hover:border-[#0D382B]/20 hover:bg-[#0D382B]/[0.04]"
             }`}
           >
             <Icon size={14} /> {label}
@@ -61,7 +67,9 @@ export default function FinancialReports({
 
       {report === "income_statement" && <IncomeStatement accounts={accounts} entries={entries} />}
       {report === "balance_sheet" && <BalanceSheet accounts={accounts} entries={entries} />}
-      {report === "cash_flow" && <CashFlowSummary bankAccounts={bankAccounts} transactions={transactions} />}
+      {report === "cash_flow" && (
+        <CashFlowSummary bankAccounts={bankAccounts} transactions={transactions} />
+      )}
       {report === "vat" && <VatReport accounts={accounts} entries={entries} />}
       {report === "aging" && (
         <AgedReceivablesPayables

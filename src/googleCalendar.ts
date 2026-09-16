@@ -5,7 +5,7 @@ import {
   GoogleAuthProvider,
   onAuthStateChanged,
   User,
-  signOut
+  signOut,
 } from "firebase/auth";
 import firebaseConfig from "../firebase-applet-config.json";
 
@@ -24,7 +24,7 @@ let isSigningIn = false;
 
 export const initAuth = (
   onAuthSuccess?: (user: User, token: string) => void,
-  onAuthFailure?: () => void
+  onAuthFailure?: () => void,
 ) => {
   return onAuthStateChanged(auth, async (user: User | null) => {
     if (user) {
@@ -96,20 +96,22 @@ export interface GoogleCalendarEventPayload {
  */
 export async function createGoogleCalendarEvent(
   accessToken: string,
-  event: GoogleCalendarEventPayload
+  event: GoogleCalendarEventPayload,
 ): Promise<any> {
   const res = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    body: JSON.stringify(event)
+    body: JSON.stringify(event),
   });
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
-    throw new Error(errorData.error?.message || `فشل إضافة الجلسة إلى Google Calendar (كود: ${res.status})`);
+    throw new Error(
+      errorData.error?.message || `فشل إضافة الجلسة إلى Google Calendar (كود: ${res.status})`,
+    );
   }
 
   return await res.json();
@@ -120,7 +122,7 @@ export async function createGoogleCalendarEvent(
  */
 export async function listGoogleCalendarEvents(
   accessToken: string,
-  maxResults = 20
+  maxResults = 20,
 ): Promise<any[]> {
   const timeMin = new Date().toISOString();
   const url = new URL("https://www.googleapis.com/calendar/v3/calendars/primary/events");
@@ -131,8 +133,8 @@ export async function listGoogleCalendarEvents(
 
   const res = await fetch(url.toString(), {
     headers: {
-      Authorization: `Bearer ${accessToken}`
-    }
+      Authorization: `Bearer ${accessToken}`,
+    },
   });
 
   if (!res.ok) {
@@ -149,14 +151,17 @@ export async function listGoogleCalendarEvents(
  */
 export async function deleteGoogleCalendarEvent(
   accessToken: string,
-  eventId: string
+  eventId: string,
 ): Promise<boolean> {
-  const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`, {
-    method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${accessToken}`
-    }
-  });
+  const res = await fetch(
+    `https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`,
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    },
+  );
 
   if (!res.ok && res.status !== 404) {
     const errorData = await res.json().catch(() => ({}));
@@ -191,6 +196,6 @@ export function formatCalendarDateTime(dateStr: string, timeStr: string, duratio
 
   return {
     startDateTime: formatWithOffset(startDate),
-    endDateTime: formatWithOffset(endDate)
+    endDateTime: formatWithOffset(endDate),
   };
 }

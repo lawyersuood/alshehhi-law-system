@@ -7,13 +7,21 @@ export function useCourtExcelImport() {
   const [courtImportPreviewList, setCourtImportPreviewList] = useState<Partial<CourtContact>[]>([]);
   const [courtExcelImportMode, setCourtExcelImportMode] = useState<"append" | "replace">("append");
   const [courtExcelFileName, setCourtExcelFileName] = useState<string>("");
-  const [courtExcelImportStatus, setCourtExcelImportStatus] = useState<{ message: string; isError?: boolean } | null>(null);
+  const [courtExcelImportStatus, setCourtExcelImportStatus] = useState<{
+    message: string;
+    isError?: boolean;
+  } | null>(null);
 
   return {
-    courtExcelModalOpen, setCourtExcelModalOpen,
-    courtImportPreviewList, setCourtImportPreviewList,
-    courtExcelImportMode, setCourtExcelImportMode,
-    courtExcelFileName, setCourtExcelFileName,
-    courtExcelImportStatus, setCourtExcelImportStatus,
+    courtExcelModalOpen,
+    setCourtExcelModalOpen,
+    courtImportPreviewList,
+    setCourtImportPreviewList,
+    courtExcelImportMode,
+    setCourtExcelImportMode,
+    courtExcelFileName,
+    setCourtExcelFileName,
+    courtExcelImportStatus,
+    setCourtExcelImportStatus,
   };
 }

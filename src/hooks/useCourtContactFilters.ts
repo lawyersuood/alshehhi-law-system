@@ -11,11 +11,17 @@ export function useCourtContactFilters() {
   const [editingCourtContact, setEditingCourtContact] = useState<CourtContact | null>(null);
 
   return {
-    courtSearchQuery, setCourtSearchQuery,
-    courtEmirateFilter, setCourtEmirateFilter,
-    courtCategoryFilter, setCourtCategoryFilter,
-    courtBranchFilter, setCourtBranchFilter,
-    courtFiltersExpanded, setCourtFiltersExpanded,
-    editingCourtContact, setEditingCourtContact,
+    courtSearchQuery,
+    setCourtSearchQuery,
+    courtEmirateFilter,
+    setCourtEmirateFilter,
+    courtCategoryFilter,
+    setCourtCategoryFilter,
+    courtBranchFilter,
+    setCourtBranchFilter,
+    courtFiltersExpanded,
+    setCourtFiltersExpanded,
+    editingCourtContact,
+    setEditingCourtContact,
   };
 }

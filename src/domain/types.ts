@@ -25,87 +25,87 @@ export interface DelegationPrintData {
 
 export interface RolePermissions {
   // 1. صلاحيات الوصول للأقسام والتبويبات الرئيسية الـ 18 (Module Access)
-  dashboard: boolean;            // 1. لوحة التحكم والأداء
-  cases: boolean;                // 2. القضايا
-  calendar: boolean;             // 3. الجلسات والرول
-  clients: boolean;              // 4. الموكلين والعملاء
+  dashboard: boolean; // 1. لوحة التحكم والأداء
+  cases: boolean; // 2. القضايا
+  calendar: boolean; // 3. الجلسات والرول
+  clients: boolean; // 4. الموكلين والعملاء
   bookingConsultation?: boolean; // 5. حجز الاستشارات المرئية
-  tasks: boolean;                // 6. المهام والتكليفات
-  whatsapp: boolean;             // 7. واتساب المكتب المدمج
-  email: boolean;                // 8. البريد الإلكتروني المدمج
-  directory: boolean;            // 9. دليل المحاكم والجهات
-  docs?: boolean;                // 10. المستندات والأرشيف الإلكتروني
-  poa?: boolean;                 // 11. الوكالات القانونية
-  agreements: boolean;           // 12. اتفاقيات أتعاب المكتب
-  finance: boolean;              // 13. الفواتير والضريبة والحسابات
-  kyc: boolean;                  // 14. اعرف عميلك (KYC) والامتثال
-  precedents?: boolean;          // 15. المبادئ والأحكام القضائية
-  hr?: boolean;                  // 16. الموظفون والكادر (HR)
-  auditLog?: boolean;            // 17. سجل التدقيق والأنشطة (Audit Log)
-  manageUsers?: boolean;         // 18. إدارة المستخدمين والصلاحيات
-  colleagues?: boolean;          // 19. الزملاء والإنابات
-  policies?: boolean;            // 20. السياسات الداخلية للمكتب
+  tasks: boolean; // 6. المهام والتكليفات
+  whatsapp: boolean; // 7. واتساب المكتب المدمج
+  email: boolean; // 8. البريد الإلكتروني المدمج
+  directory: boolean; // 9. دليل المحاكم والجهات
+  docs?: boolean; // 10. المستندات والأرشيف الإلكتروني
+  poa?: boolean; // 11. الوكالات القانونية
+  agreements: boolean; // 12. اتفاقيات أتعاب المكتب
+  finance: boolean; // 13. الفواتير والضريبة والحسابات
+  kyc: boolean; // 14. اعرف عميلك (KYC) والامتثال
+  precedents?: boolean; // 15. المبادئ والأحكام القضائية
+  hr?: boolean; // 16. الموظفون والكادر (HR)
+  auditLog?: boolean; // 17. سجل التدقيق والأنشطة (Audit Log)
+  manageUsers?: boolean; // 18. إدارة المستخدمين والصلاحيات
+  colleagues?: boolean; // 19. الزملاء والإنابات
+  policies?: boolean; // 20. السياسات الداخلية للمكتب
 
   // 2. صلاحيات العمليات والإجراءات الدقيقة والتفويضات (Action Permissions)
-  manageCases?: boolean;         // قيد وتعديل القضايا
-  manageHearings?: boolean;      // جدولة وتحديث الجلسات والرول
-  manageTasks?: boolean;         // إسناد وتعيين ومتابعة المهام
-  manageClients?: boolean;       // إضافة وتعديل بيانات الموكلين
-  manageDocs?: boolean;          // رفع وإدارة وأرشفة المستندات
-  managePoa?: boolean;           // قيد وتحديث الوكالات القانونية
-  manageAgreements?: boolean;    // صياغة واعتماد اتفاقيات الأتعاب
-  viewInvoices?: boolean;        // الاطلاع على الفواتير والأتعاب
-  manageInvoices?: boolean;      // إصدار وتعديل الفواتير وسندات القبض
-  manageKyc?: boolean;           // مراجعة واعتماد ملفات KYC
-  manageEmployees?: boolean;     // إدارة الكادر الوظيفي والرواتب
-  managePrecedents?: boolean;    // إضافة وتصنيف المبادئ القضائية
-  viewReports?: boolean;         // استخراج ومراجعة التقارير التحليلية
-  exportData?: boolean;          // تصدير واستعادة النسخ الاحتياطية (JSON/PDF)
-  manageColleagues?: boolean;    // إضافة وتعديل بيانات الزملاء وإصدار الإنابات
+  manageCases?: boolean; // قيد وتعديل القضايا
+  manageHearings?: boolean; // جدولة وتحديث الجلسات والرول
+  manageTasks?: boolean; // إسناد وتعيين ومتابعة المهام
+  manageClients?: boolean; // إضافة وتعديل بيانات الموكلين
+  manageDocs?: boolean; // رفع وإدارة وأرشفة المستندات
+  managePoa?: boolean; // قيد وتحديث الوكالات القانونية
+  manageAgreements?: boolean; // صياغة واعتماد اتفاقيات الأتعاب
+  viewInvoices?: boolean; // الاطلاع على الفواتير والأتعاب
+  manageInvoices?: boolean; // إصدار وتعديل الفواتير وسندات القبض
+  manageKyc?: boolean; // مراجعة واعتماد ملفات KYC
+  manageEmployees?: boolean; // إدارة الكادر الوظيفي والرواتب
+  managePrecedents?: boolean; // إضافة وتصنيف المبادئ القضائية
+  viewReports?: boolean; // استخراج ومراجعة التقارير التحليلية
+  exportData?: boolean; // تصدير واستعادة النسخ الاحتياطية (JSON/PDF)
+  manageColleagues?: boolean; // إضافة وتعديل بيانات الزملاء وإصدار الإنابات
   manageLetterheadAssets?: boolean; // إدارة قسم الهوية الرسمية: تعديل الورق الرسمي والتوقيع والختم (صلاحية حساسة)
-  useSignatureStamp?: boolean;      // إدراج التوقيع والختم المعتمدين عند إصدار المستندات (دون صلاحية تعديلهما)
+  useSignatureStamp?: boolean; // إدراج التوقيع والختم المعتمدين عند إصدار المستندات (دون صلاحية تعديلهما)
 
   // 3. صلاحيات الحذف والرقابة الحساسة لجميع الأقسام (Deletion Permissions)
-  deleteCases?: boolean;         // حذف القضايا والملفات نهائياً
-  deleteClients?: boolean;       // حذف سجلات الموكلين والعملاء
-  deleteHearings?: boolean;      // حذف الجلسات والرول القضائي
-  deleteTasks?: boolean;         // حذف وتفريغ المهام والتكليفات
-  deleteDocs?: boolean;          // حذف مستندات الأرشيف والوثائق
-  deletePoas?: boolean;          // حذف وإلغاء قيود الوكالات القانونية
-  deleteAgreements?: boolean;    // حذف اتفاقيات وعقود أتعاب المكتب
-  deleteInvoices?: boolean;      // حذف الفواتير وسندات القبض والتحصيلات
-  deleteKyc?: boolean;           // حذف سجلات KYC وقوائم الحظر والمتابعة
-  deleteEmployees?: boolean;     // حذف سجلات الكادر والموظفين
-  deletePrecedents?: boolean;    // حذف المبادئ والأحكام القضائية
-  deleteUsers?: boolean;         // حذف حسابات المستخدمين والموظفين
-  deleteContacts?: boolean;      // حذف جهات الاتصال ودليل المحاكم
-  deleteColleagues?: boolean;    // حذف بيانات الزملاء والإنابات الصادرة
+  deleteCases?: boolean; // حذف القضايا والملفات نهائياً
+  deleteClients?: boolean; // حذف سجلات الموكلين والعملاء
+  deleteHearings?: boolean; // حذف الجلسات والرول القضائي
+  deleteTasks?: boolean; // حذف وتفريغ المهام والتكليفات
+  deleteDocs?: boolean; // حذف مستندات الأرشيف والوثائق
+  deletePoas?: boolean; // حذف وإلغاء قيود الوكالات القانونية
+  deleteAgreements?: boolean; // حذف اتفاقيات وعقود أتعاب المكتب
+  deleteInvoices?: boolean; // حذف الفواتير وسندات القبض والتحصيلات
+  deleteKyc?: boolean; // حذف سجلات KYC وقوائم الحظر والمتابعة
+  deleteEmployees?: boolean; // حذف سجلات الكادر والموظفين
+  deletePrecedents?: boolean; // حذف المبادئ والأحكام القضائية
+  deleteUsers?: boolean; // حذف حسابات المستخدمين والموظفين
+  deleteContacts?: boolean; // حذف جهات الاتصال ودليل المحاكم
+  deleteColleagues?: boolean; // حذف بيانات الزملاء والإنابات الصادرة
 
   // 4. صلاحيات النظام المحاسبي المتكامل (قيد الإنشاء — غير مفعّلة بعد، انظر ACCOUNTING_MODULE_ENABLED)
-  accounting?: boolean;             // الوصول لقسم المحاسبة
-  manageChartOfAccounts?: boolean;  // إدارة شجرة الحسابات
-  postJournalEntries?: boolean;     // ترحيل القيود اليومية
-  deleteJournalEntries?: boolean;   // حذف القيود اليومية
-  manageBankAccounts?: boolean;     // إدارة سجل الحسابات البنكية
+  accounting?: boolean; // الوصول لقسم المحاسبة
+  manageChartOfAccounts?: boolean; // إدارة شجرة الحسابات
+  postJournalEntries?: boolean; // ترحيل القيود اليومية
+  deleteJournalEntries?: boolean; // حذف القيود اليومية
+  manageBankAccounts?: boolean; // إدارة سجل الحسابات البنكية
   recordBankTransactions?: boolean; // تسجيل حركات بنكية (إيداع/سحب)
   deleteBankTransactions?: boolean; // حذف حركات بنكية وقيودها المرتبطة
-  manageSalesInvoices?: boolean;    // إنشاء وتعديل مسودات الفواتير الضريبية الجديدة
-  approveSalesInvoices?: boolean;   // اعتماد الفواتير الضريبية وترحيل قيودها
-  recordSalesPayments?: boolean;    // تسجيل تحصيل دفعات الفواتير الضريبية الجديدة
-  deleteSalesInvoices?: boolean;    // حذف مسودات الفواتير الضريبية الجديدة
-  manageVendors?: boolean;          // إدارة سجل الموردين
-  deleteVendors?: boolean;          // حذف الموردين
+  manageSalesInvoices?: boolean; // إنشاء وتعديل مسودات الفواتير الضريبية الجديدة
+  approveSalesInvoices?: boolean; // اعتماد الفواتير الضريبية وترحيل قيودها
+  recordSalesPayments?: boolean; // تسجيل تحصيل دفعات الفواتير الضريبية الجديدة
+  deleteSalesInvoices?: boolean; // حذف مسودات الفواتير الضريبية الجديدة
+  manageVendors?: boolean; // إدارة سجل الموردين
+  deleteVendors?: boolean; // حذف الموردين
   managePurchaseInvoices?: boolean; // إنشاء وتعديل مسودات فواتير المشتريات
-  approvePurchaseInvoices?: boolean;// اعتماد فواتير المشتريات وترحيل قيودها
+  approvePurchaseInvoices?: boolean; // اعتماد فواتير المشتريات وترحيل قيودها
   recordPurchasePayments?: boolean; // تسجيل دفعات سداد فواتير المشتريات
   deletePurchaseInvoices?: boolean; // حذف مسودات فواتير المشتريات
-  manageFixedAssets?: boolean;      // إدارة سجل الأصول الثابتة
-  runDepreciation?: boolean;        // توليد قيود الإهلاك الدوري وترحيلها
-  deleteFixedAssets?: boolean;      // حذف أصول ثابتة لم يُحتسب لها إهلاك بعد
+  manageFixedAssets?: boolean; // إدارة سجل الأصول الثابتة
+  runDepreciation?: boolean; // توليد قيود الإهلاك الدوري وترحيلها
+  deleteFixedAssets?: boolean; // حذف أصول ثابتة لم يُحتسب لها إهلاك بعد
   managePayrollEmployees?: boolean; // إدارة سجل موظفي الرواتب (مستقل عن سجل الموظفون والكادر)
   deletePayrollEmployees?: boolean; // حذف موظف من سجل الرواتب لم يُصرف له راتب بعد
-  runPayroll?: boolean;             // تشغيل الرواتب الشهري وترحيل قيد الاستحقاق
-  recordPayrollPayments?: boolean;  // تسجيل سداد الرواتب وترحيل قيد السداد
+  runPayroll?: boolean; // تشغيل الرواتب الشهري وترحيل قيد الاستحقاق
+  recordPayrollPayments?: boolean; // تسجيل سداد الرواتب وترحيل قيد السداد
 }
 
 export interface UserItem {
@@ -207,7 +207,7 @@ export interface Colleague {
   phone: string;
   email?: string;
   specialization?: string; // التخصص القانوني
-  coverageArea?: string;   // الإمارة / المحكمة التي يغطيها
+  coverageArea?: string; // الإمارة / المحكمة التي يغطيها
   notes?: string;
   status: "متاح" | "غير متاح";
   addedBy?: string;
@@ -222,12 +222,12 @@ export interface ColleagueDelegation {
   caseId?: number;
   hearingId?: number;
   caseTitleSnapshot?: string; // نص حر عند عدم ربطها بقضية مسجلة
-  purpose: string;            // الغرض من الإنابة (حضور جلسة / متابعة إجراء...)
+  purpose: string; // الغرض من الإنابة (حضور جلسة / متابعة إجراء...)
   issuedByName: string;
   issuedAt: string; // ISO
   status: "صادرة" | "مستخدمة" | "ملغاة";
-  sessionDate?: string;          // تاريخ الجلسة المناب لها الزميل
-  issuerLicenseNumber?: string;  // رقم قيد المحامي الموكِّل (يُسحب تلقائياً، قابل للتعديل)
+  sessionDate?: string; // تاريخ الجلسة المناب لها الزميل
+  issuerLicenseNumber?: string; // رقم قيد المحامي الموكِّل (يُسحب تلقائياً، قابل للتعديل)
   colleagueLicenseNumber?: string; // رقم قيد الزميل المُناب (يُسحب تلقائياً، قابل للتعديل)
   customBodyHtml?: string; // صياغة نص الإنابة بعد تعديلها يدوياً من المستخدم (تحل محل النص التلقائي عند وجودها)
 }
@@ -319,7 +319,15 @@ export interface NotificationLog {
   recipientPhone: string;
   recipientEmail: string;
   channel: "واتساب" | "إيميل" | "كلاهما";
-  type: "تنبيه جلسة" | "تحديث قضية" | "تذكير فاتورة" | "تجديد وثائق / KYC" | "تجديد وكالة / POA" | "تنبيه ميعاد طعن / استئناف" | "تذكير قسط فاتورة" | "رسالة عامة";
+  type:
+    | "تنبيه جلسة"
+    | "تحديث قضية"
+    | "تذكير فاتورة"
+    | "تجديد وثائق / KYC"
+    | "تجديد وكالة / POA"
+    | "تنبيه ميعاد طعن / استئناف"
+    | "تذكير قسط فاتورة"
+    | "رسالة عامة";
   message: string;
   sentAt: string;
   status: "تم الإرسال" | "قيد التسليم";
@@ -334,7 +342,14 @@ export interface AuditLogEntry {
   userName: string;
   userEmail: string;
   userRole: string;
-  actionType: "DELETE" | "UPDATE" | "CREATE" | "STATUS_CHANGE" | "PERMISSION_CHANGE" | "UNAUTHORIZED_DELETE" | "UNAUTHORIZED_ACCESS";
+  actionType:
+    | "DELETE"
+    | "UPDATE"
+    | "CREATE"
+    | "STATUS_CHANGE"
+    | "PERMISSION_CHANGE"
+    | "UNAUTHORIZED_DELETE"
+    | "UNAUTHORIZED_ACCESS";
   targetModule: string;
   targetId: string | number;
   targetTitle: string;
@@ -397,7 +412,12 @@ export interface JudgmentDeadline {
   rulingSummary: string;
   appealDays: number;
   appealDeadlineDate: string;
-  status: "جارٍ حساب الميعاد" | "تم تقديم الطعن" | "انقضى الميعاد القانوني" | "تم قيد الطعن" | "لا حاجة لطعن";
+  status:
+    | "جارٍ حساب الميعاد"
+    | "تم تقديم الطعن"
+    | "انقضى الميعاد القانوني"
+    | "تم قيد الطعن"
+    | "لا حاجة لطعن";
   notes: string;
   assignedLawyerId?: number;
   assignedLawyerName?: string;
@@ -462,8 +482,8 @@ export interface OfficeAgreementInstallment {
 
 export interface OfficeAgreement {
   id: number;
-  agreementNumber: string;   // رقم AGR المرتبط باتفاقية الأتعاب
-  feeAgreementId: number;    // معرف اتفاقية الأتعاب المنشأة تلقائياً
+  agreementNumber: string; // رقم AGR المرتبط باتفاقية الأتعاب
+  feeAgreementId: number; // معرف اتفاقية الأتعاب المنشأة تلقائياً
   clientId: number;
   contractDate: string;
   contractCity: string;

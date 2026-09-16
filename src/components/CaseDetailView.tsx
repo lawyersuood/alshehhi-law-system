@@ -3,9 +3,19 @@ import { ChevronLeft, Edit2 } from "lucide-react";
 import { Badge } from "./AuthScreens";
 import { CaseItem, RolePermissions } from "../domain/types";
 import { CASE_STAGES, CASE_STATUS } from "../domain/constants";
-import { statusColor, stageBadgeColor, getCaseStage, caseOpponentsLabel, caseTypeBadgeColor, caseTypeDotColor, fmtAED, fmtDate } from "../domain/utils";
+import {
+  statusColor,
+  stageBadgeColor,
+  getCaseStage,
+  caseOpponentsLabel,
+  caseTypeBadgeColor,
+  caseTypeDotColor,
+  fmtAED,
+  fmtDate,
+} from "../domain/utils";
 
-const inputCls = "w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:border-[#0D382B]/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all";
+const inputCls =
+  "w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:border-[#0D382B]/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all";
 
 export interface CaseDetailViewProps {
   selectedCase: CaseItem;
@@ -15,13 +25,26 @@ export interface CaseDetailViewProps {
   setForm: (v: Record<string, any>) => void;
   setModal: (v: string | null) => void;
   logAuditAction: (
-    actionType: "DELETE" | "UPDATE" | "CREATE" | "STATUS_CHANGE" | "PERMISSION_CHANGE" | "UNAUTHORIZED_DELETE" | "UNAUTHORIZED_ACCESS",
+    actionType:
+      | "DELETE"
+      | "UPDATE"
+      | "CREATE"
+      | "STATUS_CHANGE"
+      | "PERMISSION_CHANGE"
+      | "UNAUTHORIZED_DELETE"
+      | "UNAUTHORIZED_ACCESS",
     targetModule: string,
     targetTitle: string,
     details: string,
     targetId?: string | number,
     statusOverride?: "مؤكد" | "محاولة غير مصرح بها - مرفوض" | "مكتمل" | "فشل",
-    userOverride?: { id?: string | number; name?: string; email?: string; roleTitle?: string; jobTitle?: string }
+    userOverride?: {
+      id?: string | number;
+      name?: string;
+      email?: string;
+      roleTitle?: string;
+      jobTitle?: string;
+    },
   ) => void;
   cases: CaseItem[];
   setCases: React.Dispatch<React.SetStateAction<CaseItem[]>>;
@@ -44,7 +67,10 @@ export default function CaseDetailView({
 }: CaseDetailViewProps) {
   return (
     <>
-      <button onClick={() => setCaseView(null)} className="flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-800">
+      <button
+        onClick={() => setCaseView(null)}
+        className="flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-800"
+      >
         <ChevronLeft size={16} className="rotate-180" /> عودة إلى القضايا
       </button>
       <div className="app-card p-6">
@@ -58,11 +84,17 @@ export default function CaseDetailView({
                 />
                 <h2 className="text-xl font-bold">{selectedCase.number}</h2>
               </div>
-              <Badge className={`${caseTypeBadgeColor(selectedCase.type)} inline-flex items-center gap-1.5 shadow-2xs`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${caseTypeDotColor(selectedCase.type)} inline-block shrink-0`} />
+              <Badge
+                className={`${caseTypeBadgeColor(selectedCase.type)} inline-flex items-center gap-1.5 shadow-2xs`}
+              >
+                <span
+                  className={`h-1.5 w-1.5 rounded-full ${caseTypeDotColor(selectedCase.type)} inline-block shrink-0`}
+                />
                 {selectedCase.type}
               </Badge>
-              <Badge className={stageBadgeColor(getCaseStage(selectedCase))}>{getCaseStage(selectedCase)}</Badge>
+              <Badge className={stageBadgeColor(getCaseStage(selectedCase))}>
+                {getCaseStage(selectedCase)}
+              </Badge>
               <Badge className={statusColor(selectedCase.status)}>{selectedCase.status}</Badge>
             </div>
             <p className="mt-1 text-sm text-slate-500">{selectedCase.subject}</p>
@@ -75,7 +107,10 @@ export default function CaseDetailView({
                   setForm({
                     number: selectedCase.number,
                     clientId: selectedCase.clientId,
-                    opponents: selectedCase.opponents && selectedCase.opponents.length > 0 ? [...selectedCase.opponents] : [""],
+                    opponents:
+                      selectedCase.opponents && selectedCase.opponents.length > 0
+                        ? [...selectedCase.opponents]
+                        : [""],
                     type: selectedCase.type,
                     court: selectedCase.court,
                     judge: selectedCase.judge,
@@ -99,12 +134,24 @@ export default function CaseDetailView({
                   value={selectedCase.stage || getCaseStage(selectedCase)}
                   onChange={(e) => {
                     const newStage = e.target.value;
-                    logAuditAction("UPDATE", "القضايا", `قضية رقم ${selectedCase.number}`, `تعديل مرحلة القضية رقم ${selectedCase.number} إلى (${newStage})`, selectedCase.id);
-                    setCases(cases.map((c) => c.id === selectedCase.id ? { ...c, stage: newStage } : c));
+                    logAuditAction(
+                      "UPDATE",
+                      "القضايا",
+                      `قضية رقم ${selectedCase.number}`,
+                      `تعديل مرحلة القضية رقم ${selectedCase.number} إلى (${newStage})`,
+                      selectedCase.id,
+                    );
+                    setCases(
+                      cases.map((c) => (c.id === selectedCase.id ? { ...c, stage: newStage } : c)),
+                    );
                   }}
                   className={`${inputCls} w-auto text-xs py-1.5`}
                 >
-                  {CASE_STAGES.map((stg) => <option key={stg} value={stg}>{stg}</option>)}
+                  {CASE_STAGES.map((stg) => (
+                    <option key={stg} value={stg}>
+                      {stg}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="space-y-0.5">
@@ -113,12 +160,26 @@ export default function CaseDetailView({
                   value={selectedCase.status}
                   onChange={(e) => {
                     const newStatus = e.target.value;
-                    logAuditAction("STATUS_CHANGE", "القضايا", `قضية رقم ${selectedCase.number}`, `تعديل حالة القضية رقم ${selectedCase.number} من (${selectedCase.status}) إلى (${newStatus})`, selectedCase.id);
-                    setCases(cases.map((c) => c.id === selectedCase.id ? { ...c, status: newStatus } : c));
+                    logAuditAction(
+                      "STATUS_CHANGE",
+                      "القضايا",
+                      `قضية رقم ${selectedCase.number}`,
+                      `تعديل حالة القضية رقم ${selectedCase.number} من (${selectedCase.status}) إلى (${newStatus})`,
+                      selectedCase.id,
+                    );
+                    setCases(
+                      cases.map((c) =>
+                        c.id === selectedCase.id ? { ...c, status: newStatus } : c,
+                      ),
+                    );
                   }}
                   className={`${inputCls} w-auto text-xs py-1.5`}
                 >
-                  {CASE_STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
+                  {CASE_STATUS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -137,21 +198,27 @@ export default function CaseDetailView({
             ["الدائرة/القاضي", selectedCase.judge || "—"],
             ["تاريخ القيد", fmtDate(selectedCase.openDate)],
             canViewFinancials ? ["الأتعاب المتفق عليها", fmtAED(selectedCase.fee)] : null,
-          ].filter(Boolean).map(([k, v, isType]: any) => (
-            <div key={k} className="rounded-xl bg-stone-50 p-3">
-              <p className="text-xs text-slate-500">{k}</p>
-              {isType ? (
-                <div className="mt-1">
-                  <Badge className={`${caseTypeBadgeColor(String(v))} inline-flex items-center gap-1.5 shadow-2xs`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${caseTypeDotColor(String(v))} inline-block shrink-0`} />
-                    {v}
-                  </Badge>
-                </div>
-              ) : (
-                <p className="mt-0.5 font-semibold">{v}</p>
-              )}
-            </div>
-          ))}
+          ]
+            .filter(Boolean)
+            .map(([k, v, isType]: any) => (
+              <div key={k} className="rounded-xl bg-stone-50 p-3">
+                <p className="text-xs text-slate-500">{k}</p>
+                {isType ? (
+                  <div className="mt-1">
+                    <Badge
+                      className={`${caseTypeBadgeColor(String(v))} inline-flex items-center gap-1.5 shadow-2xs`}
+                    >
+                      <span
+                        className={`h-1.5 w-1.5 rounded-full ${caseTypeDotColor(String(v))} inline-block shrink-0`}
+                      />
+                      {v}
+                    </Badge>
+                  </div>
+                ) : (
+                  <p className="mt-0.5 font-semibold">{v}</p>
+                )}
+              </div>
+            ))}
         </div>
       </div>
     </>

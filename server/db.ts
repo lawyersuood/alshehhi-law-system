@@ -17,16 +17,16 @@ let pool: mysql.Pool | null = null;
 export function isAccountingDbConfigured(): boolean {
   return Boolean(
     process.env.ACCOUNTING_DB_HOST &&
-      process.env.ACCOUNTING_DB_NAME &&
-      process.env.ACCOUNTING_DB_USER &&
-      process.env.ACCOUNTING_DB_PASSWORD
+    process.env.ACCOUNTING_DB_NAME &&
+    process.env.ACCOUNTING_DB_USER &&
+    process.env.ACCOUNTING_DB_PASSWORD,
   );
 }
 
 export function getPool(): mysql.Pool {
   if (!isAccountingDbConfigured()) {
     throw new Error(
-      "قاعدة بيانات النظام المحاسبي غير مهيأة — يرجى ضبط متغيرات البيئة ACCOUNTING_DB_HOST / ACCOUNTING_DB_NAME / ACCOUNTING_DB_USER / ACCOUNTING_DB_PASSWORD."
+      "قاعدة بيانات النظام المحاسبي غير مهيأة — يرجى ضبط متغيرات البيئة ACCOUNTING_DB_HOST / ACCOUNTING_DB_NAME / ACCOUNTING_DB_USER / ACCOUNTING_DB_PASSWORD.",
     );
   }
   if (!pool) {

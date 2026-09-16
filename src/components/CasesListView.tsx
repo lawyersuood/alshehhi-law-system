@@ -1,13 +1,38 @@
 import React from "react";
 import {
-  Hash, Eye, EyeOff, SlidersHorizontal, Sparkles, FileSpreadsheet, Plus, Layers,
-  MapPin, User, Users, CalendarDays, ArrowUpDown, Building2, Search, RotateCcw, X,
-  CheckCircle2, Scale, Edit2, Trash2,
+  Hash,
+  Eye,
+  EyeOff,
+  SlidersHorizontal,
+  Sparkles,
+  FileSpreadsheet,
+  Plus,
+  Layers,
+  MapPin,
+  User,
+  Users,
+  CalendarDays,
+  ArrowUpDown,
+  Building2,
+  Search,
+  RotateCcw,
+  X,
+  CheckCircle2,
+  Scale,
+  Edit2,
+  Trash2,
 } from "lucide-react";
 import { Badge } from "./AuthScreens";
 import { CaseItem, Client, RolePermissions } from "../domain/types";
 import { CASE_STAGES, CASE_STATUS, CASE_TYPES } from "../domain/constants";
-import { statusColor, stageBadgeColor, getCaseStage, caseOpponentsLabel, caseTypeBadgeColor, caseTypeDotColor } from "../domain/utils";
+import {
+  statusColor,
+  stageBadgeColor,
+  getCaseStage,
+  caseOpponentsLabel,
+  caseTypeBadgeColor,
+  caseTypeDotColor,
+} from "../domain/utils";
 
 export interface CaseStatsBreakdown {
   statusMap: Record<string, number>;
@@ -74,13 +99,26 @@ export interface CasesListViewProps {
     onConfirm: () => void;
   }) => void;
   logAuditAction: (
-    actionType: "DELETE" | "UPDATE" | "CREATE" | "STATUS_CHANGE" | "PERMISSION_CHANGE" | "UNAUTHORIZED_DELETE" | "UNAUTHORIZED_ACCESS",
+    actionType:
+      | "DELETE"
+      | "UPDATE"
+      | "CREATE"
+      | "STATUS_CHANGE"
+      | "PERMISSION_CHANGE"
+      | "UNAUTHORIZED_DELETE"
+      | "UNAUTHORIZED_ACCESS",
     targetModule: string,
     targetTitle: string,
     details: string,
     targetId?: string | number,
     statusOverride?: "مؤكد" | "محاولة غير مصرح بها - مرفوض" | "مكتمل" | "فشل",
-    userOverride?: { id?: string | number; name?: string; email?: string; roleTitle?: string; jobTitle?: string }
+    userOverride?: {
+      id?: string | number;
+      name?: string;
+      email?: string;
+      roleTitle?: string;
+      jobTitle?: string;
+    },
   ) => void;
   setCases: React.Dispatch<React.SetStateAction<CaseItem[]>>;
 }
@@ -145,7 +183,10 @@ export default function CasesListView({
               <Hash size={13} /> {filteredCases.length} قضية
             </span>
           </div>
-          <p className="text-xs text-slate-500">قيد ومتابعة ملفات القضايا وتوزيعها حسب المحاكم والدوائر والقضاة مع محرك فلترة متقدم وإحصاء فوري</p>
+          <p className="text-xs text-slate-500">
+            قيد ومتابعة ملفات القضايا وتوزيعها حسب المحاكم والدوائر والقضاة مع محرك فلترة متقدم
+            وإحصاء فوري
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {/* زر إظهار / إخفاء عدد وإحصائيات القضايا عند الطلب */}
@@ -159,8 +200,12 @@ export default function CasesListView({
             title="إظهار أو إخفاء بطاقات الإحصاء وتحليل الأعداد"
           >
             {showCaseStatsOnDemand ? <EyeOff size={16} /> : <Eye size={16} />}
-            <span>{showCaseStatsOnDemand ? "إخفاء إحصائيات الأعداد" : "إظهار أعداد وإحصائيات القضايا"}</span>
-            <span className={`px-2 py-0.5 rounded-full text-xs font-black ${showCaseStatsOnDemand ? "bg-white/20 text-white" : "bg-amber-100 text-amber-900"}`}>
+            <span>
+              {showCaseStatsOnDemand ? "إخفاء إحصائيات الأعداد" : "إظهار أعداد وإحصائيات القضايا"}
+            </span>
+            <span
+              className={`px-2 py-0.5 rounded-full text-xs font-black ${showCaseStatsOnDemand ? "bg-white/20 text-white" : "bg-amber-100 text-amber-900"}`}
+            >
               {filteredCases.length}
             </span>
           </button>
@@ -219,13 +264,21 @@ export default function CasesListView({
                 <Hash size={18} />
               </div>
               <div>
-                <h3 className="font-bold text-slate-900 text-sm">لوحة تفصيل أعداد القضايا والإحصاء الفوري (عند الطلب)</h3>
-                <p className="text-xs text-slate-500">انقر على أي بطاقة أو تصنيف لتطبيق الفلترة السريعة مباشرة</p>
+                <h3 className="font-bold text-slate-900 text-sm">
+                  لوحة تفصيل أعداد القضايا والإحصاء الفوري (عند الطلب)
+                </h3>
+                <p className="text-xs text-slate-500">
+                  انقر على أي بطاقة أو تصنيف لتطبيق الفلترة السريعة مباشرة
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-700 bg-amber-100/90 border border-amber-300 px-3 py-1.5 rounded-xl">
-                إجمالي السجلات: <strong className="text-amber-950 text-sm font-black">{filteredCases.length}</strong> / {cases.length} قضية
+                إجمالي السجلات:{" "}
+                <strong className="text-amber-950 text-sm font-black">
+                  {filteredCases.length}
+                </strong>{" "}
+                / {cases.length} قضية
               </span>
               <button
                 onClick={() => setShowCaseStatsOnDemand(false)}
@@ -240,7 +293,10 @@ export default function CasesListView({
           {/* بطاقات الإحصاءات السريعة لحالة القضايا ومراحل التقاضي */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 text-center">
             <div
-              onClick={() => { setCaseFilter("الكل"); setCaseStageFilter("الكل"); }}
+              onClick={() => {
+                setCaseFilter("الكل");
+                setCaseStageFilter("الكل");
+              }}
               className={`cursor-pointer rounded-xl p-3 border transition ${
                 caseFilter === "الكل" && caseStageFilter === "الكل"
                   ? "bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-slate-400"
@@ -260,9 +316,21 @@ export default function CasesListView({
                   : "bg-white border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/40"
               }`}
             >
-              <p className={`text-[11px] font-bold ${caseFilter === "متداولة" ? "text-white" : "text-emerald-800"}`}>قضايا متداولة</p>
-              <p className={`text-2xl font-black mt-0.5 ${caseFilter === "متداولة" ? "text-white" : "text-emerald-950"}`}>{caseStatsBreakdown.statusMap["متداولة"] || 0}</p>
-              <span className={`text-[10px] font-semibold ${caseFilter === "متداولة" ? "text-emerald-100" : "text-emerald-700"}`}>جلسات نشطة</span>
+              <p
+                className={`text-[11px] font-bold ${caseFilter === "متداولة" ? "text-white" : "text-emerald-800"}`}
+              >
+                قضايا متداولة
+              </p>
+              <p
+                className={`text-2xl font-black mt-0.5 ${caseFilter === "متداولة" ? "text-white" : "text-emerald-950"}`}
+              >
+                {caseStatsBreakdown.statusMap["متداولة"] || 0}
+              </p>
+              <span
+                className={`text-[10px] font-semibold ${caseFilter === "متداولة" ? "text-emerald-100" : "text-emerald-700"}`}
+              >
+                جلسات نشطة
+              </span>
             </div>
 
             <div
@@ -273,9 +341,21 @@ export default function CasesListView({
                   : "bg-white border-slate-200 hover:border-stone-400 hover:bg-stone-50"
               }`}
             >
-              <p className={`text-[11px] font-bold ${caseFilter === "منتهية" ? "text-white" : "text-stone-800"}`}>قضايا منتهية</p>
-              <p className={`text-2xl font-black mt-0.5 ${caseFilter === "منتهية" ? "text-white" : "text-stone-950"}`}>{caseStatsBreakdown.statusMap["منتهية"] || 0}</p>
-              <span className={`text-[10px] font-semibold ${caseFilter === "منتهية" ? "text-stone-100" : "text-stone-600"}`}>ملفات محسومة ومغلقة</span>
+              <p
+                className={`text-[11px] font-bold ${caseFilter === "منتهية" ? "text-white" : "text-stone-800"}`}
+              >
+                قضايا منتهية
+              </p>
+              <p
+                className={`text-2xl font-black mt-0.5 ${caseFilter === "منتهية" ? "text-white" : "text-stone-950"}`}
+              >
+                {caseStatsBreakdown.statusMap["منتهية"] || 0}
+              </p>
+              <span
+                className={`text-[10px] font-semibold ${caseFilter === "منتهية" ? "text-stone-100" : "text-stone-600"}`}
+              >
+                ملفات محسومة ومغلقة
+              </span>
             </div>
 
             <div
@@ -286,9 +366,21 @@ export default function CasesListView({
                   : "bg-white border-slate-200 hover:border-purple-400 hover:bg-purple-50/40"
               }`}
             >
-              <p className={`text-[11px] font-bold ${caseFilter === "محكومة" ? "text-white" : "text-purple-800"}`}>قضايا محكومة</p>
-              <p className={`text-2xl font-black mt-0.5 ${caseFilter === "محكومة" ? "text-white" : "text-purple-950"}`}>{caseStatsBreakdown.statusMap["محكومة"] || 0}</p>
-              <span className={`text-[10px] font-semibold ${caseFilter === "محكومة" ? "text-purple-100" : "text-purple-700"}`}>أحكام صدرت</span>
+              <p
+                className={`text-[11px] font-bold ${caseFilter === "محكومة" ? "text-white" : "text-purple-800"}`}
+              >
+                قضايا محكومة
+              </p>
+              <p
+                className={`text-2xl font-black mt-0.5 ${caseFilter === "محكومة" ? "text-white" : "text-purple-950"}`}
+              >
+                {caseStatsBreakdown.statusMap["محكومة"] || 0}
+              </p>
+              <span
+                className={`text-[10px] font-semibold ${caseFilter === "محكومة" ? "text-purple-100" : "text-purple-700"}`}
+              >
+                أحكام صدرت
+              </span>
             </div>
 
             <div
@@ -299,9 +391,21 @@ export default function CasesListView({
                   : "bg-white border-slate-200 hover:border-amber-400 hover:bg-amber-50/40"
               }`}
             >
-              <p className={`text-[11px] font-bold ${caseFilter === "قيد النظر" ? "text-white" : "text-amber-800"}`}>قيد النظر</p>
-              <p className={`text-2xl font-black mt-0.5 ${caseFilter === "قيد النظر" ? "text-white" : "text-amber-950"}`}>{caseStatsBreakdown.statusMap["قيد النظر"] || 0}</p>
-              <span className={`text-[10px] font-semibold ${caseFilter === "قيد النظر" ? "text-amber-100" : "text-amber-700"}`}>بانتظار الفصل</span>
+              <p
+                className={`text-[11px] font-bold ${caseFilter === "قيد النظر" ? "text-white" : "text-amber-800"}`}
+              >
+                قيد النظر
+              </p>
+              <p
+                className={`text-2xl font-black mt-0.5 ${caseFilter === "قيد النظر" ? "text-white" : "text-amber-950"}`}
+              >
+                {caseStatsBreakdown.statusMap["قيد النظر"] || 0}
+              </p>
+              <span
+                className={`text-[10px] font-semibold ${caseFilter === "قيد النظر" ? "text-amber-100" : "text-amber-700"}`}
+              >
+                بانتظار الفصل
+              </span>
             </div>
 
             <div
@@ -312,11 +416,22 @@ export default function CasesListView({
                   : "bg-white border-slate-200 hover:border-red-400 hover:bg-red-50/40"
               }`}
             >
-              <p className={`text-[11px] font-bold ${caseFilter === "مشطوبة" ? "text-white" : "text-red-800"}`}>مشطوبة / معلقة</p>
-              <p className={`text-2xl font-black mt-0.5 ${caseFilter === "مشطوبة" ? "text-white" : "text-red-950"}`}>
-                {(caseStatsBreakdown.statusMap["مشطوبة"] || 0) + (caseStatsBreakdown.statusMap["معلقة"] || 0)}
+              <p
+                className={`text-[11px] font-bold ${caseFilter === "مشطوبة" ? "text-white" : "text-red-800"}`}
+              >
+                مشطوبة / معلقة
               </p>
-              <span className={`text-[10px] font-semibold ${caseFilter === "مشطوبة" ? "text-red-100" : "text-red-600"}`}>مشطوبة أو موقوفة</span>
+              <p
+                className={`text-2xl font-black mt-0.5 ${caseFilter === "مشطوبة" ? "text-white" : "text-red-950"}`}
+              >
+                {(caseStatsBreakdown.statusMap["مشطوبة"] || 0) +
+                  (caseStatsBreakdown.statusMap["معلقة"] || 0)}
+              </p>
+              <span
+                className={`text-[10px] font-semibold ${caseFilter === "مشطوبة" ? "text-red-100" : "text-red-600"}`}
+              >
+                مشطوبة أو موقوفة
+              </span>
             </div>
           </div>
 
@@ -325,7 +440,10 @@ export default function CasesListView({
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
               <span className="font-bold text-xs text-slate-800 flex items-center gap-1.5">
                 <Layers size={14} className="text-amber-600" />
-                <span>توزيع مراحل ودرجات التقاضي (الاستئناف، الابتدائي، التمييز، التنفيذ) مع حالة التداول والإنجاز:</span>
+                <span>
+                  توزيع مراحل ودرجات التقاضي (الاستئناف، الابتدائي، التمييز، التنفيذ) مع حالة
+                  التداول والإنجاز:
+                </span>
               </span>
               {caseStageFilter !== "الكل" && (
                 <button
@@ -340,7 +458,10 @@ export default function CasesListView({
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
               {CASE_STAGES.map((stg) => {
                 const totalForStage = caseStatsBreakdown.stageMap[stg] || 0;
-                const stgStats = caseStatsBreakdown.stageStatusMap[stg] || { ongoing: 0, finished: 0 };
+                const stgStats = caseStatsBreakdown.stageStatusMap[stg] || {
+                  ongoing: 0,
+                  finished: 0,
+                };
                 const isSelected = caseStageFilter === stg;
                 return (
                   <button
@@ -353,8 +474,14 @@ export default function CasesListView({
                     }`}
                   >
                     <div className="flex items-center justify-between w-full">
-                      <span className={`text-xs font-bold ${isSelected ? "text-white" : "text-slate-900"}`}>{stg}</span>
-                      <span className={`text-xs font-black px-2 py-0.5 rounded-full ${isSelected ? "bg-white text-amber-900" : "bg-amber-100 text-amber-950"}`}>
+                      <span
+                        className={`text-xs font-bold ${isSelected ? "text-white" : "text-slate-900"}`}
+                      >
+                        {stg}
+                      </span>
+                      <span
+                        className={`text-xs font-black px-2 py-0.5 rounded-full ${isSelected ? "bg-white text-amber-900" : "bg-amber-100 text-amber-950"}`}
+                      >
                         {totalForStage}
                       </span>
                     </div>
@@ -384,7 +511,8 @@ export default function CasesListView({
               { id: "أم القيوين", name: "أم القيوين", icon: "" },
               { id: "الفجيرة", name: "الفجيرة", icon: "" },
             ].map((em) => {
-              const count = em.id === "الكل" ? cases.length : (caseStatsBreakdown.emirateMap[em.id] || 0);
+              const count =
+                em.id === "الكل" ? cases.length : caseStatsBreakdown.emirateMap[em.id] || 0;
               const isSelected = caseEmirateFilter === em.id;
               return (
                 <button
@@ -397,7 +525,9 @@ export default function CasesListView({
                   }`}
                 >
                   <span className="leading-tight truncate w-full">{em.name}</span>
-                  <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${isSelected ? "bg-[#C5A059] text-[#0D382B] font-bold" : "bg-slate-100 text-slate-600"}`}>
+                  <span
+                    className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${isSelected ? "bg-[#C5A059] text-[#0D382B] font-bold" : "bg-slate-100 text-slate-600"}`}
+                  >
                     {count}
                   </span>
                 </button>
@@ -407,21 +537,25 @@ export default function CasesListView({
 
           {/* شريط توزيع المحاكم وتصنيف الموكلين */}
           <div className="grid sm:grid-cols-2 gap-3 pt-3 text-xs">
-
             <div className="bg-white p-3 rounded-xl border border-amber-100 shadow-2xs">
               <span className="font-bold text-slate-800 mb-2 flex items-center justify-between">
                 <span className="flex items-center gap-1">
                   <Users size={13} className="text-amber-600" /> توزيع الموكلين وصفاتهم:
                 </span>
                 {caseClientTypeFilter !== "الكل" && (
-                  <button onClick={() => setCaseClientTypeFilter("الكل")} className="text-[10px] text-amber-700 font-bold hover:underline">
+                  <button
+                    onClick={() => setCaseClientTypeFilter("الكل")}
+                    className="text-[10px] text-amber-700 font-bold hover:underline"
+                  >
                     إلغاء التحديد
                   </button>
                 )}
               </span>
               <div className="flex items-center gap-2 mt-2">
                 <button
-                  onClick={() => setCaseClientTypeFilter(caseClientTypeFilter === "شركة" ? "الكل" : "شركة")}
+                  onClick={() =>
+                    setCaseClientTypeFilter(caseClientTypeFilter === "شركة" ? "الكل" : "شركة")
+                  }
                   className={`flex-1 p-2 rounded-lg border text-center transition ${
                     caseClientTypeFilter === "شركة"
                       ? "bg-amber-600 text-white border-amber-600 shadow-xs"
@@ -429,10 +563,14 @@ export default function CasesListView({
                   }`}
                 >
                   <p className="text-[10px] font-bold opacity-90">شركات ومؤسسات</p>
-                  <p className="text-base font-black mt-0.5">{caseStatsBreakdown.clientTypeMap["شركة"] || 0} قضية</p>
+                  <p className="text-base font-black mt-0.5">
+                    {caseStatsBreakdown.clientTypeMap["شركة"] || 0} قضية
+                  </p>
                 </button>
                 <button
-                  onClick={() => setCaseClientTypeFilter(caseClientTypeFilter === "فرد" ? "الكل" : "فرد")}
+                  onClick={() =>
+                    setCaseClientTypeFilter(caseClientTypeFilter === "فرد" ? "الكل" : "فرد")
+                  }
                   className={`flex-1 p-2 rounded-lg border text-center transition ${
                     caseClientTypeFilter === "فرد"
                       ? "bg-amber-600 text-white border-amber-600 shadow-xs"
@@ -440,7 +578,9 @@ export default function CasesListView({
                   }`}
                 >
                   <p className="text-[10px] font-bold opacity-90">أفراد وأشخاص</p>
-                  <p className="text-base font-black mt-0.5">{caseStatsBreakdown.clientTypeMap["فرد"] || 0} قضية</p>
+                  <p className="text-base font-black mt-0.5">
+                    {caseStatsBreakdown.clientTypeMap["فرد"] || 0} قضية
+                  </p>
                 </button>
               </div>
             </div>
@@ -451,7 +591,10 @@ export default function CasesListView({
                   <Scale size={13} className="text-amber-600" /> أكثر التخصصات القضائية:
                 </span>
                 {caseTypeFilter !== "الكل" && (
-                  <button onClick={() => setCaseTypeFilter("الكل")} className="text-[10px] text-amber-700 font-bold hover:underline">
+                  <button
+                    onClick={() => setCaseTypeFilter("الكل")}
+                    className="text-[10px] text-amber-700 font-bold hover:underline"
+                  >
                     إلغاء التحديد
                   </button>
                 )}
@@ -472,9 +615,15 @@ export default function CasesListView({
                             : `${caseTypeBadgeColor(tp)} hover:opacity-85`
                         }`}
                       >
-                        <span className={`h-2 w-2 rounded-full ${caseTypeDotColor(tp)} inline-block shrink-0`} />
+                        <span
+                          className={`h-2 w-2 rounded-full ${caseTypeDotColor(tp)} inline-block shrink-0`}
+                        />
                         <span>{tp}</span>
-                        <span className={`font-bold ${isSelected ? "text-amber-300" : "text-slate-600"}`}>({count})</span>
+                        <span
+                          className={`font-bold ${isSelected ? "text-amber-300" : "text-slate-600"}`}
+                        >
+                          ({count})
+                        </span>
                       </button>
                     );
                   })}
@@ -490,7 +639,9 @@ export default function CasesListView({
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
             <div className="flex items-center gap-2">
               <SlidersHorizontal size={16} className="text-amber-600" />
-              <span className="font-bold text-sm text-slate-900">محرك الفلترة المتقدمة وتخصيص رول القضايا</span>
+              <span className="font-bold text-sm text-slate-900">
+                محرك الفلترة المتقدمة وتخصيص رول القضايا
+              </span>
               {activeFiltersCount > 0 && (
                 <span className="rounded-full bg-amber-100 text-amber-900 border border-amber-200 px-2 py-0.5 text-xs font-bold">
                   {activeFiltersCount} فلتر مطبق
@@ -529,7 +680,9 @@ export default function CasesListView({
               >
                 <option value="الكل">🏛️ جميع المراحل ودرجات التقاضي ({cases.length})</option>
                 {CASE_STAGES.map((stg) => (
-                  <option key={stg} value={stg}>{stg} ({caseStatsBreakdown.stageMap[stg] || 0})</option>
+                  <option key={stg} value={stg}>
+                    {stg} ({caseStatsBreakdown.stageMap[stg] || 0})
+                  </option>
                 ))}
               </select>
             </div>
@@ -546,7 +699,9 @@ export default function CasesListView({
               >
                 <option value="الكل">📋 جميع الحالات ({cases.length})</option>
                 {CASE_STATUS.map((st) => (
-                  <option key={st} value={st}>{st} ({caseStatsBreakdown.statusMap[st] || 0})</option>
+                  <option key={st} value={st}>
+                    {st} ({caseStatsBreakdown.statusMap[st] || 0})
+                  </option>
                 ))}
               </select>
             </div>
@@ -563,7 +718,9 @@ export default function CasesListView({
               >
                 <option value="الكل">⚖️ جميع الأنواع والتخصصات ({uniqueCaseTypes.length})</option>
                 {uniqueCaseTypes.map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
                 ))}
               </select>
             </div>
@@ -580,7 +737,9 @@ export default function CasesListView({
               >
                 <option value="الكل">📍 جميع الإمارات ({uniqueEmirates.length})</option>
                 {uniqueEmirates.map((em) => (
-                  <option key={em} value={em}>{em}</option>
+                  <option key={em} value={em}>
+                    {em}
+                  </option>
                 ))}
               </select>
             </div>
@@ -597,7 +756,9 @@ export default function CasesListView({
               >
                 <option value="الكل">👥 جميع الموكلين ({uniqueCaseClients.length})</option>
                 {uniqueCaseClients.map((cl) => (
-                  <option key={cl.id} value={String(cl.id)}>{cl.name} ({cl.type})</option>
+                  <option key={cl.id} value={String(cl.id)}>
+                    {cl.name} ({cl.type})
+                  </option>
                 ))}
               </select>
             </div>
@@ -630,7 +791,9 @@ export default function CasesListView({
               >
                 <option value="الكل">📅 جميع السنوات ({uniqueCaseYears.length})</option>
                 {uniqueCaseYears.map((yr) => (
-                  <option key={yr} value={yr}>سنة {yr}</option>
+                  <option key={yr} value={yr}>
+                    سنة {yr}
+                  </option>
                 ))}
               </select>
             </div>
@@ -666,7 +829,9 @@ export default function CasesListView({
               >
                 <option value="الكل">🏢 جميع المحاكم ({uniqueCourts.length})</option>
                 {uniqueCourts.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
               </select>
             </div>
@@ -679,67 +844,119 @@ export default function CasesListView({
               {caseStageFilter !== "الكل" && (
                 <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-300 px-2.5 py-0.5 text-xs text-amber-950 font-bold">
                   درجة التقاضي: {caseStageFilter}
-                  <button onClick={() => setCaseStageFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                  <button
+                    onClick={() => setCaseStageFilter("الكل")}
+                    className="hover:text-red-600 p-0.5"
+                  >
+                    <X size={12} />
+                  </button>
                 </span>
               )}
               {caseFilter !== "الكل" && (
                 <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
                   الحالة: {caseFilter}
-                  <button onClick={() => setCaseFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                  <button
+                    onClick={() => setCaseFilter("الكل")}
+                    className="hover:text-red-600 p-0.5"
+                  >
+                    <X size={12} />
+                  </button>
                 </span>
               )}
               {caseJudgeFilter !== "الكل" && (
                 <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
                   القاضي/الدائرة: {caseJudgeFilter}
-                  <button onClick={() => setCaseJudgeFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                  <button
+                    onClick={() => setCaseJudgeFilter("الكل")}
+                    className="hover:text-red-600 p-0.5"
+                  >
+                    <X size={12} />
+                  </button>
                 </span>
               )}
               {caseCourtFilter !== "الكل" && (
                 <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
                   المحكمة: {caseCourtFilter}
-                  <button onClick={() => setCaseCourtFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                  <button
+                    onClick={() => setCaseCourtFilter("الكل")}
+                    className="hover:text-red-600 p-0.5"
+                  >
+                    <X size={12} />
+                  </button>
                 </span>
               )}
               {caseTypeFilter !== "الكل" && (
                 <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
                   النوع: {caseTypeFilter}
-                  <button onClick={() => setCaseTypeFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                  <button
+                    onClick={() => setCaseTypeFilter("الكل")}
+                    className="hover:text-red-600 p-0.5"
+                  >
+                    <X size={12} />
+                  </button>
                 </span>
               )}
               {caseEmirateFilter !== "الكل" && (
                 <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
                   الإمارة: {caseEmirateFilter}
-                  <button onClick={() => setCaseEmirateFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                  <button
+                    onClick={() => setCaseEmirateFilter("الكل")}
+                    className="hover:text-red-600 p-0.5"
+                  >
+                    <X size={12} />
+                  </button>
                 </span>
               )}
               {caseClientFilter !== "الكل" && (
                 <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
                   الموكل: {clientName(Number(caseClientFilter))}
-                  <button onClick={() => setCaseClientFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                  <button
+                    onClick={() => setCaseClientFilter("الكل")}
+                    className="hover:text-red-600 p-0.5"
+                  >
+                    <X size={12} />
+                  </button>
                 </span>
               )}
               {caseClientTypeFilter !== "الكل" && (
                 <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
                   صفة الموكل: {caseClientTypeFilter}
-                  <button onClick={() => setCaseClientTypeFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                  <button
+                    onClick={() => setCaseClientTypeFilter("الكل")}
+                    className="hover:text-red-600 p-0.5"
+                  >
+                    <X size={12} />
+                  </button>
                 </span>
               )}
               {caseYearFilter !== "الكل" && (
                 <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
                   السنة: {caseYearFilter}
-                  <button onClick={() => setCaseYearFilter("الكل")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                  <button
+                    onClick={() => setCaseYearFilter("الكل")}
+                    className="hover:text-red-600 p-0.5"
+                  >
+                    <X size={12} />
+                  </button>
                 </span>
               )}
               {caseSortBy !== "default" && (
                 <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
                   الترتيب: {caseSortBy}
-                  <button onClick={() => setCaseSortBy("default")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                  <button
+                    onClick={() => setCaseSortBy("default")}
+                    className="hover:text-red-600 p-0.5"
+                  >
+                    <X size={12} />
+                  </button>
                 </span>
               )}
               {q.trim() !== "" && (
                 <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200 px-2.5 py-0.5 text-xs text-amber-900 font-semibold">
                   بحث: "{q}"
-                  <button onClick={() => setQ("")} className="hover:text-red-600 p-0.5"><X size={12} /></button>
+                  <button onClick={() => setQ("")} className="hover:text-red-600 p-0.5">
+                    <X size={12} />
+                  </button>
                 </span>
               )}
             </div>
@@ -768,7 +985,9 @@ export default function CasesListView({
                 }`}
               >
                 <span>{stg}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${isSelected ? "bg-white text-amber-900" : "bg-amber-200/80 text-amber-950"}`}>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${isSelected ? "bg-white text-amber-900" : "bg-amber-200/80 text-amber-950"}`}
+                >
                   {count}
                 </span>
               </button>
@@ -792,12 +1011,14 @@ export default function CasesListView({
                   isSelected
                     ? "bg-slate-900 text-white border-slate-900 shadow-xs"
                     : s === "الكل"
-                    ? "bg-slate-100 text-slate-600 border-slate-200 hover:bg-[#0D382B]/[0.08] transition-colors"
-                    : `${statusColor(s)} hover:brightness-95`
+                      ? "bg-slate-100 text-slate-600 border-slate-200 hover:bg-[#0D382B]/[0.08] transition-colors"
+                      : `${statusColor(s)} hover:brightness-95`
                 }`}
               >
                 <span>{s}</span>
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}>
+                <span
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${isSelected ? "bg-white/20 text-white" : "bg-slate-200 text-slate-700"}`}
+                >
                   {count}
                 </span>
               </button>
@@ -819,7 +1040,9 @@ export default function CasesListView({
           >
             <option value="الكل">🏛️ جميع الدوائر والقضاة ({uniqueJudges.length})</option>
             {uniqueJudges.map((j) => (
-              <option key={j} value={j}>{j}</option>
+              <option key={j} value={j}>
+                {j}
+              </option>
             ))}
           </select>
         </div>
@@ -835,7 +1058,9 @@ export default function CasesListView({
           >
             <option value="الكل">🏢 جميع المحاكم ({uniqueCourts.length})</option>
             {uniqueCourts.map((c) => (
-              <option key={c} value={c}>{c}</option>
+              <option key={c} value={c}>
+                {c}
+              </option>
             ))}
           </select>
         </div>
@@ -885,7 +1110,9 @@ export default function CasesListView({
               className="flex items-center gap-1 font-bold text-amber-800 hover:text-amber-950 hover:underline transition"
             >
               {showCaseStatsOnDemand ? <EyeOff size={13} /> : <Eye size={13} />}
-              <span>{showCaseStatsOnDemand ? "إخفاء التفصيل الإحصائي" : "عرض التفصيل الإحصائي للأعداد"}</span>
+              <span>
+                {showCaseStatsOnDemand ? "إخفاء التفصيل الإحصائي" : "عرض التفصيل الإحصائي للأعداد"}
+              </span>
             </button>
           </div>
 
@@ -906,7 +1133,9 @@ export default function CasesListView({
                 }`}
                 title={`تصفية سريعة حسب: قضية ${t}`}
               >
-                <span className={`h-2 w-2 rounded-full ${caseTypeDotColor(t)} inline-block shrink-0`} />
+                <span
+                  className={`h-2 w-2 rounded-full ${caseTypeDotColor(t)} inline-block shrink-0`}
+                />
                 <span>{t}</span>
               </button>
             ))}
@@ -925,13 +1154,18 @@ export default function CasesListView({
               <th className="px-4 py-3 font-semibold">مرحلة الدعوى</th>
               <th className="px-4 py-3 font-semibold">الحالة</th>
               {/* عمود ثابت (sticky) حتى تبقى أزرار عرض/تعديل/حذف القضية ظاهرة دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
-              <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-[#faf9f6] shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
+              <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-[#faf9f6] shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
+                إجراءات
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100/80">
             {filteredCases.map((c) => (
               <tr key={c.id} className="transition hover:bg-[#0D382B]/[0.025] group">
-                <td className="px-4 py-3 font-semibold text-slate-900 cursor-pointer" onClick={() => setCaseView(c.id)}>
+                <td
+                  className="px-4 py-3 font-semibold text-slate-900 cursor-pointer"
+                  onClick={() => setCaseView(c.id)}
+                >
                   <div className="flex items-center gap-2.5">
                     {/* مؤشر بصري (نقطة ملونة) يمثل تصنيف القضية */}
                     <span
@@ -943,10 +1177,25 @@ export default function CasesListView({
                     </span>
                   </div>
                 </td>
-                <td className="px-4 py-3 cursor-pointer" onClick={() => setCaseView(c.id)}>{clientName(c.clientId)}</td>
-                <td className="px-4 py-3 text-slate-500 cursor-pointer" onClick={() => setCaseView(c.id)}>{caseOpponentsLabel(c)}</td>
-                <td className="hidden px-4 py-3 text-slate-500 lg:table-cell cursor-pointer" onClick={() => setCaseView(c.id)}>{c.court}</td>
-                <td className="hidden px-4 py-3 md:table-cell cursor-pointer" onClick={() => setCaseView(c.id)}>
+                <td className="px-4 py-3 cursor-pointer" onClick={() => setCaseView(c.id)}>
+                  {clientName(c.clientId)}
+                </td>
+                <td
+                  className="px-4 py-3 text-slate-500 cursor-pointer"
+                  onClick={() => setCaseView(c.id)}
+                >
+                  {caseOpponentsLabel(c)}
+                </td>
+                <td
+                  className="hidden px-4 py-3 text-slate-500 lg:table-cell cursor-pointer"
+                  onClick={() => setCaseView(c.id)}
+                >
+                  {c.court}
+                </td>
+                <td
+                  className="hidden px-4 py-3 md:table-cell cursor-pointer"
+                  onClick={() => setCaseView(c.id)}
+                >
                   {c.judge && c.judge.trim() ? (
                     <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-700 bg-stone-100 px-2.5 py-1 rounded-lg border border-stone-200">
                       <Scale size={12} className="text-amber-600" /> {c.judge}
@@ -957,24 +1206,38 @@ export default function CasesListView({
                 </td>
                 <td className="px-4 py-3 whitespace-nowrap">
                   {/* شارة نوع القضية مع النقطة الملونة وتنسيق الألوان الخاص بالتصنيف */}
-                  <Badge className={`${caseTypeBadgeColor(c.type)} inline-flex items-center gap-1.5 shadow-2xs`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${caseTypeDotColor(c.type)} inline-block shrink-0`} />
+                  <Badge
+                    className={`${caseTypeBadgeColor(c.type)} inline-flex items-center gap-1.5 shadow-2xs`}
+                  >
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${caseTypeDotColor(c.type)} inline-block shrink-0`}
+                    />
                     <span>{c.type}</span>
                   </Badge>
                 </td>
-                <td className="px-4 py-3"><Badge className={stageBadgeColor(getCaseStage(c))}>{getCaseStage(c)}</Badge></td>
-                <td className="px-4 py-3"><Badge className={statusColor(c.status)}>{c.status}</Badge></td>
+                <td className="px-4 py-3">
+                  <Badge className={stageBadgeColor(getCaseStage(c))}>{getCaseStage(c)}</Badge>
+                </td>
+                <td className="px-4 py-3">
+                  <Badge className={statusColor(c.status)}>{c.status}</Badge>
+                </td>
                 {/* عمود ثابت (sticky) حتى تبقى أزرار عرض/تعديل/حذف القضية ظاهرة دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
                 <td className="sticky left-0 z-10 bg-white group-hover:bg-[#0D382B]/[0.025] px-4 py-3 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
                   <div className="flex items-center justify-center gap-2">
-                    <button onClick={() => setCaseView(c.id)} className="text-xs font-semibold text-amber-700 hover:underline">عرض التفاصيل</button>
+                    <button
+                      onClick={() => setCaseView(c.id)}
+                      className="text-xs font-semibold text-amber-700 hover:underline"
+                    >
+                      عرض التفاصيل
+                    </button>
                     <button
                       onClick={() => {
                         setEditingCase(c);
                         setForm({
                           number: c.number,
                           clientId: c.clientId,
-                          opponents: c.opponents && c.opponents.length > 0 ? [...c.opponents] : [""],
+                          opponents:
+                            c.opponents && c.opponents.length > 0 ? [...c.opponents] : [""],
                           type: c.type,
                           court: c.court,
                           judge: c.judge,
@@ -1001,7 +1264,13 @@ export default function CasesListView({
                           permKey: "deleteCases",
                           actionName: "حذف ملف القضية",
                           onConfirm: () => {
-                            logAuditAction("DELETE", "إدارة القضايا", `قضية: ${c.number}`, `حذف القضية رقم ${c.number} الخاصة بالموكل ${clientName(c.clientId)}`, c.id);
+                            logAuditAction(
+                              "DELETE",
+                              "إدارة القضايا",
+                              `قضية: ${c.number}`,
+                              `حذف القضية رقم ${c.number} الخاصة بالموكل ${clientName(c.clientId)}`,
+                              c.id,
+                            );
                             setCases((prev) => prev.filter((x) => x.id !== c.id));
                           },
                         });
@@ -1019,7 +1288,9 @@ export default function CasesListView({
         </table>
         {filteredCases.length === 0 && (
           <div className="py-12 text-center text-sm text-slate-500 space-y-2">
-            <p className="font-semibold text-slate-600">لا توجد قضايا مطابقة لخيارات الفلترة المحددة</p>
+            <p className="font-semibold text-slate-600">
+              لا توجد قضايا مطابقة لخيارات الفلترة المحددة
+            </p>
             <p className="text-xs text-slate-400">جرب تعديل خيارات الفلترة أو تفريغ معايير البحث</p>
             {activeFiltersCount > 0 && (
               <button

@@ -97,7 +97,14 @@ export default function ChartOfAccounts({
 
   const openEdit = (a: Account) => {
     setError("");
-    setForm({ id: a.id, code: a.code, name: a.name, type: a.type, notes: a.notes || "", isActive: a.isActive });
+    setForm({
+      id: a.id,
+      code: a.code,
+      name: a.name,
+      type: a.type,
+      notes: a.notes || "",
+      isActive: a.isActive,
+    });
   };
 
   const closeForm = () => setForm(null);
@@ -118,8 +125,17 @@ export default function ChartOfAccounts({
     if (form.id) {
       setAccounts((prev) =>
         prev.map((a) =>
-          a.id === form.id ? { ...a, code, name, type: form.type, notes: form.notes.trim() || undefined, isActive: form.isActive } : a
-        )
+          a.id === form.id
+            ? {
+                ...a,
+                code,
+                name,
+                type: form.type,
+                notes: form.notes.trim() || undefined,
+                isActive: form.isActive,
+              }
+            : a,
+        ),
       );
     } else {
       setAccounts((prev) => [
@@ -158,11 +174,18 @@ export default function ChartOfAccounts({
     const kids = (childrenMap.get(a.id) || []).filter((k) => visibleIds.has(k.id));
     return (
       <React.Fragment key={a.id}>
-        <tr className={`border-b border-slate-50 last:border-0 hover:bg-[#0D382B]/[0.02] transition-colors ${!a.isActive ? "opacity-50" : ""} ${a.isGroup ? "bg-slate-50/60" : ""}`}>
-          <td className="px-4 py-1.5 font-mono text-slate-700" style={{ paddingRight: `${16 + depth * 18}px` }}>
+        <tr
+          className={`border-b border-slate-50 last:border-0 hover:bg-[#0D382B]/[0.02] transition-colors ${!a.isActive ? "opacity-50" : ""} ${a.isGroup ? "bg-slate-50/60" : ""}`}
+        >
+          <td
+            className="px-4 py-1.5 font-mono text-slate-700"
+            style={{ paddingRight: `${16 + depth * 18}px` }}
+          >
             {a.code}
           </td>
-          <td className={`px-4 py-1.5 ${a.isGroup ? "text-slate-600 font-bold" : "text-slate-800 font-medium"}`}>
+          <td
+            className={`px-4 py-1.5 ${a.isGroup ? "text-slate-600 font-bold" : "text-slate-800 font-medium"}`}
+          >
             <span className="inline-flex items-center gap-1.5">
               {a.name}
               {a.isGroup && (
@@ -170,7 +193,13 @@ export default function ChartOfAccounts({
                   تصنيف
                 </span>
               )}
-              {a.isSystem && <Lock size={12} className="text-slate-300" title="حساب أساسي من الشجرة الافتراضية" />}
+              {a.isSystem && (
+                <Lock
+                  size={12}
+                  className="text-slate-300"
+                  title="حساب أساسي من الشجرة الافتراضية"
+                />
+              )}
             </span>
           </td>
           <td className="px-4 py-1.5 text-xs text-slate-500">{a.notes || "—"}</td>
@@ -186,14 +215,23 @@ export default function ChartOfAccounts({
           {canManage && (
             <td className="px-4 py-1.5">
               <div className="flex items-center gap-1 justify-end">
-                <button onClick={() => toggleActive(a)} className="text-xs text-slate-500 hover:text-slate-800 px-2 py-1">
+                <button
+                  onClick={() => toggleActive(a)}
+                  className="text-xs text-slate-500 hover:text-slate-800 px-2 py-1"
+                >
                   {a.isActive ? "تعطيل" : "تفعيل"}
                 </button>
-                <button onClick={() => openEdit(a)} className="p-1.5 text-slate-500 hover:text-[#0D382B] rounded-lg hover:bg-[#0D382B]/[0.06]">
+                <button
+                  onClick={() => openEdit(a)}
+                  className="p-1.5 text-slate-500 hover:text-[#0D382B] rounded-lg hover:bg-[#0D382B]/[0.06]"
+                >
                   <Pencil size={14} />
                 </button>
                 {!a.isSystem && (
-                  <button onClick={() => requestDelete(a)} className="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50">
+                  <button
+                    onClick={() => requestDelete(a)}
+                    className="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50"
+                  >
                     <Trash2 size={14} />
                   </button>
                 )}
@@ -211,7 +249,9 @@ export default function ChartOfAccounts({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-slate-900">شجرة الحسابات</h2>
-          <p className="text-xs text-slate-500">دليل الحسابات المحاسبي المعتمد للمكتب — {accounts.length} حساب مسجّل</p>
+          <p className="text-xs text-slate-500">
+            دليل الحسابات المحاسبي المعتمد للمكتب — {accounts.length} حساب مسجّل
+          </p>
         </div>
         {canManage && (
           <button
@@ -233,7 +273,11 @@ export default function ChartOfAccounts({
             className={inputCls + " pr-9"}
           />
         </div>
-        <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as AccountType | "all")} className={inputCls + " w-auto"}>
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value as AccountType | "all")}
+          className={inputCls + " w-auto"}
+        >
           <option value="all">كل الأنواع</option>
           {ACCOUNT_TYPE_ORDER.map((t) => (
             <option key={t} value={t}>
@@ -242,7 +286,11 @@ export default function ChartOfAccounts({
           ))}
         </select>
         <label className="flex items-center gap-2 text-xs text-slate-600 whitespace-nowrap">
-          <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={showInactive}
+            onChange={(e) => setShowInactive(e.target.checked)}
+          />
           إظهار الحسابات المعطّلة
         </label>
       </div>
@@ -267,32 +315,46 @@ export default function ChartOfAccounts({
                       {canManage && <th className="px-4 py-1.5 font-bold"></th>}
                     </tr>
                   </thead>
-                  <tbody>
-                    {list.map((a) => renderNode(a, 0))}
-                  </tbody>
+                  <tbody>{list.map((a) => renderNode(a, 0))}</tbody>
                 </table>
               </div>
             </div>
           );
         })}
         {filtered.length === 0 && (
-          <div className="app-card p-8 text-center text-sm text-slate-500">لا توجد حسابات مطابقة لخيارات البحث الحالية</div>
+          <div className="app-card p-8 text-center text-sm text-slate-500">
+            لا توجد حسابات مطابقة لخيارات البحث الحالية
+          </div>
         )}
       </div>
 
       {form && (
-        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeForm}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={closeForm}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-900">{form.id ? "تعديل الحساب" : "إضافة حساب جديد"}</h3>
+              <h3 className="font-bold text-slate-900">
+                {form.id ? "تعديل الحساب" : "إضافة حساب جديد"}
+              </h3>
               <button onClick={closeForm} className="text-slate-400 hover:text-slate-700">
                 <X size={18} />
               </button>
             </div>
-            {error && <div className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">{error}</div>}
+            {error && (
+              <div className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+                {error}
+              </div>
+            )}
             <div className="space-y-3">
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">رقم الحساب</label>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  رقم الحساب
+                </label>
                 <input
                   value={form.code}
                   onChange={(e) => setForm({ ...form, code: e.target.value })}
@@ -301,7 +363,9 @@ export default function ChartOfAccounts({
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">اسم الحساب</label>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  اسم الحساب
+                </label>
                 <input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -310,8 +374,14 @@ export default function ChartOfAccounts({
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">نوع الحساب</label>
-                <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as AccountType })} className={inputCls}>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  نوع الحساب
+                </label>
+                <select
+                  value={form.type}
+                  onChange={(e) => setForm({ ...form, type: e.target.value as AccountType })}
+                  className={inputCls}
+                >
                   {ACCOUNT_TYPE_ORDER.map((t) => (
                     <option key={t} value={t}>
                       {ACCOUNT_TYPE_LABELS[t]}
@@ -320,15 +390,27 @@ export default function ChartOfAccounts({
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">ملاحظات (اختياري)</label>
-                <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className={inputCls} />
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  ملاحظات (اختياري)
+                </label>
+                <input
+                  value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  className={inputCls}
+                />
               </div>
             </div>
             <div className="flex gap-2 justify-end pt-2">
-              <button onClick={closeForm} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
+              <button
+                onClick={closeForm}
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
                 إلغاء
               </button>
-              <button onClick={saveForm} className="px-4 py-2 text-sm font-semibold text-white bg-[#0D382B] hover:bg-[#124d40] transition-colors rounded-xl">
+              <button
+                onClick={saveForm}
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#0D382B] hover:bg-[#124d40] transition-colors rounded-xl"
+              >
                 حفظ
               </button>
             </div>
@@ -337,18 +419,33 @@ export default function ChartOfAccounts({
       )}
 
       {confirmDeleteId && deletingAccount && (
-        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmDeleteId(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setConfirmDeleteId(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="font-bold text-slate-900">تأكيد حذف الحساب</h3>
             <p className="text-sm text-slate-600">
-              هل أنت متأكد من حذف الحساب <span className="font-bold">{deletingAccount.code} — {deletingAccount.name}</span>؟ لا يمكن التراجع عن هذا
-              الإجراء.
+              هل أنت متأكد من حذف الحساب{" "}
+              <span className="font-bold">
+                {deletingAccount.code} — {deletingAccount.name}
+              </span>
+              ؟ لا يمكن التراجع عن هذا الإجراء.
             </p>
             <div className="flex gap-2 justify-end pt-2">
-              <button onClick={() => setConfirmDeleteId(null)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
                 إلغاء
               </button>
-              <button onClick={confirmDelete} className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl">
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl"
+              >
                 حذف نهائياً
               </button>
             </div>

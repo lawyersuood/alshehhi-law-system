@@ -13,14 +13,19 @@ import { todayISO } from "../domain/utils";
 
 export function usePolicies() {
   const [policies, setPolicies] = useState<InternalPolicy[]>(() =>
-    loadStorage("firm_internal_policies", seedInternalPolicies)
+    loadStorage("firm_internal_policies", seedInternalPolicies),
   );
   const [policySearch, setPolicySearch] = useState<string>("");
   const [policyCategoryFilter, setPolicyCategoryFilter] = useState<string>("الكل");
   const [showPolicyModal, setShowPolicyModal] = useState<boolean>(false);
   const [editingPolicy, setEditingPolicy] = useState<InternalPolicy | null>(null);
   const [selectedPolicy, setSelectedPolicy] = useState<InternalPolicy | null>(null);
-  const [policyForm, setPolicyForm] = useState<{ title: string; category: string; content: string; effectiveDate: string }>({
+  const [policyForm, setPolicyForm] = useState<{
+    title: string;
+    category: string;
+    content: string;
+    effectiveDate: string;
+  }>({
     title: "",
     category: POLICY_CATEGORIES[0],
     content: "",
@@ -43,13 +48,20 @@ export function usePolicies() {
   }, [policies, policySearch, policyCategoryFilter]);
 
   return {
-    policies, setPolicies,
-    policySearch, setPolicySearch,
-    policyCategoryFilter, setPolicyCategoryFilter,
-    showPolicyModal, setShowPolicyModal,
-    editingPolicy, setEditingPolicy,
-    selectedPolicy, setSelectedPolicy,
+    policies,
+    setPolicies,
+    policySearch,
+    setPolicySearch,
+    policyCategoryFilter,
+    setPolicyCategoryFilter,
+    showPolicyModal,
+    setShowPolicyModal,
+    editingPolicy,
+    setEditingPolicy,
+    selectedPolicy,
+    setSelectedPolicy,
     filteredPolicies,
-    policyForm, setPolicyForm,
+    policyForm,
+    setPolicyForm,
   };
 }

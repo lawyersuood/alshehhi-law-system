@@ -7,12 +7,30 @@ const inputCls =
   "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0D382B] focus:outline-none focus:ring-2 focus:ring-[#0D382B]/[0.12] transition";
 
 const fmtMoney = (n: number) =>
-  new Intl.NumberFormat("ar-AE", { style: "currency", currency: "AED", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
+  new Intl.NumberFormat("ar-AE", {
+    style: "currency",
+    currency: "AED",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n || 0);
 
-const fmtDateLabel = (d: string) => (d ? new Date(d + "T00:00:00").toLocaleDateString("ar-AE", { year: "numeric", month: "long", day: "numeric" }) : "—");
+const fmtDateLabel = (d: string) =>
+  d
+    ? new Date(d + "T00:00:00").toLocaleDateString("ar-AE", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "—";
 
 function emptyLine(): JournalLine {
-  return { id: `ln-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, accountId: "", debit: 0, credit: 0, description: "" };
+  return {
+    id: `ln-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    accountId: "",
+    debit: 0,
+    credit: 0,
+    description: "",
+  };
 }
 
 interface DraftForm {
@@ -23,7 +41,12 @@ interface DraftForm {
 }
 
 function newDraft(): DraftForm {
-  return { date: new Date().toISOString().slice(0, 10), description: "", reference: "", lines: [emptyLine(), emptyLine()] };
+  return {
+    date: new Date().toISOString().slice(0, 10),
+    description: "",
+    reference: "",
+    lines: [emptyLine(), emptyLine()],
+  };
 }
 
 export default function JournalEntries({
@@ -47,9 +70,19 @@ export default function JournalEntries({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [viewingId, setViewingId] = useState<string | null>(null);
 
-  const activeAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup).sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const activeAccounts = useMemo(
+    () =>
+      accounts.filter((a) => a.isActive && !a.isGroup).sort((a, b) => a.code.localeCompare(b.code)),
+    [accounts],
+  );
 
-  const sortedEntries = useMemo(() => [...entries].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.entryNumber.localeCompare(a.entryNumber))), [entries]);
+  const sortedEntries = useMemo(
+    () =>
+      [...entries].sort((a, b) =>
+        a.date < b.date ? 1 : a.date > b.date ? -1 : b.entryNumber.localeCompare(a.entryNumber),
+      ),
+    [entries],
+  );
 
   const { totalDebit: draftDebit, totalCredit: draftCredit } = entryTotals(draft);
   const draftBalanced = isEntryBalanced(draft);
@@ -68,14 +101,17 @@ export default function JournalEntries({
 
   const addLine = () => setDraft((d) => ({ ...d, lines: [...d.lines, emptyLine()] }));
 
-  const removeLine = (id: string) => setDraft((d) => (d.lines.length > 2 ? { ...d, lines: d.lines.filter((l) => l.id !== id) } : d));
+  const removeLine = (id: string) =>
+    setDraft((d) => (d.lines.length > 2 ? { ...d, lines: d.lines.filter((l) => l.id !== id) } : d));
 
   const saveEntry = (status: "draft" | "posted") => {
     if (!draft.description.trim()) {
       setError("يرجى إدخال بيان/وصف القيد");
       return;
     }
-    const validLines = draft.lines.filter((l) => l.accountId && (Number(l.debit) > 0 || Number(l.credit) > 0));
+    const validLines = draft.lines.filter(
+      (l) => l.accountId && (Number(l.debit) > 0 || Number(l.credit) > 0),
+    );
     if (validLines.length < 2) {
       setError("يجب إدخال سطرين على الأقل مع تحديد الحساب والمبلغ");
       return;
@@ -114,8 +150,13 @@ export default function JournalEntries({
       prev.map((e) => {
         if (e.id !== id) return e;
         if (!isEntryBalanced(e)) return e;
-        return { ...e, status: "posted", postedAt: new Date().toISOString(), postedBy: currentUserName };
-      })
+        return {
+          ...e,
+          status: "posted",
+          postedAt: new Date().toISOString(),
+          postedBy: currentUserName,
+        };
+      }),
     );
   };
 
@@ -139,7 +180,10 @@ export default function JournalEntries({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-slate-900">القيود اليومية</h2>
-          <p className="text-xs text-slate-500">تسجيل وترحيل القيود المحاسبية بنظام القيد المزدوج (مدين/دائن) — {entries.length} قيد مسجّل</p>
+          <p className="text-xs text-slate-500">
+            تسجيل وترحيل القيود المحاسبية بنظام القيد المزدوج (مدين/دائن) — {entries.length} قيد
+            مسجّل
+          </p>
         </div>
         <button
           onClick={openNew}
@@ -166,7 +210,10 @@ export default function JournalEntries({
               {sortedEntries.map((e) => {
                 const { totalDebit } = entryTotals(e);
                 return (
-                  <tr key={e.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50">
+                  <tr
+                    key={e.id}
+                    className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50"
+                  >
                     <td className="px-4 py-2.5 font-mono text-slate-700">{e.entryNumber}</td>
                     <td className="px-4 py-2.5 text-slate-600">{fmtDateLabel(e.date)}</td>
                     <td className="px-4 py-2.5 text-slate-800">{e.description}</td>
@@ -184,7 +231,10 @@ export default function JournalEntries({
                     </td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-1 justify-end">
-                        <button onClick={() => setViewingId(e.id)} className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100">
+                        <button
+                          onClick={() => setViewingId(e.id)}
+                          className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100"
+                        >
                           <FileText size={14} />
                         </button>
                         {e.status === "draft" && canPost && (
@@ -196,7 +246,10 @@ export default function JournalEntries({
                           </button>
                         )}
                         {canDelete && (
-                          <button onClick={() => requestDelete(e.id)} className="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50">
+                          <button
+                            onClick={() => requestDelete(e.id)}
+                            className="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50"
+                          >
                             <Trash2 size={14} />
                           </button>
                         )}
@@ -218,8 +271,14 @@ export default function JournalEntries({
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeForm}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={closeForm}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900">قيد يومية جديد</h3>
               <button onClick={closeForm} className="text-slate-400 hover:text-slate-700">
@@ -233,11 +292,20 @@ export default function JournalEntries({
             )}
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">تاريخ القيد</label>
-                <input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} className={inputCls} />
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  تاريخ القيد
+                </label>
+                <input
+                  type="date"
+                  value={draft.date}
+                  onChange={(e) => setDraft({ ...draft, date: e.target.value })}
+                  className={inputCls}
+                />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">مرجع (اختياري)</label>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  مرجع (اختياري)
+                </label>
                 <input
                   value={draft.reference}
                   onChange={(e) => setDraft({ ...draft, reference: e.target.value })}
@@ -281,7 +349,9 @@ export default function JournalEntries({
                     type="number"
                     min={0}
                     value={l.debit || ""}
-                    onChange={(e) => updateLine(l.id, { debit: Number(e.target.value) || 0, credit: 0 })}
+                    onChange={(e) =>
+                      updateLine(l.id, { debit: Number(e.target.value) || 0, credit: 0 })
+                    }
                     placeholder="0.00"
                     className={inputCls + " col-span-3 font-mono"}
                   />
@@ -289,7 +359,9 @@ export default function JournalEntries({
                     type="number"
                     min={0}
                     value={l.credit || ""}
-                    onChange={(e) => updateLine(l.id, { credit: Number(e.target.value) || 0, debit: 0 })}
+                    onChange={(e) =>
+                      updateLine(l.id, { credit: Number(e.target.value) || 0, debit: 0 })
+                    }
                     placeholder="0.00"
                     className={inputCls + " col-span-3 font-mono"}
                   />
@@ -302,22 +374,33 @@ export default function JournalEntries({
                   </button>
                 </div>
               ))}
-              <button onClick={addLine} className="text-xs font-semibold text-[#0D382B] hover:bg-[#0D382B]/[0.06] px-2 py-1.5 rounded-lg flex items-center gap-1">
+              <button
+                onClick={addLine}
+                className="text-xs font-semibold text-[#0D382B] hover:bg-[#0D382B]/[0.06] px-2 py-1.5 rounded-lg flex items-center gap-1"
+              >
                 <Plus size={13} /> إضافة سطر
               </button>
             </div>
 
-            <div className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold ${draftBalanced ? "bg-emerald-50 text-emerald-700" : "bg-[#0D382B]/[0.05] text-[#0D382B]"}`}>
+            <div
+              className={`flex items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold ${draftBalanced ? "bg-emerald-50 text-emerald-700" : "bg-[#0D382B]/[0.05] text-[#0D382B]"}`}
+            >
               <span>إجمالي المدين: {fmtMoney(draftDebit)}</span>
               <span>إجمالي الدائن: {fmtMoney(draftCredit)}</span>
               <span>{draftBalanced ? "القيد متوازن ✓" : "القيد غير متوازن"}</span>
             </div>
 
             <div className="flex gap-2 justify-end pt-2">
-              <button onClick={closeForm} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
+              <button
+                onClick={closeForm}
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
                 إلغاء
               </button>
-              <button onClick={() => saveEntry("draft")} className="px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl">
+              <button
+                onClick={() => saveEntry("draft")}
+                className="px-4 py-2 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl"
+              >
                 حفظ كمسودة
               </button>
               {canPost && (
@@ -334,16 +417,28 @@ export default function JournalEntries({
       )}
 
       {viewingEntry && (
-        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setViewingId(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setViewingId(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900">تفاصيل القيد {viewingEntry.entryNumber}</h3>
-              <button onClick={() => setViewingId(null)} className="text-slate-400 hover:text-slate-700">
+              <button
+                onClick={() => setViewingId(null)}
+                className="text-slate-400 hover:text-slate-700"
+              >
                 <X size={18} />
               </button>
             </div>
             <p className="text-sm text-slate-600">{viewingEntry.description}</p>
-            <p className="text-xs text-slate-400">{fmtDateLabel(viewingEntry.date)}{viewingEntry.reference ? ` · مرجع: ${viewingEntry.reference}` : ""}</p>
+            <p className="text-xs text-slate-400">
+              {fmtDateLabel(viewingEntry.date)}
+              {viewingEntry.reference ? ` · مرجع: ${viewingEntry.reference}` : ""}
+            </p>
             <div className="border border-slate-100 rounded-xl overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
@@ -369,17 +464,31 @@ export default function JournalEntries({
       )}
 
       {confirmDeleteId && deletingEntry && (
-        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmDeleteId(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setConfirmDeleteId(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="font-bold text-slate-900">تأكيد حذف القيد</h3>
             <p className="text-sm text-slate-600">
-              هل أنت متأكد من حذف القيد <span className="font-bold">{deletingEntry.entryNumber}</span>؟ لا يمكن التراجع عن هذا الإجراء.
+              هل أنت متأكد من حذف القيد{" "}
+              <span className="font-bold">{deletingEntry.entryNumber}</span>؟ لا يمكن التراجع عن هذا
+              الإجراء.
             </p>
             <div className="flex gap-2 justify-end pt-2">
-              <button onClick={() => setConfirmDeleteId(null)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
                 إلغاء
               </button>
-              <button onClick={confirmDelete} className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl">
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl"
+              >
                 حذف نهائياً
               </button>
             </div>

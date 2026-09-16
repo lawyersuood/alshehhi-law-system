@@ -6,5 +6,12 @@ export function useGoogleCalendarModal() {
   const [showGoogleCalendarModal, setShowGoogleCalendarModal] = useState(false);
   const [googleUser, setGoogleUser] = useState<FirebaseUser | null>(null);
   const [googleToken, setGoogleToken] = useState<string | null>(null);
-  return { showGoogleCalendarModal, setShowGoogleCalendarModal, googleUser, setGoogleUser, googleToken, setGoogleToken };
+  return {
+    showGoogleCalendarModal,
+    setShowGoogleCalendarModal,
+    googleUser,
+    setGoogleUser,
+    googleToken,
+    setGoogleToken,
+  };
 }

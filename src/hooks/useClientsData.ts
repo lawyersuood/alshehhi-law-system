@@ -10,7 +10,7 @@ import { useSyncedTable } from "./useSyncedTable";
 
 function initClients(): Client[] {
   const saved = loadStorage<Client[]>("firm_clients", seedClients);
-  const combined = (!saved || saved.length === 0) ? seedClients : [...saved, ...seedClients];
+  const combined = !saved || saved.length === 0 ? seedClients : [...saved, ...seedClients];
   return deduplicateClients(combined);
 }
 

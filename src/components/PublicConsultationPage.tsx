@@ -1,9 +1,33 @@
 import React, { useState, useMemo } from "react";
 import {
-  Video, Clock, Upload, AlertCircle, CreditCard,
-  Copy, ExternalLink, Lock, CheckCircle2, Globe, FileText, X, ShieldAlert, ArrowLeft,
-  HelpCircle, MapPin, Phone, Star, Scale, ShieldCheck, Award, ChevronDown, ChevronUp,
-  Sparkles, Building2, UserCheck, Receipt, Smartphone
+  Video,
+  Clock,
+  Upload,
+  AlertCircle,
+  CreditCard,
+  Copy,
+  ExternalLink,
+  Lock,
+  CheckCircle2,
+  Globe,
+  FileText,
+  X,
+  ShieldAlert,
+  ArrowLeft,
+  HelpCircle,
+  MapPin,
+  Phone,
+  Star,
+  Scale,
+  ShieldCheck,
+  Award,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  Building2,
+  UserCheck,
+  Receipt,
+  Smartphone,
 } from "lucide-react";
 import { FirmEmblemSVG } from "./Logo";
 
@@ -55,22 +79,28 @@ const DEFAULT_CONSULTATION_SETTINGS: ConsultationSettings = {
   price30: 525,
   price60: 945,
   availableSlots: [
-    "09:00 AM", "10:30 AM", "12:00 PM", "02:00 PM",
-    "03:30 PM", "05:00 PM", "06:30 PM", "08:00 PM"
+    "09:00 AM",
+    "10:30 AM",
+    "12:00 PM",
+    "02:00 PM",
+    "03:30 PM",
+    "05:00 PM",
+    "06:30 PM",
+    "08:00 PM",
   ],
   blockedDates: [],
   // بيانات الحساب البنكي الرسمي المعتمد للمكتب — تُعرض للعملاء في صفحة الحجز العامة.
   // أي تعديل هنا يجب أن يطابق بيانات الحساب الفعلية لدى البنك، فهذه الأرقام تُستخدم لتحويل أموال حقيقية.
   mbankIban: "AE260973002451030000001",
   mbankBankName: "بنك المارية المحلي ذ.م.م.",
-  mbankAccountName: "SUOOD AHMED ALSHEHHI ADVOCATES & LEGAL CONSULTANTS"
+  mbankAccountName: "SUOOD AHMED ALSHEHHI ADVOCATES & LEGAL CONSULTANTS",
 };
 
 export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
   onNewBooking,
   onNavigateToAdmin,
   existingBookings = [],
-  settings = DEFAULT_CONSULTATION_SETTINGS
+  settings = DEFAULT_CONSULTATION_SETTINGS,
 }) => {
   // Language State
   const [lang, setLang] = useState<"ar" | "en">("ar");
@@ -91,7 +121,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
 
   // Payment Gateway State
-  const [paymentMethod, setPaymentMethod] = useState<"apple_pay" | "credit_card" | "bank_transfer">("credit_card");
+  const [paymentMethod, setPaymentMethod] = useState<"apple_pay" | "credit_card" | "bank_transfer">(
+    "credit_card",
+  );
   const [cardNumber, setCardNumber] = useState("");
   const [cardExpiry, setCardExpiry] = useState("");
   const [cardCvv, setCardCvv] = useState("");
@@ -119,7 +151,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
     // المواعيد المحجوزة فعلياً لنفس التاريخ (أي حجز موجود يُعتبر شاغلاً للموعد، بغض النظر عن حالته
     // اللاحقة — لا توجد حالة "ملغاة" ضمن BookingRecord.status حالياً) — لمنع الحجز المزدوج لنفس الموعد
     const takenSlots = new Set(
-      existingBookings.filter((b) => b.date === selectedDate).map((b) => b.timeSlot)
+      existingBookings.filter((b) => b.date === selectedDate).map((b) => b.timeSlot),
     );
 
     return settings.availableSlots.map((slot) => {
@@ -127,7 +159,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
         return {
           slot,
           available: false,
-          reason: lang === "ar" ? "تاريخ غير متاح" : "Date Unavailable"
+          reason: lang === "ar" ? "تاريخ غير متاح" : "Date Unavailable",
         };
       }
 
@@ -135,7 +167,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
         return {
           slot,
           available: false,
-          reason: lang === "ar" ? "الموعد محجوز مسبقاً" : "Already Booked"
+          reason: lang === "ar" ? "الموعد محجوز مسبقاً" : "Already Booked",
         };
       }
 
@@ -144,7 +176,8 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
       }
 
       const [timeStr, modifier] = slot.split(" ");
-      let [hours, minutes] = timeStr.split(":").map(Number);
+      const [parsedHours, minutes] = timeStr.split(":").map(Number);
+      let hours = parsedHours;
       if (modifier === "PM" && hours < 12) hours += 12;
       if (modifier === "AM" && hours === 12) hours = 0;
 
@@ -157,9 +190,14 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
         return {
           slot,
           available: false,
-          reason: diffInMinutes < 0
-            ? (lang === "ar" ? "وقت مضى" : "Past Time")
-            : (lang === "ar" ? "أقل من 60 دقيقة" : "< 60 mins away")
+          reason:
+            diffInMinutes < 0
+              ? lang === "ar"
+                ? "وقت مضى"
+                : "Past Time"
+              : lang === "ar"
+                ? "أقل من 60 دقيقة"
+                : "< 60 mins away",
         };
       }
 
@@ -176,19 +214,40 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
     let q2 = "هل جرى توجيه إنذار عدلي أو إعذار رسمي قبل البدء بالإجراءات؟";
     let q3 = "ما هي القيمة المالية الإجمالية للمطالبة وما هي الأضرار المباشرة المترتبة؟";
 
-    if (lower.includes("عمل") || lower.includes("راتب") || lower.includes("فصل") || lower.includes("عمال") || lower.includes("labor") || lower.includes("salary")) {
+    if (
+      lower.includes("عمل") ||
+      lower.includes("راتب") ||
+      lower.includes("فصل") ||
+      lower.includes("عمال") ||
+      lower.includes("labor") ||
+      lower.includes("salary")
+    ) {
       niche = "منازعة عمالية (قوانين تنظيم علاقات العمل)";
       court = "المحكمة العمالية / الجهات العمالية المختصة";
       q1 = "هل الشكوى مقيدة رسمياً لدى وزارة العمل / الجهة المختصة وهل أُحيلت للقضاء؟";
       q2 = "ما هو تاريخ أخر يوم عمل فعلي وهل تمت تصفية مستحقات نهاية الخدمة؟";
       q3 = "هل يوجد عقد عمل محدد أم غير محدد المدة وما قيمة الأجر الأساسي والإجمالي؟";
-    } else if (lower.includes("عقار") || lower.includes("إيجار") || lower.includes("شقة") || lower.includes("مطور") || lower.includes("rent") || lower.includes("property")) {
+    } else if (
+      lower.includes("عقار") ||
+      lower.includes("إيجار") ||
+      lower.includes("شقة") ||
+      lower.includes("مطور") ||
+      lower.includes("rent") ||
+      lower.includes("property")
+    ) {
       niche = "نزاع عقاري وإيجاري (تشريعات الإيجارات والتطوير العقاري)";
       court = "مركز المنازعات الإيجارية / اللجان العقارية المختصة";
       q1 = "هل تم تسجيل عقد الإيجار رسمياً بالجهات المعنية؟";
       q2 = "هل صَدر إشعار إخلاء أو تعديل إيجاري رسمي موجه وفق الأوقات القانونية؟";
       q3 = "هل توجد شيكات مرتجعة أو مطالبات بالصيانة والتعويض؟";
-    } else if (lower.includes("شركة") || lower.includes("شريك") || lower.includes("عقد") || lower.includes("استثمار") || lower.includes("company") || lower.includes("partner")) {
+    } else if (
+      lower.includes("شركة") ||
+      lower.includes("شريك") ||
+      lower.includes("عقد") ||
+      lower.includes("استثمار") ||
+      lower.includes("company") ||
+      lower.includes("partner")
+    ) {
       niche = "منازعة شركات وتجارة (قوانين الشركات التجارية)";
       court = "المحكمة التجارية الابتدائية (دائرة الاستثمار والدعاوى التجارية)";
       q1 = "ما هي نسبة الحصص المسجلة في عقد تأسيس الشركة والرخصة التجارية؟";
@@ -196,16 +255,22 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
       q3 = "هل يوجد نزاع حول الإدارة والتوقيع أو توزيع الأرباح؟";
     }
 
-    const sentences = text.trim().split(/[\n.،]/).filter((s) => s.trim().length > 5);
-    const fact1 = sentences[0] || "تُبيّن المعطيات وجود التزام أو نزاع قانوني يتطلب التكييف قبل قيد الدعوى.";
-    const fact2 = sentences[1] || "خلاف جوهري بين الأطراف حول تنفيذ الاتفاقات أو الحقوق والالتزامات المالية.";
-    const fact3 = sentences[2] || "رغبة الموكل في تحديد الموقف القضائي الدقيق وتقييم أدلة الإثبات المتاحة.";
+    const sentences = text
+      .trim()
+      .split(/[\n.،]/)
+      .filter((s) => s.trim().length > 5);
+    const fact1 =
+      sentences[0] || "تُبيّن المعطيات وجود التزام أو نزاع قانوني يتطلب التكييف قبل قيد الدعوى.";
+    const fact2 =
+      sentences[1] || "خلاف جوهري بين الأطراف حول تنفيذ الاتفاقات أو الحقوق والالتزامات المالية.";
+    const fact3 =
+      sentences[2] || "رغبة الموكل في تحديد الموقف القضائي الدقيق وتقييم أدلة الإثبات المتاحة.";
 
     return {
       qualification: niche,
       facts: [fact1, fact2, fact3],
       jurisdiction: court,
-      keyQuestions: [q1, q2, q3]
+      keyQuestions: [q1, q2, q3],
     };
   };
 
@@ -243,7 +308,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
       alert(
         lang === "ar"
           ? "يرجى القبول والموافقة على وثيقة الشروط والأحكام وإخلاء المسؤولية للبدء في إجراءات الحجز."
-          : "Please agree to the Terms, Conditions & Legal Disclaimer before proceeding."
+          : "Please agree to the Terms, Conditions & Legal Disclaimer before proceeding.",
       );
       return;
     }
@@ -251,19 +316,21 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
       alert(
         lang === "ar"
           ? "يرجى اختيار الموعد المناسب للجلسة المرئية من الأوقات المتاحة."
-          : "Please select an available time slot for your consultation."
+          : "Please select an available time slot for your consultation.",
       );
       return;
     }
 
     // إعادة التحقق لحظة الإرسال من أن الموعد المختار لم يُحجز من زائر آخر أثناء تعبئة النموذج
     // (حماية إضافية من الحجز المزدوج، وليست فقط اعتماداً على حالة القائمة وقت عرضها)
-    const isSlotNowTaken = existingBookings.some((b) => b.date === selectedDate && b.timeSlot === selectedTimeSlot);
+    const isSlotNowTaken = existingBookings.some(
+      (b) => b.date === selectedDate && b.timeSlot === selectedTimeSlot,
+    );
     if (isSlotNowTaken) {
       alert(
         lang === "ar"
           ? "عذراً، تم حجز هذا الموعد للتو من قِبل زائر آخر. يرجى اختيار موعد آخر متاح."
-          : "Sorry, this time slot was just booked by someone else. Please choose another available slot."
+          : "Sorry, this time slot was just booked by someone else. Please choose another available slot.",
       );
       setSelectedTimeSlot("");
       return;
@@ -273,7 +340,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
       alert(
         lang === "ar"
           ? "يرجى إدخال بيانات بطاقة الائتمان بشكل صحيح لإتمام عملية السداد."
-          : "Please enter valid credit card details to complete payment."
+          : "Please enter valid credit card details to complete payment.",
       );
       return;
     }
@@ -287,7 +354,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
       const amount = serviceDuration === 30 ? settings.price30 : settings.price60;
 
       const ai = generateLegalSummary(
-        issueSummary || "استفسار قانوني عام يرغب الموكل في مناقشته وتكييفه خلال الجلسة المرئية."
+        issueSummary || "استفسار قانوني عام يرغب الموكل في مناقشته وتكييفه خلال الجلسة المرئية.",
       );
 
       const newRecord: BookingRecord = {
@@ -305,7 +372,7 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
         createdAt: new Date().toISOString(),
         status: "pending_assignment",
         attachmentName: attachedFile?.name,
-        aiSummary: ai
+        aiSummary: ai,
       };
 
       setCreatedBooking(newRecord);
@@ -323,30 +390,32 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
       qAr: "كيف يتم إجراء الجلسة المرئية بعد إتمام الحجز؟",
       qEn: "How is the video consultation conducted after booking?",
       aAr: "فور استكمال نموذج الحجز والدفع الإلكتروني، سيظهر لك رابط Google Meet المباشر فوراً على الشاشة كما سيصلك بريد إلكتروني ورسالة واتساب تأكيدية تحتوي على رابط قاعة الاجتماع الخاصة بك.",
-      aEn: "Upon completing the booking and payment, your direct Google Meet link will appear immediately on screen, and an email & WhatsApp confirmation will be sent."
+      aEn: "Upon completing the booking and payment, your direct Google Meet link will appear immediately on screen, and an email & WhatsApp confirmation will be sent.",
     },
     {
       qAr: "هل يمكنني إرفاق عقود أو مستندات ليقوم المحامي بمرجعتها؟",
       qEn: "Can I attach contracts or documents for review?",
       aAr: "نعم، يتيح لك نموذج الحجز رفع ملف المستندات أو العقود (PDF أو صورة). ستقوم المنظومة الذكية بالمكتب بإعداد ملخص تحليلي أولي يُعرض على المستشار قبل بدء الجلسة لضمان الاستفادة الكاملة من الوقت.",
-      aEn: "Yes, you can upload contracts or document files. Our system generates a preliminary summary for the lawyer to review before your session."
+      aEn: "Yes, you can upload contracts or document files. Our system generates a preliminary summary for the lawyer to review before your session.",
     },
     {
       qAr: "هل الجلسة والاستشارات المقدمة مضمونة السرية؟",
       qEn: "Are consultations strictly confidential?",
       aAr: "بالتأكيد. تخضع جميع الجلسات والاستشارات المباشرة للسرية المهنية المطلقة المضمونة بقانون مهنة المحاماة في دولة الإمارات العربية المتحدة وأخلاقيات المهنة.",
-      aEn: "Absolutely. All consultations are strictly confidential under UAE Advocacy Laws and professional code of ethics."
+      aEn: "Absolutely. All consultations are strictly confidential under UAE Advocacy Laws and professional code of ethics.",
     },
     {
       qAr: "ماذا لو رغبت في تعديل الموعد أو إعادة الجدول؟",
       qEn: "What if I need to reschedule my consultation?",
       aAr: "يمكنك طلب تعديل الموعد أو التواصل مع فريق المكتب عبر الواتساب المباشر قبل 4 ساعات على الأقل من موعد الجلسة ليتم اختيار موعد بديل مناسب.",
-      aEn: "You can request a schedule change by contacting our team via WhatsApp at least 4 hours before the appointment."
-    }
+      aEn: "You can request a schedule change by contacting our team via WhatsApp at least 4 hours before the appointment.",
+    },
   ];
 
   return (
-    <div className={`min-h-screen bg-[#f8faf9] text-slate-800 font-sans pb-24 ${lang === "ar" ? "dir-rtl" : "dir-ltr"}`}>
+    <div
+      className={`min-h-screen bg-[#f8faf9] text-slate-800 font-sans pb-24 ${lang === "ar" ? "dir-rtl" : "dir-ltr"}`}
+    >
       {/* Themed native date input: recolor the browser's calendar icon + consistent focus ring */}
       <style>{`
         input[type="date"].themed-date-input {
@@ -387,7 +456,11 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
             <FirmEmblemSVG className="w-11 h-11 shrink-0" />
             <div>
               <h1 className="text-sm md:text-base font-black text-[#072422] leading-tight flex items-center gap-2">
-                <span>{lang === "ar" ? "مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية" : "Suood Ahmed Al Shehhi Advocates & Legal Consultants"}</span>
+                <span>
+                  {lang === "ar"
+                    ? "مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية"
+                    : "Suood Ahmed Al Shehhi Advocates & Legal Consultants"}
+                </span>
               </h1>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-[10px] text-amber-900 font-bold px-2 py-0.5 rounded-md bg-amber-50 border border-amber-200">
@@ -422,7 +495,11 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
           <div className="lg:col-span-7 space-y-5">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold">
               <Sparkles size={14} className="text-amber-400" />
-              <span>{lang === "ar" ? "بوابة الاستشارات القانونية المرئية الرسمية" : "Official Digital Legal Consultation Portal"}</span>
+              <span>
+                {lang === "ar"
+                  ? "بوابة الاستشارات القانونية المرئية الرسمية"
+                  : "Official Digital Legal Consultation Portal"}
+              </span>
             </div>
 
             <h2 className="text-2xl md:text-3xl lg:text-4xl font-black text-white leading-tight">
@@ -463,15 +540,21 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
             <div className="pt-4 grid grid-cols-3 gap-3 border-t border-teal-800/50 text-center">
               <div>
                 <span className="block text-sm md:text-base font-black text-amber-300">100%</span>
-                <span className="text-[10px] text-slate-300">{lang === "ar" ? "سرية وحماية بيانات" : "Confidential"}</span>
+                <span className="text-[10px] text-slate-300">
+                  {lang === "ar" ? "سرية وحماية بيانات" : "Confidential"}
+                </span>
               </div>
               <div>
                 <span className="block text-sm md:text-base font-black text-amber-300">فوري</span>
-                <span className="text-[10px] text-slate-300">{lang === "ar" ? "رابط Google Meet" : "Instant Meet Link"}</span>
+                <span className="text-[10px] text-slate-300">
+                  {lang === "ar" ? "رابط Google Meet" : "Instant Meet Link"}
+                </span>
               </div>
               <div>
                 <span className="block text-sm md:text-base font-black text-amber-300">رسمي</span>
-                <span className="text-[10px] text-slate-300">{lang === "ar" ? "استشارة موثوقة" : "Licensed Advice"}</span>
+                <span className="text-[10px] text-slate-300">
+                  {lang === "ar" ? "استشارة موثوقة" : "Licensed Advice"}
+                </span>
               </div>
             </div>
           </div>
@@ -488,7 +571,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                     {lang === "ar" ? "ترخيص ومعايير قانونية معتمدة" : "Licensed Legal Practice"}
                   </h3>
                   <p className="text-[11px] text-slate-300">
-                    {lang === "ar" ? "مكتب محاماة واستشارات قانونية مرخص" : "Licensed Advocates & Legal Consultants"}
+                    {lang === "ar"
+                      ? "مكتب محاماة واستشارات قانونية مرخص"
+                      : "Licensed Advocates & Legal Consultants"}
                   </p>
                 </div>
               </div>
@@ -498,10 +583,14 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                   <Award size={18} className="text-amber-400 shrink-0 mt-0.5" />
                   <div>
                     <h4 className="text-xs font-bold text-slate-100">
-                      {lang === "ar" ? "تخصصات وخبرات قانونية متنوعة" : "Comprehensive Legal Practice"}
+                      {lang === "ar"
+                        ? "تخصصات وخبرات قانونية متنوعة"
+                        : "Comprehensive Legal Practice"}
                     </h4>
                     <p className="text-[11px] text-slate-300 leading-relaxed mt-0.5">
-                      {lang === "ar" ? "مستشارون متخصصون في دراسة وقضايا المنازعات المدنية والعقارية والعمالية والتجارية." : "Specialized Advocates in Civil, Real Estate, Labor & Commercial litigation."}
+                      {lang === "ar"
+                        ? "مستشارون متخصصون في دراسة وقضايا المنازعات المدنية والعقارية والعمالية والتجارية."
+                        : "Specialized Advocates in Civil, Real Estate, Labor & Commercial litigation."}
                     </p>
                   </div>
                 </div>
@@ -513,7 +602,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                       {lang === "ar" ? "ربط فوري عبر Google Meet" : "Instant Google Meet Room"}
                     </h4>
                     <p className="text-[11px] text-slate-300 leading-relaxed mt-0.5">
-                      {lang === "ar" ? "تأكيد فوري لرابط الجلسة عبر الشاشة والواتساب والبريد مباشرة فور إتمام الحجز." : "Receive your private meeting room link directly on screen and via WhatsApp & Email."}
+                      {lang === "ar"
+                        ? "تأكيد فوري لرابط الجلسة عبر الشاشة والواتساب والبريد مباشرة فور إتمام الحجز."
+                        : "Receive your private meeting room link directly on screen and via WhatsApp & Email."}
                     </p>
                   </div>
                 </div>
@@ -525,7 +616,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                       {lang === "ar" ? "سرية تامة ومحمية قانونياً" : "100% Legal Secrecy"}
                     </h4>
                     <p className="text-[11px] text-slate-300 leading-relaxed mt-0.5">
-                      {lang === "ar" ? "تخضع جميع الجلسات لسرية مهنة المحاماة وحماية البيانات المضمونة تشريعياً." : "Protected under UAE Advocacy law confidentiality regulations."}
+                      {lang === "ar"
+                        ? "تخضع جميع الجلسات لسرية مهنة المحاماة وحماية البيانات المضمونة تشريعياً."
+                        : "Protected under UAE Advocacy law confidentiality regulations."}
                     </p>
                   </div>
                 </div>
@@ -537,30 +630,46 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
         {/* Workflow Steps */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition flex items-center gap-3">
-            <span className="w-9 h-9 rounded-xl bg-[#072422] text-[#e5c388] font-bold text-sm flex items-center justify-center shrink-0 shadow-sm">1</span>
+            <span className="w-9 h-9 rounded-xl bg-[#072422] text-[#e5c388] font-bold text-sm flex items-center justify-center shrink-0 shadow-sm">
+              1
+            </span>
             <div>
-              <h4 className="text-xs font-bold text-slate-900">{lang === "ar" ? "اختر مدة الجلسة" : "Select Duration"}</h4>
+              <h4 className="text-xs font-bold text-slate-900">
+                {lang === "ar" ? "اختر مدة الجلسة" : "Select Duration"}
+              </h4>
               <p className="text-[11px] text-slate-500">30 أو 60 دقيقة</p>
             </div>
           </div>
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition flex items-center gap-3">
-            <span className="w-9 h-9 rounded-xl bg-[#072422] text-[#e5c388] font-bold text-sm flex items-center justify-center shrink-0 shadow-sm">2</span>
+            <span className="w-9 h-9 rounded-xl bg-[#072422] text-[#e5c388] font-bold text-sm flex items-center justify-center shrink-0 shadow-sm">
+              2
+            </span>
             <div>
-              <h4 className="text-xs font-bold text-slate-900">{lang === "ar" ? "حدد تاريخ ووقت" : "Select Date & Time"}</h4>
+              <h4 className="text-xs font-bold text-slate-900">
+                {lang === "ar" ? "حدد تاريخ ووقت" : "Select Date & Time"}
+              </h4>
               <p className="text-[11px] text-slate-500">أوقات المواعيد المتاحة</p>
             </div>
           </div>
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition flex items-center gap-3">
-            <span className="w-9 h-9 rounded-xl bg-[#072422] text-[#e5c388] font-bold text-sm flex items-center justify-center shrink-0 shadow-sm">3</span>
+            <span className="w-9 h-9 rounded-xl bg-[#072422] text-[#e5c388] font-bold text-sm flex items-center justify-center shrink-0 shadow-sm">
+              3
+            </span>
             <div>
-              <h4 className="text-xs font-bold text-slate-900">{lang === "ar" ? "اكتب وقائع الاستفسار" : "Provide Case Details"}</h4>
+              <h4 className="text-xs font-bold text-slate-900">
+                {lang === "ar" ? "اكتب وقائع الاستفسار" : "Provide Case Details"}
+              </h4>
               <p className="text-[11px] text-slate-500">مع إمكانية إرفاق عقود</p>
             </div>
           </div>
           <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition flex items-center gap-3">
-            <span className="w-9 h-9 rounded-xl bg-[#072422] text-[#e5c388] font-bold text-sm flex items-center justify-center shrink-0 shadow-sm">4</span>
+            <span className="w-9 h-9 rounded-xl bg-[#072422] text-[#e5c388] font-bold text-sm flex items-center justify-center shrink-0 shadow-sm">
+              4
+            </span>
             <div>
-              <h4 className="text-xs font-bold text-slate-900">{lang === "ar" ? "سدد واستلم الرابط" : "Pay & Get Meet Link"}</h4>
+              <h4 className="text-xs font-bold text-slate-900">
+                {lang === "ar" ? "سدد واستلم الرابط" : "Pay & Get Meet Link"}
+              </h4>
               <p className="text-[11px] text-slate-500">رابط Google Meet مباشر</p>
             </div>
           </div>
@@ -575,10 +684,14 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                 <div className="bg-[#092322] text-white p-6 border-b border-teal-900 flex items-center justify-between">
                   <div>
                     <h3 className="text-lg font-black text-amber-300">
-                      {lang === "ar" ? "نموذج حجز الاستشارة والمرئيات" : "Consultation Booking Form"}
+                      {lang === "ar"
+                        ? "نموذج حجز الاستشارة والمرئيات"
+                        : "Consultation Booking Form"}
                     </h3>
                     <p className="text-xs text-slate-300 mt-1">
-                      {lang === "ar" ? "حجز آلي مشفر ومعتمد مع استلام رابط القاعة فور السداد" : "Secure booking with direct Google Meet URL generation"}
+                      {lang === "ar"
+                        ? "حجز آلي مشفر ومعتمد مع استلام رابط القاعة فور السداد"
+                        : "Secure booking with direct Google Meet URL generation"}
                     </p>
                   </div>
                   <div className="hidden sm:flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200">
@@ -591,8 +704,12 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                   {/* Step 1: Duration */}
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-[#092322] text-white flex items-center justify-center text-xs font-bold">1</span>
-                      {lang === "ar" ? "اختر مدة الجلسة الاستشارية المرئية:" : "Choose Consultation Duration:"}
+                      <span className="w-6 h-6 rounded-full bg-[#092322] text-white flex items-center justify-center text-xs font-bold">
+                        1
+                      </span>
+                      {lang === "ar"
+                        ? "اختر مدة الجلسة الاستشارية المرئية:"
+                        : "Choose Consultation Duration:"}
                     </h3>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -641,7 +758,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                               </span>
                             </div>
                             <span className="text-[10px] text-amber-700 font-bold block mt-0.5">
-                              {lang === "ar" ? "★ الخيار الموصى به للعقود والنزاعات" : "★ Recommended for Complex Matters"}
+                              {lang === "ar"
+                                ? "★ الخيار الموصى به للعقود والنزاعات"
+                                : "★ Recommended for Complex Matters"}
                             </span>
                           </div>
                           <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-600 text-white">
@@ -660,7 +779,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                   {/* Step 2: Date & Time */}
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 mb-2 flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-[#092322] text-white flex items-center justify-center text-xs font-bold">2</span>
+                      <span className="w-6 h-6 rounded-full bg-[#092322] text-white flex items-center justify-center text-xs font-bold">
+                        2
+                      </span>
                       {lang === "ar" ? "اختر موعد الجلسة:" : "Select Appointment Time:"}
                     </h3>
 
@@ -698,7 +819,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                         </label>
                         {isDateBlocked ? (
                           <div className="p-4 bg-red-50 text-red-700 text-xs font-bold rounded-xl border border-red-200 text-center">
-                            {lang === "ar" ? "عذراً، هذا اليوم غير متاح للحجوزات حالياً." : "Selected date is not available."}
+                            {lang === "ar"
+                              ? "عذراً، هذا اليوم غير متاح للحجوزات حالياً."
+                              : "Selected date is not available."}
                           </div>
                         ) : (
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -714,12 +837,16 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                                     !available
                                       ? "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60"
                                       : isSelected
-                                      ? "bg-[#092322] text-white border-[#092322] shadow-md"
-                                      : "bg-white text-slate-800 border-slate-300 hover:border-teal-700 hover:bg-teal-50/50"
+                                        ? "bg-[#092322] text-white border-[#092322] shadow-md"
+                                        : "bg-white text-slate-800 border-slate-300 hover:border-teal-700 hover:bg-teal-50/50"
                                   }`}
                                 >
                                   <span>{slot}</span>
-                                  {!available && <span className="text-[9px] text-red-500 font-normal">({reason})</span>}
+                                  {!available && (
+                                    <span className="text-[9px] text-red-500 font-normal">
+                                      ({reason})
+                                    </span>
+                                  )}
                                 </button>
                               );
                             })}
@@ -732,7 +859,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                   {/* Step 3: Information & Issue */}
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 mb-4 flex items-center gap-2">
-                      <span className="w-6 h-6 rounded-full bg-[#092322] text-white flex items-center justify-center text-xs font-bold">3</span>
+                      <span className="w-6 h-6 rounded-full bg-[#092322] text-white flex items-center justify-center text-xs font-bold">
+                        3
+                      </span>
                       {lang === "ar" ? "بيانات الموكل وموجز الموضوع:" : "Client Contact & Details:"}
                     </h3>
 
@@ -782,7 +911,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
 
                     <div className="mb-4">
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        {lang === "ar" ? "ملخص وقائع الاستفسار والقضايا *" : "Summary of Legal Issue *"}
+                        {lang === "ar"
+                          ? "ملخص وقائع الاستفسار والقضايا *"
+                          : "Summary of Legal Issue *"}
                       </label>
                       <textarea
                         required
@@ -800,7 +931,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        {lang === "ar" ? "إرفاق المستندات والعقود (اختياري - حتى 3 صفحات PDF/صورة)" : "Attach Documents / Contracts (Optional)"}
+                        {lang === "ar"
+                          ? "إرفاق المستندات والعقود (اختياري - حتى 3 صفحات PDF/صورة)"
+                          : "Attach Documents / Contracts (Optional)"}
                       </label>
                       <div className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-slate-300 bg-slate-50">
                         <Upload size={18} className="text-slate-400 shrink-0" />
@@ -823,9 +956,13 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                   <div className="bg-slate-50 p-6 rounded-3xl border border-slate-200 space-y-5">
                     <div className="flex items-center justify-between border-b border-slate-200 pb-3">
                       <div className="flex items-center gap-2">
-                        <span className="w-6 h-6 rounded-full bg-[#092322] text-white flex items-center justify-center text-xs font-bold">4</span>
+                        <span className="w-6 h-6 rounded-full bg-[#092322] text-white flex items-center justify-center text-xs font-bold">
+                          4
+                        </span>
                         <h3 className="text-sm font-bold text-slate-900">
-                          {lang === "ar" ? "اختر طريقة الدفع الآمنة (بوابة الدفع الإلكترونية):" : "Select Secure Payment Method:"}
+                          {lang === "ar"
+                            ? "اختر طريقة الدفع الآمنة (بوابة الدفع الإلكترونية):"
+                            : "Select Secure Payment Method:"}
                         </h3>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 font-bold">
@@ -847,12 +984,18 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
                             <CreditCard size={16} className="text-[#092322]" />
-                            <span>{lang === "ar" ? "بطاقة ائتمان / مدى" : "Credit / Debit Card"}</span>
+                            <span>
+                              {lang === "ar" ? "بطاقة ائتمان / مدى" : "Credit / Debit Card"}
+                            </span>
                           </span>
-                          <span className="text-[10px] bg-[#092322] text-white px-2 py-0.5 rounded font-mono">Visa/MC</span>
+                          <span className="text-[10px] bg-[#092322] text-white px-2 py-0.5 rounded font-mono">
+                            Visa/MC
+                          </span>
                         </div>
                         <p className="text-[11px] text-slate-500">
-                          {lang === "ar" ? "الدفع الفوري الآمن بالبطاقة البنكية" : "Secure instant card payment"}
+                          {lang === "ar"
+                            ? "الدفع الفوري الآمن بالبطاقة البنكية"
+                            : "Secure instant card payment"}
                         </p>
                       </div>
 
@@ -869,10 +1012,14 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                             <Smartphone size={16} className="text-[#092322]" />
                             <span>Apple Pay / Google Pay</span>
                           </span>
-                          <span className="text-[10px] bg-[#0D382B] text-white px-2 py-0.5 rounded font-bold">1-Click</span>
+                          <span className="text-[10px] bg-[#0D382B] text-white px-2 py-0.5 rounded font-bold">
+                            1-Click
+                          </span>
                         </div>
                         <p className="text-[11px] text-slate-500">
-                          {lang === "ar" ? "الدفع السريع بالبصمة أو الوجه" : "Fast biometric checkout"}
+                          {lang === "ar"
+                            ? "الدفع السريع بالبصمة أو الوجه"
+                            : "Fast biometric checkout"}
                         </p>
                       </div>
 
@@ -887,9 +1034,13 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
                             <Building2 size={16} className="text-[#092322]" />
-                            <span>{lang === "ar" ? "تحويل بنكي (IBAN)" : "Direct Bank Transfer"}</span>
+                            <span>
+                              {lang === "ar" ? "تحويل بنكي (IBAN)" : "Direct Bank Transfer"}
+                            </span>
                           </span>
-                          <span className="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded font-bold">IBAN</span>
+                          <span className="text-[10px] bg-amber-600 text-white px-2 py-0.5 rounded font-bold">
+                            IBAN
+                          </span>
                         </div>
                         <p className="text-[11px] text-slate-500">
                           {lang === "ar"
@@ -903,7 +1054,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                     {paymentMethod === "credit_card" && (
                       <div className="p-4 rounded-2xl bg-white border border-slate-200 space-y-3">
                         <div className="flex items-center justify-between text-xs font-bold text-slate-700">
-                          <span>{lang === "ar" ? "بيانات البطاقة الآمنة" : "Secure Card Details"}</span>
+                          <span>
+                            {lang === "ar" ? "بيانات البطاقة الآمنة" : "Secure Card Details"}
+                          </span>
                           <div className="flex items-center gap-1 text-[10px] text-slate-400">
                             <Lock size={12} /> SSL Encrypted
                           </div>
@@ -926,7 +1079,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                             {cardBrand !== "unknown" && (
                               <span
                                 className={`absolute left-2.5 top-1/2 -translate-y-1/2 text-[9px] font-black px-1.5 py-1 rounded-md ${
-                                  cardBrand === "visa" ? "bg-blue-50 text-blue-700 border border-blue-200" : "bg-orange-50 text-orange-700 border border-orange-200"
+                                  cardBrand === "visa"
+                                    ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                    : "bg-orange-50 text-orange-700 border border-orange-200"
                                 }`}
                               >
                                 {cardBrand === "visa" ? "VISA" : "MASTERCARD"}
@@ -977,20 +1132,32 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                             <Smartphone size={20} />
                           </div>
                           <div>
-                            <p className="text-xs font-bold text-[#0D382B]">Apple Pay / Google Pay Ready</p>
-                            <p className="text-[10px] text-slate-500">سيتم تفعيل الدفع بلمسة واحدة عند النقر على زر التأكيد</p>
+                            <p className="text-xs font-bold text-[#0D382B]">
+                              Apple Pay / Google Pay Ready
+                            </p>
+                            <p className="text-[10px] text-slate-500">
+                              سيتم تفعيل الدفع بلمسة واحدة عند النقر على زر التأكيد
+                            </p>
                           </div>
                         </div>
-                        <span className="text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-lg font-bold border border-emerald-300">جاهز</span>
+                        <span className="text-xs bg-emerald-100 text-emerald-800 px-3 py-1 rounded-lg font-bold border border-emerald-300">
+                          جاهز
+                        </span>
                       </div>
                     )}
 
                     {paymentMethod === "bank_transfer" && (
                       <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 space-y-2 text-xs">
                         <div className="flex justify-between items-center font-bold text-amber-900">
-                          <span>{lang === "ar" ? "حساب التحويل الرسمي للمكتب:" : "Official Firm Bank Account:"}</span>
+                          <span>
+                            {lang === "ar"
+                              ? "حساب التحويل الرسمي للمكتب:"
+                              : "Official Firm Bank Account:"}
+                          </span>
                           {settings.mbankBankName && (
-                            <span className="text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">{settings.mbankBankName}</span>
+                            <span className="text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                              {settings.mbankBankName}
+                            </span>
                           )}
                         </div>
                         {/* لا يُعرض أي رقم حساب افتراضي أو تجريبي إطلاقاً: إن لم تُضبط بيانات الحساب من لوحة
@@ -1000,7 +1167,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                             {settings.mbankAccountName && (
                               <p className="text-slate-700 text-[11px]">
                                 <b>{lang === "ar" ? "اسم المستفيد:" : "Beneficiary:"}</b>{" "}
-                                <span className="font-mono" dir="ltr">{settings.mbankAccountName}</span>
+                                <span className="font-mono" dir="ltr">
+                                  {settings.mbankAccountName}
+                                </span>
                               </p>
                             )}
                             <p className="text-slate-700 font-mono text-[11px]">
@@ -1030,16 +1199,41 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                     {/* Invoice Tax Breakdown */}
                     <div className="bg-white p-4 rounded-2xl border border-slate-200 space-y-2 text-xs">
                       <div className="flex justify-between text-slate-600">
-                        <span>{lang === "ar" ? `رسوم الاستشارة (${serviceDuration} دقيقة):` : `Consultation Fee (${serviceDuration} mins):`}</span>
-                        <span>{Math.round((serviceDuration === 30 ? settings.price30 : settings.price60) / 1.05)} درهم</span>
+                        <span>
+                          {lang === "ar"
+                            ? `رسوم الاستشارة (${serviceDuration} دقيقة):`
+                            : `Consultation Fee (${serviceDuration} mins):`}
+                        </span>
+                        <span>
+                          {Math.round(
+                            (serviceDuration === 30 ? settings.price30 : settings.price60) / 1.05,
+                          )}{" "}
+                          درهم
+                        </span>
                       </div>
                       <div className="flex justify-between text-slate-600 border-b border-slate-100 pb-2">
-                        <span>{lang === "ar" ? "ضريبة القيمة المضافة (5% UAE VAT):" : "UAE VAT (5%):"}</span>
-                        <span>{Math.round((serviceDuration === 30 ? settings.price30 : settings.price60) - Math.round((serviceDuration === 30 ? settings.price30 : settings.price60) / 1.05))} درهم</span>
+                        <span>
+                          {lang === "ar" ? "ضريبة القيمة المضافة (5% UAE VAT):" : "UAE VAT (5%):"}
+                        </span>
+                        <span>
+                          {Math.round(
+                            (serviceDuration === 30 ? settings.price30 : settings.price60) -
+                              Math.round(
+                                (serviceDuration === 30 ? settings.price30 : settings.price60) /
+                                  1.05,
+                              ),
+                          )}{" "}
+                          درهم
+                        </span>
                       </div>
                       <div className="flex justify-between font-black text-slate-900 text-sm pt-1">
-                        <span>{lang === "ar" ? "المبلغ الإجمالي المستحق:" : "Total Payable Amount:"}</span>
-                        <span className="text-amber-700">{serviceDuration === 30 ? settings.price30 : settings.price60} درهم إماراتي</span>
+                        <span>
+                          {lang === "ar" ? "المبلغ الإجمالي المستحق:" : "Total Payable Amount:"}
+                        </span>
+                        <span className="text-amber-700">
+                          {serviceDuration === 30 ? settings.price30 : settings.price60} درهم
+                          إماراتي
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -1055,7 +1249,10 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                         onChange={(e) => setAgreedToTerms(e.target.checked)}
                         className="mt-1 w-4 h-4 rounded border-slate-300 text-[#092322] focus:ring-[#092322] shrink-0 cursor-pointer"
                       />
-                      <label htmlFor="termsCheckbox" className="text-xs text-slate-800 leading-relaxed cursor-pointer font-medium">
+                      <label
+                        htmlFor="termsCheckbox"
+                        className="text-xs text-slate-800 leading-relaxed cursor-pointer font-medium"
+                      >
                         {lang === "ar" ? (
                           <>
                             أقر وأوافق على{" "}
@@ -1123,7 +1320,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                     ✓
                   </div>
                   <h3 className="text-2xl font-black text-[#0D382B]">
-                    {lang === "ar" ? "تم تأكيد الحجز وإنشاء رابط الاجتماع بنجاح!" : "Booking Confirmed & Meet Link Created!"}
+                    {lang === "ar"
+                      ? "تم تأكيد الحجز وإنشاء رابط الاجتماع بنجاح!"
+                      : "Booking Confirmed & Meet Link Created!"}
                   </h3>
                   <p className="text-xs text-slate-600 leading-relaxed">
                     {lang === "ar"
@@ -1134,27 +1333,43 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
 
                 <div className="p-6 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-4 max-w-xl mx-auto">
                   <div className="flex justify-between items-center text-xs pb-3 border-b border-emerald-200">
-                    <span className="text-slate-500 font-medium">{lang === "ar" ? "رقم المرجع:" : "Reference:"}</span>
-                    <span className="font-mono text-[#0D382B] font-bold">{createdBooking?.reference}</span>
+                    <span className="text-slate-500 font-medium">
+                      {lang === "ar" ? "رقم المرجع:" : "Reference:"}
+                    </span>
+                    <span className="font-mono text-[#0D382B] font-bold">
+                      {createdBooking?.reference}
+                    </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 text-xs">
                     <div>
-                      <span className="text-slate-500 block">{lang === "ar" ? "التاريخ والوقت:" : "Date & Time:"}</span>
-                      <span className="text-slate-800 font-bold block mt-0.5">{createdBooking?.date} | {createdBooking?.timeSlot}</span>
+                      <span className="text-slate-500 block">
+                        {lang === "ar" ? "التاريخ والوقت:" : "Date & Time:"}
+                      </span>
+                      <span className="text-slate-800 font-bold block mt-0.5">
+                        {createdBooking?.date} | {createdBooking?.timeSlot}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-slate-500 block">{lang === "ar" ? "مدّة الجلسة:" : "Duration:"}</span>
-                      <span className="text-[#C5A059] font-bold block mt-0.5">{createdBooking?.duration} {lang === "ar" ? "دقيقة" : "Mins"}</span>
+                      <span className="text-slate-500 block">
+                        {lang === "ar" ? "مدّة الجلسة:" : "Duration:"}
+                      </span>
+                      <span className="text-[#C5A059] font-bold block mt-0.5">
+                        {createdBooking?.duration} {lang === "ar" ? "دقيقة" : "Mins"}
+                      </span>
                     </div>
                   </div>
 
                   <div className="p-4 rounded-xl bg-white border border-emerald-200 space-y-2 shadow-sm">
                     <span className="text-[11px] font-bold text-[#0D382B] uppercase block tracking-wider">
-                      {lang === "ar" ? "رابط الجلسة المرئية المباشرة (Google Meet):" : "Direct Google Meet URL:"}
+                      {lang === "ar"
+                        ? "رابط الجلسة المرئية المباشرة (Google Meet):"
+                        : "Direct Google Meet URL:"}
                     </span>
                     <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-lg border border-slate-200 font-mono text-xs">
-                      <span className="text-emerald-700 truncate dir-ltr">{createdBooking?.meetUrl}</span>
+                      <span className="text-emerald-700 truncate dir-ltr">
+                        {createdBooking?.meetUrl}
+                      </span>
                       <button
                         onClick={() => {
                           if (createdBooking?.meetUrl) {
@@ -1176,7 +1391,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                     rel="noreferrer"
                     className="w-full py-3.5 rounded-xl bg-[#0D382B] text-white font-black text-xs text-center block hover:bg-[#124d40] transition shadow-md"
                   >
-                    {lang === "ar" ? "الانضمام المباشر للقاعة الآن 🚀" : "Join Google Meet Room Now 🚀"}
+                    {lang === "ar"
+                      ? "الانضمام المباشر للقاعة الآن 🚀"
+                      : "Join Google Meet Room Now 🚀"}
                   </a>
                 </div>
 
@@ -1223,8 +1440,12 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                   <span>{lang === "ar" ? "نوع الجلسة:" : "Session Type:"}</span>
                   <span className="font-bold text-slate-900">
                     {serviceDuration === 30
-                      ? (lang === "ar" ? "جلسة 30 دقيقة" : "30-Min Session")
-                      : (lang === "ar" ? "جلسة 60 دقيقة" : "60-Min Session")}
+                      ? lang === "ar"
+                        ? "جلسة 30 دقيقة"
+                        : "30-Min Session"
+                      : lang === "ar"
+                        ? "جلسة 60 دقيقة"
+                        : "60-Min Session"}
                   </span>
                 </div>
 
@@ -1239,9 +1460,12 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                 </div>
 
                 <div className="pt-3 border-t border-slate-200 flex justify-between items-center text-sm font-black">
-                  <span className="text-slate-800">{lang === "ar" ? "الإجمالي المستحق:" : "Total Amount:"}</span>
+                  <span className="text-slate-800">
+                    {lang === "ar" ? "الإجمالي المستحق:" : "Total Amount:"}
+                  </span>
                   <span className="text-amber-700 font-mono text-lg">
-                    {serviceDuration === 30 ? settings.price30 : settings.price60} {lang === "ar" ? "درهم" : "AED"}
+                    {serviceDuration === 30 ? settings.price30 : settings.price60}{" "}
+                    {lang === "ar" ? "درهم" : "AED"}
                   </span>
                 </div>
               </div>
@@ -1252,9 +1476,21 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                   <span>{lang === "ar" ? "مميزات الحجز الإلكتروني:" : "Included Benefits:"}</span>
                 </div>
                 <ul className="space-y-1 text-slate-200 list-disc list-inside">
-                  <li>{lang === "ar" ? "رابط Google Meet مباشر ومحمي." : "Instant secure Google Meet URL."}</li>
-                  <li>{lang === "ar" ? "مراجعة مبدئية ذكية للعقود والمستندات." : "Smart initial document triage."}</li>
-                  <li>{lang === "ar" ? "تأكيد فوري عبر الواتساب والبريد." : "Instant WhatsApp & email confirm."}</li>
+                  <li>
+                    {lang === "ar"
+                      ? "رابط Google Meet مباشر ومحمي."
+                      : "Instant secure Google Meet URL."}
+                  </li>
+                  <li>
+                    {lang === "ar"
+                      ? "مراجعة مبدئية ذكية للعقود والمستندات."
+                      : "Smart initial document triage."}
+                  </li>
+                  <li>
+                    {lang === "ar"
+                      ? "تأكيد فوري عبر الواتساب والبريد."
+                      : "Instant WhatsApp & email confirm."}
+                  </li>
                 </ul>
               </div>
             </div>
@@ -1275,7 +1511,9 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                   <Phone size={13} className="text-amber-600" />
                   <span>+971 4 000 0000</span>
                 </span>
-                <span className="text-emerald-700 font-bold">{lang === "ar" ? "دعم 24/7" : "24/7 Support"}</span>
+                <span className="text-emerald-700 font-bold">
+                  {lang === "ar" ? "دعم 24/7" : "24/7 Support"}
+                </span>
               </div>
             </div>
           </div>
@@ -1289,10 +1527,14 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
             </div>
             <div>
               <h3 className="text-base font-bold text-slate-900">
-                {lang === "ar" ? "الأسئلة الشائعة حول الاستشارات المرئية" : "Frequently Asked Questions"}
+                {lang === "ar"
+                  ? "الأسئلة الشائعة حول الاستشارات المرئية"
+                  : "Frequently Asked Questions"}
               </h3>
               <p className="text-xs text-slate-500">
-                {lang === "ar" ? "كل ما تحتاج معرفته عن آلية الحجز والسرية والجلسة المباشرة" : "Everything about session security, Google Meet links, and scheduling"}
+                {lang === "ar"
+                  ? "كل ما تحتاج معرفته عن آلية الحجز والسرية والجلسة المباشرة"
+                  : "Everything about session security, Google Meet links, and scheduling"}
               </p>
             </div>
           </div>
@@ -1310,7 +1552,11 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
                     className="w-full p-4 text-xs font-bold text-slate-800 hover:text-[#072422] flex items-center justify-between cursor-pointer text-right"
                   >
                     <span>{lang === "ar" ? faq.qAr : faq.qEn}</span>
-                    {isOpen ? <ChevronUp size={16} className="text-amber-600" /> : <ChevronDown size={16} className="text-slate-400" />}
+                    {isOpen ? (
+                      <ChevronUp size={16} className="text-amber-600" />
+                    ) : (
+                      <ChevronDown size={16} className="text-slate-400" />
+                    )}
                   </button>
                   {isOpen && (
                     <div className="px-4 pb-4 text-xs text-slate-600 leading-relaxed border-t border-slate-200 pt-3 bg-white">
@@ -1331,7 +1577,11 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
             <div className="p-5 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-2 text-[#0D382B] font-bold text-sm">
                 <FileText size={18} />
-                <span>{lang === "ar" ? "وثيقة الشروط والأحكام وإخلاء المسؤولية" : "Terms, Conditions & Legal Disclaimer"}</span>
+                <span>
+                  {lang === "ar"
+                    ? "وثيقة الشروط والأحكام وإخلاء المسؤولية"
+                    : "Terms, Conditions & Legal Disclaimer"}
+                </span>
               </div>
               <button
                 onClick={() => setShowTermsModal(false)}
@@ -1343,16 +1593,20 @@ export const PublicConsultationPage: React.FC<PublicConsultationPageProps> = ({
 
             <div className="p-6 overflow-y-auto space-y-4 text-xs text-slate-600 leading-relaxed">
               <p>
-                <b>1. طبيعة الخدمة:</b> تعد الجلسة الاستشارية المرئية رأياً قانونياً توجيهياً مبنياً على المعطيات والوقائع المقدمة من قبل الموكل وقت الجلسة.
+                <b>1. طبيعة الخدمة:</b> تعد الجلسة الاستشارية المرئية رأياً قانونياً توجيهياً مبنياً
+                على المعطيات والوقائع المقدمة من قبل الموكل وقت الجلسة.
               </p>
               <p>
-                <b>2. السرية وحماية البيانات:</b> يلتزم المكتب بالسرية التامة وفق أحكام قوانين تنظيم مهنة المحاماة والأنظمة المعمول بها في دولة الإمارات العربية المتحدة.
+                <b>2. السرية وحماية البيانات:</b> يلتزم المكتب بالسرية التامة وفق أحكام قوانين تنظيم
+                مهنة المحاماة والأنظمة المعمول بها في دولة الإمارات العربية المتحدة.
               </p>
               <p>
-                <b>3. سياسة تعديل المواعيد:</b> يمكن للموكل طلب إعادة جدولة الموعد قبل 4 ساعات على الأقل من بداية الجلسة.
+                <b>3. سياسة تعديل المواعيد:</b> يمكن للموكل طلب إعادة جدولة الموعد قبل 4 ساعات على
+                الأقل من بداية الجلسة.
               </p>
               <p>
-                <b>4. الدفع والرسوم:</b> تُسدد رسوم الجلسة المحددة إلكترونياً قبل توثيق الحجز، ويُولد رابط القاعة تلقائياً وبشكل فوري.
+                <b>4. الدفع والرسوم:</b> تُسدد رسوم الجلسة المحددة إلكترونياً قبل توثيق الحجز،
+                ويُولد رابط القاعة تلقائياً وبشكل فوري.
               </p>
             </div>
 

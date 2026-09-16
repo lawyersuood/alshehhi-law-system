@@ -6,7 +6,8 @@ import { CaseItem, Client, DocItem, RolePermissions } from "../domain/types";
 import { DOC_TEMPLATES, FIRM_NAME, FIRM_TAGLINE } from "../domain/constants";
 import { fmtDate, todayISO, caseOpponentsLabel } from "../domain/utils";
 
-const inputCls = "w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:border-[#0D382B]/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all";
+const inputCls =
+  "w-full rounded-[11px] border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-base sm:text-sm text-slate-800 focus:border-[#0D382B]/40 focus:bg-white focus:outline-none focus:ring-4 focus:ring-[#0D382B]/[0.06] transition-all";
 
 export interface DocsViewProps {
   docSubTab: "archive" | "generator" | "officialLetters";
@@ -81,7 +82,8 @@ export default function DocsView({
 
       {!canManageLetterhead && !canUseSignatureStamp && (
         <div className="rounded-xl border border-sky-200 bg-sky-50 p-3 text-xs text-sky-800 flex items-center gap-2">
-          <Stamp size={14} /> إدارة صور الورق الرسمي والتوقيع والختم انتقلت إلى قسم "الهوية الرسمية والأختام" المحمي في القائمة الجانبية.
+          <Stamp size={14} /> إدارة صور الورق الرسمي والتوقيع والختم انتقلت إلى قسم "الهوية الرسمية
+          والأختام" المحمي في القائمة الجانبية.
         </div>
       )}
 
@@ -93,7 +95,14 @@ export default function DocsView({
           footerImg={letterhead.footerImg}
           signatureImg={letterhead.signatureImg}
           stampImg={letterhead.stampImg}
-          onUsageLog={(action: string, details: string) => logAuditAction("UPDATE", "الورق الرسمي", action, `قام المستخدم "${currentUser.name}" ${details}`)}
+          onUsageLog={(action: string, details: string) =>
+            logAuditAction(
+              "UPDATE",
+              "الورق الرسمي",
+              action,
+              `قام المستخدم "${currentUser.name}" ${details}`,
+            )
+          }
         />
       ) : docSubTab === "generator" ? (
         <div className="space-y-6">
@@ -102,25 +111,33 @@ export default function DocsView({
               <h2 className="text-2xl font-bold flex items-center gap-2">
                 <FileText className="text-amber-600" /> توليد النماذج والمذكرات القانونية تلقائياً
               </h2>
-              <p className="text-xs text-slate-500">تعبئة القوالب الرسمية تلقائياً ببيانات الموكل والدعوى لسرعة التقديم بالمحكمة</p>
+              <p className="text-xs text-slate-500">
+                تعبئة القوالب الرسمية تلقائياً ببيانات الموكل والدعوى لسرعة التقديم بالمحكمة
+              </p>
             </div>
           </div>
 
           {(() => {
-            const selTpl = DOC_TEMPLATES.find((t) => t.id === selectedTemplateId) || DOC_TEMPLATES[0];
+            const selTpl =
+              DOC_TEMPLATES.find((t) => t.id === selectedTemplateId) || DOC_TEMPLATES[0];
             const selCs = cases.find((c) => c.id === selectedGenCaseId) || cases[0];
             const selClient = selCs ? clients.find((cl) => cl.id === selCs.clientId) : null;
 
-            const generatedContent = selTpl && selCs ? selTpl.templateBody
-              .replace(/\{\{CASE_NUMBER\}\}/g, selCs.number)
-              .replace(/\{\{CLIENT_NAME\}\}/g, selClient ? selClient.name : "—")
-              .replace(/\{\{CLIENT_ID_NO\}\}/g, selClient ? selClient.idNo : "—")
-              .replace(/\{\{COURT\}\}/g, selCs.court)
-              .replace(/\{\{OPPONENT\}\}/g, caseOpponentsLabel(selCs))
-              .replace(/\{\{CASE_SUBJECT\}\}/g, selCs.subject)
-              .replace(/\{\{CASE_FEE\}\}/g, selCs.fee ? selCs.fee.toLocaleString("ar-AE") : "0")
-              .replace(/\{\{TODAY_DATE\}\}/g, fmtDate(todayISO()))
-              : "";
+            const generatedContent =
+              selTpl && selCs
+                ? selTpl.templateBody
+                    .replace(/\{\{CASE_NUMBER\}\}/g, selCs.number)
+                    .replace(/\{\{CLIENT_NAME\}\}/g, selClient ? selClient.name : "—")
+                    .replace(/\{\{CLIENT_ID_NO\}\}/g, selClient ? selClient.idNo : "—")
+                    .replace(/\{\{COURT\}\}/g, selCs.court)
+                    .replace(/\{\{OPPONENT\}\}/g, caseOpponentsLabel(selCs))
+                    .replace(/\{\{CASE_SUBJECT\}\}/g, selCs.subject)
+                    .replace(
+                      /\{\{CASE_FEE\}\}/g,
+                      selCs.fee ? selCs.fee.toLocaleString("ar-AE") : "0",
+                    )
+                    .replace(/\{\{TODAY_DATE\}\}/g, fmtDate(todayISO()))
+                : "";
 
             return (
               <div className="grid gap-6 lg:grid-cols-3">
@@ -133,7 +150,9 @@ export default function DocsView({
                       className={inputCls}
                     >
                       {DOC_TEMPLATES.map((t) => (
-                        <option key={t.id} value={t.id}>{t.title} ({t.category})</option>
+                        <option key={t.id} value={t.id}>
+                          {t.title} ({t.category})
+                        </option>
                       ))}
                     </select>
                   </Field>
@@ -145,7 +164,9 @@ export default function DocsView({
                       className={inputCls}
                     >
                       {cases.map((c) => (
-                        <option key={c.id} value={c.id}>{c.number} — {clientName(c.clientId)}</option>
+                        <option key={c.id} value={c.id}>
+                          {c.number} — {clientName(c.clientId)}
+                        </option>
                       ))}
                     </select>
                   </Field>
@@ -189,10 +210,18 @@ export default function DocsView({
                       {canUseSignatureStamp && (letterhead.signatureImg || letterhead.stampImg) ? (
                         <span className="relative inline-block h-12 w-24">
                           {letterhead.stampImg && (
-                            <img src={letterhead.stampImg} alt="ختم" className="absolute top-0 right-0 h-12 w-12 object-contain opacity-90 -rotate-6" />
+                            <img
+                              src={letterhead.stampImg}
+                              alt="ختم"
+                              className="absolute top-0 right-0 h-12 w-12 object-contain opacity-90 -rotate-6"
+                            />
                           )}
                           {letterhead.signatureImg && (
-                            <img src={letterhead.signatureImg} alt="توقيع" className="absolute bottom-0 left-0 h-8 object-contain" />
+                            <img
+                              src={letterhead.signatureImg}
+                              alt="توقيع"
+                              className="absolute bottom-0 left-0 h-8 object-contain"
+                            />
                           )}
                         </span>
                       ) : null}
@@ -211,14 +240,21 @@ export default function DocsView({
               <h2 className="text-2xl font-bold">الأرشيف والمستندات</h2>
               <p className="text-xs text-slate-500">صحائف الدعوى، المذكرات، وعقود الخبرة</p>
             </div>
-            <button onClick={() => openModalWithCheck("doc", "manageDocs")} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"><Plus size={16} /> رفع مستند</button>
+            <button
+              onClick={() => openModalWithCheck("doc", "manageDocs")}
+              className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"
+            >
+              <Plus size={16} /> رفع مستند
+            </button>
           </div>
           {docs.length === 0 ? (
             <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl border border-dashed border-slate-300 bg-white space-y-3">
               <div className="w-12 h-12 rounded-2xl bg-sky-50 text-sky-600 flex items-center justify-center">
                 <FolderOpen size={24} />
               </div>
-              <p className="text-sm font-bold text-slate-800">لا توجد مستندات مرفوعة بالأرشيف حالياً</p>
+              <p className="text-sm font-bold text-slate-800">
+                لا توجد مستندات مرفوعة بالأرشيف حالياً
+              </p>
               <p className="text-xs text-slate-500 max-w-sm">
                 يمكنك رفع صحائف الدعوى، المذكرات، وعقود الخبرة هنا لأرشفتها وربطها بالقضايا.
               </p>
@@ -234,10 +270,14 @@ export default function DocsView({
               {docs.map((d) => (
                 <div key={d.id} className="app-card p-4 flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3 min-w-0 flex-1">
-                    <div className="p-3 bg-sky-50 text-sky-600 rounded-xl"><FolderOpen size={20} /></div>
+                    <div className="p-3 bg-sky-50 text-sky-600 rounded-xl">
+                      <FolderOpen size={20} />
+                    </div>
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold text-sm truncate">{d.name}</p>
-                      <p className="text-xs text-slate-500 mt-1">{d.type} • {fmtDate(d.date)}</p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {d.type} • {fmtDate(d.date)}
+                      </p>
                       <p className="text-[11px] text-slate-400 mt-0.5">بواسطة: {d.by}</p>
                     </div>
                   </div>
@@ -250,7 +290,13 @@ export default function DocsView({
                         permKey: "deleteDocs",
                         actionName: "حذف المستند من الأرشيف",
                         onConfirm: () => {
-                          logAuditAction("DELETE", "الأرشيف", `مستند: ${d.name}`, `حذف المستند ${d.name} من الأرشيف`, d.id);
+                          logAuditAction(
+                            "DELETE",
+                            "الأرشيف",
+                            `مستند: ${d.name}`,
+                            `حذف المستند ${d.name} من الأرشيف`,
+                            d.id,
+                          );
                           setDocs((prev) => prev.filter((x) => x.id !== d.id));
                         },
                       });

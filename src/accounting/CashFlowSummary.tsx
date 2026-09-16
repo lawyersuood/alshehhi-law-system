@@ -14,7 +14,13 @@ function balanceAsOf(account: BankAccount, transactions: BankTransaction[], asOf
   return balance;
 }
 
-export default function CashFlowSummary({ bankAccounts, transactions }: { bankAccounts: BankAccount[]; transactions: BankTransaction[] }) {
+export default function CashFlowSummary({
+  bankAccounts,
+  transactions,
+}: {
+  bankAccounts: BankAccount[];
+  transactions: BankTransaction[];
+}) {
   const initialPeriod = useMemo(() => defaultPeriod(), []);
   const [from, setFrom] = useState(initialPeriod.from);
   const [to, setTo] = useState(initialPeriod.to);
@@ -31,14 +37,30 @@ export default function CashFlowSummary({ bankAccounts, transactions }: { bankAc
         const opening = balanceAsOf(acc, transactions, dayBeforeFrom);
         const closing = balanceAsOf(acc, transactions, to);
         const deposits = transactions
-          .filter((t) => t.bankAccountId === acc.id && t.type === "deposit" && t.date >= from && t.date <= to)
+          .filter(
+            (t) =>
+              t.bankAccountId === acc.id && t.type === "deposit" && t.date >= from && t.date <= to,
+          )
           .reduce((s, t) => s + t.amount, 0);
         const withdrawals = transactions
-          .filter((t) => t.bankAccountId === acc.id && t.type === "withdrawal" && t.date >= from && t.date <= to)
+          .filter(
+            (t) =>
+              t.bankAccountId === acc.id &&
+              t.type === "withdrawal" &&
+              t.date >= from &&
+              t.date <= to,
+          )
           .reduce((s, t) => s + t.amount, 0);
-        return { account: acc, opening, closing, deposits, withdrawals, net: deposits - withdrawals };
+        return {
+          account: acc,
+          opening,
+          closing,
+          deposits,
+          withdrawals,
+          net: deposits - withdrawals,
+        };
       }),
-    [bankAccounts, transactions, from, to, dayBeforeFrom]
+    [bankAccounts, transactions, from, to, dayBeforeFrom],
   );
 
   const totals = rows.reduce(
@@ -49,24 +71,36 @@ export default function CashFlowSummary({ bankAccounts, transactions }: { bankAc
       withdrawals: acc.withdrawals + r.withdrawals,
       net: acc.net + r.net,
     }),
-    { opening: 0, closing: 0, deposits: 0, withdrawals: 0, net: 0 }
+    { opening: 0, closing: 0, deposits: 0, withdrawals: 0, net: 0 },
   );
 
   return (
     <div className="space-y-5">
       <div>
         <h2 className="text-xl font-bold text-slate-900">التدفق النقدي المبسّط</h2>
-        <p className="text-xs text-slate-500">حركة الإيداعات والسحوبات على كل الحسابات البنكية المسجّلة خلال فترة محددة</p>
+        <p className="text-xs text-slate-500">
+          حركة الإيداعات والسحوبات على كل الحسابات البنكية المسجّلة خلال فترة محددة
+        </p>
       </div>
 
       <div className="flex flex-wrap items-end gap-3">
         <div>
           <label className="text-xs font-semibold text-slate-600 mb-1 block">من تاريخ</label>
-          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+          <input
+            type="date"
+            value={from}
+            onChange={(e) => setFrom(e.target.value)}
+            className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+          />
         </div>
         <div>
           <label className="text-xs font-semibold text-slate-600 mb-1 block">إلى تاريخ</label>
-          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+          <input
+            type="date"
+            value={to}
+            onChange={(e) => setTo(e.target.value)}
+            className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+          />
         </div>
       </div>
 
@@ -90,12 +124,18 @@ export default function CashFlowSummary({ bankAccounts, transactions }: { bankAc
           </div>
         </div>
         <div className="app-card px-4 py-3.5 flex items-center gap-3">
-          <div className={`p-2 rounded-xl ${totals.net >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}>
+          <div
+            className={`p-2 rounded-xl ${totals.net >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"}`}
+          >
             <Wallet size={18} />
           </div>
           <div>
             <p className="text-xs text-slate-500">صافي التغيّر في النقدية</p>
-            <p className={`font-mono font-bold ${totals.net >= 0 ? "text-emerald-700" : "text-rose-700"}`}>{fmtMoney(totals.net)}</p>
+            <p
+              className={`font-mono font-bold ${totals.net >= 0 ? "text-emerald-700" : "text-rose-700"}`}
+            >
+              {fmtMoney(totals.net)}
+            </p>
           </div>
         </div>
       </div>
@@ -116,7 +156,8 @@ export default function CashFlowSummary({ bankAccounts, transactions }: { bankAc
               {rows.map((r) => (
                 <tr key={r.account.id} className="border-b border-slate-50 last:border-0">
                   <td className="px-4 py-2.5 text-slate-800">
-                    {r.account.bankName} <span className="text-xs text-slate-400">— {r.account.accountLabel}</span>
+                    {r.account.bankName}{" "}
+                    <span className="text-xs text-slate-400">— {r.account.accountLabel}</span>
                   </td>
                   <td className="px-4 py-2.5 font-mono">{fmtMoney(r.opening)}</td>
                   <td className="px-4 py-2.5 font-mono text-emerald-700">{fmtMoney(r.deposits)}</td>

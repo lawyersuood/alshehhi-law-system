@@ -1,8 +1,23 @@
 import React, { useState } from "react";
 import { BookingRecord, ConsultationSettings } from "./PublicConsultationPage";
 import {
-  Video, Bell, UserCheck, Calendar, Clock, Sparkles, Copy, ExternalLink,
-  Search, Filter, CheckCircle2, AlertCircle, Settings, DollarSign, Plus, Trash2, Shield
+  Video,
+  Bell,
+  UserCheck,
+  Calendar,
+  Clock,
+  Sparkles,
+  Copy,
+  ExternalLink,
+  Search,
+  Filter,
+  CheckCircle2,
+  AlertCircle,
+  Settings,
+  DollarSign,
+  Plus,
+  Trash2,
+  Shield,
 } from "lucide-react";
 
 export interface EmployeeOption {
@@ -15,7 +30,10 @@ interface AdminConsultationsViewProps {
   bookings: BookingRecord[];
   employees: EmployeeOption[];
   onAssignLawyer: (bookingId: string, lawyerId: number, lawyerName: string) => void;
-  onUpdateStatus: (bookingId: string, status: "pending_assignment" | "assigned" | "completed") => void;
+  onUpdateStatus: (
+    bookingId: string,
+    status: "pending_assignment" | "assigned" | "completed",
+  ) => void;
   settings: ConsultationSettings;
   onUpdateSettings: (newSettings: ConsultationSettings) => void;
   onOpenPublicPage?: () => void;
@@ -28,7 +46,7 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
   onUpdateStatus,
   settings,
   onUpdateSettings,
-  onOpenPublicPage
+  onOpenPublicPage,
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -74,7 +92,7 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
       mbankIban,
       mbankBankName,
       mbankAccountName,
-      mbankMerchantId
+      mbankMerchantId,
     });
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 3000);
@@ -116,7 +134,8 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
                 تنبيه فوري: يوجد {unassignedCount} طلب حجز استشارة مرئية مدفوع جديد!
               </h3>
               <p className="text-xs text-amber-100/80">
-                يتطلب إسناد وتوجيه الاستشارة ورابط Google Meet إلى أحد المحامين والمستشارين المتاحين فوراً.
+                يتطلب إسناد وتوجيه الاستشارة ورابط Google Meet إلى أحد المحامين والمستشارين المتاحين
+                فوراً.
               </p>
             </div>
           </div>
@@ -148,7 +167,8 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
             إدارة طلبات الاستشارات المرئية والتحكم الإداري
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            تابع الطلبات المدفوعة، قم بتعيين المحامي المختص، أو عدّل الأسعار والأوقات المتاحة للحجز أونلاين.
+            تابع الطلبات المدفوعة، قم بتعيين المحامي المختص، أو عدّل الأسعار والأوقات المتاحة للحجز
+            أونلاين.
           </p>
         </div>
 
@@ -218,7 +238,9 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
               <button
                 onClick={() => setStatusFilter("all")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                  statusFilter === "all" ? "bg-slate-800 text-white" : "text-slate-400 hover:text-white"
+                  statusFilter === "all"
+                    ? "bg-slate-800 text-white"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
                 الكل ({bookings.length})
@@ -226,7 +248,9 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
               <button
                 onClick={() => setStatusFilter("pending")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                  statusFilter === "pending" ? "bg-amber-500/20 text-amber-300 border border-amber-500/30" : "text-slate-400 hover:text-white"
+                  statusFilter === "pending"
+                    ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
                 بانتظار التعيين ({unassignedCount})
@@ -234,7 +258,9 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
               <button
                 onClick={() => setStatusFilter("assigned")}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                  statusFilter === "assigned" ? "bg-teal-500/20 text-teal-300 border border-teal-500/30" : "text-slate-400 hover:text-white"
+                  statusFilter === "assigned"
+                    ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
                 تم التعيين ({bookings.filter((b) => b.status === "assigned").length})
@@ -276,8 +302,8 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
                           b.status === "pending_assignment"
                             ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse"
                             : b.status === "assigned"
-                            ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
-                            : "bg-slate-800 text-slate-300"
+                              ? "bg-teal-500/20 text-teal-300 border border-teal-500/30"
+                              : "bg-slate-800 text-slate-300"
                         }`}
                       >
                         {b.status === "pending_assignment" && <AlertCircle size={14} />}
@@ -286,8 +312,8 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
                           {b.status === "pending_assignment"
                             ? "⚠️ بانتظار تعيين محامٍ"
                             : b.status === "assigned"
-                            ? `تم التعيين: ${b.assignedLawyerName}`
-                            : "مكتملة"}
+                              ? `تم التعيين: ${b.assignedLawyerName}`
+                              : "مكتملة"}
                         </span>
                       </span>
 
@@ -296,7 +322,7 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
                         onChange={(e) =>
                           onUpdateStatus(
                             b.id,
-                            e.target.value as "pending_assignment" | "assigned" | "completed"
+                            e.target.value as "pending_assignment" | "assigned" | "completed",
                           )
                         }
                         className="bg-slate-950 border border-slate-800 text-[11px] text-slate-300 rounded-lg px-2 py-1 font-bold"
@@ -324,7 +350,9 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
                       </div>
                       <div>
                         <span className="text-slate-400">الواتساب:</span>{" "}
-                        <span className="text-teal-400 font-mono font-bold" dir="ltr">{b.whatsapp}</span>
+                        <span className="text-teal-400 font-mono font-bold" dir="ltr">
+                          {b.whatsapp}
+                        </span>
                       </div>
                       <div>
                         <span className="text-slate-400">البريد:</span>{" "}
@@ -332,7 +360,9 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
                       </div>
                       <div>
                         <span className="text-slate-400">الموعد المحجوز:</span>{" "}
-                        <span className="text-amber-300 font-bold">{b.date} ({b.timeSlot})</span>
+                        <span className="text-amber-300 font-bold">
+                          {b.date} ({b.timeSlot})
+                        </span>
                       </div>
                       <div>
                         <span className="text-slate-400">المدة:</span>{" "}
@@ -358,7 +388,9 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
                       <div className="space-y-2 text-slate-300 text-xs">
                         <div>
                           <b className="text-amber-300">1. المجال والقانون المطبق:</b>{" "}
-                          <span className="text-white font-semibold">{b.aiSummary.qualification}</span>
+                          <span className="text-white font-semibold">
+                            {b.aiSummary.qualification}
+                          </span>
                         </div>
 
                         <div>
@@ -371,8 +403,12 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
                         </div>
 
                         <div>
-                          <b className="text-amber-300">3. الجهة المختصة والأسئلة المفتاحية للجلسة:</b>
-                          <p className="text-teal-300 font-bold my-0.5">{b.aiSummary.jurisdiction}</p>
+                          <b className="text-amber-300">
+                            3. الجهة المختصة والأسئلة المفتاحية للجلسة:
+                          </b>
+                          <p className="text-teal-300 font-bold my-0.5">
+                            {b.aiSummary.jurisdiction}
+                          </p>
                           <ul className="list-decimal list-inside space-y-0.5 text-slate-300">
                             {b.aiSummary.keyQuestions.map((q, idx) => (
                               <li key={idx}>{q}</li>
@@ -464,7 +500,6 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
           </div>
 
           <form onSubmit={handleSaveSettings} className="space-y-8">
-            
             {/* 1. Price Control */}
             <div>
               <h4 className="text-sm font-bold text-amber-300 mb-3 flex items-center gap-1.5">
@@ -610,7 +645,10 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
 
               <div className="bg-slate-950 p-5 rounded-xl border border-slate-800 space-y-4">
                 <div className="flex items-center justify-between bg-teal-950/40 p-3 rounded-lg border border-teal-800/60 text-xs text-teal-200">
-                  <span>🏦 بيانات الحساب البنكي الرسمي للمكتب. هذه البيانات تُعرض للعملاء في صفحة الحجز العامة ويُحوَّل إليها أموال فعلية — يجب أن تطابق بيانات الحساب لدى البنك حرفياً.</span>
+                  <span>
+                    🏦 بيانات الحساب البنكي الرسمي للمكتب. هذه البيانات تُعرض للعملاء في صفحة الحجز
+                    العامة ويُحوَّل إليها أموال فعلية — يجب أن تطابق بيانات الحساب لدى البنك حرفياً.
+                  </span>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -674,7 +712,10 @@ export const AdminConsultationsView: React.FC<AdminConsultationsViewProps> = ({
                 </div>
 
                 <p className="text-[11px] text-slate-400 leading-relaxed">
-                  * عند إتمام الموكل عملية السداد عبر الموقع الرسمي (lawyersuood.com)، يقوم النظام بإرسال إشعار لحظي (Webhook Callback) إلى بوابة بنك المارية لتحصيل المبلغ وإيداعه مباشرة في الحساب التجاري للمكتب، وتوليد الفاتورة الضريبية وإيصال القبض آلياً في النظام المحاسبي للمكتب.
+                  * عند إتمام الموكل عملية السداد عبر الموقع الرسمي (lawyersuood.com)، يقوم النظام
+                  بإرسال إشعار لحظي (Webhook Callback) إلى بوابة بنك المارية لتحصيل المبلغ وإيداعه
+                  مباشرة في الحساب التجاري للمكتب، وتوليد الفاتورة الضريبية وإيصال القبض آلياً في
+                  النظام المحاسبي للمكتب.
                 </p>
               </div>
             </div>

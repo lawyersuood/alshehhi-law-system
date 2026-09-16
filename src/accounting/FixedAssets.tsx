@@ -19,14 +19,29 @@ const inputCls =
   "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0D382B] focus:outline-none focus:ring-2 focus:ring-[#0D382B]/[0.12] transition";
 
 const fmtMoney = (n: number) =>
-  new Intl.NumberFormat("ar-AE", { style: "currency", currency: "AED", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
+  new Intl.NumberFormat("ar-AE", {
+    style: "currency",
+    currency: "AED",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n || 0);
 
-const fmtDateLabel = (d: string) => (d ? new Date(d + "T00:00:00").toLocaleDateString("ar-AE", { year: "numeric", month: "long", day: "numeric" }) : "—");
+const fmtDateLabel = (d: string) =>
+  d
+    ? new Date(d + "T00:00:00").toLocaleDateString("ar-AE", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "—";
 
 const fmtPeriodLabel = (p: string) => {
   if (!p) return "—";
   const [y, m] = p.split("-");
-  return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("ar-AE", { year: "numeric", month: "long" });
+  return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("ar-AE", {
+    year: "numeric",
+    month: "long",
+  });
 };
 
 interface FormState {
@@ -83,10 +98,28 @@ export default function FixedAssets({
   canDelete: boolean;
   currentUserName?: string;
 }) {
-  const assetTypeAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
-  const expenseTypeAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
-  const defaultAccDepAccount = useMemo(() => accounts.find((a) => a.code === ACCUMULATED_DEPRECIATION_ACCOUNT_CODE), [accounts]);
-  const defaultExpAccount = useMemo(() => accounts.find((a) => a.code === DEPRECIATION_EXPENSE_ACCOUNT_CODE), [accounts]);
+  const assetTypeAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.isActive && !a.isGroup && a.type === "asset")
+        .sort((a, b) => a.code.localeCompare(b.code)),
+    [accounts],
+  );
+  const expenseTypeAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.isActive && !a.isGroup && a.type === "expense")
+        .sort((a, b) => a.code.localeCompare(b.code)),
+    [accounts],
+  );
+  const defaultAccDepAccount = useMemo(
+    () => accounts.find((a) => a.code === ACCUMULATED_DEPRECIATION_ACCOUNT_CODE),
+    [accounts],
+  );
+  const defaultExpAccount = useMemo(
+    () => accounts.find((a) => a.code === DEPRECIATION_EXPENSE_ACCOUNT_CODE),
+    [accounts],
+  );
 
   const [form, setForm] = useState<FormState | null>(null);
   const [error, setError] = useState("");
@@ -97,7 +130,9 @@ export default function FixedAssets({
 
   const openNew = () => {
     setError("");
-    setForm(emptyForm({ accDepId: defaultAccDepAccount?.id || "", expId: defaultExpAccount?.id || "" }));
+    setForm(
+      emptyForm({ accDepId: defaultAccDepAccount?.id || "", expId: defaultExpAccount?.id || "" }),
+    );
   };
 
   const openEdit = (a: FixedAsset) => {
@@ -123,7 +158,11 @@ export default function FixedAssets({
       setError("يرجى إدخال اسم الأصل");
       return;
     }
-    if (!form.assetAccountId || !form.accumulatedDepreciationAccountId || !form.depreciationExpenseAccountId) {
+    if (
+      !form.assetAccountId ||
+      !form.accumulatedDepreciationAccountId ||
+      !form.depreciationExpenseAccountId
+    ) {
       setError("يرجى اختيار حساب الأصل وحساب مجمع الإهلاك وحساب مصروف الإهلاك");
       return;
     }
@@ -159,8 +198,8 @@ export default function FixedAssets({
                 salvageValue,
                 notes: form.notes.trim() || undefined,
               }
-            : a
-        )
+            : a,
+        ),
       );
     } else {
       setAssets((prev) => [
@@ -197,13 +236,20 @@ export default function FixedAssets({
   const requestDispose = (id: string) => setConfirmDisposeId(id);
   const confirmDispose = () => {
     if (!confirmDisposeId) return;
-    setAssets((prev) => prev.map((a) => (a.id === confirmDisposeId ? { ...a, status: "disposed", disposedAt: new Date().toISOString() } : a)));
+    setAssets((prev) =>
+      prev.map((a) =>
+        a.id === confirmDisposeId
+          ? { ...a, status: "disposed", disposedAt: new Date().toISOString() }
+          : a,
+      ),
+    );
     setConfirmDisposeId(null);
   };
 
   const deletingAsset = assets.find((a) => a.id === confirmDeleteId);
   const disposingAsset = assets.find((a) => a.id === confirmDisposeId);
-  const canDeleteAsset = (a: FixedAsset) => accumulatedDepreciationSoFar(a.id, depreciationRuns) === 0;
+  const canDeleteAsset = (a: FixedAsset) =>
+    accumulatedDepreciationSoFar(a.id, depreciationRuns) === 0;
 
   // الأصول المؤهلة للإهلاك في الفترة المختارة: أصول فعّالة، لم يُنفَّذ لها إهلاك في هذه الفترة، ولم تصل بعد لقيمتها التخريدية
   const eligibleForRun = useMemo(
@@ -211,9 +257,13 @@ export default function FixedAssets({
       assets
         .filter((a) => a.status === "active")
         .filter((a) => !hasRunForPeriod(a.id, period, depreciationRuns))
-        .map((a) => ({ asset: a, amount: monthlyDepreciation(a), nbv: netBookValue(a, depreciationRuns) }))
+        .map((a) => ({
+          asset: a,
+          amount: monthlyDepreciation(a),
+          nbv: netBookValue(a, depreciationRuns),
+        }))
         .filter((r) => r.nbv > r.asset.salvageValue + 0.005 && r.amount > 0.005),
-    [assets, depreciationRuns, period]
+    [assets, depreciationRuns, period],
   );
 
   const runDepreciation = () => {
@@ -227,10 +277,13 @@ export default function FixedAssets({
     const expenseByAccount = new Map<string, number>();
     const accDepByAccount = new Map<string, number>();
     for (const { asset, amount } of eligibleForRun) {
-      expenseByAccount.set(asset.depreciationExpenseAccountId, (expenseByAccount.get(asset.depreciationExpenseAccountId) || 0) + amount);
+      expenseByAccount.set(
+        asset.depreciationExpenseAccountId,
+        (expenseByAccount.get(asset.depreciationExpenseAccountId) || 0) + amount,
+      );
       accDepByAccount.set(
         asset.accumulatedDepreciationAccountId,
-        (accDepByAccount.get(asset.accumulatedDepreciationAccountId) || 0) + amount
+        (accDepByAccount.get(asset.accumulatedDepreciationAccountId) || 0) + amount,
       );
     }
     const lines = [
@@ -277,7 +330,11 @@ export default function FixedAssets({
   const pastRunsByPeriod = useMemo(() => {
     const byPeriod = new Map<string, { count: number; total: number; journalEntryId: string }>();
     for (const r of depreciationRuns) {
-      const cur = byPeriod.get(r.periodLabel) || { count: 0, total: 0, journalEntryId: r.journalEntryId };
+      const cur = byPeriod.get(r.periodLabel) || {
+        count: 0,
+        total: 0,
+        journalEntryId: r.journalEntryId,
+      };
       cur.count += 1;
       cur.total += r.amount;
       byPeriod.set(r.periodLabel, cur);
@@ -292,10 +349,15 @@ export default function FixedAssets({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-slate-900">الأصول الثابتة</h2>
-          <p className="text-xs text-slate-500">سجل أصول المكتب (أثاث، أجهزة، سيارات) وإهلاكها الدوري — {assets.length} أصل مسجّل</p>
+          <p className="text-xs text-slate-500">
+            سجل أصول المكتب (أثاث، أجهزة، سيارات) وإهلاكها الدوري — {assets.length} أصل مسجّل
+          </p>
         </div>
         {canManage && (
-          <button onClick={openNew} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]">
+          <button
+            onClick={openNew}
+            className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"
+          >
             <Plus size={16} /> إضافة أصل جديد
           </button>
         )}
@@ -304,8 +366,10 @@ export default function FixedAssets({
       {(!defaultAccDepAccount || !defaultExpAccount) && (
         <div className="flex items-center gap-2 rounded-xl bg-[#0D382B]/[0.05] border border-[#0D382B]/15 px-4 py-3 text-xs text-[#0D382B]">
           <AlertTriangle size={15} />
-          تنبيه: لم يتم العثور على حساب "مجمع إهلاك الأصول الثابتة" ({ACCUMULATED_DEPRECIATION_ACCOUNT_CODE}) أو حساب "استهلاك الأصول الثابتة" (
-          {DEPRECIATION_EXPENSE_ACCOUNT_CODE}) في شجرة الحسابات — يمكن اختيار حسابات بديلة يدوياً عند إضافة كل أصل.
+          تنبيه: لم يتم العثور على حساب "مجمع إهلاك الأصول الثابتة" (
+          {ACCUMULATED_DEPRECIATION_ACCOUNT_CODE}) أو حساب "استهلاك الأصول الثابتة" (
+          {DEPRECIATION_EXPENSE_ACCOUNT_CODE}) في شجرة الحسابات — يمكن اختيار حسابات بديلة يدوياً
+          عند إضافة كل أصل.
         </div>
       )}
 
@@ -330,14 +394,19 @@ export default function FixedAssets({
                 const accumulated = accumulatedDepreciationSoFar(a.id, depreciationRuns);
                 const nbv = netBookValue(a, depreciationRuns);
                 return (
-                  <tr key={a.id} className={`border-b border-slate-50 last:border-0 ${a.status === "disposed" ? "opacity-50" : ""}`}>
+                  <tr
+                    key={a.id}
+                    className={`border-b border-slate-50 last:border-0 ${a.status === "disposed" ? "opacity-50" : ""}`}
+                  >
                     <td className="px-4 py-2.5 text-slate-800 font-medium">
                       <span className="inline-flex items-center gap-1.5">
                         <Boxes size={13} className="text-slate-400" /> {a.name}
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-xs text-slate-500">{a.category}</td>
-                    <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">{fmtDateLabel(a.purchaseDate)}</td>
+                    <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">
+                      {fmtDateLabel(a.purchaseDate)}
+                    </td>
                     <td className="px-4 py-2.5 font-mono">{fmtMoney(a.cost)}</td>
                     <td className="px-4 py-2.5 font-mono">{fmtMoney(monthlyDepreciation(a))}</td>
                     <td className="px-4 py-2.5 font-mono">{fmtMoney(accumulated)}</td>
@@ -345,7 +414,9 @@ export default function FixedAssets({
                     <td className="px-4 py-2.5">
                       <span
                         className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
-                          a.status === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-500 border-slate-200"
+                          a.status === "active"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : "bg-slate-100 text-slate-500 border-slate-200"
                         }`}
                       >
                         {a.status === "active" ? "فعّال" : "مستبعد"}
@@ -354,17 +425,27 @@ export default function FixedAssets({
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-1 justify-end">
                         {canManage && a.status === "active" && (
-                          <button onClick={() => openEdit(a)} className="p-1.5 text-slate-500 hover:text-[#0D382B] rounded-lg hover:bg-[#0D382B]/[0.06]">
+                          <button
+                            onClick={() => openEdit(a)}
+                            className="p-1.5 text-slate-500 hover:text-[#0D382B] rounded-lg hover:bg-[#0D382B]/[0.06]"
+                          >
                             <Pencil size={14} />
                           </button>
                         )}
                         {canManage && a.status === "active" && (
-                          <button onClick={() => requestDispose(a.id)} className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100" title="استبعاد الأصل">
+                          <button
+                            onClick={() => requestDispose(a.id)}
+                            className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100"
+                            title="استبعاد الأصل"
+                          >
                             <Archive size={14} />
                           </button>
                         )}
                         {canDelete && canDeleteAsset(a) && (
-                          <button onClick={() => requestDelete(a.id)} className="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50">
+                          <button
+                            onClick={() => requestDelete(a.id)}
+                            className="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50"
+                          >
                             <Trash2 size={14} />
                           </button>
                         )}
@@ -389,11 +470,18 @@ export default function FixedAssets({
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h3 className="font-bold text-slate-900">توليد قيد الإهلاك الدوري</h3>
-            <p className="text-xs text-slate-500">يُنشئ قيداً واحداً مرحّلاً تلقائياً يجمّع إهلاك كل الأصول المؤهلة عن الفترة المختارة</p>
+            <p className="text-xs text-slate-500">
+              يُنشئ قيداً واحداً مرحّلاً تلقائياً يجمّع إهلاك كل الأصول المؤهلة عن الفترة المختارة
+            </p>
           </div>
           <div>
             <label className="text-xs font-semibold text-slate-600 mb-1 block">الفترة (شهر)</label>
-            <input type="month" value={period} onChange={(e) => setPeriod(e.target.value)} className={inputCls} />
+            <input
+              type="month"
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              className={inputCls}
+            />
           </div>
         </div>
 
@@ -421,7 +509,8 @@ export default function FixedAssets({
               {eligibleForRun.length === 0 && (
                 <tr>
                   <td colSpan={2} className="px-3 py-4 text-center text-xs text-slate-500">
-                    لا توجد أصول مؤهلة لتوليد إهلاك عن هذه الفترة (إمّا تم تنفيذها مسبقاً أو انتهى عمرها الإنتاجي)
+                    لا توجد أصول مؤهلة لتوليد إهلاك عن هذه الفترة (إمّا تم تنفيذها مسبقاً أو انتهى
+                    عمرها الإنتاجي)
                   </td>
                 </tr>
               )}
@@ -469,10 +558,18 @@ export default function FixedAssets({
       )}
 
       {form && (
-        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setForm(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setForm(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-900">{form.id ? "تعديل بيانات الأصل" : "إضافة أصل جديد"}</h3>
+              <h3 className="font-bold text-slate-900">
+                {form.id ? "تعديل بيانات الأصل" : "إضافة أصل جديد"}
+              </h3>
               <button onClick={() => setForm(null)} className="text-slate-400 hover:text-slate-700">
                 <X size={18} />
               </button>
@@ -484,12 +581,20 @@ export default function FixedAssets({
             )}
             <div>
               <label className="text-xs font-semibold text-slate-600 mb-1 block">اسم الأصل</label>
-              <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls} />
+              <input
+                value={form.name}
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className={inputCls}
+              />
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-semibold text-slate-600 mb-1 block">الفئة</label>
-                <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className={inputCls}>
+                <select
+                  value={form.category}
+                  onChange={(e) => setForm({ ...form, category: e.target.value })}
+                  className={inputCls}
+                >
                   {ASSET_CATEGORIES.map((c) => (
                     <option key={c} value={c}>
                       {c}
@@ -498,17 +603,32 @@ export default function FixedAssets({
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">تاريخ الشراء</label>
-                <input type="date" value={form.purchaseDate} onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })} className={inputCls} />
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  تاريخ الشراء
+                </label>
+                <input
+                  type="date"
+                  value={form.purchaseDate}
+                  onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })}
+                  className={inputCls}
+                />
               </div>
             </div>
             <div className="grid sm:grid-cols-3 gap-3">
               <div>
                 <label className="text-xs font-semibold text-slate-600 mb-1 block">التكلفة</label>
-                <input type="number" min={0} value={form.cost} onChange={(e) => setForm({ ...form, cost: e.target.value })} className={inputCls + " font-mono"} />
+                <input
+                  type="number"
+                  min={0}
+                  value={form.cost}
+                  onChange={(e) => setForm({ ...form, cost: e.target.value })}
+                  className={inputCls + " font-mono"}
+                />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">العمر الإنتاجي (سنوات)</label>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  العمر الإنتاجي (سنوات)
+                </label>
                 <input
                   type="number"
                   min={1}
@@ -518,13 +638,27 @@ export default function FixedAssets({
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">القيمة التخريدية</label>
-                <input type="number" min={0} value={form.salvageValue} onChange={(e) => setForm({ ...form, salvageValue: e.target.value })} className={inputCls + " font-mono"} />
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  القيمة التخريدية
+                </label>
+                <input
+                  type="number"
+                  min={0}
+                  value={form.salvageValue}
+                  onChange={(e) => setForm({ ...form, salvageValue: e.target.value })}
+                  className={inputCls + " font-mono"}
+                />
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">حساب الأصل (شجرة الحسابات)</label>
-              <select value={form.assetAccountId} onChange={(e) => setForm({ ...form, assetAccountId: e.target.value })} className={inputCls}>
+              <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                حساب الأصل (شجرة الحسابات)
+              </label>
+              <select
+                value={form.assetAccountId}
+                onChange={(e) => setForm({ ...form, assetAccountId: e.target.value })}
+                className={inputCls}
+              >
                 <option value="">اختر…</option>
                 {assetTypeAccounts.map((a) => (
                   <option key={a.id} value={a.id}>
@@ -535,10 +669,14 @@ export default function FixedAssets({
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">حساب مجمع الإهلاك</label>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  حساب مجمع الإهلاك
+                </label>
                 <select
                   value={form.accumulatedDepreciationAccountId}
-                  onChange={(e) => setForm({ ...form, accumulatedDepreciationAccountId: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, accumulatedDepreciationAccountId: e.target.value })
+                  }
                   className={inputCls}
                 >
                   <option value="">اختر…</option>
@@ -550,10 +688,14 @@ export default function FixedAssets({
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">حساب مصروف الإهلاك</label>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  حساب مصروف الإهلاك
+                </label>
                 <select
                   value={form.depreciationExpenseAccountId}
-                  onChange={(e) => setForm({ ...form, depreciationExpenseAccountId: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, depreciationExpenseAccountId: e.target.value })
+                  }
                   className={inputCls}
                 >
                   <option value="">اختر…</option>
@@ -566,14 +708,26 @@ export default function FixedAssets({
               </div>
             </div>
             <div>
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">ملاحظات (اختياري)</label>
-              <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className={inputCls} />
+              <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                ملاحظات (اختياري)
+              </label>
+              <input
+                value={form.notes}
+                onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                className={inputCls}
+              />
             </div>
             <div className="flex gap-2 justify-end pt-2">
-              <button onClick={() => setForm(null)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
+              <button
+                onClick={() => setForm(null)}
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
                 إلغاء
               </button>
-              <button onClick={saveForm} className="px-4 py-2 text-sm font-semibold text-white bg-[#0D382B] hover:bg-[#124d40] transition-colors rounded-xl">
+              <button
+                onClick={saveForm}
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#0D382B] hover:bg-[#124d40] transition-colors rounded-xl"
+              >
                 حفظ
               </button>
             </div>
@@ -582,17 +736,29 @@ export default function FixedAssets({
       )}
 
       {confirmDeleteId && deletingAsset && (
-        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmDeleteId(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setConfirmDeleteId(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="font-bold text-slate-900">تأكيد حذف الأصل</h3>
             <p className="text-sm text-slate-600">
               هل أنت متأكد من حذف الأصل <span className="font-bold">{deletingAsset.name}</span>؟
             </p>
             <div className="flex gap-2 justify-end pt-2">
-              <button onClick={() => setConfirmDeleteId(null)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
                 إلغاء
               </button>
-              <button onClick={confirmDeleteAsset} className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl">
+              <button
+                onClick={confirmDeleteAsset}
+                className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl"
+              >
                 حذف نهائياً
               </button>
             </div>
@@ -601,18 +767,30 @@ export default function FixedAssets({
       )}
 
       {confirmDisposeId && disposingAsset && (
-        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmDisposeId(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setConfirmDisposeId(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="font-bold text-slate-900">تأكيد استبعاد الأصل</h3>
             <p className="text-sm text-slate-600">
-              هل أنت متأكد من استبعاد الأصل <span className="font-bold">{disposingAsset.name}</span>؟ سيتوقف احتساب الإهلاك الدوري له بعد ذلك، وسيبقى في
-              السجل للرجوع إليه فقط.
+              هل أنت متأكد من استبعاد الأصل <span className="font-bold">{disposingAsset.name}</span>
+              ؟ سيتوقف احتساب الإهلاك الدوري له بعد ذلك، وسيبقى في السجل للرجوع إليه فقط.
             </p>
             <div className="flex gap-2 justify-end pt-2">
-              <button onClick={() => setConfirmDisposeId(null)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
+              <button
+                onClick={() => setConfirmDisposeId(null)}
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
                 تراجع
               </button>
-              <button onClick={confirmDispose} className="px-4 py-2 text-sm font-semibold text-white bg-slate-800 hover:bg-slate-900 rounded-xl">
+              <button
+                onClick={confirmDispose}
+                className="px-4 py-2 text-sm font-semibold text-white bg-slate-800 hover:bg-slate-900 rounded-xl"
+              >
                 تأكيد الاستبعاد
               </button>
             </div>

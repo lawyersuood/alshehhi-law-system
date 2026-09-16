@@ -50,7 +50,7 @@ export function useWhatsAppModule() {
       (c) =>
         c.name !== "فوزية أحمد المهيري" &&
         c.name !== "شركة دار سمرا للكمبيوتر (ممثل الشركة)" &&
-        c.name !== "أمانة سر محاكم دبي - كاتب الجلسة"
+        c.name !== "أمانة سر محاكم دبي - كاتب الجلسة",
     );
   });
 
@@ -59,14 +59,23 @@ export function useWhatsAppModule() {
   }, [waChats]);
 
   return {
-    waBackendSession, setWaBackendSession,
-    isGeneratingQr, setIsGeneratingQr,
-    selectedWaChatId, setSelectedWaChatId,
-    waInputText, setWaInputText,
-    waSearchTerm, setWaSearchTerm,
-    showNewWaChatModal, setShowNewWaChatModal,
-    newWaName, setNewWaName,
-    newWaPhone, setNewWaPhone,
-    waChats, setWaChats,
+    waBackendSession,
+    setWaBackendSession,
+    isGeneratingQr,
+    setIsGeneratingQr,
+    selectedWaChatId,
+    setSelectedWaChatId,
+    waInputText,
+    setWaInputText,
+    waSearchTerm,
+    setWaSearchTerm,
+    showNewWaChatModal,
+    setShowNewWaChatModal,
+    newWaName,
+    setNewWaName,
+    newWaPhone,
+    setNewWaPhone,
+    waChats,
+    setWaChats,
   };
 }

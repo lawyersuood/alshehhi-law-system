@@ -11,32 +11,38 @@ import { loadStorage, saveStorage } from "../domain/storageAndMessaging";
 import { useSyncedTable } from "./useSyncedTable";
 
 export function useKycWatchlist() {
-  const [kycWatchlist, setKycWatchlist] = useSyncedTable<KycWatchlistItem>("firm_kyc_watchlist", "kyc_watchlist_items", () => {
-    const saved = loadStorage<KycWatchlistItem[]>("firm_kyc_watchlist", uaeTerroristList);
-    let list = (!saved || saved.length < 260) ? uaeTerroristList : saved;
-    const seenIds = new Set<number>();
-    let hadDuplicates = false;
-    let maxId = 0;
-    list.forEach((item) => { if (item.id > maxId) maxId = item.id; });
-    const deduped = list.map((item) => {
-      if (seenIds.has(item.id)) {
-        hadDuplicates = true;
-        maxId += 1;
-        seenIds.add(maxId);
-        return { ...item, id: maxId };
+  const [kycWatchlist, setKycWatchlist] = useSyncedTable<KycWatchlistItem>(
+    "firm_kyc_watchlist",
+    "kyc_watchlist_items",
+    () => {
+      const saved = loadStorage<KycWatchlistItem[]>("firm_kyc_watchlist", uaeTerroristList);
+      const list = !saved || saved.length < 260 ? uaeTerroristList : saved;
+      const seenIds = new Set<number>();
+      let hadDuplicates = false;
+      let maxId = 0;
+      list.forEach((item) => {
+        if (item.id > maxId) maxId = item.id;
+      });
+      const deduped = list.map((item) => {
+        if (seenIds.has(item.id)) {
+          hadDuplicates = true;
+          maxId += 1;
+          seenIds.add(maxId);
+          return { ...item, id: maxId };
+        }
+        seenIds.add(item.id);
+        return item;
+      });
+      if (hadDuplicates) {
+        saveStorage("firm_kyc_watchlist", deduped);
+        return deduped;
       }
-      seenIds.add(item.id);
-      return item;
-    });
-    if (hadDuplicates) {
-      saveStorage("firm_kyc_watchlist", deduped);
-      return deduped;
-    }
-    if (!saved || saved.length < 260) {
-      saveStorage("firm_kyc_watchlist", list);
-    }
-    return list;
-  });
+      if (!saved || saved.length < 260) {
+        saveStorage("firm_kyc_watchlist", list);
+      }
+      return list;
+    },
+  );
 
   const [kycWatchlistParsed, setKycWatchlistParsed] = useState<KycWatchlistItem[]>([]);
 

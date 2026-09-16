@@ -15,7 +15,13 @@ export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
 };
 
 // الترتيب المعتمد لعرض أنواع الحسابات في شجرة الحسابات والتقارير
-export const ACCOUNT_TYPE_ORDER: AccountType[] = ["asset", "liability", "equity", "revenue", "expense"];
+export const ACCOUNT_TYPE_ORDER: AccountType[] = [
+  "asset",
+  "liability",
+  "equity",
+  "revenue",
+  "expense",
+];
 
 export interface Account {
   id: string;
@@ -70,7 +76,10 @@ export const LS_KEYS = {
 };
 
 // إجمالي المدين وإجمالي الدائن لقيد معيّن
-export function entryTotals(entry: Pick<JournalEntry, "lines">): { totalDebit: number; totalCredit: number } {
+export function entryTotals(entry: Pick<JournalEntry, "lines">): {
+  totalDebit: number;
+  totalCredit: number;
+} {
   let totalDebit = 0;
   let totalCredit = 0;
   for (const line of entry.lines) {

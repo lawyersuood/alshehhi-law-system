@@ -11,7 +11,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 2,
@@ -20,7 +20,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الأردن",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 3,
@@ -29,7 +29,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الأردن",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 4,
@@ -38,7 +38,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 5,
@@ -47,7 +47,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 6,
@@ -56,7 +56,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 7,
@@ -65,7 +65,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 8,
@@ -74,7 +74,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 9,
@@ -83,7 +83,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 10,
@@ -92,16 +92,17 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 11,
-    fullName: "عبد الوهاب محمد عبد الرحمن الحميقاني (HUMAYQANI-AL RAHMAN-AL ABD MUHAMMAD WAHHAB-AL ABD)",
+    fullName:
+      "عبد الوهاب محمد عبد الرحمن الحميقاني (HUMAYQANI-AL RAHMAN-AL ABD MUHAMMAD WAHHAB-AL ABD)",
     idNo: "—",
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 12,
@@ -110,7 +111,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الكويت",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 13,
@@ -119,7 +120,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر / قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 14,
@@ -128,7 +129,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "ليبيا",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 15,
@@ -137,7 +138,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "ليبيا",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 16,
@@ -146,7 +147,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "ليبيا",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 17,
@@ -155,7 +156,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "ليبيا",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 18,
@@ -164,7 +165,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "ليبيا",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 19,
@@ -173,7 +174,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 20,
@@ -182,7 +183,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 21,
@@ -191,7 +192,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 22,
@@ -200,7 +201,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 23,
@@ -209,7 +210,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 24,
@@ -218,7 +219,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 25,
@@ -227,7 +228,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "السعودية / الكويت",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 26,
@@ -236,7 +237,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "السعودية",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 27,
@@ -245,7 +246,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الكويت",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 28,
@@ -254,7 +255,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 29,
@@ -263,7 +264,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 30,
@@ -272,7 +273,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 31,
@@ -281,7 +282,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 32,
@@ -290,7 +291,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 33,
@@ -299,7 +300,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 34,
@@ -308,7 +309,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 35,
@@ -317,7 +318,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 36,
@@ -326,7 +327,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 37,
@@ -335,7 +336,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 38,
@@ -344,7 +345,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 39,
@@ -353,7 +354,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 40,
@@ -362,7 +363,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 41,
@@ -371,7 +372,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 42,
@@ -380,7 +381,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 43,
@@ -389,7 +390,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 44,
@@ -398,7 +399,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 45,
@@ -407,7 +408,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 46,
@@ -416,7 +417,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 47,
@@ -425,7 +426,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 48,
@@ -434,7 +435,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "البحرين",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 49,
@@ -443,7 +444,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "البحرين",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 50,
@@ -452,7 +453,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-08-01"
+    addedDate: "2017-08-01",
   },
   {
     id: 51,
@@ -461,7 +462,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-08-01"
+    addedDate: "2017-08-01",
   },
   {
     id: 52,
@@ -470,7 +471,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-08-01"
+    addedDate: "2017-08-01",
   },
   {
     id: 53,
@@ -479,7 +480,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الكويت",
-    addedDate: "2017-08-01"
+    addedDate: "2017-08-01",
   },
   {
     id: 54,
@@ -488,7 +489,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "ليبيا",
-    addedDate: "2017-08-01"
+    addedDate: "2017-08-01",
   },
   {
     id: 55,
@@ -497,7 +498,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "ليبيا",
-    addedDate: "2017-08-01"
+    addedDate: "2017-08-01",
   },
   {
     id: 56,
@@ -506,7 +507,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-10-25"
+    addedDate: "2017-10-25",
   },
   {
     id: 57,
@@ -515,7 +516,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-10-25"
+    addedDate: "2017-10-25",
   },
   {
     id: 58,
@@ -524,7 +525,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-10-25"
+    addedDate: "2017-10-25",
   },
   {
     id: 59,
@@ -533,7 +534,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-10-25"
+    addedDate: "2017-10-25",
   },
   {
     id: 60,
@@ -542,7 +543,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-10-25"
+    addedDate: "2017-10-25",
   },
   {
     id: 61,
@@ -551,7 +552,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-10-25"
+    addedDate: "2017-10-25",
   },
   {
     id: 62,
@@ -560,7 +561,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-10-25"
+    addedDate: "2017-10-25",
   },
   {
     id: 63,
@@ -569,7 +570,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-10-25"
+    addedDate: "2017-10-25",
   },
   {
     id: 64,
@@ -578,7 +579,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-10-25"
+    addedDate: "2017-10-25",
   },
   {
     id: 65,
@@ -587,7 +588,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-10-25"
+    addedDate: "2017-10-25",
   },
   {
     id: 66,
@@ -596,16 +597,17 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "أمريكا",
-    addedDate: "2017-11-22"
+    addedDate: "2017-11-22",
   },
   {
     id: 67,
-    fullName: "د. سالم جابر عمر علي سلطان فتح الله جابر (JABER FATHALLAH SULTAN ALI OMAR JABER SALEM)",
+    fullName:
+      "د. سالم جابر عمر علي سلطان فتح الله جابر (JABER FATHALLAH SULTAN ALI OMAR JABER SALEM)",
     idNo: "—",
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "ليبيا",
-    addedDate: "2017-11-22"
+    addedDate: "2017-11-22",
   },
   {
     id: 68,
@@ -614,7 +616,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "قطر / العراق",
-    addedDate: "2017-11-22"
+    addedDate: "2017-11-22",
   },
   {
     id: 69,
@@ -623,7 +625,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2017-11-22"
+    addedDate: "2017-11-22",
   },
   {
     id: 70,
@@ -632,7 +634,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "البحرين",
-    addedDate: "2017-11-22"
+    addedDate: "2017-11-22",
   },
   {
     id: 71,
@@ -641,7 +643,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-11-22"
+    addedDate: "2017-11-22",
   },
   {
     id: 72,
@@ -650,7 +652,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-11-22"
+    addedDate: "2017-11-22",
   },
   {
     id: 73,
@@ -659,7 +661,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-11-22"
+    addedDate: "2017-11-22",
   },
   {
     id: 74,
@@ -668,7 +670,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-11-22"
+    addedDate: "2017-11-22",
   },
   {
     id: 75,
@@ -677,7 +679,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2017-11-22"
+    addedDate: "2017-11-22",
   },
   {
     id: 76,
@@ -686,7 +688,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "النمسا",
-    addedDate: "2018-05-10"
+    addedDate: "2018-05-10",
   },
   {
     id: 77,
@@ -695,7 +697,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "إيران",
-    addedDate: "2018-05-10"
+    addedDate: "2018-05-10",
   },
   {
     id: 78,
@@ -704,7 +706,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "إيران",
-    addedDate: "2018-05-10"
+    addedDate: "2018-05-10",
   },
   {
     id: 79,
@@ -713,7 +715,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "إيران",
-    addedDate: "2018-05-10"
+    addedDate: "2018-05-10",
   },
   {
     id: 80,
@@ -722,7 +724,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "إيران",
-    addedDate: "2018-05-10"
+    addedDate: "2018-05-10",
   },
   {
     id: 81,
@@ -731,7 +733,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "إيران",
-    addedDate: "2018-05-10"
+    addedDate: "2018-05-10",
   },
   {
     id: 82,
@@ -740,7 +742,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "إيران",
-    addedDate: "2018-10-15"
+    addedDate: "2018-10-15",
   },
   {
     id: 83,
@@ -749,7 +751,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "إيران",
-    addedDate: "2018-10-15"
+    addedDate: "2018-10-15",
   },
   {
     id: 84,
@@ -758,7 +760,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "أفغانستان",
-    addedDate: "2018-10-15"
+    addedDate: "2018-10-15",
   },
   {
     id: 85,
@@ -767,7 +769,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "أفغانستان",
-    addedDate: "2018-10-15"
+    addedDate: "2018-10-15",
   },
   {
     id: 86,
@@ -776,7 +778,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "أفغانستان",
-    addedDate: "2018-10-15"
+    addedDate: "2018-10-15",
   },
   {
     id: 87,
@@ -785,7 +787,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "أفغانستان",
-    addedDate: "2018-10-15"
+    addedDate: "2018-10-15",
   },
   {
     id: 88,
@@ -794,7 +796,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "أفغانستان",
-    addedDate: "2018-10-15"
+    addedDate: "2018-10-15",
   },
   {
     id: 89,
@@ -803,7 +805,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "باكستان",
-    addedDate: "2018-10-15"
+    addedDate: "2018-10-15",
   },
   {
     id: 90,
@@ -812,7 +814,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (50) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "أفغانستان",
-    addedDate: "2018-10-15"
+    addedDate: "2018-10-15",
   },
   {
     id: 91,
@@ -821,7 +823,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (51) لسنة 2020 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "سوريا",
-    addedDate: "2020-09-01"
+    addedDate: "2020-09-01",
   },
   {
     id: 92,
@@ -830,16 +832,17 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (51) لسنة 2020 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "أفغانستان",
-    addedDate: "2020-09-01"
+    addedDate: "2020-09-01",
   },
   {
     id: 93,
-    fullName: "أحمد محمد عبد الله محمد الشيبه النعيمي (ALNUAIMI ALSHAIBA MOHAMMED ABDULLA MOHAMMED AHMED)",
+    fullName:
+      "أحمد محمد عبد الله محمد الشيبه النعيمي (ALNUAIMI ALSHAIBA MOHAMMED ABDULLA MOHAMMED AHMED)",
     idNo: "257451",
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 94,
@@ -848,7 +851,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 95,
@@ -857,7 +860,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 96,
@@ -866,7 +869,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 97,
@@ -875,7 +878,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 98,
@@ -884,7 +887,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 99,
@@ -893,7 +896,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 100,
@@ -902,7 +905,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 101,
@@ -911,7 +914,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 102,
@@ -920,7 +923,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "أفغانستان",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 103,
@@ -929,7 +932,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 104,
@@ -938,7 +941,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 105,
@@ -947,7 +950,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "السعودية",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 106,
@@ -956,7 +959,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 107,
@@ -965,7 +968,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 108,
@@ -974,7 +977,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "سوريا",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 109,
@@ -983,7 +986,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "إيران",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 110,
@@ -992,7 +995,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "إيران",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 111,
@@ -1001,7 +1004,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "إيران",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 112,
@@ -1010,7 +1013,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "إيران",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 113,
@@ -1019,7 +1022,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 114,
@@ -1028,7 +1031,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "سوريا",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 115,
@@ -1037,7 +1040,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "نيجيريا",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 116,
@@ -1046,7 +1049,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "نيجيريا",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 117,
@@ -1055,7 +1058,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "نيجيريا",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 118,
@@ -1064,7 +1067,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "نيجيريا",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 119,
@@ -1073,7 +1076,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "نيجيريا",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 120,
@@ -1082,7 +1085,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "نيجيريا",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 121,
@@ -1091,7 +1094,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "سوريا",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 122,
@@ -1100,7 +1103,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "بريطانيا",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 123,
@@ -1109,7 +1112,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "سانت كيتس ونافيس",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 124,
@@ -1118,7 +1121,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "سانت كيتس ونافيس",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 125,
@@ -1127,7 +1130,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "روسيا",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 126,
@@ -1136,7 +1139,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الأردن",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 127,
@@ -1145,7 +1148,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (9) لسنة 2023 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2023-01-30"
+    addedDate: "2023-01-30",
   },
   {
     id: 128,
@@ -1154,7 +1157,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (9) لسنة 2023 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2023-01-30"
+    addedDate: "2023-01-30",
   },
   {
     id: 129,
@@ -1163,7 +1166,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (9) لسنة 2023 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2023-01-30"
+    addedDate: "2023-01-30",
   },
   {
     id: 130,
@@ -1172,7 +1175,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "السويد / ليبيريا",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 131,
@@ -1181,7 +1184,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "تركيا / الإمارات",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 132,
@@ -1190,7 +1193,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات / السويد",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 133,
@@ -1199,7 +1202,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "السويد / الإمارات",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 134,
@@ -1208,7 +1211,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 135,
@@ -1217,7 +1220,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 136,
@@ -1226,7 +1229,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 137,
@@ -1235,7 +1238,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 138,
@@ -1244,7 +1247,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات / بريطانيا",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 139,
@@ -1253,7 +1256,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 140,
@@ -1262,7 +1265,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن / الإمارات",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 141,
@@ -1271,7 +1274,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2025-05-15"
+    addedDate: "2025-05-15",
   },
   {
     id: 142,
@@ -1280,7 +1283,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2025-05-15"
+    addedDate: "2025-05-15",
   },
   {
     id: 143,
@@ -1289,7 +1292,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2025-05-15"
+    addedDate: "2025-05-15",
   },
   {
     id: 144,
@@ -1298,7 +1301,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2025-05-15"
+    addedDate: "2025-05-15",
   },
   {
     id: 145,
@@ -1307,7 +1310,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2025-05-15"
+    addedDate: "2025-05-15",
   },
   {
     id: 146,
@@ -1316,7 +1319,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2025-05-15"
+    addedDate: "2025-05-15",
   },
   {
     id: 147,
@@ -1325,7 +1328,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2025-05-15"
+    addedDate: "2025-05-15",
   },
   {
     id: 148,
@@ -1334,7 +1337,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2025-05-15"
+    addedDate: "2025-05-15",
   },
   {
     id: 149,
@@ -1343,7 +1346,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2025-05-15"
+    addedDate: "2025-05-15",
   },
   {
     id: 150,
@@ -1352,7 +1355,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2025-05-15"
+    addedDate: "2025-05-15",
   },
   {
     id: 151,
@@ -1361,7 +1364,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2025-05-15"
+    addedDate: "2025-05-15",
   },
   {
     id: 152,
@@ -1370,7 +1373,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2025-05-15"
+    addedDate: "2025-05-15",
   },
   {
     id: 153,
@@ -1379,7 +1382,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2025-05-15"
+    addedDate: "2025-05-15",
   },
   {
     id: 154,
@@ -1388,7 +1391,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2025-05-15"
+    addedDate: "2025-05-15",
   },
   {
     id: 155,
@@ -1397,7 +1400,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (44) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2025-05-15"
+    addedDate: "2025-05-15",
   },
   {
     id: 156,
@@ -1406,7 +1409,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 157,
@@ -1415,7 +1418,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 158,
@@ -1424,7 +1427,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 159,
@@ -1433,7 +1436,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 160,
@@ -1442,7 +1445,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 161,
@@ -1451,7 +1454,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الكويت / لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 162,
@@ -1460,7 +1463,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 163,
@@ -1469,7 +1472,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 164,
@@ -1478,7 +1481,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 165,
@@ -1487,7 +1490,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 166,
@@ -1496,7 +1499,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 167,
@@ -1505,7 +1508,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 168,
@@ -1514,7 +1517,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 169,
@@ -1523,7 +1526,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 170,
@@ -1532,7 +1535,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 171,
@@ -1541,7 +1544,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "شخص إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
 
   // -------------------------------------------------------------
@@ -1554,7 +1557,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 173,
@@ -1563,7 +1566,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 174,
@@ -1572,7 +1575,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "دول الخليج",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 175,
@@ -1581,7 +1584,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "دولي",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 176,
@@ -1590,7 +1593,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "العراق / سوريا",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 177,
@@ -1599,7 +1602,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 178,
@@ -1608,7 +1611,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 179,
@@ -1617,7 +1620,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "دولي",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 180,
@@ -1626,7 +1629,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 181,
@@ -1635,7 +1638,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 182,
@@ -1644,7 +1647,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مصر",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 183,
@@ -1653,7 +1656,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "فلسطين",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 184,
@@ -1662,7 +1665,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 185,
@@ -1671,7 +1674,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "السعودية",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 186,
@@ -1680,7 +1683,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "دول الخليج",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 187,
@@ -1689,7 +1692,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "إيران",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 188,
@@ -1698,7 +1701,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "العراق",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 189,
@@ -1707,7 +1710,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "العراق",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 190,
@@ -1716,7 +1719,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "العراق",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 191,
@@ -1725,7 +1728,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "سوريا",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 192,
@@ -1734,7 +1737,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "العراق",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 193,
@@ -1743,7 +1746,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "سوريا",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 194,
@@ -1752,7 +1755,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "العراق",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 195,
@@ -1761,7 +1764,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "سوريا",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 196,
@@ -1770,7 +1773,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "سوريا",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 197,
@@ -1779,7 +1782,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "فلسطين",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 263,
@@ -1788,7 +1791,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 264,
@@ -1797,7 +1800,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 265,
@@ -1806,7 +1809,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 266,
@@ -1815,7 +1818,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   // -------------------------------------------------------------
   // خامساً - الأفراد والكيانات المرفوعة أسمائهم من قائمة الإرهاب المحلية (الصفحات 11 و 12)
@@ -1825,243 +1828,273 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     fullName: "محمد سعيد بن حلوان السقطري (SEQATRI-AL HELWAN BIN SAEED MOHAMMAD)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 268,
     fullName: "خليفة بن محمد الربان (RABBAN-AL MOHAMMAD BIN KHALIFA)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 269,
-    fullName: "عبد الله بن خالد حمد بن عبد الله آل ثاني (THANI-AL ABDULLAH BIN HAMAD BIN KHALID BIN ABDULLAH)",
+    fullName:
+      "عبد الله بن خالد حمد بن عبد الله آل ثاني (THANI-AL ABDULLAH BIN HAMAD BIN KHALID BIN ABDULLAH)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 270,
     fullName: "عبد الرحيم أحمد الحرام (HARAM-AL AHMAD RAHIM ABDUL)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 271,
     fullName: "مبارك بن محمد العجي (AJJI-AL MOHAMMAD MUBARAK)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 272,
     fullName: "جابر بن ناصر المري (MARRI-AL NASSER BIN JABIR)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 273,
     fullName: "محمد جاسم السليطي (SULAITI-AL JASSIM MOHAMMED)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 274,
     fullName: "علي بن عبد الله السويدي (SUWAIDI-AL ABDALLAH BIN ALI)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 275,
     fullName: "هاشم محمد صالح عبد الله العوضي (AWADHY-AL ABDULLAH SALEH HASHIM)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 276,
     fullName: "حمد عبد الله الفطيس المري (MARRI-AL FUTTAIS-AL ABDULLAH HAMAD)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 277,
     fullName: "خالد سعيد فضل راشد الرومي البوعينين (BOUNEIN-AL SAEED KHALID)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 278,
     fullName: "شقر جمعة الشهواني (SHAHWANI-AL JUMMAH SHAQER)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 279,
     fullName: "صالح بن أحمد الغانم الكواري (KUWARI-AL GHANIM-AL AHMED BIN SALEH)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 280,
     fullName: "محمد سليمان حيدر محمد الحيدر (HAYDAR-AL MOHAMMED HAIDAR SULAIMAN MOHAMMED)",
     idNo: "01030941",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 281,
     fullName: "حيدر حبيب علي (ALI HABEEB HAYDER)",
     idNo: "3899559",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "العراق",
-    addedDate: "2021-01-01"
+    addedDate: "2021-01-01",
   },
   {
     id: 282,
     fullName: "باسم يوسف حسين الشغانبي (ALSHAGHANBI HUSSEIN YOUSUF BASIM)",
     idNo: "44907857",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "العراق",
-    addedDate: "2021-01-01"
+    addedDate: "2021-01-01",
   },
   {
     id: 283,
     fullName: "شريف احمد شريف باعلوى (ALAWI BA SHARIF AHMED SHARIF)",
     idNo: "43260201",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "اليمن",
-    addedDate: "2021-01-01"
+    addedDate: "2021-01-01",
   },
   {
     id: 284,
     fullName: "مانوج ساباروال اوبراكاش (PRAKASH OM SABHARWAL MANOJ)",
     idNo: "4415541",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (24) لسنة 2024",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (24) لسنة 2024",
     nationality: "الهند",
-    addedDate: "2021-01-01"
+    addedDate: "2021-01-01",
   },
   {
     id: 285,
     fullName: "عبده عبد الله دائل احمد (AHMED DAEL ABDULLAH ABDO)",
     idNo: "8948884",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (13) لسنة 2022 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (48) لسنة 2024",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (13) لسنة 2022 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (48) لسنة 2024",
     nationality: "اليمن",
-    addedDate: "2022-01-01"
+    addedDate: "2022-01-01",
   },
   {
     id: 286,
-    fullName: "منظمة كانفاس في صربيا/بلجراد (CANVAS: CENTER FOR APPLIED NONVIOLENT ACTION AND STRATEGIES)",
+    fullName:
+      "منظمة كانفاس في صربيا/بلجراد (CANVAS: CENTER FOR APPLIED NONVIOLENT ACTION AND STRATEGIES)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "صربيا",
-    addedDate: "2014-01-01"
+    addedDate: "2014-01-01",
   },
   {
     id: 287,
     fullName: "مركز قطر للعمل التطوعي (QATAR VOLUNTEER CENTER)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 288,
     fullName: "شركة دوحة أبل (DOHA APPLE)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 289,
     fullName: "قطر الخيرية (QATAR CHARITY)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 290,
     fullName: "مؤسسة الشيخ عيد آل ثاني الخيرية (EID CHARITY)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 291,
-    fullName: "مؤسسة الشيخ ثاني بن عبد الله للخدمات الإنسانية (SHEIKH THANI BIN ABDULLAH FOUNDATION)",
+    fullName:
+      "مؤسسة الشيخ ثاني بن عبد الله للخدمات الإنسانية (SHEIKH THANI BIN ABDULLAH FOUNDATION)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 292,
     fullName: "مؤسسة البالغ الخيرية (AL-BALAGH CHARITABLE FOUNDATION)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 293,
     fullName: "جمعية الإحسان الخيرية (AL-IHSAN CHARITABLE SOCIETY)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "الإمارات",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 201,
@@ -2070,7 +2103,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "شمال أفريقيا",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 202,
@@ -2079,7 +2112,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "ليبيا",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 203,
@@ -2088,7 +2121,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "تونس",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 204,
@@ -2097,7 +2130,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الصومال",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 205,
@@ -2106,7 +2139,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "نيجيريا",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 206,
@@ -2115,7 +2148,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مالي",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 207,
@@ -2124,7 +2157,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "مالي",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 208,
@@ -2133,7 +2166,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "باكستان",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 209,
@@ -2142,7 +2175,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "باكستان",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 210,
@@ -2151,7 +2184,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "باكستان / الصين",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 211,
@@ -2160,7 +2193,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "باكستان",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 212,
@@ -2169,7 +2202,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "باكستان / الهند",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 213,
@@ -2178,7 +2211,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الهند",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 214,
@@ -2187,7 +2220,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "روسيا / الشيشان",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 215,
@@ -2196,7 +2229,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "أوزبكستان",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 216,
@@ -2205,7 +2238,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الفلبين",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 217,
@@ -2214,7 +2247,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "باكستان",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 218,
@@ -2223,7 +2256,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "ليبيا",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 219,
@@ -2232,7 +2265,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "البحرين",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 220,
@@ -2241,7 +2274,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "البحرين",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 221,
@@ -2250,7 +2283,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "البحرين",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 222,
@@ -2259,7 +2292,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "البحرين",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 223,
@@ -2268,7 +2301,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "البحرين",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 224,
@@ -2277,7 +2310,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "تنظيم إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "البحرين",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
 
   // -------------------------------------------------------------
@@ -2290,7 +2323,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "دولي",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 226,
@@ -2299,7 +2332,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "أمريكا",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 227,
@@ -2308,7 +2341,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "أمريكا",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 228,
@@ -2317,7 +2350,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "دولي",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 229,
@@ -2326,7 +2359,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "أوروبا",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 230,
@@ -2335,7 +2368,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "فرنسا",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 231,
@@ -2344,7 +2377,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "بريطانيا",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 232,
@@ -2353,7 +2386,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "بريطانيا",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 233,
@@ -2362,7 +2395,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "بريطانيا",
-    addedDate: "2014-11-15"
+    addedDate: "2014-11-15",
   },
   {
     id: 234,
@@ -2371,7 +2404,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-08-01"
+    addedDate: "2017-08-01",
   },
   {
     id: 235,
@@ -2380,7 +2413,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "ليبيا",
-    addedDate: "2017-08-01"
+    addedDate: "2017-08-01",
   },
   {
     id: 236,
@@ -2389,7 +2422,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (45) لسنة 2017 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2017-10-25"
+    addedDate: "2017-10-25",
   },
   {
     id: 237,
@@ -2398,7 +2431,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "إيران / الإمارات",
-    addedDate: "2018-05-10"
+    addedDate: "2018-05-10",
   },
   {
     id: 238,
@@ -2407,7 +2440,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (24) لسنة 2018 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "إيران",
-    addedDate: "2018-05-10"
+    addedDate: "2018-05-10",
   },
   {
     id: 239,
@@ -2416,7 +2449,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (51) لسنة 2020 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "سوريا",
-    addedDate: "2020-09-01"
+    addedDate: "2020-09-01",
   },
   {
     id: 240,
@@ -2425,7 +2458,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (51) لسنة 2020 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "سوريا",
-    addedDate: "2020-09-01"
+    addedDate: "2020-09-01",
   },
   {
     id: 241,
@@ -2434,7 +2467,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (51) لسنة 2020 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "سوريا",
-    addedDate: "2020-09-01"
+    addedDate: "2020-09-01",
   },
   {
     id: 242,
@@ -2443,7 +2476,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 243,
@@ -2452,7 +2485,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 244,
@@ -2461,7 +2494,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 245,
@@ -2470,7 +2503,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 246,
@@ -2479,7 +2512,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 247,
@@ -2488,7 +2521,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 248,
@@ -2497,7 +2530,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "الإمارات",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 249,
@@ -2506,7 +2539,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2021-09-13"
+    addedDate: "2021-09-13",
   },
   {
     id: 250,
@@ -2515,7 +2548,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (13) لسنة 2022 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2022-04-12"
+    addedDate: "2022-04-12",
   },
   {
     id: 251,
@@ -2524,7 +2557,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (13) لسنة 2022 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "اليمن",
-    addedDate: "2022-04-12"
+    addedDate: "2022-04-12",
   },
   {
     id: 252,
@@ -2533,7 +2566,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (13) لسنة 2022 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "دولي",
-    addedDate: "2022-04-12"
+    addedDate: "2022-04-12",
   },
   {
     id: 253,
@@ -2542,7 +2575,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (9) لسنة 2023 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2023-01-30"
+    addedDate: "2023-01-30",
   },
   {
     id: 254,
@@ -2551,7 +2584,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "المملكة المتحدة",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 255,
@@ -2560,7 +2593,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "المملكة المتحدة",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 256,
@@ -2569,7 +2602,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "المملكة المتحدة",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 257,
@@ -2578,7 +2611,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "المملكة المتحدة",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 258,
@@ -2587,7 +2620,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "المملكة المتحدة",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 259,
@@ -2596,7 +2629,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "المملكة المتحدة",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 260,
@@ -2605,7 +2638,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "المملكة المتحدة",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 261,
@@ -2614,7 +2647,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (1) لسنة 2025 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "المملكة المتحدة",
-    addedDate: "2025-01-10"
+    addedDate: "2025-01-10",
   },
   {
     id: 262,
@@ -2623,7 +2656,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 263,
@@ -2632,7 +2665,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 264,
@@ -2641,7 +2674,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 265,
@@ -2650,7 +2683,7 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 266,
@@ -2659,249 +2692,276 @@ export const uaeTerroristList: KycWatchlistItem[] = [
     type: "كيان إرهابي",
     reason: "مدرج بموجب قرار مجلس الوزراء رقم (63) لسنة 2026 - قائمة الإرهاب المحلية الإماراتية",
     nationality: "لبنان",
-    addedDate: "2026-02-10"
+    addedDate: "2026-02-10",
   },
   {
     id: 267,
     fullName: "محمد سعيد بن حلوان السقطري (SEQATRI-AL HELWAN BIN SAEED)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 268,
     fullName: "خليفة بن محمد الربان (RABBAN-AL MOHAMMAD BIN KHALIFA)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 269,
     fullName: "عبد الله بن خالد حمد بن عبد الله آل ثاني (THANI-AL ABDULLAH BIN HAMAD)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 270,
     fullName: "عبد الرحيم أحمد الحرام (HARAM-AL AHMAD RAHIM ABDUL)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 271,
     fullName: "مبارك بن محمد العجي (AJJI-AL MOHAMMAD MUBARAK)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 272,
     fullName: "جابر بن ناصر المري (MARRI-AL NASSER BIN JABIR)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 273,
     fullName: "محمد جاسم السليطي (SULAITI-AL JASSIM MOHAMMED)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 274,
     fullName: "علي بن عبد الله السويدي (SUWAIDI-AL ABDALLAH BIN ALI)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 275,
     fullName: "هاشم محمد صالح عبد الله العوضي (AWADHY-AL ABDULLAH SALEH HASHIM)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 276,
     fullName: "حمد عبد الله الفطيس المري (MARRI-AL FUTTAIS-AL ABDULLAH HAMAD)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 277,
     fullName: "خالد سعيد فضل راشد الرومي البوعينين (BOUNEIN-AL SAEED KHALID)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 278,
     fullName: "شقر جمعة الشهواني (SHAHWANI-AL JUMMAH SHAQER)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 279,
     fullName: "صالح بن أحمد الغانم الكواري (KUWARI-AL GHANIM-AL AHMED BIN SALEH)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 280,
     fullName: "محمد سليمان حيدر محمد الحيدر (HAYDAR-AL MOHAMMED HAIDAR)",
     idNo: "01030941",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (53) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 281,
     fullName: "حيدر حبيب علي (ALI HABEEB HAYDER)",
     idNo: "3899559",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "العراق",
-    addedDate: "2021-01-01"
+    addedDate: "2021-01-01",
   },
   {
     id: 282,
     fullName: "باسم يوسف حسين الشغانبي (ALSHAGHANBI HUSSEIN YOUSUF)",
     idNo: "44907857",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "العراق",
-    addedDate: "2021-01-01"
+    addedDate: "2021-01-01",
   },
   {
     id: 283,
     fullName: "شريف أحمد شريف باعلوى (ALAWI BA SHARIF AHMED)",
     idNo: "43260201",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "اليمن",
-    addedDate: "2021-01-01"
+    addedDate: "2021-01-01",
   },
   {
     id: 284,
     fullName: "مانوج ساباروال اوبراكاش (PRAKASH OM SABHARWAL MANOJ)",
     idNo: "4415541",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (24) لسنة 2024",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (83) لسنة 2021 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (24) لسنة 2024",
     nationality: "الهند",
-    addedDate: "2021-01-01"
+    addedDate: "2021-01-01",
   },
   {
     id: 285,
     fullName: "عبده عبد الله دائل احمد (AHMED DAEL ABDULLAH ABDO)",
     idNo: "8948884",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (13) لسنة 2022 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (48) لسنة 2024",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (13) لسنة 2022 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (48) لسنة 2024",
     nationality: "اليمن",
-    addedDate: "2020-06-04"
+    addedDate: "2020-06-04",
   },
   {
     id: 286,
     fullName: "منظمة كانفاس في صربيا/بلجراد (CANVAS)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (41) لسنة 2014 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "صربيا",
-    addedDate: "2014-01-01"
+    addedDate: "2014-01-01",
   },
   {
     id: 287,
     fullName: "مركز قطر للعمل التطوعي (QATAR VOLUNTEER CENTER)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 288,
     fullName: "شركة دوحة أبل (DOHA APPLE)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 289,
     fullName: "قطر الخيرية (QATAR CHARITY)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 290,
     fullName: "مؤسسة الشيخ عيد آل ثاني الخيرية (EID CHARITY)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 291,
     fullName: "مؤسسة الشيخ ثاني بن عبد الله للخدمات الإنسانية (SHEIKH THANI BIN ABDULLAH)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (18) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 292,
     fullName: "مؤسسة البالغ الخيرية (AL-BALAGH CHARITABLE FOUNDATION)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "قطر",
-    addedDate: "2017-06-11"
+    addedDate: "2017-06-11",
   },
   {
     id: 293,
     fullName: "جمعية الإحسان الخيرية (AL-IHSAN CHARITABLE SOCIETY)",
     idNo: "—",
     type: "مرفوع الإدراج",
-    reason: "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
+    reason:
+      "مدرج سابقاً بموجب قرار مجلس الوزراء رقم (28) لسنة 2017 - تم رفع الإدراج بموجب قرار مجلس الوزراء رقم (88) لسنة 2023",
     nationality: "الإمارات",
-    addedDate: "2017-06-11"
-  }
+    addedDate: "2017-06-11",
+  },
 ];

@@ -83,5 +83,8 @@ export function currentPayrollPeriodLabel(): string {
 export function fmtPeriodLabel(p: string): string {
   if (!p) return "—";
   const [y, m] = p.split("-");
-  return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("ar-AE", { year: "numeric", month: "long" });
+  return new Date(Number(y), Number(m) - 1, 1).toLocaleDateString("ar-AE", {
+    year: "numeric",
+    month: "long",
+  });
 }

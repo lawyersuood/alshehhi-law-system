@@ -2,11 +2,27 @@ import React, { useMemo } from "react";
 import { TrendingUp, TrendingDown, Wallet, AlertTriangle } from "lucide-react";
 import { Account, JournalEntry } from "./types";
 import { BankAccount, BankTransaction, computeBankBalance } from "./bankTypes";
-import { SalesInvoice, SalesPayment, invoiceTotals, amountDue as salesAmountDue } from "./salesTypes";
-import { Vendor, PurchaseInvoice, PurchasePayment, purchaseTotals, amountDue as purchaseAmountDue } from "./purchaseTypes";
+import {
+  SalesInvoice,
+  SalesPayment,
+  invoiceTotals,
+  amountDue as salesAmountDue,
+} from "./salesTypes";
+import {
+  Vendor,
+  PurchaseInvoice,
+  PurchasePayment,
+  purchaseTotals,
+  amountDue as purchaseAmountDue,
+} from "./purchaseTypes";
 
 const fmtMoney = (n: number) =>
-  new Intl.NumberFormat("ar-AE", { style: "currency", currency: "AED", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n || 0);
+  new Intl.NumberFormat("ar-AE", {
+    style: "currency",
+    currency: "AED",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(n || 0);
 
 const todayStr = () => new Date().toISOString().slice(0, 10);
 
@@ -60,8 +76,11 @@ export default function AccountingDashboard({
   const netProfit = totalRevenue - totalExpense;
 
   const cashBalance = useMemo(
-    () => bankAccounts.filter((b) => b.isActive).reduce((sum, b) => sum + computeBankBalance(b, transactions), 0),
-    [bankAccounts, transactions]
+    () =>
+      bankAccounts
+        .filter((b) => b.isActive)
+        .reduce((sum, b) => sum + computeBankBalance(b, transactions), 0),
+    [bankAccounts, transactions],
   );
 
   // آخر 6 أشهر: إيرادات ومصروفات مجمّعة شهرياً من القيود المرحّلة
@@ -86,7 +105,13 @@ export default function AccountingDashboard({
   const overdueSales = useMemo(() => {
     const today = todayStr();
     return salesInvoices
-      .filter((inv) => inv.status === "approved" && inv.dueDate && inv.dueDate < today && salesAmountDue(inv, salesPayments) > 0.01)
+      .filter(
+        (inv) =>
+          inv.status === "approved" &&
+          inv.dueDate &&
+          inv.dueDate < today &&
+          salesAmountDue(inv, salesPayments) > 0.01,
+      )
       .map((inv) => ({ inv, due: salesAmountDue(inv, salesPayments) }))
       .sort((a, b) => b.due - a.due)
       .slice(0, 5);
@@ -95,17 +120,47 @@ export default function AccountingDashboard({
   const overduePurchases = useMemo(() => {
     const today = todayStr();
     return purchaseInvoices
-      .filter((b) => b.status === "approved" && b.dueDate && b.dueDate < today && purchaseAmountDue(b, purchasePayments) > 0.01)
-      .map((b) => ({ b, due: purchaseAmountDue(b, purchasePayments), vendor: vendors.find((v) => v.id === b.vendorId)?.name || "—" }))
+      .filter(
+        (b) =>
+          b.status === "approved" &&
+          b.dueDate &&
+          b.dueDate < today &&
+          purchaseAmountDue(b, purchasePayments) > 0.01,
+      )
+      .map((b) => ({
+        b,
+        due: purchaseAmountDue(b, purchasePayments),
+        vendor: vendors.find((v) => v.id === b.vendorId)?.name || "—",
+      }))
       .sort((a, b2) => b2.due - a.due)
       .slice(0, 5);
   }, [purchaseInvoices, purchasePayments, vendors]);
 
   const kpis = [
-    { label: "إجمالي الإيرادات", value: totalRevenue, icon: TrendingUp, tone: "text-[#0D382B] bg-[#0D382B]/[0.08]" },
-    { label: "إجمالي المصروفات", value: totalExpense, icon: TrendingDown, tone: "text-rose-700 bg-rose-50" },
-    { label: "صافي الربح", value: netProfit, icon: Wallet, tone: netProfit >= 0 ? "text-[#0D382B] bg-[#C5A059]/[0.15]" : "text-rose-700 bg-rose-50" },
-    { label: "الرصيد النقدي بالبنوك", value: cashBalance, icon: Wallet, tone: "text-slate-700 bg-slate-100" },
+    {
+      label: "إجمالي الإيرادات",
+      value: totalRevenue,
+      icon: TrendingUp,
+      tone: "text-[#0D382B] bg-[#0D382B]/[0.08]",
+    },
+    {
+      label: "إجمالي المصروفات",
+      value: totalExpense,
+      icon: TrendingDown,
+      tone: "text-rose-700 bg-rose-50",
+    },
+    {
+      label: "صافي الربح",
+      value: netProfit,
+      icon: Wallet,
+      tone: netProfit >= 0 ? "text-[#0D382B] bg-[#C5A059]/[0.15]" : "text-rose-700 bg-rose-50",
+    },
+    {
+      label: "الرصيد النقدي بالبنوك",
+      value: cashBalance,
+      icon: Wallet,
+      tone: "text-slate-700 bg-slate-100",
+    },
   ];
 
   return (
@@ -117,13 +172,17 @@ export default function AccountingDashboard({
               <k.icon size={17} />
             </div>
             <div className="text-[11px] font-bold text-slate-500">{k.label}</div>
-            <div className="text-lg font-black text-slate-800 tabular-nums">{fmtMoney(k.value)}</div>
+            <div className="text-lg font-black text-slate-800 tabular-nums">
+              {fmtMoney(k.value)}
+            </div>
           </div>
         ))}
       </div>
 
       <div className="app-card p-5">
-        <h3 className="text-sm font-black text-[#0D382B] mb-4">الإيرادات والمصروفات — آخر 6 أشهر</h3>
+        <h3 className="text-sm font-black text-[#0D382B] mb-4">
+          الإيرادات والمصروفات — آخر 6 أشهر
+        </h3>
         <div className="flex items-end gap-4 h-40">
           {monthlySeries.map((m) => (
             <div key={m.key} className="flex-1 flex flex-col items-center gap-1.5">

@@ -3,11 +3,22 @@ import { CheckCircle2, AlertTriangle } from "lucide-react";
 import { Account, ACCOUNT_TYPE_LABELS, JournalEntry } from "./types";
 
 const fmtMoney = (n: number) =>
-  new Intl.NumberFormat("ar-AE", { style: "currency", currency: "AED", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
+  new Intl.NumberFormat("ar-AE", {
+    style: "currency",
+    currency: "AED",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n || 0);
 
 const isDebitNature = (type: Account["type"]) => type === "asset" || type === "expense";
 
-export default function TrialBalance({ accounts, entries }: { accounts: Account[]; entries: JournalEntry[] }) {
+export default function TrialBalance({
+  accounts,
+  entries,
+}: {
+  accounts: Account[];
+  entries: JournalEntry[];
+}) {
   const rows = useMemo(() => {
     const balances = new Map<string, { debitMovements: number; creditMovements: number }>();
     for (const e of entries) {
@@ -23,7 +34,9 @@ export default function TrialBalance({ accounts, entries }: { accounts: Account[
       .map((a) => {
         const mv = balances.get(a.id);
         if (!mv) return null;
-        const net = isDebitNature(a.type) ? mv.debitMovements - mv.creditMovements : mv.creditMovements - mv.debitMovements;
+        const net = isDebitNature(a.type)
+          ? mv.debitMovements - mv.creditMovements
+          : mv.creditMovements - mv.debitMovements;
         const debitCol = isDebitNature(a.type) ? Math.max(net, 0) : Math.max(-net, 0);
         const creditCol = isDebitNature(a.type) ? Math.max(-net, 0) : Math.max(net, 0);
         if (debitCol === 0 && creditCol === 0) return null;
@@ -33,14 +46,19 @@ export default function TrialBalance({ accounts, entries }: { accounts: Account[
       .sort((a, b) => a.account.code.localeCompare(b.account.code));
   }, [accounts, entries]);
 
-  const totals = rows.reduce((acc, r) => ({ debit: acc.debit + r.debitCol, credit: acc.credit + r.creditCol }), { debit: 0, credit: 0 });
+  const totals = rows.reduce(
+    (acc, r) => ({ debit: acc.debit + r.debitCol, credit: acc.credit + r.creditCol }),
+    { debit: 0, credit: 0 },
+  );
   const balanced = Math.abs(totals.debit - totals.credit) < 0.005;
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold text-slate-900">ميزان المراجعة</h2>
-        <p className="text-xs text-slate-500">إجمالي أرصدة الحسابات المرحّلة حتى تاريخه — يجب أن يتساوى إجمالي المدين مع إجمالي الدائن</p>
+        <p className="text-xs text-slate-500">
+          إجمالي أرصدة الحسابات المرحّلة حتى تاريخه — يجب أن يتساوى إجمالي المدين مع إجمالي الدائن
+        </p>
       </div>
 
       <div className="app-card overflow-hidden">
@@ -60,9 +78,15 @@ export default function TrialBalance({ accounts, entries }: { accounts: Account[
                 <tr key={r.account.id} className="border-b border-slate-50 last:border-0">
                   <td className="px-4 py-2.5 font-mono text-slate-700">{r.account.code}</td>
                   <td className="px-4 py-2.5 text-slate-800">{r.account.name}</td>
-                  <td className="px-4 py-2.5 text-xs text-slate-500">{ACCOUNT_TYPE_LABELS[r.account.type]}</td>
-                  <td className="px-4 py-2.5 font-mono">{r.debitCol ? fmtMoney(r.debitCol) : "—"}</td>
-                  <td className="px-4 py-2.5 font-mono">{r.creditCol ? fmtMoney(r.creditCol) : "—"}</td>
+                  <td className="px-4 py-2.5 text-xs text-slate-500">
+                    {ACCOUNT_TYPE_LABELS[r.account.type]}
+                  </td>
+                  <td className="px-4 py-2.5 font-mono">
+                    {r.debitCol ? fmtMoney(r.debitCol) : "—"}
+                  </td>
+                  <td className="px-4 py-2.5 font-mono">
+                    {r.creditCol ? fmtMoney(r.creditCol) : "—"}
+                  </td>
                 </tr>
               ))}
               {rows.length === 0 && (
@@ -76,7 +100,9 @@ export default function TrialBalance({ accounts, entries }: { accounts: Account[
             {rows.length > 0 && (
               <tfoot>
                 <tr className="border-t border-slate-200 bg-slate-50/70 font-semibold text-slate-800">
-                  <td className="px-4 py-2.5" colSpan={3}>الإجمالي</td>
+                  <td className="px-4 py-2.5" colSpan={3}>
+                    الإجمالي
+                  </td>
                   <td className="px-4 py-2.5 font-mono">{fmtMoney(totals.debit)}</td>
                   <td className="px-4 py-2.5 font-mono">{fmtMoney(totals.credit)}</td>
                 </tr>
@@ -87,9 +113,13 @@ export default function TrialBalance({ accounts, entries }: { accounts: Account[
       </div>
 
       {rows.length > 0 && (
-        <div className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold ${balanced ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+        <div
+          className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold ${balanced ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}
+        >
           {balanced ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
-          {balanced ? "ميزان المراجعة متوازن" : "تنبيه: ميزان المراجعة غير متوازن — يرجى مراجعة القيود"}
+          {balanced
+            ? "ميزان المراجعة متوازن"
+            : "تنبيه: ميزان المراجعة غير متوازن — يرجى مراجعة القيود"}
         </div>
       )}
     </div>

@@ -9,9 +9,7 @@ import { useSyncedTable } from "./useSyncedTable";
 
 function initCases(): CaseItem[] {
   const saved = loadStorage<CaseItem[]>("firm_cases", seedCases);
-  const cleanList = (saved || [])
-    .filter(c => !isDemoCase(c))
-    .map(c => sanitizeCase(c));
+  const cleanList = (saved || []).filter((c) => !isDemoCase(c)).map((c) => sanitizeCase(c));
 
   // لا نصفّر أتعاب القضايا بعد الآن — الأتعاب الفعلية المُدخلة تبقى كما هي عبر إعادة التحميل والدمج
   const combined = [...cleanList, ...seedCases];

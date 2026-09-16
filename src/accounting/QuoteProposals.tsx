@@ -9,10 +9,22 @@ const inputCls =
   "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0D382B] focus:outline-none focus:ring-2 focus:ring-[#0D382B]/[0.12] transition";
 
 const fmtMoney = (n: number) =>
-  new Intl.NumberFormat("ar-AE", { style: "currency", currency: "AED", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
+  new Intl.NumberFormat("ar-AE", {
+    style: "currency",
+    currency: "AED",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n || 0);
 
 function emptyLine(): InvoiceLineItem {
-  return { id: `ql-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, description: "", quantity: 1, unitPrice: 0, vatRate: 5, accountId: "" };
+  return {
+    id: `ql-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    description: "",
+    quantity: 1,
+    unitPrice: 0,
+    vatRate: 5,
+    accountId: "",
+  };
 }
 
 interface DraftForm {
@@ -79,11 +91,20 @@ export default function QuoteProposals({
   const [error, setError] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const revenueAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "revenue").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const revenueAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.isActive && !a.isGroup && a.type === "revenue")
+        .sort((a, b) => a.code.localeCompare(b.code)),
+    [accounts],
+  );
 
   const sortedQuotes = useMemo(
-    () => [...quotes].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.quoteNumber.localeCompare(a.quoteNumber))),
-    [quotes]
+    () =>
+      [...quotes].sort((a, b) =>
+        a.date < b.date ? 1 : a.date > b.date ? -1 : b.quoteNumber.localeCompare(a.quoteNumber),
+      ),
+    [quotes],
   );
 
   const openNew = () => {
@@ -109,7 +130,8 @@ export default function QuoteProposals({
   const updateLine = (id: string, patch: Partial<InvoiceLineItem>) =>
     setDraft((d) => ({ ...d, lines: d.lines.map((l) => (l.id === id ? { ...l, ...patch } : l)) }));
   const addLine = () => setDraft((d) => ({ ...d, lines: [...d.lines, emptyLine()] }));
-  const removeLine = (id: string) => setDraft((d) => (d.lines.length > 1 ? { ...d, lines: d.lines.filter((l) => l.id !== id) } : d));
+  const removeLine = (id: string) =>
+    setDraft((d) => (d.lines.length > 1 ? { ...d, lines: d.lines.filter((l) => l.id !== id) } : d));
 
   const draftTotals = invoiceTotals(draft);
 
@@ -118,7 +140,9 @@ export default function QuoteProposals({
       setError("يرجى إدخال اسم العميل");
       return;
     }
-    const validLines = draft.lines.filter((l) => l.description.trim() && l.quantity > 0 && l.accountId);
+    const validLines = draft.lines.filter(
+      (l) => l.description.trim() && l.quantity > 0 && l.accountId,
+    );
     if (validLines.length === 0) {
       setError("يجب إدخال بند واحد على الأقل ببيان وكمية وحساب إيراد مرتبط");
       return;
@@ -136,8 +160,8 @@ export default function QuoteProposals({
                 notes: draft.notes.trim() || undefined,
                 lines: validLines,
               }
-            : q
-        )
+            : q,
+        ),
       );
     } else {
       setQuotes((prev) => [
@@ -160,7 +184,8 @@ export default function QuoteProposals({
     setShowForm(false);
   };
 
-  const setStatus = (q: SalesQuote, status: QuoteStatus) => setQuotes((prev) => prev.map((x) => (x.id === q.id ? { ...x, status } : x)));
+  const setStatus = (q: SalesQuote, status: QuoteStatus) =>
+    setQuotes((prev) => prev.map((x) => (x.id === q.id ? { ...x, status } : x)));
 
   const convertToInvoice = (q: SalesQuote) => {
     const newInvoiceId = `inv-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -172,14 +197,23 @@ export default function QuoteProposals({
         date: new Date().toISOString().slice(0, 10),
         clientName: q.clientName,
         placeOfSupply: "",
-        lines: q.lines.map((l) => ({ ...l, id: `il-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` })),
-        notes: q.caseSubject ? `بناءً على عرض الأتعاب ${q.quoteNumber} — ${q.caseSubject}` : `بناءً على عرض الأتعاب ${q.quoteNumber}`,
+        lines: q.lines.map((l) => ({
+          ...l,
+          id: `il-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+        })),
+        notes: q.caseSubject
+          ? `بناءً على عرض الأتعاب ${q.quoteNumber} — ${q.caseSubject}`
+          : `بناءً على عرض الأتعاب ${q.quoteNumber}`,
         status: "draft",
         createdAt: new Date().toISOString(),
         createdBy: currentUserName,
       },
     ]);
-    setQuotes((prev) => prev.map((x) => (x.id === q.id ? { ...x, status: "converted", convertedInvoiceId: newInvoiceId } : x)));
+    setQuotes((prev) =>
+      prev.map((x) =>
+        x.id === q.id ? { ...x, status: "converted", convertedInvoiceId: newInvoiceId } : x,
+      ),
+    );
   };
 
   const requestDelete = (id: string) => setConfirmDeleteId(id);
@@ -194,7 +228,9 @@ export default function QuoteProposals({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-slate-900">عروض الأسعار والأتعاب</h2>
-          <p className="text-xs text-slate-500">عرض أتعاب للعميل قبل فتح القضية أو إصدار فاتورة رسمية — {quotes.length} عرض مسجّل</p>
+          <p className="text-xs text-slate-500">
+            عرض أتعاب للعميل قبل فتح القضية أو إصدار فاتورة رسمية — {quotes.length} عرض مسجّل
+          </p>
         </div>
         {canManage && (
           <button
@@ -230,26 +266,39 @@ export default function QuoteProposals({
             {sortedQuotes.map((q) => {
               const totals = invoiceTotals(q);
               return (
-                <tr key={q.id} className="border-b border-slate-50 last:border-0 hover:bg-[#0D382B]/[0.02] transition-colors">
+                <tr
+                  key={q.id}
+                  className="border-b border-slate-50 last:border-0 hover:bg-[#0D382B]/[0.02] transition-colors"
+                >
                   <td className="px-4 py-1.5 font-mono text-slate-700">{q.quoteNumber}</td>
                   <td className="px-4 py-1.5 text-slate-800 font-medium">{q.clientName}</td>
                   <td className="px-4 py-1.5 text-slate-600">{q.caseSubject || "—"}</td>
                   <td className="px-4 py-1.5 text-slate-600">{q.date}</td>
-                  <td className="px-4 py-1.5 font-bold text-slate-800">{fmtMoney(totals.grandTotal)}</td>
+                  <td className="px-4 py-1.5 font-bold text-slate-800">
+                    {fmtMoney(totals.grandTotal)}
+                  </td>
                   <td className="px-4 py-1.5">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${STATUS_BADGE[q.status]}`}>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${STATUS_BADGE[q.status]}`}
+                    >
                       {QUOTE_STATUS_LABELS[q.status]}
                     </span>
                   </td>
                   <td className="px-4 py-1.5">
                     <div className="flex items-center justify-end gap-1.5">
                       {canManage && q.status !== "converted" && (
-                        <button onClick={() => openEdit(q)} className="text-xs font-bold text-[#0D382B] hover:underline">
+                        <button
+                          onClick={() => openEdit(q)}
+                          className="text-xs font-bold text-[#0D382B] hover:underline"
+                        >
                           تعديل
                         </button>
                       )}
                       {canManage && (q.status === "draft" || q.status === "sent") && (
-                        <button onClick={() => setStatus(q, "accepted")} className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1">
+                        <button
+                          onClick={() => setStatus(q, "accepted")}
+                          className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1"
+                        >
                           <CheckCircle2 size={13} /> وافق العميل
                         </button>
                       )}
@@ -262,7 +311,10 @@ export default function QuoteProposals({
                         </button>
                       )}
                       {canManage && q.status !== "converted" && (
-                        <button onClick={() => requestDelete(q.id)} className="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1">
+                        <button
+                          onClick={() => requestDelete(q.id)}
+                          className="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1"
+                        >
                           <Trash2 size={13} />
                         </button>
                       )}
@@ -279,37 +331,71 @@ export default function QuoteProposals({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="app-card w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 space-y-5">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-black text-[#0D382B]">{draft.id ? "تعديل عرض الأتعاب" : "عرض أتعاب جديد"}</h3>
-              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600">
+              <h3 className="text-lg font-black text-[#0D382B]">
+                {draft.id ? "تعديل عرض الأتعاب" : "عرض أتعاب جديد"}
+              </h3>
+              <button
+                onClick={() => setShowForm(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
                 <X size={20} />
               </button>
             </div>
 
-            {error && <div className="rounded-xl bg-rose-50 text-rose-700 text-sm px-4 py-2.5">{error}</div>}
+            {error && (
+              <div className="rounded-xl bg-rose-50 text-rose-700 text-sm px-4 py-2.5">{error}</div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">اسم العميل *</label>
-                <input className={inputCls} value={draft.clientName} onChange={(e) => setDraft((d) => ({ ...d, clientName: e.target.value }))} />
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  اسم العميل *
+                </label>
+                <input
+                  className={inputCls}
+                  value={draft.clientName}
+                  onChange={(e) => setDraft((d) => ({ ...d, clientName: e.target.value }))}
+                />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">موضوع القضية / الخدمة القانونية</label>
-                <input className={inputCls} value={draft.caseSubject} onChange={(e) => setDraft((d) => ({ ...d, caseSubject: e.target.value }))} />
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  موضوع القضية / الخدمة القانونية
+                </label>
+                <input
+                  className={inputCls}
+                  value={draft.caseSubject}
+                  onChange={(e) => setDraft((d) => ({ ...d, caseSubject: e.target.value }))}
+                />
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-600 mb-1.5">تاريخ العرض</label>
-                <input type="date" className={inputCls} value={draft.date} onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))} />
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={draft.date}
+                  onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))}
+                />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">تاريخ انتهاء الصلاحية</label>
-                <input type="date" className={inputCls} value={draft.expiryDate} onChange={(e) => setDraft((d) => ({ ...d, expiryDate: e.target.value }))} />
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  تاريخ انتهاء الصلاحية
+                </label>
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={draft.expiryDate}
+                  onChange={(e) => setDraft((d) => ({ ...d, expiryDate: e.target.value }))}
+                />
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-600">بنود العرض</label>
-                <button onClick={addLine} className="text-xs font-bold text-[#0D382B] hover:underline flex items-center gap-1">
+                <button
+                  onClick={addLine}
+                  className="text-xs font-bold text-[#0D382B] hover:underline flex items-center gap-1"
+                >
                   <Plus size={13} /> إضافة بند
                 </button>
               </div>
@@ -335,7 +421,11 @@ export default function QuoteProposals({
                     value={l.unitPrice}
                     onChange={(e) => updateLine(l.id, { unitPrice: Number(e.target.value) })}
                   />
-                  <select className={`${inputCls} col-span-2`} value={l.accountId} onChange={(e) => updateLine(l.id, { accountId: e.target.value })}>
+                  <select
+                    className={`${inputCls} col-span-2`}
+                    value={l.accountId}
+                    onChange={(e) => updateLine(l.id, { accountId: e.target.value })}
+                  >
                     <option value="">الحساب</option>
                     {revenueAccounts.map((a) => (
                       <option key={a.id} value={a.id}>
@@ -343,7 +433,10 @@ export default function QuoteProposals({
                       </option>
                     ))}
                   </select>
-                  <button onClick={() => removeLine(l.id)} className="col-span-1 text-rose-500 hover:text-rose-700 flex justify-center">
+                  <button
+                    onClick={() => removeLine(l.id)}
+                    className="col-span-1 text-rose-500 hover:text-rose-700 flex justify-center"
+                  >
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -352,15 +445,26 @@ export default function QuoteProposals({
 
             <div>
               <label className="block text-xs font-bold text-slate-600 mb-1.5">ملاحظات</label>
-              <textarea className={inputCls} rows={2} value={draft.notes} onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))} />
+              <textarea
+                className={inputCls}
+                rows={2}
+                value={draft.notes}
+                onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))}
+              />
             </div>
 
             <div className="flex items-center justify-between border-t border-slate-100 pt-4">
               <div className="text-sm text-slate-500">
-                الإجمالي المقترح: <span className="font-black text-[#0D382B] text-base">{fmtMoney(draftTotals.grandTotal)}</span>
+                الإجمالي المقترح:{" "}
+                <span className="font-black text-[#0D382B] text-base">
+                  {fmtMoney(draftTotals.grandTotal)}
+                </span>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setShowForm(false)} className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50">
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50"
+                >
                   إلغاء
                 </button>
                 <button
@@ -381,10 +485,16 @@ export default function QuoteProposals({
             <Ban className="mx-auto text-rose-500" size={28} />
             <p className="text-sm text-slate-700">هل تريد حذف عرض الأتعاب هذا نهائياً؟</p>
             <div className="flex justify-center gap-2">
-              <button onClick={() => setConfirmDeleteId(null)} className="rounded-xl px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="rounded-xl px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50"
+              >
                 تراجع
               </button>
-              <button onClick={confirmDelete} className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white hover:bg-rose-700">
+              <button
+                onClick={confirmDelete}
+                className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white hover:bg-rose-700"
+              >
                 حذف نهائياً
               </button>
             </div>

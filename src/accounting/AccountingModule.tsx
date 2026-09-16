@@ -193,10 +193,15 @@ const SUB_TAB_GROUPS: Array<{
   },
 ];
 
-const SUB_TAB_LABELS: Record<SubTab, string> = SUB_TAB_GROUPS.reduce((acc, g) => {
-  g.items.forEach((it) => { acc[it.id] = it.label; });
-  return acc;
-}, {} as Record<SubTab, string>);
+const SUB_TAB_LABELS: Record<SubTab, string> = SUB_TAB_GROUPS.reduce(
+  (acc, g) => {
+    g.items.forEach((it) => {
+      acc[it.id] = it.label;
+    });
+    return acc;
+  },
+  {} as Record<SubTab, string>,
+);
 
 export default function AccountingModule({
   canManageAccounts = true,
@@ -265,11 +270,19 @@ export default function AccountingModule({
   const [salesInvoices, setSalesInvoices] = useState<SalesInvoice[]>(() => loadSalesInvoices());
   const [salesPayments, setSalesPayments] = useState<SalesPayment[]>(() => loadSalesPayments());
   const [vendors, setVendors] = useState<Vendor[]>(() => loadVendors());
-  const [purchaseInvoices, setPurchaseInvoices] = useState<PurchaseInvoice[]>(() => loadPurchaseInvoices());
-  const [purchasePayments, setPurchasePayments] = useState<PurchasePayment[]>(() => loadPurchasePayments());
+  const [purchaseInvoices, setPurchaseInvoices] = useState<PurchaseInvoice[]>(() =>
+    loadPurchaseInvoices(),
+  );
+  const [purchasePayments, setPurchasePayments] = useState<PurchasePayment[]>(() =>
+    loadPurchasePayments(),
+  );
   const [fixedAssets, setFixedAssets] = useState<FixedAsset[]>(() => loadFixedAssets());
-  const [depreciationRuns, setDepreciationRuns] = useState<DepreciationRun[]>(() => loadDepreciationRuns());
-  const [payrollEmployees, setPayrollEmployees] = useState<PayrollEmployee[]>(() => loadPayrollEmployees());
+  const [depreciationRuns, setDepreciationRuns] = useState<DepreciationRun[]>(() =>
+    loadDepreciationRuns(),
+  );
+  const [payrollEmployees, setPayrollEmployees] = useState<PayrollEmployee[]>(() =>
+    loadPayrollEmployees(),
+  );
   const [payrollRuns, setPayrollRuns] = useState<PayrollRun[]>(() => loadPayrollRuns());
   const [payslips, setPayslips] = useState<Payslip[]>(() => loadPayslips());
   const [salesQuotes, setSalesQuotes] = useState<SalesQuote[]>(() => loadSalesQuotes());
@@ -277,39 +290,82 @@ export default function AccountingModule({
   const [creditNotes, setCreditNotes] = useState<CreditNote[]>(() => loadCreditNotes());
   const [debitNotes, setDebitNotes] = useState<DebitNote[]>(() => loadDebitNotes());
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>(() => loadPurchaseOrders());
-  const [recurringTemplates, setRecurringTemplates] = useState<RecurringInvoiceTemplate[]>(() => loadRecurringInvoiceTemplates());
+  const [recurringTemplates, setRecurringTemplates] = useState<RecurringInvoiceTemplate[]>(() =>
+    loadRecurringInvoiceTemplates(),
+  );
   const [customers, setCustomers] = useState<Customer[]>(() => loadCustomers());
-  const [cashSalesInvoices, setCashSalesInvoices] = useState<CashSalesInvoice[]>(() => loadCashSalesInvoices());
+  const [cashSalesInvoices, setCashSalesInvoices] = useState<CashSalesInvoice[]>(() =>
+    loadCashSalesInvoices(),
+  );
   const [employeeClaims, setEmployeeClaims] = useState<EmployeeClaim[]>(() => loadEmployeeClaims());
-  const [bulkReclassLog, setBulkReclassLog] = useState<BulkReclassLogEntry[]>(() => loadBulkReclassLog());
+  const [bulkReclassLog, setBulkReclassLog] = useState<BulkReclassLogEntry[]>(() =>
+    loadBulkReclassLog(),
+  );
 
   useEffect(() => saveAccountingStorage(LS_KEYS.accounts, accounts), [accounts]);
   useEffect(() => saveAccountingStorage(LS_KEYS.journalEntries, entries), [entries]);
   useEffect(() => saveAccountingStorage(BANK_LS_KEYS.bankAccounts, bankAccounts), [bankAccounts]);
-  useEffect(() => saveAccountingStorage(BANK_LS_KEYS.bankTransactions, transactions), [transactions]);
+  useEffect(
+    () => saveAccountingStorage(BANK_LS_KEYS.bankTransactions, transactions),
+    [transactions],
+  );
   useEffect(() => saveAccountingStorage(SALES_LS_KEYS.invoices, salesInvoices), [salesInvoices]);
   useEffect(() => saveAccountingStorage(SALES_LS_KEYS.payments, salesPayments), [salesPayments]);
   useEffect(() => saveAccountingStorage(PURCHASE_LS_KEYS.vendors, vendors), [vendors]);
-  useEffect(() => saveAccountingStorage(PURCHASE_LS_KEYS.invoices, purchaseInvoices), [purchaseInvoices]);
-  useEffect(() => saveAccountingStorage(PURCHASE_LS_KEYS.payments, purchasePayments), [purchasePayments]);
+  useEffect(
+    () => saveAccountingStorage(PURCHASE_LS_KEYS.invoices, purchaseInvoices),
+    [purchaseInvoices],
+  );
+  useEffect(
+    () => saveAccountingStorage(PURCHASE_LS_KEYS.payments, purchasePayments),
+    [purchasePayments],
+  );
   useEffect(() => saveAccountingStorage(FIXED_ASSET_LS_KEYS.assets, fixedAssets), [fixedAssets]);
-  useEffect(() => saveAccountingStorage(FIXED_ASSET_LS_KEYS.depreciationRuns, depreciationRuns), [depreciationRuns]);
-  useEffect(() => saveAccountingStorage(PAYROLL_LS_KEYS.employees, payrollEmployees), [payrollEmployees]);
+  useEffect(
+    () => saveAccountingStorage(FIXED_ASSET_LS_KEYS.depreciationRuns, depreciationRuns),
+    [depreciationRuns],
+  );
+  useEffect(
+    () => saveAccountingStorage(PAYROLL_LS_KEYS.employees, payrollEmployees),
+    [payrollEmployees],
+  );
   useEffect(() => saveAccountingStorage(PAYROLL_LS_KEYS.runs, payrollRuns), [payrollRuns]);
   useEffect(() => saveAccountingStorage(PAYROLL_LS_KEYS.payslips, payslips), [payslips]);
   useEffect(() => saveAccountingStorage(QUOTE_LS_KEYS.quotes, salesQuotes), [salesQuotes]);
-  useEffect(() => saveAccountingStorage(CASH_EXPENSE_LS_KEYS.expenses, cashExpenses), [cashExpenses]);
-  useEffect(() => saveAccountingStorage(CREDIT_NOTE_LS_KEYS.creditNotes, creditNotes), [creditNotes]);
+  useEffect(
+    () => saveAccountingStorage(CASH_EXPENSE_LS_KEYS.expenses, cashExpenses),
+    [cashExpenses],
+  );
+  useEffect(
+    () => saveAccountingStorage(CREDIT_NOTE_LS_KEYS.creditNotes, creditNotes),
+    [creditNotes],
+  );
   useEffect(() => saveAccountingStorage(DEBIT_NOTE_LS_KEYS.debitNotes, debitNotes), [debitNotes]);
-  useEffect(() => saveAccountingStorage(PURCHASE_ORDER_LS_KEYS.orders, purchaseOrders), [purchaseOrders]);
-  useEffect(() => saveAccountingStorage(RECURRING_LS_KEYS.templates, recurringTemplates), [recurringTemplates]);
+  useEffect(
+    () => saveAccountingStorage(PURCHASE_ORDER_LS_KEYS.orders, purchaseOrders),
+    [purchaseOrders],
+  );
+  useEffect(
+    () => saveAccountingStorage(RECURRING_LS_KEYS.templates, recurringTemplates),
+    [recurringTemplates],
+  );
   useEffect(() => saveAccountingStorage(CUSTOMER_LS_KEYS.customers, customers), [customers]);
-  useEffect(() => saveAccountingStorage(CASH_SALES_INVOICE_LS_KEYS.invoices, cashSalesInvoices), [cashSalesInvoices]);
-  useEffect(() => saveAccountingStorage(EMPLOYEE_CLAIM_LS_KEYS.claims, employeeClaims), [employeeClaims]);
-  useEffect(() => saveAccountingStorage(BULK_RECLASS_LS_KEYS.log, bulkReclassLog), [bulkReclassLog]);
+  useEffect(
+    () => saveAccountingStorage(CASH_SALES_INVOICE_LS_KEYS.invoices, cashSalesInvoices),
+    [cashSalesInvoices],
+  );
+  useEffect(
+    () => saveAccountingStorage(EMPLOYEE_CLAIM_LS_KEYS.claims, employeeClaims),
+    [employeeClaims],
+  );
+  useEffect(
+    () => saveAccountingStorage(BULK_RECLASS_LS_KEYS.log, bulkReclassLog),
+    [bulkReclassLog],
+  );
 
   useEffect(() => {
-    if (selectedBankId && !bankAccounts.some((b) => b.id === selectedBankId)) setSelectedBankId(null);
+    if (selectedBankId && !bankAccounts.some((b) => b.id === selectedBankId))
+      setSelectedBankId(null);
     if (!selectedBankId && bankAccounts.length > 0) setSelectedBankId(bankAccounts[0].id);
   }, [bankAccounts, selectedBankId]);
 
@@ -318,10 +374,13 @@ export default function AccountingModule({
   return (
     <div className="space-y-4">
       <div className="rounded-2xl border border-[#0D382B]/15 bg-[#0D382B]/[0.04] px-4 py-3 text-xs text-[#0D382B] flex items-center gap-2">
-        <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-[#C5A059] text-[#0D382B] text-[10px] font-black shrink-0">تجريبي</span>
+        <span className="inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-[#C5A059] text-[#0D382B] text-[10px] font-black shrink-0">
+          تجريبي
+        </span>
         <span>
-          هذه نسخة تجريبية من النظام المحاسبي لغرض التقييم فقط، وتعتمد حالياً على تخزين المتصفح المحلي دون ربط بقاعدة بيانات خلفية دائمة —
-          لا تُدخل أي بيانات مالية حقيقية للمكتب حتى اكتمال الربط والاختبار الكامل.
+          هذه نسخة تجريبية من النظام المحاسبي لغرض التقييم فقط، وتعتمد حالياً على تخزين المتصفح
+          المحلي دون ربط بقاعدة بيانات خلفية دائمة — لا تُدخل أي بيانات مالية حقيقية للمكتب حتى
+          اكتمال الربط والاختبار الكامل.
         </span>
       </div>
 
@@ -345,7 +404,9 @@ export default function AccountingModule({
                   }`}
                 >
                   <FirstIcon size={19} />
-                  <span className="text-[10px] font-bold leading-tight whitespace-nowrap lg:whitespace-normal">{group.category}</span>
+                  <span className="text-[10px] font-bold leading-tight whitespace-nowrap lg:whitespace-normal">
+                    {group.category}
+                  </span>
                 </button>
 
                 {isFlyoutOpen && (
@@ -381,287 +442,299 @@ export default function AccountingModule({
 
         {/* منطقة المحتوى: شاشة القسم الفرعي المختار حالياً (كل شاشة فرعية تعرض عنوانها الخاص أصلاً) */}
         <div className="min-w-0 space-y-4">
-
-      {subTab === "dashboard" && (
-        <AccountingDashboard
-          accounts={accounts}
-          entries={entries}
-          bankAccounts={bankAccounts}
-          transactions={transactions}
-          salesInvoices={salesInvoices}
-          salesPayments={salesPayments}
-          vendors={vendors}
-          purchaseInvoices={purchaseInvoices}
-          purchasePayments={purchasePayments}
-        />
-      )}
-
-      {subTab === "accounts" && <ChartOfAccounts accounts={accounts} setAccounts={setAccounts} canManage={canManageAccounts} />}
-
-      {subTab === "bank" && (
-        <div className="space-y-6">
-          <BankAccounts
-            accounts={accounts}
-            bankAccounts={bankAccounts}
-            setBankAccounts={setBankAccounts}
-            transactions={transactions}
-            canManage={canManageBankAccounts}
-            selectedId={selectedBankId}
-            onSelect={setSelectedBankId}
-          />
-          {selectedBank && (
-            <BankAccountLedger
-              bankAccount={selectedBank}
+          {subTab === "dashboard" && (
+            <AccountingDashboard
               accounts={accounts}
-              transactions={transactions}
-              setTransactions={setTransactions}
               entries={entries}
-              setEntries={setEntries}
-              canRecord={canRecordBankTransactions}
-              canDelete={canDeleteBankTransactions}
+              bankAccounts={bankAccounts}
+              transactions={transactions}
+              salesInvoices={salesInvoices}
+              salesPayments={salesPayments}
+              vendors={vendors}
+              purchaseInvoices={purchaseInvoices}
+              purchasePayments={purchasePayments}
+            />
+          )}
+
+          {subTab === "accounts" && (
+            <ChartOfAccounts
+              accounts={accounts}
+              setAccounts={setAccounts}
+              canManage={canManageAccounts}
+            />
+          )}
+
+          {subTab === "bank" && (
+            <div className="space-y-6">
+              <BankAccounts
+                accounts={accounts}
+                bankAccounts={bankAccounts}
+                setBankAccounts={setBankAccounts}
+                transactions={transactions}
+                canManage={canManageBankAccounts}
+                selectedId={selectedBankId}
+                onSelect={setSelectedBankId}
+              />
+              {selectedBank && (
+                <BankAccountLedger
+                  bankAccount={selectedBank}
+                  accounts={accounts}
+                  transactions={transactions}
+                  setTransactions={setTransactions}
+                  entries={entries}
+                  setEntries={setEntries}
+                  canRecord={canRecordBankTransactions}
+                  canDelete={canDeleteBankTransactions}
+                  currentUserName={currentUserName}
+                />
+              )}
+            </div>
+          )}
+
+          {subTab === "customers" && (
+            <Customers
+              customers={customers}
+              setCustomers={setCustomers}
+              invoices={salesInvoices}
+              payments={salesPayments}
+              canManage={canManageSalesInvoices}
+            />
+          )}
+
+          {subTab === "sales_quotes" && (
+            <QuoteProposals
+              accounts={accounts}
+              quotes={salesQuotes}
+              setQuotes={setSalesQuotes}
+              invoices={salesInvoices}
+              setInvoices={setSalesInvoices}
+              canManage={canManageSalesInvoices}
               currentUserName={currentUserName}
             />
           )}
-        </div>
-      )}
 
-      {subTab === "customers" && (
-        <Customers
-          customers={customers}
-          setCustomers={setCustomers}
-          invoices={salesInvoices}
-          payments={salesPayments}
-          canManage={canManageSalesInvoices}
-        />
-      )}
+          {subTab === "sales" && (
+            <SalesInvoices
+              accounts={accounts}
+              invoices={salesInvoices}
+              setInvoices={setSalesInvoices}
+              payments={salesPayments}
+              setPayments={setSalesPayments}
+              entries={entries}
+              setEntries={setEntries}
+              canManage={canManageSalesInvoices}
+              canApprove={canApproveSalesInvoices}
+              canRecordPayment={canRecordSalesPayments}
+              canDelete={canDeleteSalesInvoices}
+              currentUserName={currentUserName}
+              letterheadHeaderImg={letterheadHeaderImg}
+              letterheadFooterImg={letterheadFooterImg}
+            />
+          )}
 
-      {subTab === "sales_quotes" && (
-        <QuoteProposals
-          accounts={accounts}
-          quotes={salesQuotes}
-          setQuotes={setSalesQuotes}
-          invoices={salesInvoices}
-          setInvoices={setSalesInvoices}
-          canManage={canManageSalesInvoices}
-          currentUserName={currentUserName}
-        />
-      )}
+          {subTab === "sales_recurring" && (
+            <RecurringInvoices
+              accounts={accounts}
+              templates={recurringTemplates}
+              setTemplates={setRecurringTemplates}
+              invoices={salesInvoices}
+              setInvoices={setSalesInvoices}
+              canManage={canManageSalesInvoices}
+              currentUserName={currentUserName}
+            />
+          )}
 
-      {subTab === "sales" && (
-        <SalesInvoices
-          accounts={accounts}
-          invoices={salesInvoices}
-          setInvoices={setSalesInvoices}
-          payments={salesPayments}
-          setPayments={setSalesPayments}
-          entries={entries}
-          setEntries={setEntries}
-          canManage={canManageSalesInvoices}
-          canApprove={canApproveSalesInvoices}
-          canRecordPayment={canRecordSalesPayments}
-          canDelete={canDeleteSalesInvoices}
-          currentUserName={currentUserName}
-          letterheadHeaderImg={letterheadHeaderImg}
-          letterheadFooterImg={letterheadFooterImg}
-        />
-      )}
+          {subTab === "sales_credit_notes" && (
+            <CreditNotes
+              accounts={accounts}
+              creditNotes={creditNotes}
+              setCreditNotes={setCreditNotes}
+              invoices={salesInvoices}
+              entries={entries}
+              setEntries={setEntries}
+              canManage={canManageSalesInvoices}
+              canApprove={canApproveSalesInvoices}
+              currentUserName={currentUserName}
+            />
+          )}
 
-      {subTab === "sales_recurring" && (
-        <RecurringInvoices
-          accounts={accounts}
-          templates={recurringTemplates}
-          setTemplates={setRecurringTemplates}
-          invoices={salesInvoices}
-          setInvoices={setSalesInvoices}
-          canManage={canManageSalesInvoices}
-          currentUserName={currentUserName}
-        />
-      )}
+          {subTab === "sales_cash_invoices" && (
+            <CashSalesInvoices
+              accounts={accounts}
+              invoices={cashSalesInvoices}
+              setInvoices={setCashSalesInvoices}
+              entries={entries}
+              setEntries={setEntries}
+              canManage={canManageSalesInvoices}
+              canDelete={canDeleteSalesInvoices}
+              currentUserName={currentUserName}
+            />
+          )}
 
-      {subTab === "sales_credit_notes" && (
-        <CreditNotes
-          accounts={accounts}
-          creditNotes={creditNotes}
-          setCreditNotes={setCreditNotes}
-          invoices={salesInvoices}
-          entries={entries}
-          setEntries={setEntries}
-          canManage={canManageSalesInvoices}
-          canApprove={canApproveSalesInvoices}
-          currentUserName={currentUserName}
-        />
-      )}
+          {subTab === "vendors" && (
+            <Vendors
+              vendors={vendors}
+              setVendors={setVendors}
+              canManage={canManageVendors}
+              canDelete={canDeleteVendors}
+            />
+          )}
 
-      {subTab === "sales_cash_invoices" && (
-        <CashSalesInvoices
-          accounts={accounts}
-          invoices={cashSalesInvoices}
-          setInvoices={setCashSalesInvoices}
-          entries={entries}
-          setEntries={setEntries}
-          canManage={canManageSalesInvoices}
-          canDelete={canDeleteSalesInvoices}
-          currentUserName={currentUserName}
-        />
-      )}
+          {subTab === "purchase_orders" && (
+            <PurchaseOrders
+              accounts={accounts}
+              orders={purchaseOrders}
+              setOrders={setPurchaseOrders}
+              vendors={vendors}
+              bills={purchaseInvoices}
+              setBills={setPurchaseInvoices}
+              canManage={canManagePurchaseInvoices}
+              currentUserName={currentUserName}
+            />
+          )}
 
-      {subTab === "vendors" && <Vendors vendors={vendors} setVendors={setVendors} canManage={canManageVendors} canDelete={canDeleteVendors} />}
+          {subTab === "purchases" && (
+            <PurchaseInvoices
+              accounts={accounts}
+              vendors={vendors}
+              invoices={purchaseInvoices}
+              setInvoices={setPurchaseInvoices}
+              payments={purchasePayments}
+              setPayments={setPurchasePayments}
+              entries={entries}
+              setEntries={setEntries}
+              canManage={canManagePurchaseInvoices}
+              canApprove={canApprovePurchaseInvoices}
+              canRecordPayment={canRecordPurchasePayments}
+              canDelete={canDeletePurchaseInvoices}
+              currentUserName={currentUserName}
+            />
+          )}
 
-      {subTab === "purchase_orders" && (
-        <PurchaseOrders
-          accounts={accounts}
-          orders={purchaseOrders}
-          setOrders={setPurchaseOrders}
-          vendors={vendors}
-          bills={purchaseInvoices}
-          setBills={setPurchaseInvoices}
-          canManage={canManagePurchaseInvoices}
-          currentUserName={currentUserName}
-        />
-      )}
+          {subTab === "purchase_debit_notes" && (
+            <DebitNotes
+              accounts={accounts}
+              debitNotes={debitNotes}
+              setDebitNotes={setDebitNotes}
+              vendors={vendors}
+              bills={purchaseInvoices}
+              entries={entries}
+              setEntries={setEntries}
+              canManage={canManagePurchaseInvoices}
+              canApprove={canApprovePurchaseInvoices}
+              currentUserName={currentUserName}
+            />
+          )}
 
-      {subTab === "purchases" && (
-        <PurchaseInvoices
-          accounts={accounts}
-          vendors={vendors}
-          invoices={purchaseInvoices}
-          setInvoices={setPurchaseInvoices}
-          payments={purchasePayments}
-          setPayments={setPurchasePayments}
-          entries={entries}
-          setEntries={setEntries}
-          canManage={canManagePurchaseInvoices}
-          canApprove={canApprovePurchaseInvoices}
-          canRecordPayment={canRecordPurchasePayments}
-          canDelete={canDeletePurchaseInvoices}
-          currentUserName={currentUserName}
-        />
-      )}
+          {subTab === "purchase_cash_expenses" && (
+            <CashExpenses
+              accounts={accounts}
+              expenses={cashExpenses}
+              setExpenses={setCashExpenses}
+              entries={entries}
+              setEntries={setEntries}
+              canManage={canManagePurchaseInvoices}
+              canDelete={canDeletePurchaseInvoices}
+              currentUserName={currentUserName}
+            />
+          )}
 
-      {subTab === "purchase_debit_notes" && (
-        <DebitNotes
-          accounts={accounts}
-          debitNotes={debitNotes}
-          setDebitNotes={setDebitNotes}
-          vendors={vendors}
-          bills={purchaseInvoices}
-          entries={entries}
-          setEntries={setEntries}
-          canManage={canManagePurchaseInvoices}
-          canApprove={canApprovePurchaseInvoices}
-          currentUserName={currentUserName}
-        />
-      )}
+          {subTab === "employee_claims" && (
+            <EmployeeClaims
+              accounts={accounts}
+              claims={employeeClaims}
+              setClaims={setEmployeeClaims}
+              entries={entries}
+              setEntries={setEntries}
+              canManage={canManagePayrollEmployees}
+              canApprove={canManagePayrollEmployees}
+              canDelete={canDeletePayrollEmployees}
+              currentUserName={currentUserName}
+            />
+          )}
 
-      {subTab === "purchase_cash_expenses" && (
-        <CashExpenses
-          accounts={accounts}
-          expenses={cashExpenses}
-          setExpenses={setCashExpenses}
-          entries={entries}
-          setEntries={setEntries}
-          canManage={canManagePurchaseInvoices}
-          canDelete={canDeletePurchaseInvoices}
-          currentUserName={currentUserName}
-        />
-      )}
+          {subTab === "bulk_reclass" && (
+            <BulkReclass
+              accounts={accounts}
+              entries={entries}
+              setEntries={setEntries}
+              reclassLog={bulkReclassLog}
+              setReclassLog={setBulkReclassLog}
+              canManage={canManageAccounts}
+              currentUserName={currentUserName}
+            />
+          )}
 
-      {subTab === "employee_claims" && (
-        <EmployeeClaims
-          accounts={accounts}
-          claims={employeeClaims}
-          setClaims={setEmployeeClaims}
-          entries={entries}
-          setEntries={setEntries}
-          canManage={canManagePayrollEmployees}
-          canApprove={canManagePayrollEmployees}
-          canDelete={canDeletePayrollEmployees}
-          currentUserName={currentUserName}
-        />
-      )}
+          {subTab === "assets" && (
+            <FixedAssets
+              accounts={accounts}
+              assets={fixedAssets}
+              setAssets={setFixedAssets}
+              depreciationRuns={depreciationRuns}
+              setDepreciationRuns={setDepreciationRuns}
+              entries={entries}
+              setEntries={setEntries}
+              canManage={canManageFixedAssets}
+              canRunDepreciation={canRunDepreciation}
+              canDelete={canDeleteFixedAssets}
+              currentUserName={currentUserName}
+            />
+          )}
 
-      {subTab === "bulk_reclass" && (
-        <BulkReclass
-          accounts={accounts}
-          entries={entries}
-          setEntries={setEntries}
-          reclassLog={bulkReclassLog}
-          setReclassLog={setBulkReclassLog}
-          canManage={canManageAccounts}
-          currentUserName={currentUserName}
-        />
-      )}
+          {subTab === "payroll_employees" && (
+            <PayrollEmployees
+              accounts={accounts}
+              employees={payrollEmployees}
+              setEmployees={setPayrollEmployees}
+              payslips={payslips}
+              canManage={canManagePayrollEmployees}
+              canDelete={canDeletePayrollEmployees}
+              currentUserName={currentUserName}
+            />
+          )}
 
-      {subTab === "assets" && (
-        <FixedAssets
-          accounts={accounts}
-          assets={fixedAssets}
-          setAssets={setFixedAssets}
-          depreciationRuns={depreciationRuns}
-          setDepreciationRuns={setDepreciationRuns}
-          entries={entries}
-          setEntries={setEntries}
-          canManage={canManageFixedAssets}
-          canRunDepreciation={canRunDepreciation}
-          canDelete={canDeleteFixedAssets}
-          currentUserName={currentUserName}
-        />
-      )}
+          {subTab === "payroll_runs" && (
+            <PayrollRuns
+              accounts={accounts}
+              employees={payrollEmployees}
+              runs={payrollRuns}
+              setRuns={setPayrollRuns}
+              payslips={payslips}
+              setPayslips={setPayslips}
+              entries={entries}
+              setEntries={setEntries}
+              canRun={canRunPayroll}
+              canRecordPayment={canRecordPayrollPayments}
+              currentUserName={currentUserName}
+            />
+          )}
 
-      {subTab === "payroll_employees" && (
-        <PayrollEmployees
-          accounts={accounts}
-          employees={payrollEmployees}
-          setEmployees={setPayrollEmployees}
-          payslips={payslips}
-          canManage={canManagePayrollEmployees}
-          canDelete={canDeletePayrollEmployees}
-          currentUserName={currentUserName}
-        />
-      )}
+          {subTab === "journal" && (
+            <JournalEntries
+              accounts={accounts}
+              entries={entries}
+              setEntries={setEntries}
+              canPost={canPostEntries}
+              canDelete={canDeleteEntries}
+              currentUserName={currentUserName}
+            />
+          )}
+          {subTab === "ledger" && <Ledger accounts={accounts} entries={entries} />}
+          {subTab === "trial_balance" && <TrialBalance accounts={accounts} entries={entries} />}
 
-      {subTab === "payroll_runs" && (
-        <PayrollRuns
-          accounts={accounts}
-          employees={payrollEmployees}
-          runs={payrollRuns}
-          setRuns={setPayrollRuns}
-          payslips={payslips}
-          setPayslips={setPayslips}
-          entries={entries}
-          setEntries={setEntries}
-          canRun={canRunPayroll}
-          canRecordPayment={canRecordPayrollPayments}
-          currentUserName={currentUserName}
-        />
-      )}
-
-      {subTab === "journal" && (
-        <JournalEntries
-          accounts={accounts}
-          entries={entries}
-          setEntries={setEntries}
-          canPost={canPostEntries}
-          canDelete={canDeleteEntries}
-          currentUserName={currentUserName}
-        />
-      )}
-      {subTab === "ledger" && <Ledger accounts={accounts} entries={entries} />}
-      {subTab === "trial_balance" && <TrialBalance accounts={accounts} entries={entries} />}
-
-      {subTab === "reports" && (
-        <FinancialReports
-          accounts={accounts}
-          entries={entries}
-          bankAccounts={bankAccounts}
-          transactions={transactions}
-          salesInvoices={salesInvoices}
-          salesPayments={salesPayments}
-          vendors={vendors}
-          purchaseInvoices={purchaseInvoices}
-          purchasePayments={purchasePayments}
-        />
-      )}
+          {subTab === "reports" && (
+            <FinancialReports
+              accounts={accounts}
+              entries={entries}
+              bankAccounts={bankAccounts}
+              transactions={transactions}
+              salesInvoices={salesInvoices}
+              salesPayments={salesPayments}
+              vendors={vendors}
+              purchaseInvoices={purchaseInvoices}
+              purchasePayments={purchasePayments}
+            />
+          )}
         </div>
       </div>
     </div>

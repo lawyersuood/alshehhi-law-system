@@ -1,8 +1,19 @@
 import React, { useMemo, useState } from "react";
 import { Clock } from "lucide-react";
 import { SalesInvoice, SalesPayment, amountDue as salesAmountDue } from "./salesTypes";
-import { Vendor, PurchaseInvoice, PurchasePayment, amountDue as purchaseAmountDue } from "./purchaseTypes";
-import { AgingBucket, AGING_BUCKET_LABELS, agingBucketFor, fmtMoney, fmtDateLabel } from "./reportHelpers";
+import {
+  Vendor,
+  PurchaseInvoice,
+  PurchasePayment,
+  amountDue as purchaseAmountDue,
+} from "./purchaseTypes";
+import {
+  AgingBucket,
+  AGING_BUCKET_LABELS,
+  agingBucketFor,
+  fmtMoney,
+  fmtDateLabel,
+} from "./reportHelpers";
 
 const BUCKET_ORDER: AgingBucket[] = ["current", "d1_30", "d31_60", "d61_90", "d90_plus"];
 
@@ -17,7 +28,13 @@ interface AgingRow {
 
 function BucketSummaryTable({ title, rows }: { title: string; rows: AgingRow[] }) {
   const totalsByBucket = useMemo(() => {
-    const totals: Record<AgingBucket, number> = { current: 0, d1_30: 0, d31_60: 0, d61_90: 0, d90_plus: 0 };
+    const totals: Record<AgingBucket, number> = {
+      current: 0,
+      d1_30: 0,
+      d31_60: 0,
+      d61_90: 0,
+      d90_plus: 0,
+    };
     for (const r of rows) totals[r.bucket] += r.amount;
     return totals;
   }, [rows]);
@@ -75,15 +92,17 @@ function DetailTable({ rows }: { rows: AgingRow[] }) {
               <tr key={r.id} className="border-b border-slate-50 last:border-0">
                 <td className="px-4 py-2.5 font-mono text-slate-700">{r.number}</td>
                 <td className="px-4 py-2.5 text-slate-800">{r.partyName}</td>
-                <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">{fmtDateLabel(r.dueDate)}</td>
+                <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">
+                  {fmtDateLabel(r.dueDate)}
+                </td>
                 <td className="px-4 py-2.5">
                   <span
                     className={`px-2 py-0.5 rounded-full text-[11px] font-semibold border ${
                       r.bucket === "current"
                         ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                         : r.bucket === "d90_plus"
-                        ? "bg-rose-50 text-rose-700 border-rose-200"
-                        : "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15"
+                          ? "bg-rose-50 text-rose-700 border-rose-200"
+                          : "bg-[#0D382B]/[0.05] text-[#0D382B] border-[#0D382B]/15"
                     }`}
                   >
                     {AGING_BUCKET_LABELS[r.bucket]}
@@ -128,7 +147,14 @@ export default function AgedReceivablesPayables({
       const due = salesAmountDue(inv, salesPayments);
       if (due <= 0.005) continue;
       const refDate = inv.dueDate || inv.date;
-      rows.push({ id: inv.id, number: inv.invoiceNumber, partyName: inv.clientName, dueDate: refDate, bucket: agingBucketFor(refDate, asOf), amount: due });
+      rows.push({
+        id: inv.id,
+        number: inv.invoiceNumber,
+        partyName: inv.clientName,
+        dueDate: refDate,
+        bucket: agingBucketFor(refDate, asOf),
+        amount: due,
+      });
     }
     return rows.sort((a, b) => (a.dueDate < b.dueDate ? -1 : 1));
   }, [salesInvoices, salesPayments, asOf]);
@@ -141,7 +167,14 @@ export default function AgedReceivablesPayables({
       if (due <= 0.005) continue;
       const refDate = bill.dueDate || bill.date;
       const vendorName = vendors.find((v) => v.id === bill.vendorId)?.name || "—";
-      rows.push({ id: bill.id, number: bill.billNumber, partyName: vendorName, dueDate: refDate, bucket: agingBucketFor(refDate, asOf), amount: due });
+      rows.push({
+        id: bill.id,
+        number: bill.billNumber,
+        partyName: vendorName,
+        dueDate: refDate,
+        bucket: agingBucketFor(refDate, asOf),
+        amount: due,
+      });
     }
     return rows.sort((a, b) => (a.dueDate < b.dueDate ? -1 : 1));
   }, [purchaseInvoices, purchasePayments, vendors, asOf]);
@@ -150,12 +183,19 @@ export default function AgedReceivablesPayables({
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold text-slate-900">أعمار الذمم المدينة والدائنة</h2>
-        <p className="text-xs text-slate-500">تصنيف الفواتير المعتمدة غير المسدّدة بالكامل حسب عدد أيام التأخير عن تاريخ الاستحقاق</p>
+        <p className="text-xs text-slate-500">
+          تصنيف الفواتير المعتمدة غير المسدّدة بالكامل حسب عدد أيام التأخير عن تاريخ الاستحقاق
+        </p>
       </div>
 
       <div>
         <label className="text-xs font-semibold text-slate-600 mb-1 block">كما في تاريخ</label>
-        <input type="date" value={asOf} onChange={(e) => setAsOf(e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+        <input
+          type="date"
+          value={asOf}
+          onChange={(e) => setAsOf(e.target.value)}
+          className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+        />
       </div>
 
       <div className="space-y-3">

@@ -7,7 +7,12 @@ const inputCls =
   "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0D382B] focus:outline-none focus:ring-2 focus:ring-[#0D382B]/[0.12] transition";
 
 const fmtMoney = (n: number, currency: string) =>
-  new Intl.NumberFormat("ar-AE", { style: "currency", currency: currency || "AED", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
+  new Intl.NumberFormat("ar-AE", {
+    style: "currency",
+    currency: currency || "AED",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n || 0);
 
 interface FormState {
   id?: string;
@@ -58,7 +63,13 @@ export default function BankAccounts({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // حسابات الأصول فقط تصلح لتمثيل حساب بنكي في شجرة الحسابات
-  const assetAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const assetAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.isActive && !a.isGroup && a.type === "asset")
+        .sort((a, b) => a.code.localeCompare(b.code)),
+    [accounts],
+  );
 
   const openNew = () => {
     setError("");
@@ -110,8 +121,8 @@ export default function BankAccounts({
                 linkedAccountId: form.linkedAccountId,
                 notes: form.notes.trim() || undefined,
               }
-            : b
-        )
+            : b,
+        ),
       );
     } else {
       setBankAccounts((prev) => [
@@ -135,7 +146,10 @@ export default function BankAccounts({
     setForm(null);
   };
 
-  const toggleActive = (b: BankAccount) => setBankAccounts((prev) => prev.map((x) => (x.id === b.id ? { ...x, isActive: !x.isActive } : x)));
+  const toggleActive = (b: BankAccount) =>
+    setBankAccounts((prev) =>
+      prev.map((x) => (x.id === b.id ? { ...x, isActive: !x.isActive } : x)),
+    );
 
   const requestDelete = (id: string) => setConfirmDeleteId(id);
   const confirmDelete = () => {
@@ -150,14 +164,18 @@ export default function BankAccounts({
   };
 
   const deletingAccount = bankAccounts.find((b) => b.id === confirmDeleteId);
-  const hasTransactions = confirmDeleteId ? transactions.some((t) => t.bankAccountId === confirmDeleteId) : false;
+  const hasTransactions = confirmDeleteId
+    ? transactions.some((t) => t.bankAccountId === confirmDeleteId)
+    : false;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-slate-900">الحسابات البنكية</h2>
-          <p className="text-xs text-slate-500">سجل حسابات المكتب البنكية كأساس لتسجيل المقبوضات والمدفوعات ومطابقتها</p>
+          <p className="text-xs text-slate-500">
+            سجل حسابات المكتب البنكية كأساس لتسجيل المقبوضات والمدفوعات ومطابقتها
+          </p>
         </div>
         {canManage && (
           <button
@@ -170,7 +188,9 @@ export default function BankAccounts({
       </div>
 
       {bankAccounts.length === 0 ? (
-        <div className="app-card p-8 text-center text-sm text-slate-500">لا توجد حسابات بنكية مسجّلة بعد</div>
+        <div className="app-card p-8 text-center text-sm text-slate-500">
+          لا توجد حسابات بنكية مسجّلة بعد
+        </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {bankAccounts.map((b) => {
@@ -219,7 +239,9 @@ export default function BankAccounts({
                 </div>
                 <div>
                   <p className="text-[11px] text-slate-400">الرصيد الحالي</p>
-                  <p className="text-lg font-bold font-mono text-slate-900">{fmtMoney(balance, b.currency)}</p>
+                  <p className="text-lg font-bold font-mono text-slate-900">
+                    {fmtMoney(balance, b.currency)}
+                  </p>
                 </div>
                 <div className="text-[11px] text-slate-400 space-y-0.5">
                   {b.iban && <p className="font-mono">{b.iban}</p>}
@@ -232,38 +254,80 @@ export default function BankAccounts({
       )}
 
       {form && (
-        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={closeForm}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={closeForm}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-900">{form.id ? "تعديل الحساب البنكي" : "إضافة حساب بنكي جديد"}</h3>
+              <h3 className="font-bold text-slate-900">
+                {form.id ? "تعديل الحساب البنكي" : "إضافة حساب بنكي جديد"}
+              </h3>
               <button onClick={closeForm} className="text-slate-400 hover:text-slate-700">
                 <X size={18} />
               </button>
             </div>
-            {error && <div className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">{error}</div>}
+            {error && (
+              <div className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+                {error}
+              </div>
+            )}
             <div className="space-y-3">
               <div>
                 <label className="text-xs font-semibold text-slate-600 mb-1 block">اسم البنك</label>
-                <input value={form.bankName} onChange={(e) => setForm({ ...form, bankName: e.target.value })} placeholder="مثال: بنك الإمارات دبي الوطني" className={inputCls} />
+                <input
+                  value={form.bankName}
+                  onChange={(e) => setForm({ ...form, bankName: e.target.value })}
+                  placeholder="مثال: بنك الإمارات دبي الوطني"
+                  className={inputCls}
+                />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">وصف الحساب</label>
-                <input value={form.accountLabel} onChange={(e) => setForm({ ...form, accountLabel: e.target.value })} placeholder="مثال: الحساب الجاري الرئيسي" className={inputCls} />
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  وصف الحساب
+                </label>
+                <input
+                  value={form.accountLabel}
+                  onChange={(e) => setForm({ ...form, accountLabel: e.target.value })}
+                  placeholder="مثال: الحساب الجاري الرئيسي"
+                  className={inputCls}
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 mb-1 block">رقم الآيبان (IBAN)</label>
-                  <input value={form.iban} onChange={(e) => setForm({ ...form, iban: e.target.value })} className={inputCls + " font-mono"} dir="ltr" />
+                  <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                    رقم الآيبان (IBAN)
+                  </label>
+                  <input
+                    value={form.iban}
+                    onChange={(e) => setForm({ ...form, iban: e.target.value })}
+                    className={inputCls + " font-mono"}
+                    dir="ltr"
+                  />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 mb-1 block">رقم الحساب</label>
-                  <input value={form.accountNumber} onChange={(e) => setForm({ ...form, accountNumber: e.target.value })} className={inputCls + " font-mono"} dir="ltr" />
+                  <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                    رقم الحساب
+                  </label>
+                  <input
+                    value={form.accountNumber}
+                    onChange={(e) => setForm({ ...form, accountNumber: e.target.value })}
+                    className={inputCls + " font-mono"}
+                    dir="ltr"
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-semibold text-slate-600 mb-1 block">العملة</label>
-                  <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={inputCls}>
+                  <select
+                    value={form.currency}
+                    onChange={(e) => setForm({ ...form, currency: e.target.value })}
+                    className={inputCls}
+                  >
                     {CURRENCIES.map((c) => (
                       <option key={c} value={c}>
                         {c}
@@ -272,7 +336,9 @@ export default function BankAccounts({
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 mb-1 block">الرصيد الافتتاحي</label>
+                  <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                    الرصيد الافتتاحي
+                  </label>
                   <input
                     type="number"
                     value={form.openingBalance}
@@ -284,7 +350,9 @@ export default function BankAccounts({
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">تاريخ الرصيد الافتتاحي</label>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  تاريخ الرصيد الافتتاحي
+                </label>
                 <input
                   type="date"
                   value={form.openingDate}
@@ -294,8 +362,14 @@ export default function BankAccounts({
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">الحساب المرتبط في شجرة الحسابات</label>
-                <select value={form.linkedAccountId} onChange={(e) => setForm({ ...form, linkedAccountId: e.target.value })} className={inputCls}>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  الحساب المرتبط في شجرة الحسابات
+                </label>
+                <select
+                  value={form.linkedAccountId}
+                  onChange={(e) => setForm({ ...form, linkedAccountId: e.target.value })}
+                  className={inputCls}
+                >
                   <option value="">اختر الحساب…</option>
                   {assetAccounts.map((a) => (
                     <option key={a.id} value={a.id}>
@@ -305,15 +379,27 @@ export default function BankAccounts({
                 </select>
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">ملاحظات (اختياري)</label>
-                <input value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className={inputCls} />
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  ملاحظات (اختياري)
+                </label>
+                <input
+                  value={form.notes}
+                  onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                  className={inputCls}
+                />
               </div>
             </div>
             <div className="flex gap-2 justify-end pt-2">
-              <button onClick={closeForm} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
+              <button
+                onClick={closeForm}
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
                 إلغاء
               </button>
-              <button onClick={saveForm} className="px-4 py-2 text-sm font-semibold text-white bg-[#0D382B] hover:bg-[#124d40] transition-colors rounded-xl">
+              <button
+                onClick={saveForm}
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#0D382B] hover:bg-[#124d40] transition-colors rounded-xl"
+              >
                 حفظ
               </button>
             </div>
@@ -322,22 +408,39 @@ export default function BankAccounts({
       )}
 
       {confirmDeleteId && deletingAccount && (
-        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmDeleteId(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setConfirmDeleteId(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="font-bold text-slate-900">تأكيد حذف الحساب البنكي</h3>
             <p className="text-sm text-slate-600">
-              هل أنت متأكد من حذف <span className="font-bold">{deletingAccount.bankName} — {deletingAccount.accountLabel}</span>؟
+              هل أنت متأكد من حذف{" "}
+              <span className="font-bold">
+                {deletingAccount.bankName} — {deletingAccount.accountLabel}
+              </span>
+              ؟
               {hasTransactions && (
                 <span className="block mt-2 text-rose-600 font-semibold">
-                  تنبيه: توجد حركات بنكية مسجّلة على هذا الحساب، وستبقى مرتبطة بحساب محذوف. يُنصح بأرشفة الحساب (تعطيله) بدلاً من حذفه.
+                  تنبيه: توجد حركات بنكية مسجّلة على هذا الحساب، وستبقى مرتبطة بحساب محذوف. يُنصح
+                  بأرشفة الحساب (تعطيله) بدلاً من حذفه.
                 </span>
               )}
             </p>
             <div className="flex gap-2 justify-end pt-2">
-              <button onClick={() => setConfirmDeleteId(null)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
                 إلغاء
               </button>
-              <button onClick={confirmDelete} className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl">
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl"
+              >
                 حذف نهائياً
               </button>
             </div>

@@ -4,13 +4,18 @@
 // استُخرج من useBillingRecords.ts (حيث بُني أول مرة) ليُستخدم أيضاً بالحالات الأساسية
 // (clients/cases/feeAgreements/payments/invoices/auditLogs/kyc/kycWatchlist).
 import { useState, useEffect, useRef } from "react";
-import { loadStorage, saveStorage, fetchSupabaseTable, pushSupabaseTable } from "../domain/storageAndMessaging";
+import {
+  loadStorage,
+  saveStorage,
+  fetchSupabaseTable,
+  pushSupabaseTable,
+} from "../domain/storageAndMessaging";
 
 export function useSyncedTable<T extends { id: number | string }>(
   storageKey: string,
   supabaseTable: string,
   initFn: () => T[],
-  fetchOptions?: { limit?: number }
+  fetchOptions?: { limit?: number },
 ) {
   const [value, setValue] = useState<T[]>(initFn);
   const hydratedRef = useRef(false);
@@ -29,7 +34,9 @@ export function useSyncedTable<T extends { id: number | string }>(
       }
       hydratedRef.current = true;
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

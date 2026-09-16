@@ -3,10 +3,24 @@ import { CheckCircle2, AlertTriangle } from "lucide-react";
 import { Account, JournalEntry } from "./types";
 import { accountBalanceAsOf, netBalance, fmtMoney } from "./reportHelpers";
 
-export default function BalanceSheet({ accounts, entries }: { accounts: Account[]; entries: JournalEntry[] }) {
+export default function BalanceSheet({
+  accounts,
+  entries,
+}: {
+  accounts: Account[];
+  entries: JournalEntry[];
+}) {
   const [asOf, setAsOf] = useState(new Date().toISOString().slice(0, 10));
 
-  const { assetRows, liabilityRows, equityRows, totalAssets, totalLiabilities, totalEquity, retainedEarnings } = useMemo(() => {
+  const {
+    assetRows,
+    liabilityRows,
+    equityRows,
+    totalAssets,
+    totalLiabilities,
+    totalEquity,
+    retainedEarnings,
+  } = useMemo(() => {
     const assetRows: Array<{ account: Account; amount: number }> = [];
     const liabilityRows: Array<{ account: Account; amount: number }> = [];
     const equityRows: Array<{ account: Account; amount: number }> = [];
@@ -31,7 +45,15 @@ export default function BalanceSheet({ accounts, entries }: { accounts: Account[
     const totalAssets = assetRows.reduce((s, r) => s + r.amount, 0);
     const totalLiabilities = liabilityRows.reduce((s, r) => s + r.amount, 0);
     const totalEquity = equityRows.reduce((s, r) => s + r.amount, 0) + retainedEarnings;
-    return { assetRows, liabilityRows, equityRows, totalAssets, totalLiabilities, totalEquity, retainedEarnings };
+    return {
+      assetRows,
+      liabilityRows,
+      equityRows,
+      totalAssets,
+      totalLiabilities,
+      totalEquity,
+      retainedEarnings,
+    };
   }, [accounts, entries, asOf]);
 
   const balanced = Math.abs(totalAssets - (totalLiabilities + totalEquity)) < 0.005;
@@ -40,12 +62,19 @@ export default function BalanceSheet({ accounts, entries }: { accounts: Account[
     <div className="space-y-5">
       <div>
         <h2 className="text-xl font-bold text-slate-900">الميزانية العمومية</h2>
-        <p className="text-xs text-slate-500">أرصدة الأصول والالتزامات وحقوق الملكية كما في تاريخ معيّن</p>
+        <p className="text-xs text-slate-500">
+          أرصدة الأصول والالتزامات وحقوق الملكية كما في تاريخ معيّن
+        </p>
       </div>
 
       <div>
         <label className="text-xs font-semibold text-slate-600 mb-1 block">كما في تاريخ</label>
-        <input type="date" value={asOf} onChange={(e) => setAsOf(e.target.value)} className="rounded-xl border border-slate-300 px-3 py-2 text-sm" />
+        <input
+          type="date"
+          value={asOf}
+          onChange={(e) => setAsOf(e.target.value)}
+          className="rounded-xl border border-slate-300 px-3 py-2 text-sm"
+        />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-5">
@@ -58,7 +87,9 @@ export default function BalanceSheet({ accounts, entries }: { accounts: Account[
               <tbody>
                 {assetRows.map((r) => (
                   <tr key={r.account.id} className="border-b border-slate-50 last:border-0">
-                    <td className="px-4 py-2 font-mono text-xs text-slate-500 w-20">{r.account.code}</td>
+                    <td className="px-4 py-2 font-mono text-xs text-slate-500 w-20">
+                      {r.account.code}
+                    </td>
                     <td className="px-4 py-2 text-slate-800">{r.account.name}</td>
                     <td className="px-4 py-2 font-mono text-left">{fmtMoney(r.amount)}</td>
                   </tr>
@@ -93,7 +124,9 @@ export default function BalanceSheet({ accounts, entries }: { accounts: Account[
                 <tbody>
                   {liabilityRows.map((r) => (
                     <tr key={r.account.id} className="border-b border-slate-50 last:border-0">
-                      <td className="px-4 py-2 font-mono text-xs text-slate-500 w-20">{r.account.code}</td>
+                      <td className="px-4 py-2 font-mono text-xs text-slate-500 w-20">
+                        {r.account.code}
+                      </td>
                       <td className="px-4 py-2 text-slate-800">{r.account.name}</td>
                       <td className="px-4 py-2 font-mono text-left">{fmtMoney(r.amount)}</td>
                     </tr>
@@ -127,14 +160,18 @@ export default function BalanceSheet({ accounts, entries }: { accounts: Account[
                 <tbody>
                   {equityRows.map((r) => (
                     <tr key={r.account.id} className="border-b border-slate-50 last:border-0">
-                      <td className="px-4 py-2 font-mono text-xs text-slate-500 w-20">{r.account.code}</td>
+                      <td className="px-4 py-2 font-mono text-xs text-slate-500 w-20">
+                        {r.account.code}
+                      </td>
                       <td className="px-4 py-2 text-slate-800">{r.account.name}</td>
                       <td className="px-4 py-2 font-mono text-left">{fmtMoney(r.amount)}</td>
                     </tr>
                   ))}
                   <tr className="border-b border-slate-50 last:border-0 bg-[#0D382B]/[0.05]/40">
                     <td className="px-4 py-2 font-mono text-xs text-slate-500 w-20">—</td>
-                    <td className="px-4 py-2 text-slate-800">الأرباح المرحّلة (صافي الدخل المتراكم)</td>
+                    <td className="px-4 py-2 text-slate-800">
+                      الأرباح المرحّلة (صافي الدخل المتراكم)
+                    </td>
                     <td className="px-4 py-2 font-mono text-left">{fmtMoney(retainedEarnings)}</td>
                   </tr>
                 </tbody>
@@ -152,9 +189,13 @@ export default function BalanceSheet({ accounts, entries }: { accounts: Account[
         </div>
       </div>
 
-      <div className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold ${balanced ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}>
+      <div
+        className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold ${balanced ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700"}`}
+      >
         {balanced ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
-        {balanced ? "الميزانية متوازنة: الأصول = الالتزامات + حقوق الملكية" : "تنبيه: الميزانية غير متوازنة — يرجى مراجعة القيود"}
+        {balanced
+          ? "الميزانية متوازنة: الأصول = الالتزامات + حقوق الملكية"
+          : "تنبيه: الميزانية غير متوازنة — يرجى مراجعة القيود"}
       </div>
     </div>
   );

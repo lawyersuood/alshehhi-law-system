@@ -11,11 +11,17 @@ export function useBackupRestoreModal() {
   const [restoreSuccessMsg, setRestoreSuccessMsg] = useState<string | null>(null);
 
   return {
-    showSupabaseModal, setShowSupabaseModal,
-    showBackupModal, setShowBackupModal,
-    backupActiveTab, setBackupActiveTab,
-    restorePreview, setRestorePreview,
-    restoreError, setRestoreError,
-    restoreSuccessMsg, setRestoreSuccessMsg,
+    showSupabaseModal,
+    setShowSupabaseModal,
+    showBackupModal,
+    setShowBackupModal,
+    backupActiveTab,
+    setBackupActiveTab,
+    restorePreview,
+    setRestorePreview,
+    restoreError,
+    setRestoreError,
+    restoreSuccessMsg,
+    setRestoreSuccessMsg,
   };
 }

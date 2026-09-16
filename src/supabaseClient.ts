@@ -5,16 +5,24 @@ const DEFAULT_URL = "https://ywfddjrrgqwxbomjxsgq.supabase.co";
 const DEFAULT_KEY = "sb_publishable_rBfdJsk33ImjcyHHhjnu7w_VaBaDi22";
 
 function getSanitisedUrl(): string {
-  const raw = (import.meta as any).env?.VITE_SUPABASE_URL || (import.meta as any).env?.SUPABASE_URL || (typeof process !== "undefined" && (process as any).env?.VITE_SUPABASE_URL) || (typeof process !== "undefined" && (process as any).env?.SUPABASE_URL);
+  const raw =
+    (import.meta as any).env?.VITE_SUPABASE_URL ||
+    (import.meta as any).env?.SUPABASE_URL ||
+    (typeof process !== "undefined" && (process as any).env?.VITE_SUPABASE_URL) ||
+    (typeof process !== "undefined" && (process as any).env?.SUPABASE_URL);
   if (!raw || typeof raw !== "string") return DEFAULT_URL;
-  const match = raw.match(/https?:\/\/[^\s\]\)\"\']+/);
+  const match = raw.match(/https?:\/\/[^\s\])"']+/);
   if (match) return match[0];
   if (raw.startsWith("http://") || raw.startsWith("https://")) return raw.trim();
   return DEFAULT_URL;
 }
 
 function getSanitisedKey(): string {
-  const raw = (import.meta as any).env?.VITE_SUPABASE_ANON_KEY || (import.meta as any).env?.SUPABASE_ANON_KEY || (typeof process !== "undefined" && (process as any).env?.VITE_SUPABASE_ANON_KEY) || (typeof process !== "undefined" && (process as any).env?.SUPABASE_ANON_KEY);
+  const raw =
+    (import.meta as any).env?.VITE_SUPABASE_ANON_KEY ||
+    (import.meta as any).env?.SUPABASE_ANON_KEY ||
+    (typeof process !== "undefined" && (process as any).env?.VITE_SUPABASE_ANON_KEY) ||
+    (typeof process !== "undefined" && (process as any).env?.SUPABASE_ANON_KEY);
   if (!raw || typeof raw !== "string") return DEFAULT_KEY;
   const cleaned = raw.trim().replace(/^['"]|['"]$/g, "");
   return cleaned || DEFAULT_KEY;
@@ -49,7 +57,9 @@ export async function authedFetch(url: string, options: RequestInit = {}): Promi
 }
 
 export function onSupabaseAuthStateChange(callback: (event: string, session: any) => void) {
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+  const {
+    data: { subscription },
+  } = supabase.auth.onAuthStateChange((event, session) => {
     callback(event, session);
   });
   return subscription;
@@ -98,11 +108,7 @@ export async function sendWhatsAppViaEdgeFunction(payload: {
 
 // إرسال بريد إلكتروني بمحتوى HTML خام — تم نقلها من Supabase Edge Function 'send-email'
 // إلى مسار محلي على سيرفر الموقع نفسه (server.ts: /api/notifications/send-email).
-export async function sendEmailViaServer(payload: {
-  to: string;
-  subject: string;
-  html: string;
-}) {
+export async function sendEmailViaServer(payload: { to: string; subject: string; html: string }) {
   try {
     const res = await authedFetch("https://api.suoodlawhq.com/api/notifications/send-email", {
       method: "POST",

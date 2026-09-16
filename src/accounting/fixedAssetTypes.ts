@@ -6,7 +6,12 @@
 export const ACCUMULATED_DEPRECIATION_ACCOUNT_CODE = "122"; // مجمع إهلاك الأصول الثابتة (حساب مقابل)
 export const DEPRECIATION_EXPENSE_ACCOUNT_CODE = "5330"; // مصاريف الإهلاك (استهلاك الأصول الثابتة)
 
-export const ASSET_CATEGORIES = ["أثاث وتجهيزات مكتبية", "أجهزة حاسب آلي ومعدات تقنية", "سيارات", "أخرى"];
+export const ASSET_CATEGORIES = [
+  "أثاث وتجهيزات مكتبية",
+  "أجهزة حاسب آلي ومعدات تقنية",
+  "سيارات",
+  "أخرى",
+];
 
 export type DepreciationMethod = "straight_line";
 
@@ -49,7 +54,9 @@ export const FIXED_ASSET_LS_KEYS = {
 };
 
 // إهلاك شهري بطريقة القسط الثابت = (التكلفة - القيمة التخريدية) ÷ (العمر الإنتاجي بالسنوات × 12)
-export function monthlyDepreciation(asset: Pick<FixedAsset, "cost" | "salvageValue" | "usefulLifeYears">): number {
+export function monthlyDepreciation(
+  asset: Pick<FixedAsset, "cost" | "salvageValue" | "usefulLifeYears">,
+): number {
   const months = (Number(asset.usefulLifeYears) || 0) * 12;
   if (months <= 0) return 0;
   const depreciable = Math.max((Number(asset.cost) || 0) - (Number(asset.salvageValue) || 0), 0);
@@ -62,12 +69,19 @@ export function accumulatedDepreciationSoFar(assetId: string, runs: Depreciation
 }
 
 // صافي القيمة الدفترية = التكلفة - الإهلاك المتراكم، بحد أدنى القيمة التخريدية
-export function netBookValue(asset: Pick<FixedAsset, "cost" | "salvageValue" | "id">, runs: DepreciationRun[]): number {
+export function netBookValue(
+  asset: Pick<FixedAsset, "cost" | "salvageValue" | "id">,
+  runs: DepreciationRun[],
+): number {
   const accumulated = accumulatedDepreciationSoFar(asset.id, runs);
   return Math.max(asset.cost - accumulated, asset.salvageValue);
 }
 
-export function hasRunForPeriod(assetId: string, periodLabel: string, runs: DepreciationRun[]): boolean {
+export function hasRunForPeriod(
+  assetId: string,
+  periodLabel: string,
+  runs: DepreciationRun[],
+): boolean {
   return runs.some((r) => r.assetId === assetId && r.periodLabel === periodLabel);
 }
 

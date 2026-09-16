@@ -10,7 +10,9 @@ export function useDeadlines() {
     const stored = loadStorage("firm_deadlines", seedDeadlines);
     const FAKE_DEMO_DEADLINE_IDS = new Set([1, 2, 3]);
     const FAKE_DEMO_CASE_IDS = new Set([101, 102, 103]);
-    const cleaned = stored.filter((d) => !(FAKE_DEMO_DEADLINE_IDS.has(d.id) && FAKE_DEMO_CASE_IDS.has(d.caseId)));
+    const cleaned = stored.filter(
+      (d) => !(FAKE_DEMO_DEADLINE_IDS.has(d.id) && FAKE_DEMO_CASE_IDS.has(d.caseId)),
+    );
     if (cleaned.length !== stored.length) {
       saveStorage("firm_deadlines", cleaned);
       return cleaned;

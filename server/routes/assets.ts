@@ -18,7 +18,7 @@ assetsRouter.get("/fixed-assets", async (_req, res) => {
               depreciation_expense_account_id AS depreciationExpenseAccountId,
               cost, purchase_date AS purchaseDate, useful_life_years AS usefulLifeYears, salvage_value AS salvageValue,
               depreciation_method AS depreciationMethod, status, notes, created_at AS createdAt, created_by AS createdBy, disposed_at AS disposedAt
-       FROM fixed_assets ORDER BY purchase_date DESC`
+       FROM fixed_assets ORDER BY purchase_date DESC`,
     );
     res.json(rows);
   } catch (err: any) {
@@ -39,7 +39,16 @@ assetsRouter.post("/fixed-assets", async (req: AuthedRequest, res) => {
     salvageValue,
     notes,
   } = req.body || {};
-  if (!name || !category || !assetAccountId || !accumulatedDepreciationAccountId || !depreciationExpenseAccountId || !cost || !purchaseDate || !usefulLifeYears) {
+  if (
+    !name ||
+    !category ||
+    !assetAccountId ||
+    !accumulatedDepreciationAccountId ||
+    !depreciationExpenseAccountId ||
+    !cost ||
+    !purchaseDate ||
+    !usefulLifeYears
+  ) {
     res.status(400).json({ error: "بيانات الأصل الثابت غير مكتملة." });
     return;
   }
@@ -63,7 +72,7 @@ assetsRouter.post("/fixed-assets", async (req: AuthedRequest, res) => {
         Number(salvageValue) || 0,
         notes || null,
         req.authUser?.email || null,
-      ]
+      ],
     );
     res.status(201).json({ id });
   } catch (err: any) {
@@ -74,7 +83,10 @@ assetsRouter.post("/fixed-assets", async (req: AuthedRequest, res) => {
 assetsRouter.post("/fixed-assets/:id/dispose", async (req, res) => {
   try {
     const pool = getPool();
-    await pool.query(`UPDATE fixed_assets SET status = 'disposed', disposed_at = NOW() WHERE id = ?`, [req.params.id]);
+    await pool.query(
+      `UPDATE fixed_assets SET status = 'disposed', disposed_at = NOW() WHERE id = ?`,
+      [req.params.id],
+    );
     res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ error: err?.message || "فشل استبعاد الأصل." });
@@ -84,7 +96,10 @@ assetsRouter.post("/fixed-assets/:id/dispose", async (req, res) => {
 assetsRouter.delete("/fixed-assets/:id", async (req, res) => {
   try {
     const pool = getPool();
-    const [runs]: any = await pool.query(`SELECT COUNT(*) AS cnt FROM depreciation_runs WHERE asset_id = ?`, [req.params.id]);
+    const [runs]: any = await pool.query(
+      `SELECT COUNT(*) AS cnt FROM depreciation_runs WHERE asset_id = ?`,
+      [req.params.id],
+    );
     if (runs[0]?.cnt > 0) {
       res.status(409).json({ error: "لا يمكن حذف أصل له قيود إهلاك منفّذة مسبقاً." });
       return;
@@ -102,7 +117,7 @@ assetsRouter.get("/depreciation-runs", async (_req, res) => {
     const [rows] = await pool.query(
       `SELECT id, asset_id AS assetId, period_label AS periodLabel, date, amount, journal_entry_id AS journalEntryId,
               created_at AS createdAt, created_by AS createdBy
-       FROM depreciation_runs ORDER BY period_label DESC`
+       FROM depreciation_runs ORDER BY period_label DESC`,
     );
     res.json(rows);
   } catch (err: any) {
@@ -114,7 +129,16 @@ assetsRouter.get("/depreciation-runs", async (_req, res) => {
 // (نفس منطق aggregation المستخدم في PurchaseInvoices/FixedAssets بالواجهة الأمامية)
 assetsRouter.post("/depreciation-runs", async (req: AuthedRequest, res) => {
   const { periodLabel, date, entryNumber, description, lines, runs } = req.body || {};
-  if (!periodLabel || !date || !entryNumber || !description || !Array.isArray(lines) || lines.length < 2 || !Array.isArray(runs) || runs.length === 0) {
+  if (
+    !periodLabel ||
+    !date ||
+    !entryNumber ||
+    !description ||
+    !Array.isArray(lines) ||
+    lines.length < 2 ||
+    !Array.isArray(runs) ||
+    runs.length === 0
+  ) {
     res.status(400).json({ error: "بيانات تشغيل الإهلاك غير مكتملة." });
     return;
   }
@@ -126,13 +150,29 @@ assetsRouter.post("/depreciation-runs", async (req: AuthedRequest, res) => {
     await conn.query(
       `INSERT INTO journal_entries (id, entry_number, date, description, reference, status, created_at, created_by, posted_at, posted_by)
        VALUES (?, ?, ?, ?, ?, 'posted', NOW(), ?, NOW(), ?)`,
-      [entryId, entryNumber, date, description, periodLabel, req.authUser?.email || null, req.authUser?.email || null]
+      [
+        entryId,
+        entryNumber,
+        date,
+        description,
+        periodLabel,
+        req.authUser?.email || null,
+        req.authUser?.email || null,
+      ],
     );
     let order = 0;
     for (const l of lines) {
       await conn.query(
         `INSERT INTO journal_lines (id, journal_entry_id, account_id, debit, credit, description, line_order) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [randomUUID(), entryId, l.accountId, Number(l.debit) || 0, Number(l.credit) || 0, l.description || null, order++]
+        [
+          randomUUID(),
+          entryId,
+          l.accountId,
+          Number(l.debit) || 0,
+          Number(l.credit) || 0,
+          l.description || null,
+          order++,
+        ],
       );
     }
     const createdRunIds: string[] = [];
@@ -141,7 +181,15 @@ assetsRouter.post("/depreciation-runs", async (req: AuthedRequest, res) => {
       await conn.query(
         `INSERT INTO depreciation_runs (id, asset_id, period_label, date, amount, journal_entry_id, created_at, created_by)
          VALUES (?, ?, ?, ?, ?, ?, NOW(), ?)`,
-        [runId, r.assetId, periodLabel, date, Number(r.amount), entryId, req.authUser?.email || null]
+        [
+          runId,
+          r.assetId,
+          periodLabel,
+          date,
+          Number(r.amount),
+          entryId,
+          req.authUser?.email || null,
+        ],
       );
       createdRunIds.push(runId);
     }

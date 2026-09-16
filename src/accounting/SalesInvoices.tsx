@@ -1,8 +1,23 @@
 import React, { useMemo, useState } from "react";
-import { Plus, Trash2, X, AlertTriangle, CheckCircle2, Printer, Eye, Ban, CreditCard } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  X,
+  AlertTriangle,
+  CheckCircle2,
+  Printer,
+  Eye,
+  Ban,
+  CreditCard,
+} from "lucide-react";
 import { Account, JournalEntry } from "./types";
 import { nextEntryNumber, nextInvoiceNumber } from "./storage";
-import { printHtmlDocumentInHiddenIframe, LETTERHEAD_LAYOUT, LETTER_FONT_STACK, AMIRI_FONT_LINK } from "../OfficialLetterComposer";
+import {
+  printHtmlDocumentInHiddenIframe,
+  LETTERHEAD_LAYOUT,
+  LETTER_FONT_STACK,
+  AMIRI_FONT_LINK,
+} from "../OfficialLetterComposer";
 import {
   SalesInvoice,
   SalesPayment,
@@ -21,17 +36,40 @@ const inputCls =
   "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0D382B] focus:outline-none focus:ring-2 focus:ring-[#0D382B]/[0.12] transition";
 
 const fmtMoney = (n: number) =>
-  new Intl.NumberFormat("ar-AE", { style: "currency", currency: "AED", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
+  new Intl.NumberFormat("ar-AE", {
+    style: "currency",
+    currency: "AED",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n || 0);
 
-const fmtDateLabel = (d: string) => (d ? new Date(d + "T00:00:00").toLocaleDateString("ar-AE", { year: "numeric", month: "long", day: "numeric" }) : "—");
+const fmtDateLabel = (d: string) =>
+  d
+    ? new Date(d + "T00:00:00").toLocaleDateString("ar-AE", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "—";
 
 function escapeHtml(v: string | null | undefined): string {
   if (!v) return "";
-  return String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  return String(v)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function emptyLine(): InvoiceLineItem {
-  return { id: `il-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, description: "", quantity: 1, unitPrice: 0, vatRate: 5, accountId: "" };
+  return {
+    id: `il-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    description: "",
+    quantity: 1,
+    unitPrice: 0,
+    vatRate: 5,
+    accountId: "",
+  };
 }
 
 interface DraftForm {
@@ -75,7 +113,7 @@ function buildInvoicePrintHtml(params: {
         <td class="c">${l.unitPrice.toFixed(2)}</td>
         <td class="c">${l.vatRate}%</td>
         <td class="c">${lineNetAmount(l).toFixed(2)}</td>
-      </tr>`
+      </tr>`,
     )
     .join("");
 
@@ -195,14 +233,32 @@ export default function SalesInvoices({
   const [paymentRef, setPaymentRef] = useState("");
   const [paymentError, setPaymentError] = useState("");
 
-  const revenueAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "revenue").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
-  const assetAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "asset").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const revenueAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.isActive && !a.isGroup && a.type === "revenue")
+        .sort((a, b) => a.code.localeCompare(b.code)),
+    [accounts],
+  );
+  const assetAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.isActive && !a.isGroup && a.type === "asset")
+        .sort((a, b) => a.code.localeCompare(b.code)),
+    [accounts],
+  );
   const arAccount = useMemo(() => accounts.find((a) => a.code === AR_ACCOUNT_CODE), [accounts]);
-  const vatAccount = useMemo(() => accounts.find((a) => a.code === VAT_OUTPUT_ACCOUNT_CODE), [accounts]);
+  const vatAccount = useMemo(
+    () => accounts.find((a) => a.code === VAT_OUTPUT_ACCOUNT_CODE),
+    [accounts],
+  );
 
   const sortedInvoices = useMemo(
-    () => [...invoices].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.invoiceNumber.localeCompare(a.invoiceNumber))),
-    [invoices]
+    () =>
+      [...invoices].sort((a, b) =>
+        a.date < b.date ? 1 : a.date > b.date ? -1 : b.invoiceNumber.localeCompare(a.invoiceNumber),
+      ),
+    [invoices],
   );
 
   const openNew = () => {
@@ -229,7 +285,8 @@ export default function SalesInvoices({
   const updateLine = (id: string, patch: Partial<InvoiceLineItem>) =>
     setDraft((d) => ({ ...d, lines: d.lines.map((l) => (l.id === id ? { ...l, ...patch } : l)) }));
   const addLine = () => setDraft((d) => ({ ...d, lines: [...d.lines, emptyLine()] }));
-  const removeLine = (id: string) => setDraft((d) => (d.lines.length > 1 ? { ...d, lines: d.lines.filter((l) => l.id !== id) } : d));
+  const removeLine = (id: string) =>
+    setDraft((d) => (d.lines.length > 1 ? { ...d, lines: d.lines.filter((l) => l.id !== id) } : d));
 
   const draftTotals = invoiceTotals(draft);
 
@@ -242,7 +299,9 @@ export default function SalesInvoices({
       setError("حقل مكان التوريد (الإمارة) إلزامي حسب متطلبات الهيئة الاتحادية للضرائب");
       return;
     }
-    const validLines = draft.lines.filter((l) => l.description.trim() && l.quantity > 0 && l.accountId);
+    const validLines = draft.lines.filter(
+      (l) => l.description.trim() && l.quantity > 0 && l.accountId,
+    );
     if (validLines.length === 0) {
       setError("يجب إدخال بند واحد على الأقل ببيان وكمية وحساب إيراد مرتبط");
       return;
@@ -261,8 +320,8 @@ export default function SalesInvoices({
                 notes: draft.notes.trim() || undefined,
                 lines: validLines,
               }
-            : inv
-        )
+            : inv,
+        ),
       );
     } else {
       setInvoices((prev) => [
@@ -298,7 +357,10 @@ export default function SalesInvoices({
     // تجميع الإيرادات حسب الحساب (قد يتكرر نفس حساب الإيراد في أكثر من بند)
     const revenueByAccount = new Map<string, number>();
     for (const l of inv.lines) {
-      revenueByAccount.set(l.accountId, (revenueByAccount.get(l.accountId) || 0) + lineNetAmount(l));
+      revenueByAccount.set(
+        l.accountId,
+        (revenueByAccount.get(l.accountId) || 0) + lineNetAmount(l),
+      );
     }
     const lines = [
       { id: `l-${journalEntryId}-ar`, accountId: arAccount.id, debit: grandTotal, credit: 0 },
@@ -310,7 +372,12 @@ export default function SalesInvoices({
       })),
     ];
     if (vatTotal > 0 && vatAccount) {
-      lines.push({ id: `l-${journalEntryId}-vat`, accountId: vatAccount.id, debit: 0, credit: vatTotal });
+      lines.push({
+        id: `l-${journalEntryId}-vat`,
+        accountId: vatAccount.id,
+        debit: 0,
+        credit: vatTotal,
+      });
     }
     const newEntry: JournalEntry = {
       id: journalEntryId,
@@ -327,7 +394,17 @@ export default function SalesInvoices({
     };
     setEntries((prev) => [...prev, newEntry]);
     setInvoices((prev) =>
-      prev.map((x) => (x.id === inv.id ? { ...x, status: "approved", journalEntryId, approvedAt: now, approvedBy: currentUserName } : x))
+      prev.map((x) =>
+        x.id === inv.id
+          ? {
+              ...x,
+              status: "approved",
+              journalEntryId,
+              approvedAt: now,
+              approvedBy: currentUserName,
+            }
+          : x,
+      ),
     );
   };
 
@@ -341,12 +418,22 @@ export default function SalesInvoices({
   const requestCancel = (id: string) => setConfirmCancelId(id);
   const confirmCancel = () => {
     if (!confirmCancelId) return;
-    setInvoices((prev) => prev.map((i) => (i.id === confirmCancelId ? { ...i, status: "cancelled", cancelledAt: new Date().toISOString() } : i)));
+    setInvoices((prev) =>
+      prev.map((i) =>
+        i.id === confirmCancelId
+          ? { ...i, status: "cancelled", cancelledAt: new Date().toISOString() }
+          : i,
+      ),
+    );
     setConfirmCancelId(null);
   };
 
   const printInvoice = (inv: SalesInvoice) => {
-    const html = buildInvoicePrintHtml({ invoice: inv, headerImg: letterheadHeaderImg, footerImg: letterheadFooterImg });
+    const html = buildInvoicePrintHtml({
+      invoice: inv,
+      headerImg: letterheadHeaderImg,
+      footerImg: letterheadFooterImg,
+    });
     printHtmlDocumentInHiddenIframe(html);
   };
 
@@ -425,8 +512,16 @@ export default function SalesInvoices({
         </span>
       );
     if (status === "cancelled")
-      return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">ملغاة</span>;
-    return <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">مسودة</span>;
+      return (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
+          ملغاة
+        </span>
+      );
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+        مسودة
+      </span>
+    );
   };
 
   return (
@@ -434,10 +529,16 @@ export default function SalesInvoices({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-slate-900">المبيعات والفواتير الضريبية</h2>
-          <p className="text-xs text-slate-500">فوترة ضريبية متعددة البنود، بحقل "مكان التوريد" الإلزامي وربط كل بند بحساب إيراد — {invoices.length} فاتورة</p>
+          <p className="text-xs text-slate-500">
+            فوترة ضريبية متعددة البنود، بحقل "مكان التوريد" الإلزامي وربط كل بند بحساب إيراد —{" "}
+            {invoices.length} فاتورة
+          </p>
         </div>
         {canManage && (
-          <button onClick={openNew} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]">
+          <button
+            onClick={openNew}
+            className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"
+          >
             <Plus size={16} /> فاتورة ضريبية جديدة
           </button>
         )}
@@ -446,8 +547,9 @@ export default function SalesInvoices({
       {(!arAccount || !vatAccount) && (
         <div className="flex items-center gap-2 rounded-xl bg-[#0D382B]/[0.05] border border-[#0D382B]/15 px-4 py-3 text-xs text-[#0D382B]">
           <AlertTriangle size={15} />
-          تنبيه: لم يتم العثور على حساب "ذمم العملاء المدينة" ({AR_ACCOUNT_CODE}) أو حساب "ضريبة القيمة المضافة — مخرجات" ({VAT_OUTPUT_ACCOUNT_CODE}) في
-          شجرة الحسابات — لن يمكن اعتماد الفواتير دون هذين الحسابين.
+          تنبيه: لم يتم العثور على حساب "ذمم العملاء المدينة" ({AR_ACCOUNT_CODE}) أو حساب "ضريبة
+          القيمة المضافة — مخرجات" ({VAT_OUTPUT_ACCOUNT_CODE}) في شجرة الحسابات — لن يمكن اعتماد
+          الفواتير دون هذين الحسابين.
         </div>
       )}
 
@@ -470,30 +572,49 @@ export default function SalesInvoices({
                 const { grandTotal } = invoiceTotals(inv);
                 const due = amountDue(inv, payments);
                 return (
-                  <tr key={inv.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50">
+                  <tr
+                    key={inv.id}
+                    className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50"
+                  >
                     <td className="px-4 py-2.5 font-mono text-slate-700">{inv.invoiceNumber}</td>
-                    <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">{fmtDateLabel(inv.date)}</td>
+                    <td className="px-4 py-2.5 text-slate-600 whitespace-nowrap">
+                      {fmtDateLabel(inv.date)}
+                    </td>
                     <td className="px-4 py-2.5 text-slate-800">{inv.clientName}</td>
                     <td className="px-4 py-2.5 font-mono">{fmtMoney(grandTotal)}</td>
-                    <td className="px-4 py-2.5 font-mono">{inv.status === "approved" ? fmtMoney(due) : "—"}</td>
+                    <td className="px-4 py-2.5 font-mono">
+                      {inv.status === "approved" ? fmtMoney(due) : "—"}
+                    </td>
                     <td className="px-4 py-2.5">{statusBadge(inv.status)}</td>
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-1 justify-end">
-                        <button onClick={() => setViewingId(inv.id)} className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100">
+                        <button
+                          onClick={() => setViewingId(inv.id)}
+                          className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100"
+                        >
                           <Eye size={14} />
                         </button>
                         {inv.status === "draft" && canManage && (
-                          <button onClick={() => openEdit(inv)} className="text-xs font-semibold text-[#0D382B] hover:bg-[#0D382B]/[0.06] px-2 py-1 rounded-lg">
+                          <button
+                            onClick={() => openEdit(inv)}
+                            className="text-xs font-semibold text-[#0D382B] hover:bg-[#0D382B]/[0.06] px-2 py-1 rounded-lg"
+                          >
                             تعديل
                           </button>
                         )}
                         {inv.status === "draft" && canApprove && (
-                          <button onClick={() => approveInvoice(inv)} className="text-xs font-semibold text-emerald-700 hover:bg-emerald-50 px-2 py-1 rounded-lg">
+                          <button
+                            onClick={() => approveInvoice(inv)}
+                            className="text-xs font-semibold text-emerald-700 hover:bg-emerald-50 px-2 py-1 rounded-lg"
+                          >
                             اعتماد
                           </button>
                         )}
                         {inv.status === "draft" && canDelete && (
-                          <button onClick={() => requestDelete(inv.id)} className="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50">
+                          <button
+                            onClick={() => requestDelete(inv.id)}
+                            className="p-1.5 text-slate-500 hover:text-rose-600 rounded-lg hover:bg-rose-50"
+                          >
                             <Trash2 size={14} />
                           </button>
                         )}
@@ -516,11 +637,22 @@ export default function SalesInvoices({
 
       {/* نموذج إنشاء / تعديل فاتورة */}
       {showForm && (
-        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setShowForm(false)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setShowForm(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-3xl p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-900">{draft.id ? "تعديل الفاتورة" : "فاتورة ضريبية جديدة"}</h3>
-              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-700">
+              <h3 className="font-bold text-slate-900">
+                {draft.id ? "تعديل الفاتورة" : "فاتورة ضريبية جديدة"}
+              </h3>
+              <button
+                onClick={() => setShowForm(false)}
+                className="text-slate-400 hover:text-slate-700"
+              >
                 <X size={18} />
               </button>
             </div>
@@ -531,26 +663,59 @@ export default function SalesInvoices({
             )}
             <div className="grid sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">اسم العميل</label>
-                <input value={draft.clientName} onChange={(e) => setDraft({ ...draft, clientName: e.target.value })} className={inputCls} />
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  اسم العميل
+                </label>
+                <input
+                  value={draft.clientName}
+                  onChange={(e) => setDraft({ ...draft, clientName: e.target.value })}
+                  className={inputCls}
+                />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">الرقم الضريبي للعميل (اختياري)</label>
-                <input value={draft.clientTRN} onChange={(e) => setDraft({ ...draft, clientTRN: e.target.value })} className={inputCls + " font-mono"} dir="ltr" />
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  الرقم الضريبي للعميل (اختياري)
+                </label>
+                <input
+                  value={draft.clientTRN}
+                  onChange={(e) => setDraft({ ...draft, clientTRN: e.target.value })}
+                  className={inputCls + " font-mono"}
+                  dir="ltr"
+                />
               </div>
             </div>
             <div className="grid sm:grid-cols-3 gap-3">
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">تاريخ الإصدار</label>
-                <input type="date" value={draft.date} onChange={(e) => setDraft({ ...draft, date: e.target.value })} className={inputCls} />
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  تاريخ الإصدار
+                </label>
+                <input
+                  type="date"
+                  value={draft.date}
+                  onChange={(e) => setDraft({ ...draft, date: e.target.value })}
+                  className={inputCls}
+                />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">تاريخ الاستحقاق (اختياري)</label>
-                <input type="date" value={draft.dueDate} onChange={(e) => setDraft({ ...draft, dueDate: e.target.value })} className={inputCls} />
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  تاريخ الاستحقاق (اختياري)
+                </label>
+                <input
+                  type="date"
+                  value={draft.dueDate}
+                  onChange={(e) => setDraft({ ...draft, dueDate: e.target.value })}
+                  className={inputCls}
+                />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-600 mb-1 block">مكان التوريد (إلزامي)</label>
-                <select value={draft.placeOfSupply} onChange={(e) => setDraft({ ...draft, placeOfSupply: e.target.value })} className={inputCls}>
+                <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                  مكان التوريد (إلزامي)
+                </label>
+                <select
+                  value={draft.placeOfSupply}
+                  onChange={(e) => setDraft({ ...draft, placeOfSupply: e.target.value })}
+                  className={inputCls}
+                >
                   <option value="">اختر الإمارة…</option>
                   {UAE_EMIRATES.map((e) => (
                     <option key={e} value={e}>
@@ -600,7 +765,11 @@ export default function SalesInvoices({
                     onChange={(e) => updateLine(l.id, { vatRate: Number(e.target.value) || 0 })}
                     className={inputCls + " col-span-1 font-mono"}
                   />
-                  <select value={l.accountId} onChange={(e) => updateLine(l.id, { accountId: e.target.value })} className={inputCls + " col-span-2"}>
+                  <select
+                    value={l.accountId}
+                    onChange={(e) => updateLine(l.id, { accountId: e.target.value })}
+                    className={inputCls + " col-span-2"}
+                  >
                     <option value="">اختر…</option>
                     {revenueAccounts.map((a) => (
                       <option key={a.id} value={a.id}>
@@ -608,32 +777,60 @@ export default function SalesInvoices({
                       </option>
                     ))}
                   </select>
-                  <button onClick={() => removeLine(l.id)} disabled={draft.lines.length <= 1} className="col-span-1 p-2 text-slate-400 hover:text-rose-600 disabled:opacity-30">
+                  <button
+                    onClick={() => removeLine(l.id)}
+                    disabled={draft.lines.length <= 1}
+                    className="col-span-1 p-2 text-slate-400 hover:text-rose-600 disabled:opacity-30"
+                  >
                     <Trash2 size={14} />
                   </button>
                 </div>
               ))}
-              <button onClick={addLine} className="text-xs font-semibold text-[#0D382B] hover:bg-[#0D382B]/[0.06] px-2 py-1.5 rounded-lg flex items-center gap-1">
+              <button
+                onClick={addLine}
+                className="text-xs font-semibold text-[#0D382B] hover:bg-[#0D382B]/[0.06] px-2 py-1.5 rounded-lg flex items-center gap-1"
+              >
                 <Plus size={13} /> إضافة بند
               </button>
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-600 mb-1 block">ملاحظات (اختياري)</label>
-              <input value={draft.notes} onChange={(e) => setDraft({ ...draft, notes: e.target.value })} className={inputCls} />
+              <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                ملاحظات (اختياري)
+              </label>
+              <input
+                value={draft.notes}
+                onChange={(e) => setDraft({ ...draft, notes: e.target.value })}
+                className={inputCls}
+              />
             </div>
 
             <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm space-y-1">
-              <div className="flex justify-between"><span className="text-slate-500">المجموع قبل الضريبة</span><span className="font-mono">{fmtMoney(draftTotals.subtotal)}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">ضريبة القيمة المضافة</span><span className="font-mono">{fmtMoney(draftTotals.vatTotal)}</span></div>
-              <div className="flex justify-between font-bold text-slate-900 pt-1 border-t border-slate-200"><span>الإجمالي</span><span className="font-mono">{fmtMoney(draftTotals.grandTotal)}</span></div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">المجموع قبل الضريبة</span>
+                <span className="font-mono">{fmtMoney(draftTotals.subtotal)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">ضريبة القيمة المضافة</span>
+                <span className="font-mono">{fmtMoney(draftTotals.vatTotal)}</span>
+              </div>
+              <div className="flex justify-between font-bold text-slate-900 pt-1 border-t border-slate-200">
+                <span>الإجمالي</span>
+                <span className="font-mono">{fmtMoney(draftTotals.grandTotal)}</span>
+              </div>
             </div>
 
             <div className="flex gap-2 justify-end pt-2">
-              <button onClick={() => setShowForm(false)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
+              <button
+                onClick={() => setShowForm(false)}
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
                 إلغاء
               </button>
-              <button onClick={saveDraft} className="px-4 py-2 text-sm font-semibold text-white bg-[#0D382B] hover:bg-[#124d40] transition-colors rounded-xl">
+              <button
+                onClick={saveDraft}
+                className="px-4 py-2 text-sm font-semibold text-white bg-[#0D382B] hover:bg-[#124d40] transition-colors rounded-xl"
+              >
                 حفظ كمسودة
               </button>
             </div>
@@ -643,23 +840,45 @@ export default function SalesInvoices({
 
       {/* عرض تفاصيل الفاتورة */}
       {viewingInvoice && (
-        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setViewingId(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setViewingId(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 space-y-4 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-slate-900">فاتورة {viewingInvoice.invoiceNumber}</h3>
               <div className="flex items-center gap-2">
-                <button onClick={() => printInvoice(viewingInvoice)} className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100" title="طباعة">
+                <button
+                  onClick={() => printInvoice(viewingInvoice)}
+                  className="p-1.5 text-slate-500 hover:text-slate-800 rounded-lg hover:bg-slate-100"
+                  title="طباعة"
+                >
                   <Printer size={16} />
                 </button>
-                <button onClick={() => setViewingId(null)} className="text-slate-400 hover:text-slate-700">
+                <button
+                  onClick={() => setViewingId(null)}
+                  className="text-slate-400 hover:text-slate-700"
+                >
                   <X size={18} />
                 </button>
               </div>
             </div>
-            <div className="flex items-center gap-2">{statusBadge(viewingInvoice.status)}<span className="text-xs text-slate-500">{fmtDateLabel(viewingInvoice.date)}</span></div>
+            <div className="flex items-center gap-2">
+              {statusBadge(viewingInvoice.status)}
+              <span className="text-xs text-slate-500">{fmtDateLabel(viewingInvoice.date)}</span>
+            </div>
             <div className="grid sm:grid-cols-2 gap-2 text-sm">
-              <p><span className="text-slate-500">العميل: </span>{viewingInvoice.clientName}</p>
-              <p><span className="text-slate-500">مكان التوريد: </span>{viewingInvoice.placeOfSupply}</p>
+              <p>
+                <span className="text-slate-500">العميل: </span>
+                {viewingInvoice.clientName}
+              </p>
+              <p>
+                <span className="text-slate-500">مكان التوريد: </span>
+                {viewingInvoice.placeOfSupply}
+              </p>
             </div>
             <div className="border border-slate-100 rounded-xl overflow-hidden">
               <table className="w-full text-sm">
@@ -680,7 +899,9 @@ export default function SalesInvoices({
                       <td className="px-3 py-2 font-mono">{l.quantity}</td>
                       <td className="px-3 py-2 font-mono">{l.unitPrice.toFixed(2)}</td>
                       <td className="px-3 py-2 font-mono">{l.vatRate}%</td>
-                      <td className="px-3 py-2 text-xs text-slate-500">{accountLabel(l.accountId)}</td>
+                      <td className="px-3 py-2 text-xs text-slate-500">
+                        {accountLabel(l.accountId)}
+                      </td>
                       <td className="px-3 py-2 font-mono">{lineNetAmount(l).toFixed(2)}</td>
                     </tr>
                   ))}
@@ -693,34 +914,57 @@ export default function SalesInvoices({
               const paid = amountPaid(viewingInvoice.id, payments);
               return (
                 <div className="rounded-xl bg-slate-50 px-4 py-3 text-sm space-y-1">
-                  <div className="flex justify-between"><span className="text-slate-500">المجموع قبل الضريبة</span><span className="font-mono">{fmtMoney(t.subtotal)}</span></div>
-                  <div className="flex justify-between"><span className="text-slate-500">ضريبة القيمة المضافة</span><span className="font-mono">{fmtMoney(t.vatTotal)}</span></div>
-                  <div className="flex justify-between font-bold text-slate-900 pt-1 border-t border-slate-200"><span>الإجمالي</span><span className="font-mono">{fmtMoney(t.grandTotal)}</span></div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">المجموع قبل الضريبة</span>
+                    <span className="font-mono">{fmtMoney(t.subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">ضريبة القيمة المضافة</span>
+                    <span className="font-mono">{fmtMoney(t.vatTotal)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-slate-900 pt-1 border-t border-slate-200">
+                    <span>الإجمالي</span>
+                    <span className="font-mono">{fmtMoney(t.grandTotal)}</span>
+                  </div>
                   {viewingInvoice.status === "approved" && (
                     <>
-                      <div className="flex justify-between text-emerald-700"><span>المحصّل</span><span className="font-mono">{fmtMoney(paid)}</span></div>
-                      <div className="flex justify-between font-bold text-[#0D382B]"><span>المتبقي</span><span className="font-mono">{fmtMoney(due)}</span></div>
+                      <div className="flex justify-between text-emerald-700">
+                        <span>المحصّل</span>
+                        <span className="font-mono">{fmtMoney(paid)}</span>
+                      </div>
+                      <div className="flex justify-between font-bold text-[#0D382B]">
+                        <span>المتبقي</span>
+                        <span className="font-mono">{fmtMoney(due)}</span>
+                      </div>
                     </>
                   )}
                 </div>
               );
             })()}
 
-            {viewingInvoice.status === "approved" && payments.some((p) => p.invoiceId === viewingInvoice.id) && (
-              <div>
-                <p className="text-xs font-semibold text-slate-600 mb-1.5">الدفعات المسجّلة</p>
-                <div className="space-y-1.5">
-                  {payments
-                    .filter((p) => p.invoiceId === viewingInvoice.id)
-                    .map((p) => (
-                      <div key={p.id} className="flex justify-between text-xs bg-emerald-50/60 border border-emerald-100 rounded-lg px-3 py-2">
-                        <span>{fmtDateLabel(p.date)} — {accountLabel(p.receivingAccountId)}</span>
-                        <span className="font-mono font-semibold text-emerald-700">{fmtMoney(p.amount)}</span>
-                      </div>
-                    ))}
+            {viewingInvoice.status === "approved" &&
+              payments.some((p) => p.invoiceId === viewingInvoice.id) && (
+                <div>
+                  <p className="text-xs font-semibold text-slate-600 mb-1.5">الدفعات المسجّلة</p>
+                  <div className="space-y-1.5">
+                    {payments
+                      .filter((p) => p.invoiceId === viewingInvoice.id)
+                      .map((p) => (
+                        <div
+                          key={p.id}
+                          className="flex justify-between text-xs bg-emerald-50/60 border border-emerald-100 rounded-lg px-3 py-2"
+                        >
+                          <span>
+                            {fmtDateLabel(p.date)} — {accountLabel(p.receivingAccountId)}
+                          </span>
+                          <span className="font-mono font-semibold text-emerald-700">
+                            {fmtMoney(p.amount)}
+                          </span>
+                        </div>
+                      ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             <div className="flex gap-2 justify-end pt-2 flex-wrap">
               {viewingInvoice.status === "draft" && canApprove && (
@@ -734,37 +978,66 @@ export default function SalesInvoices({
                 </button>
               )}
               {viewingInvoice.status === "draft" && canManage && (
-                <button onClick={() => requestCancel(viewingInvoice.id)} className="px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 rounded-xl flex items-center gap-1.5">
+                <button
+                  onClick={() => requestCancel(viewingInvoice.id)}
+                  className="px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 rounded-xl flex items-center gap-1.5"
+                >
                   <Ban size={14} /> إلغاء الفاتورة
                 </button>
               )}
-              {viewingInvoice.status === "approved" && amountDue(viewingInvoice, payments) > 0.005 && canRecordPayment && (
-                <button
-                  onClick={() => openPaymentForm(viewingInvoice)}
-                  className="px-4 py-2 text-sm font-semibold text-white bg-[#0D382B] hover:bg-[#124d40] transition-colors rounded-xl flex items-center gap-1.5"
-                >
-                  <CreditCard size={14} /> تسجيل دفعة
-                </button>
-              )}
+              {viewingInvoice.status === "approved" &&
+                amountDue(viewingInvoice, payments) > 0.005 &&
+                canRecordPayment && (
+                  <button
+                    onClick={() => openPaymentForm(viewingInvoice)}
+                    className="px-4 py-2 text-sm font-semibold text-white bg-[#0D382B] hover:bg-[#124d40] transition-colors rounded-xl flex items-center gap-1.5"
+                  >
+                    <CreditCard size={14} /> تسجيل دفعة
+                  </button>
+                )}
             </div>
 
             {showPaymentForm && viewingInvoice.status === "approved" && (
               <div className="rounded-xl border border-slate-200 p-4 space-y-3 bg-slate-50/60">
                 <p className="text-sm font-bold text-slate-800">تسجيل دفعة جديدة</p>
-                {paymentError && <div className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">{paymentError}</div>}
+                {paymentError && (
+                  <div className="text-xs text-rose-600 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+                    {paymentError}
+                  </div>
+                )}
                 <div className="grid sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-semibold text-slate-600 mb-1 block">المبلغ</label>
-                    <input type="number" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} className={inputCls + " font-mono"} />
+                    <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                      المبلغ
+                    </label>
+                    <input
+                      type="number"
+                      value={paymentAmount}
+                      onChange={(e) => setPaymentAmount(e.target.value)}
+                      className={inputCls + " font-mono"}
+                    />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-slate-600 mb-1 block">تاريخ القبض</label>
-                    <input type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} className={inputCls} />
+                    <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                      تاريخ القبض
+                    </label>
+                    <input
+                      type="date"
+                      value={paymentDate}
+                      onChange={(e) => setPaymentDate(e.target.value)}
+                      className={inputCls}
+                    />
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 mb-1 block">الحساب المستلِم (بنك/صندوق)</label>
-                  <select value={paymentAccountId} onChange={(e) => setPaymentAccountId(e.target.value)} className={inputCls}>
+                  <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                    الحساب المستلِم (بنك/صندوق)
+                  </label>
+                  <select
+                    value={paymentAccountId}
+                    onChange={(e) => setPaymentAccountId(e.target.value)}
+                    className={inputCls}
+                  >
                     <option value="">اختر الحساب…</option>
                     {assetAccounts.map((a) => (
                       <option key={a.id} value={a.id}>
@@ -774,14 +1047,26 @@ export default function SalesInvoices({
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-slate-600 mb-1 block">مرجع (اختياري)</label>
-                  <input value={paymentRef} onChange={(e) => setPaymentRef(e.target.value)} className={inputCls} />
+                  <label className="text-xs font-semibold text-slate-600 mb-1 block">
+                    مرجع (اختياري)
+                  </label>
+                  <input
+                    value={paymentRef}
+                    onChange={(e) => setPaymentRef(e.target.value)}
+                    className={inputCls}
+                  />
                 </div>
                 <div className="flex gap-2 justify-end">
-                  <button onClick={() => setShowPaymentForm(false)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
+                  <button
+                    onClick={() => setShowPaymentForm(false)}
+                    className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                  >
                     إلغاء
                   </button>
-                  <button onClick={() => savePayment(viewingInvoice)} className="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl">
+                  <button
+                    onClick={() => savePayment(viewingInvoice)}
+                    className="px-4 py-2 text-sm font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl"
+                  >
                     حفظ وترحيل
                   </button>
                 </div>
@@ -792,26 +1077,64 @@ export default function SalesInvoices({
       )}
 
       {confirmDeleteId && deletingInvoice && (
-        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmDeleteId(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setConfirmDeleteId(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="font-bold text-slate-900">تأكيد حذف الفاتورة</h3>
-            <p className="text-sm text-slate-600">هل أنت متأكد من حذف مسودة الفاتورة <span className="font-bold">{deletingInvoice.invoiceNumber}</span>؟</p>
+            <p className="text-sm text-slate-600">
+              هل أنت متأكد من حذف مسودة الفاتورة{" "}
+              <span className="font-bold">{deletingInvoice.invoiceNumber}</span>؟
+            </p>
             <div className="flex gap-2 justify-end pt-2">
-              <button onClick={() => setConfirmDeleteId(null)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">إلغاء</button>
-              <button onClick={confirmDelete} className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl">حذف نهائياً</button>
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl"
+              >
+                حذف نهائياً
+              </button>
             </div>
           </div>
         </div>
       )}
 
       {confirmCancelId && cancellingInvoice && (
-        <div className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setConfirmCancelId(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 bg-[#08130f]/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setConfirmCancelId(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="font-bold text-slate-900">تأكيد إلغاء الفاتورة</h3>
-            <p className="text-sm text-slate-600">هل أنت متأكد من إلغاء الفاتورة <span className="font-bold">{cancellingInvoice.invoiceNumber}</span>؟</p>
+            <p className="text-sm text-slate-600">
+              هل أنت متأكد من إلغاء الفاتورة{" "}
+              <span className="font-bold">{cancellingInvoice.invoiceNumber}</span>؟
+            </p>
             <div className="flex gap-2 justify-end pt-2">
-              <button onClick={() => setConfirmCancelId(null)} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">تراجع</button>
-              <button onClick={confirmCancel} className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl">تأكيد الإلغاء</button>
+              <button
+                onClick={() => setConfirmCancelId(null)}
+                className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
+                تراجع
+              </button>
+              <button
+                onClick={confirmCancel}
+                className="px-4 py-2 text-sm font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-xl"
+              >
+                تأكيد الإلغاء
+              </button>
             </div>
           </div>
         </div>

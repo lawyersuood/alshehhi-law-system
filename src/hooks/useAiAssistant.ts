@@ -12,20 +12,39 @@ export interface AiAssistantDeps {
   hearings: Hearing[];
   invoices: Invoice[];
   tasks: TaskItem[];
-  aiQuery: string; setAiQuery: (v: string) => void;
-  aiDepartment: string; setAiDepartment: (v: string) => void;
+  aiQuery: string;
+  setAiQuery: (v: string) => void;
+  aiDepartment: string;
+  setAiDepartment: (v: string) => void;
   aiMode: string;
-  aiResponse: string | null; setAiResponse: (v: string | null) => void;
-  aiLoading: boolean; setAiLoading: (v: boolean) => void;
-  aiError: string | null; setAiError: (v: string | null) => void;
+  aiResponse: string | null;
+  setAiResponse: (v: string | null) => void;
+  aiLoading: boolean;
+  setAiLoading: (v: boolean) => void;
+  aiError: string | null;
+  setAiError: (v: string | null) => void;
   setShowAiModal: (v: boolean) => void;
 }
 
 export function useAiAssistant(deps: AiAssistantDeps) {
-  const handleAskAiAssistant = async (customQuery?: string, customDept?: string, customMode?: string) => {
+  const handleAskAiAssistant = async (
+    customQuery?: string,
+    customDept?: string,
+    customMode?: string,
+  ) => {
     const {
-      aiQuery, aiDepartment, aiMode, tab, cases, clients, hearings, invoices, tasks,
-      setAiLoading, setAiError, setAiResponse,
+      aiQuery,
+      aiDepartment,
+      aiMode,
+      tab,
+      cases,
+      clients,
+      hearings,
+      invoices,
+      tasks,
+      setAiLoading,
+      setAiError,
+      setAiResponse,
     } = deps;
 
     const q = (customQuery !== undefined ? customQuery : aiQuery).trim();
@@ -41,15 +60,31 @@ export function useAiAssistant(deps: AiAssistantDeps) {
     // تجهيز سياق بيانات النظام المأخوذة من القسم المختار لتزويد النموذج بإجابة دقيقة
     let contextData: any = null;
     if (deptToUse === "cases" || deptToUse.includes("القضايا")) {
-      contextData = cases.slice(0, 6).map(c => ({ كود: c.number, موضوع_القضية: c.subject, المحكمة: c.court, النوع: c.type, الحالة: c.status }));
+      contextData = cases
+        .slice(0, 6)
+        .map((c) => ({
+          كود: c.number,
+          موضوع_القضية: c.subject,
+          المحكمة: c.court,
+          النوع: c.type,
+          الحالة: c.status,
+        }));
     } else if (deptToUse === "clients" || deptToUse.includes("الموكلين")) {
-      contextData = clients.slice(0, 6).map(cl => ({ الاسم: cl.name, النوع: cl.type, الإمارات: cl.emirate, هاتف: cl.phone }));
+      contextData = clients
+        .slice(0, 6)
+        .map((cl) => ({ الاسم: cl.name, النوع: cl.type, الإمارات: cl.emirate, هاتف: cl.phone }));
     } else if (deptToUse === "hearings" || deptToUse.includes("الجلسات")) {
-      contextData = hearings.slice(0, 6).map(h => ({ التاريخ: h.date, المحكمة: h.type, ملاحظات: h.notes }));
+      contextData = hearings
+        .slice(0, 6)
+        .map((h) => ({ التاريخ: h.date, المحكمة: h.type, ملاحظات: h.notes }));
     } else if (deptToUse === "invoices" || deptToUse.includes("الفواتير")) {
-      contextData = invoices.slice(0, 6).map(inv => ({ رقم_الفاتورة: inv.number, المبلغ: inv.amount, الحالة: inv.status }));
+      contextData = invoices
+        .slice(0, 6)
+        .map((inv) => ({ رقم_الفاتورة: inv.number, المبلغ: inv.amount, الحالة: inv.status }));
     } else if (deptToUse === "tasks" || deptToUse.includes("المهام")) {
-      contextData = tasks.slice(0, 6).map(t => ({ المهمة: t.title, الأولوية: t.priority, المكلف: t.assignee }));
+      contextData = tasks
+        .slice(0, 6)
+        .map((t) => ({ المهمة: t.title, الأولوية: t.priority, المكلف: t.assignee }));
     }
 
     try {
@@ -60,8 +95,8 @@ export function useAiAssistant(deps: AiAssistantDeps) {
           department: deptToUse,
           query: q,
           contextData,
-          mode: modeToUse
-        })
+          mode: modeToUse,
+        }),
       });
       const data = await res.json();
       if (data.success && data.answer) {
@@ -90,7 +125,7 @@ export function useAiAssistant(deps: AiAssistantDeps) {
       docs: "المستندات والأرشيف",
       employees: "الموظفين والكادر",
       consultations: "حجوزات الاستشارات",
-      users: "إدارة المستخدمين"
+      users: "إدارة المستخدمين",
     };
 
     const sectionLabel = currentDeptMap[tab] || "عام";

@@ -15,7 +15,11 @@ export interface AccountMovement {
 }
 
 // إجمالي حركة المدين/الدائن على حساب معيّن ضمن القيود المرحّلة فقط، منذ البداية وحتى تاريخ معيّن (تراكمي)
-export function accountBalanceAsOf(accountId: string, entries: JournalEntry[], asOfDate: string): AccountMovement {
+export function accountBalanceAsOf(
+  accountId: string,
+  entries: JournalEntry[],
+  asOfDate: string,
+): AccountMovement {
   let debit = 0;
   let credit = 0;
   for (const e of entries) {
@@ -31,7 +35,12 @@ export function accountBalanceAsOf(accountId: string, entries: JournalEntry[], a
 }
 
 // إجمالي حركة المدين/الدائن على حساب معيّن ضمن القيود المرحّلة فقط، خلال فترة محددة (من - إلى)
-export function accountMovementInRange(accountId: string, entries: JournalEntry[], fromDate: string, toDate: string): AccountMovement {
+export function accountMovementInRange(
+  accountId: string,
+  entries: JournalEntry[],
+  fromDate: string,
+  toDate: string,
+): AccountMovement {
   let debit = 0;
   let credit = 0;
   for (const e of entries) {
@@ -82,9 +91,20 @@ export function agingBucketFor(dueDateOrDate: string, asOf: string): AgingBucket
 }
 
 export function fmtMoney(n: number): string {
-  return new Intl.NumberFormat("ar-AE", { style: "currency", currency: "AED", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
+  return new Intl.NumberFormat("ar-AE", {
+    style: "currency",
+    currency: "AED",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n || 0);
 }
 
 export function fmtDateLabel(d: string): string {
-  return d ? new Date(d + "T00:00:00").toLocaleDateString("ar-AE", { year: "numeric", month: "long", day: "numeric" }) : "—";
+  return d
+    ? new Date(d + "T00:00:00").toLocaleDateString("ar-AE", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : "—";
 }

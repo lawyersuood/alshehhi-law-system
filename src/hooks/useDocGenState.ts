@@ -12,7 +12,15 @@ export function useDocGenState() {
     recipientPhone: string;
     recipientEmail: string;
     channel: "واتساب" | "إيميل" | "كلاهما";
-    type: "تنبيه جلسة" | "تحديث قضية" | "تذكير فاتورة" | "تجديد وثائق / KYC" | "تجديد وكالة / POA" | "تنبيه ميعاد طعن / استئناف" | "تذكير قسط فاتورة" | "رسالة عامة";
+    type:
+      | "تنبيه جلسة"
+      | "تحديث قضية"
+      | "تذكير فاتورة"
+      | "تجديد وثائق / KYC"
+      | "تجديد وكالة / POA"
+      | "تنبيه ميعاد طعن / استئناف"
+      | "تذكير قسط فاتورة"
+      | "رسالة عامة";
     subject: string;
     message: string;
     relatedRef?: string;
@@ -22,11 +30,17 @@ export function useDocGenState() {
   const [rollCourtFilter, setRollCourtFilter] = useState<string>("الكل");
 
   return {
-    clientPortalId, setClientPortalId,
-    selectedTemplateId, setSelectedTemplateId,
-    selectedGenCaseId, setSelectedGenCaseId,
-    notifyModal, setNotifyModal,
-    selectedRollDate, setSelectedRollDate,
-    rollCourtFilter, setRollCourtFilter,
+    clientPortalId,
+    setClientPortalId,
+    selectedTemplateId,
+    setSelectedTemplateId,
+    selectedGenCaseId,
+    setSelectedGenCaseId,
+    notifyModal,
+    setNotifyModal,
+    selectedRollDate,
+    setSelectedRollDate,
+    rollCourtFilter,
+    setRollCourtFilter,
   };
 }

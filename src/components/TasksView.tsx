@@ -11,7 +11,13 @@ export interface TasksViewProps {
   checkPerm: (
     permKey: keyof RolePermissions,
     actionName: string,
-    context?: { section?: string; title?: string; details?: string; targetId?: string | number; isDelete?: boolean }
+    context?: {
+      section?: string;
+      title?: string;
+      details?: string;
+      targetId?: string | number;
+      isDelete?: boolean;
+    },
   ) => boolean;
   openModalWithCheck: (kind: string, permKey?: keyof RolePermissions) => void;
   requestDelete: (opts: {
@@ -24,16 +30,29 @@ export interface TasksViewProps {
     onConfirm: () => void;
   }) => void;
   logAuditAction: (
-    actionType: "DELETE" | "UPDATE" | "CREATE" | "STATUS_CHANGE" | "PERMISSION_CHANGE" | "UNAUTHORIZED_DELETE" | "UNAUTHORIZED_ACCESS",
+    actionType:
+      | "DELETE"
+      | "UPDATE"
+      | "CREATE"
+      | "STATUS_CHANGE"
+      | "PERMISSION_CHANGE"
+      | "UNAUTHORIZED_DELETE"
+      | "UNAUTHORIZED_ACCESS",
     targetModule: string,
     targetTitle: string,
     details: string,
     targetId?: string | number,
     statusOverride?: "مؤكد" | "محاولة غير مصرح بها - مرفوض" | "مكتمل" | "فشل",
-    userOverride?: { id?: string | number; name?: string; email?: string; roleTitle?: string; jobTitle?: string }
+    userOverride?: {
+      id?: string | number;
+      name?: string;
+      email?: string;
+      roleTitle?: string;
+      jobTitle?: string;
+    },
   ) => void;
   setPermissionNotice: (msg: string | null) => void;
-  saveStorage: <T,>(key: string, value: T) => void;
+  saveStorage: <T>(key: string, value: T) => void;
 }
 
 export default function TasksView({
@@ -60,11 +79,19 @@ export default function TasksView({
                 requestDelete({
                   section: "إدارة المهام والتكليفات",
                   title: `تفريغ كافة المهام المسجلة (${tasks.length} مهمة)`,
-                  details: "سيتم حذف ومسح جميع التكليفات والمهام الموزعة على أعضاء الفريق بشكل نهائي.",
+                  details:
+                    "سيتم حذف ومسح جميع التكليفات والمهام الموزعة على أعضاء الفريق بشكل نهائي.",
                   permKey: "deleteTasks",
                   actionName: "تفريغ كافة المهام",
                   onConfirm: () => {
-                    logAuditAction("DELETE", "المهام والتكليفات", "تفريغ كافة المهام", `تم تفريغ وحذف جميع التكليفات والمهام (${tasks.length} مهمة) بشكل نهائي.`, undefined, "مؤكد");
+                    logAuditAction(
+                      "DELETE",
+                      "المهام والتكليفات",
+                      "تفريغ كافة المهام",
+                      `تم تفريغ وحذف جميع التكليفات والمهام (${tasks.length} مهمة) بشكل نهائي.`,
+                      undefined,
+                      "مؤكد",
+                    );
                     setTasks([]);
                     saveStorage("firm_tasks", []);
                     setPermissionNotice("تم تفريغ كافة المهام والتكليفات بنجاح.");
@@ -76,7 +103,12 @@ export default function TasksView({
               <Trash2 size={15} /> تفريغ كافة المهام
             </button>
           )}
-          <button onClick={() => openModalWithCheck("task", "manageTasks")} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"><Plus size={16} /> إضافة مهمة</button>
+          <button
+            onClick={() => openModalWithCheck("task", "manageTasks")}
+            className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"
+          >
+            <Plus size={16} /> إضافة مهمة
+          </button>
         </div>
       </div>
       <div className="space-y-3">
@@ -87,7 +119,8 @@ export default function TasksView({
             </div>
             <p className="text-sm font-bold text-slate-800">لا توجد مهام أو تكليفات مسجلة حالياً</p>
             <p className="text-xs text-slate-500 max-w-sm">
-              تم إفراغ المهام التجريبية. يمكنك إضافة مهمة جديدة وتكليف أحد المحامين أو الإداريين بالمكتب وربطها بالقضايا والمواعيد.
+              تم إفراغ المهام التجريبية. يمكنك إضافة مهمة جديدة وتكليف أحد المحامين أو الإداريين
+              بالمكتب وربطها بالقضايا والمواعيد.
             </p>
             <button
               onClick={() => openModalWithCheck("task", "manageTasks")}
@@ -100,15 +133,24 @@ export default function TasksView({
           tasks.map((t) => (
             <div key={t.id} className="flex items-center justify-between app-card p-4">
               <div className="flex items-center gap-3">
-                <button onClick={() => {
-                  if (!checkPerm("manageTasks", "تحديث المهمة")) return;
-                  setTasks(tasks.map((x) => x.id === t.id ? { ...x, done: !x.done } : x));
-                }} className={`p-1 rounded-full ${t.done ? "text-emerald-600" : "text-slate-300 hover:text-slate-500"}`}>
+                <button
+                  onClick={() => {
+                    if (!checkPerm("manageTasks", "تحديث المهمة")) return;
+                    setTasks(tasks.map((x) => (x.id === t.id ? { ...x, done: !x.done } : x)));
+                  }}
+                  className={`p-1 rounded-full ${t.done ? "text-emerald-600" : "text-slate-300 hover:text-slate-500"}`}
+                >
                   <CheckCircle2 size={22} />
                 </button>
                 <div>
-                  <p className={`font-semibold text-sm ${t.done ? "line-through text-slate-400" : "text-slate-900"}`}>{t.title}</p>
-                  <p className="text-xs text-slate-500">المكلف: <b>{t.assignee}</b> | تاريخ الاستحقاق: {fmtDate(t.due)}</p>
+                  <p
+                    className={`font-semibold text-sm ${t.done ? "line-through text-slate-400" : "text-slate-900"}`}
+                  >
+                    {t.title}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    المكلف: <b>{t.assignee}</b> | تاريخ الاستحقاق: {fmtDate(t.due)}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -122,7 +164,13 @@ export default function TasksView({
                       permKey: "deleteTasks",
                       actionName: "حذف المهمة",
                       onConfirm: () => {
-                        logAuditAction("DELETE", "المهام", `مهمة: ${t.title}`, `حذف المهمة "${t.title}" المكلف بها ${t.assignee}`, t.id);
+                        logAuditAction(
+                          "DELETE",
+                          "المهام",
+                          `مهمة: ${t.title}`,
+                          `حذف المهمة "${t.title}" المكلف بها ${t.assignee}`,
+                          t.id,
+                        );
                         setTasks((prev) => prev.filter((x) => x.id !== t.id));
                       },
                     });

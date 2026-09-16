@@ -2,17 +2,37 @@ import React, { useMemo, useState } from "react";
 import { Plus, Trash2, X, CheckCircle2, Ban } from "lucide-react";
 import { Account, JournalEntry } from "./types";
 import { nextEntryNumber } from "./storage";
-import { PurchaseLineItem, PurchaseInvoice, Vendor, AP_ACCOUNT_CODE, VAT_INPUT_ACCOUNT_CODE, purchaseTotals, lineNetAmount } from "./purchaseTypes";
+import {
+  PurchaseLineItem,
+  PurchaseInvoice,
+  Vendor,
+  AP_ACCOUNT_CODE,
+  VAT_INPUT_ACCOUNT_CODE,
+  purchaseTotals,
+  lineNetAmount,
+} from "./purchaseTypes";
 import { DebitNote, DebitNoteStatus } from "./debitNoteTypes";
 
 const inputCls =
   "w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:border-[#0D382B] focus:outline-none focus:ring-2 focus:ring-[#0D382B]/[0.12] transition";
 
 const fmtMoney = (n: number) =>
-  new Intl.NumberFormat("ar-AE", { style: "currency", currency: "AED", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(n || 0);
+  new Intl.NumberFormat("ar-AE", {
+    style: "currency",
+    currency: "AED",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(n || 0);
 
 function emptyLine(): PurchaseLineItem {
-  return { id: `dnl-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, description: "", quantity: 1, unitPrice: 0, vatRate: 5, accountId: "" };
+  return {
+    id: `dnl-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    description: "",
+    quantity: 1,
+    unitPrice: 0,
+    vatRate: 5,
+    accountId: "",
+  };
 }
 
 function nextDebitNoteNumber(existing: DebitNote[]): string {
@@ -37,7 +57,13 @@ interface DraftForm {
 }
 
 function newDraft(): DraftForm {
-  return { date: new Date().toISOString().slice(0, 10), vendorId: "", relatedBillId: "", notes: "", lines: [emptyLine()] };
+  return {
+    date: new Date().toISOString().slice(0, 10),
+    vendorId: "",
+    relatedBillId: "",
+    notes: "",
+    lines: [emptyLine()],
+  };
 }
 
 const STATUS_BADGE: Record<DebitNoteStatus, string> = {
@@ -45,7 +71,11 @@ const STATUS_BADGE: Record<DebitNoteStatus, string> = {
   approved: "bg-emerald-50 text-emerald-700",
   cancelled: "bg-rose-50 text-rose-700",
 };
-const STATUS_LABEL: Record<DebitNoteStatus, string> = { draft: "مسودة", approved: "معتمد", cancelled: "ملغى" };
+const STATUS_LABEL: Record<DebitNoteStatus, string> = {
+  draft: "مسودة",
+  approved: "معتمد",
+  cancelled: "ملغى",
+};
 
 export default function DebitNotes({
   accounts,
@@ -75,15 +105,31 @@ export default function DebitNotes({
   const [error, setError] = useState("");
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  const expenseAccounts = useMemo(() => accounts.filter((a) => a.isActive && !a.isGroup && a.type === "expense").sort((a, b) => a.code.localeCompare(b.code)), [accounts]);
+  const expenseAccounts = useMemo(
+    () =>
+      accounts
+        .filter((a) => a.isActive && !a.isGroup && a.type === "expense")
+        .sort((a, b) => a.code.localeCompare(b.code)),
+    [accounts],
+  );
   const apAccount = useMemo(() => accounts.find((a) => a.code === AP_ACCOUNT_CODE), [accounts]);
-  const vatInputAccount = useMemo(() => accounts.find((a) => a.code === VAT_INPUT_ACCOUNT_CODE), [accounts]);
+  const vatInputAccount = useMemo(
+    () => accounts.find((a) => a.code === VAT_INPUT_ACCOUNT_CODE),
+    [accounts],
+  );
 
   const vendorName = (id: string) => vendors.find((v) => v.id === id)?.name || "—";
 
   const sortedNotes = useMemo(
-    () => [...debitNotes].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : b.debitNoteNumber.localeCompare(a.debitNoteNumber))),
-    [debitNotes]
+    () =>
+      [...debitNotes].sort((a, b) =>
+        a.date < b.date
+          ? 1
+          : a.date > b.date
+            ? -1
+            : b.debitNoteNumber.localeCompare(a.debitNoteNumber),
+      ),
+    [debitNotes],
   );
 
   const openNew = () => {
@@ -95,7 +141,8 @@ export default function DebitNotes({
   const updateLine = (id: string, patch: Partial<PurchaseLineItem>) =>
     setDraft((d) => ({ ...d, lines: d.lines.map((l) => (l.id === id ? { ...l, ...patch } : l)) }));
   const addLine = () => setDraft((d) => ({ ...d, lines: [...d.lines, emptyLine()] }));
-  const removeLine = (id: string) => setDraft((d) => (d.lines.length > 1 ? { ...d, lines: d.lines.filter((l) => l.id !== id) } : d));
+  const removeLine = (id: string) =>
+    setDraft((d) => (d.lines.length > 1 ? { ...d, lines: d.lines.filter((l) => l.id !== id) } : d));
 
   const draftTotals = purchaseTotals(draft);
 
@@ -104,7 +151,9 @@ export default function DebitNotes({
       setError("يرجى اختيار المورد");
       return;
     }
-    const validLines = draft.lines.filter((l) => l.description.trim() && l.quantity > 0 && l.accountId);
+    const validLines = draft.lines.filter(
+      (l) => l.description.trim() && l.quantity > 0 && l.accountId,
+    );
     if (validLines.length === 0) {
       setError("يجب إدخال بند واحد على الأقل ببيان وكمية وحساب مصروف مرتبط");
       return;
@@ -137,7 +186,11 @@ export default function DebitNotes({
     const now = new Date().toISOString();
     const journalEntryId = `je-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const expenseByAccount = new Map<string, number>();
-    for (const l of dn.lines) expenseByAccount.set(l.accountId, (expenseByAccount.get(l.accountId) || 0) + lineNetAmount(l));
+    for (const l of dn.lines)
+      expenseByAccount.set(
+        l.accountId,
+        (expenseByAccount.get(l.accountId) || 0) + lineNetAmount(l),
+      );
     const lines = [
       { id: `l-${journalEntryId}-ap`, accountId: apAccount.id, debit: grandTotal, credit: 0 },
       ...Array.from(expenseByAccount.entries()).map(([accountId, amount], idx) => ({
@@ -148,7 +201,12 @@ export default function DebitNotes({
       })),
     ];
     if (vatTotal > 0 && vatInputAccount) {
-      lines.push({ id: `l-${journalEntryId}-vat`, accountId: vatInputAccount.id, debit: 0, credit: vatTotal });
+      lines.push({
+        id: `l-${journalEntryId}-vat`,
+        accountId: vatInputAccount.id,
+        debit: 0,
+        credit: vatTotal,
+      });
     }
     const newEntry: JournalEntry = {
       id: journalEntryId,
@@ -165,7 +223,17 @@ export default function DebitNotes({
     };
     setEntries((prev) => [...prev, newEntry]);
     setDebitNotes((prev) =>
-      prev.map((x) => (x.id === dn.id ? { ...x, status: "approved", journalEntryId, approvedAt: now, approvedBy: currentUserName } : x))
+      prev.map((x) =>
+        x.id === dn.id
+          ? {
+              ...x,
+              status: "approved",
+              journalEntryId,
+              approvedAt: now,
+              approvedBy: currentUserName,
+            }
+          : x,
+      ),
     );
   };
 
@@ -181,7 +249,9 @@ export default function DebitNotes({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-bold text-slate-900">إشعارات مدينة</h2>
-          <p className="text-xs text-slate-500">لتصحيح أو تخفيض قيمة فاتورة مشتريات مستلمة من مورد — {debitNotes.length} إشعار مسجّل</p>
+          <p className="text-xs text-slate-500">
+            لتصحيح أو تخفيض قيمة فاتورة مشتريات مستلمة من مورد — {debitNotes.length} إشعار مسجّل
+          </p>
         </div>
         {canManage && (
           <button
@@ -216,25 +286,40 @@ export default function DebitNotes({
             {sortedNotes.map((dn) => {
               const totals = purchaseTotals(dn);
               return (
-                <tr key={dn.id} className="border-b border-slate-50 last:border-0 hover:bg-[#0D382B]/[0.02] transition-colors">
+                <tr
+                  key={dn.id}
+                  className="border-b border-slate-50 last:border-0 hover:bg-[#0D382B]/[0.02] transition-colors"
+                >
                   <td className="px-4 py-1.5 font-mono text-slate-700">{dn.debitNoteNumber}</td>
-                  <td className="px-4 py-1.5 text-slate-800 font-medium">{vendorName(dn.vendorId)}</td>
+                  <td className="px-4 py-1.5 text-slate-800 font-medium">
+                    {vendorName(dn.vendorId)}
+                  </td>
                   <td className="px-4 py-1.5 text-slate-600">{dn.date}</td>
-                  <td className="px-4 py-1.5 font-bold text-rose-600">- {fmtMoney(totals.grandTotal)}</td>
+                  <td className="px-4 py-1.5 font-bold text-rose-600">
+                    - {fmtMoney(totals.grandTotal)}
+                  </td>
                   <td className="px-4 py-1.5">
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${STATUS_BADGE[dn.status]}`}>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ${STATUS_BADGE[dn.status]}`}
+                    >
                       {STATUS_LABEL[dn.status]}
                     </span>
                   </td>
                   <td className="px-4 py-1.5">
                     <div className="flex items-center justify-end gap-1.5">
                       {canApprove && dn.status === "draft" && (
-                        <button onClick={() => approveDebitNote(dn)} className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1">
+                        <button
+                          onClick={() => approveDebitNote(dn)}
+                          className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1"
+                        >
                           <CheckCircle2 size={13} /> اعتماد
                         </button>
                       )}
                       {canManage && dn.status === "draft" && (
-                        <button onClick={() => requestDelete(dn.id)} className="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1">
+                        <button
+                          onClick={() => requestDelete(dn.id)}
+                          className="text-xs font-bold text-rose-600 hover:underline flex items-center gap-1"
+                        >
                           <Trash2 size={13} />
                         </button>
                       )}
@@ -252,17 +337,26 @@ export default function DebitNotes({
           <div className="app-card w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6 space-y-5">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-black text-[#0D382B]">إشعار مدين جديد</h3>
-              <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600">
+              <button
+                onClick={() => setShowForm(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
                 <X size={20} />
               </button>
             </div>
 
-            {error && <div className="rounded-xl bg-rose-50 text-rose-700 text-sm px-4 py-2.5">{error}</div>}
+            {error && (
+              <div className="rounded-xl bg-rose-50 text-rose-700 text-sm px-4 py-2.5">{error}</div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-bold text-slate-600 mb-1.5">المورد *</label>
-                <select className={inputCls} value={draft.vendorId} onChange={(e) => setDraft((d) => ({ ...d, vendorId: e.target.value }))}>
+                <select
+                  className={inputCls}
+                  value={draft.vendorId}
+                  onChange={(e) => setDraft((d) => ({ ...d, vendorId: e.target.value }))}
+                >
                   <option value="">تحديد</option>
                   {vendors.map((v) => (
                     <option key={v.id} value={v.id}>
@@ -272,8 +366,14 @@ export default function DebitNotes({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">مرتبط بفاتورة مشتريات (اختياري)</label>
-                <select className={inputCls} value={draft.relatedBillId} onChange={(e) => setDraft((d) => ({ ...d, relatedBillId: e.target.value }))}>
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  مرتبط بفاتورة مشتريات (اختياري)
+                </label>
+                <select
+                  className={inputCls}
+                  value={draft.relatedBillId}
+                  onChange={(e) => setDraft((d) => ({ ...d, relatedBillId: e.target.value }))}
+                >
                   <option value="">بدون ربط</option>
                   {bills
                     .filter((b) => !draft.vendorId || b.vendorId === draft.vendorId)
@@ -285,15 +385,25 @@ export default function DebitNotes({
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 mb-1.5">تاريخ الإشعار</label>
-                <input type="date" className={inputCls} value={draft.date} onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))} />
+                <label className="block text-xs font-bold text-slate-600 mb-1.5">
+                  تاريخ الإشعار
+                </label>
+                <input
+                  type="date"
+                  className={inputCls}
+                  value={draft.date}
+                  onChange={(e) => setDraft((d) => ({ ...d, date: e.target.value }))}
+                />
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-bold text-slate-600">البنود المخصومة</label>
-                <button onClick={addLine} className="text-xs font-bold text-[#0D382B] hover:underline flex items-center gap-1">
+                <button
+                  onClick={addLine}
+                  className="text-xs font-bold text-[#0D382B] hover:underline flex items-center gap-1"
+                >
                   <Plus size={13} /> إضافة بند
                 </button>
               </div>
@@ -319,7 +429,11 @@ export default function DebitNotes({
                     value={l.unitPrice}
                     onChange={(e) => updateLine(l.id, { unitPrice: Number(e.target.value) })}
                   />
-                  <select className={`${inputCls} col-span-2`} value={l.accountId} onChange={(e) => updateLine(l.id, { accountId: e.target.value })}>
+                  <select
+                    className={`${inputCls} col-span-2`}
+                    value={l.accountId}
+                    onChange={(e) => updateLine(l.id, { accountId: e.target.value })}
+                  >
                     <option value="">الحساب</option>
                     {expenseAccounts.map((a) => (
                       <option key={a.id} value={a.id}>
@@ -327,7 +441,10 @@ export default function DebitNotes({
                       </option>
                     ))}
                   </select>
-                  <button onClick={() => removeLine(l.id)} className="col-span-1 text-rose-500 hover:text-rose-700 flex justify-center">
+                  <button
+                    onClick={() => removeLine(l.id)}
+                    className="col-span-1 text-rose-500 hover:text-rose-700 flex justify-center"
+                  >
                     <Trash2 size={16} />
                   </button>
                 </div>
@@ -336,18 +453,32 @@ export default function DebitNotes({
 
             <div>
               <label className="block text-xs font-bold text-slate-600 mb-1.5">ملاحظات</label>
-              <textarea className={inputCls} rows={2} value={draft.notes} onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))} />
+              <textarea
+                className={inputCls}
+                rows={2}
+                value={draft.notes}
+                onChange={(e) => setDraft((d) => ({ ...d, notes: e.target.value }))}
+              />
             </div>
 
             <div className="flex items-center justify-between border-t border-slate-100 pt-4">
               <div className="text-sm text-slate-500">
-                قيمة الإشعار: <span className="font-black text-rose-600 text-base">- {fmtMoney(draftTotals.grandTotal)}</span>
+                قيمة الإشعار:{" "}
+                <span className="font-black text-rose-600 text-base">
+                  - {fmtMoney(draftTotals.grandTotal)}
+                </span>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setShowForm(false)} className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50">
+                <button
+                  onClick={() => setShowForm(false)}
+                  className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-50"
+                >
                   إلغاء
                 </button>
-                <button onClick={saveDraft} className="rounded-xl bg-[#0D382B] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors">
+                <button
+                  onClick={saveDraft}
+                  className="rounded-xl bg-[#0D382B] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors"
+                >
                   حفظ الإشعار
                 </button>
               </div>
@@ -362,10 +493,16 @@ export default function DebitNotes({
             <Ban className="mx-auto text-rose-500" size={28} />
             <p className="text-sm text-slate-700">هل تريد حذف هذا الإشعار المدين نهائياً؟</p>
             <div className="flex justify-center gap-2">
-              <button onClick={() => setConfirmDeleteId(null)} className="rounded-xl px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50">
+              <button
+                onClick={() => setConfirmDeleteId(null)}
+                className="rounded-xl px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50"
+              >
                 تراجع
               </button>
-              <button onClick={confirmDelete} className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white hover:bg-rose-700">
+              <button
+                onClick={confirmDelete}
+                className="rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white hover:bg-rose-700"
+              >
                 حذف نهائياً
               </button>
             </div>

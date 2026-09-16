@@ -14,14 +14,14 @@ import {
   Sparkles,
   ShieldCheck,
   LogOut,
-  Bell
+  Bell,
 } from "lucide-react";
 import {
   googleSignIn,
   googleLogout,
   createGoogleCalendarEvent,
   formatCalendarDateTime,
-  GoogleCalendarEventPayload
+  GoogleCalendarEventPayload,
 } from "../googleCalendar";
 import type { Hearing, CaseItem } from "../domain/types";
 
@@ -49,7 +49,7 @@ export default function GoogleCalendarSyncModal({
   onAuthChange,
 }: GoogleCalendarSyncModalProps) {
   const [selectedHearingIds, setSelectedHearingIds] = useState<number[]>(() =>
-    hearings.filter((h) => !h.done).map((h) => h.id)
+    hearings.filter((h) => !h.done).map((h) => h.id),
   );
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -99,7 +99,7 @@ export default function GoogleCalendarSyncModal({
 
   const toggleHearingSelection = (id: number) => {
     setSelectedHearingIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
   };
 
@@ -124,7 +124,7 @@ export default function GoogleCalendarSyncModal({
     }
 
     const confirmed = window.confirm(
-      `هل ترغب في مزامنة وتصدير ${toSync.length} جلسة قضائية إلى تقويم Google الخاص بك (${googleUser?.email})؟`
+      `هل ترغب في مزامنة وتصدير ${toSync.length} جلسة قضائية إلى تقويم Google الخاص بك (${googleUser?.email})؟`,
     );
     if (!confirmed) return;
 
@@ -160,7 +160,7 @@ export default function GoogleCalendarSyncModal({
         `• القاعة والوقت: ${h.room} (${h.time})`,
         h.notes ? `• المطلوب في الجلسة: ${h.notes}` : "",
         `--------------------------------`,
-        `تمت المزامنة آلياً عبر نظام إدارة مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية.`
+        `تمت المزامنة آلياً عبر نظام إدارة مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية.`,
       ]
         .filter(Boolean)
         .join("\n");
@@ -232,7 +232,8 @@ export default function GoogleCalendarSyncModal({
                 </span>
               </h3>
               <p className="text-xs text-slate-500">
-                تصدير ومزامنة مواعيد الجلسات القضائية إلى تقويم Google لتلقي التنبيهات على هواتفك وأجهزتك
+                تصدير ومزامنة مواعيد الجلسات القضائية إلى تقويم Google لتلقي التنبيهات على هواتفك
+                وأجهزتك
               </p>
             </div>
           </div>
@@ -303,7 +304,8 @@ export default function GoogleCalendarSyncModal({
                     )}
                   </h4>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    {googleUser?.email || "سجّل الدخول لمنح الصلاحية لمزامنة الجلسات مباشرة في تقويمك"}
+                    {googleUser?.email ||
+                      "سجّل الدخول لمنح الصلاحية لمزامنة الجلسات مباشرة في تقويمك"}
                   </p>
                 </div>
               </div>
@@ -409,7 +411,9 @@ export default function GoogleCalendarSyncModal({
                   الجلسات المجدولة ({hearings.filter((h) => !h.done).length} جلسة قادمة)
                 </h4>
                 <p className="text-xs text-slate-500">
-                  تم تحديد <span className="font-bold text-slate-900">{selectedHearingIds.length}</span> جلسة للمزامنة
+                  تم تحديد{" "}
+                  <span className="font-bold text-slate-900">{selectedHearingIds.length}</span> جلسة
+                  للمزامنة
                 </p>
               </div>
 
@@ -520,7 +524,9 @@ export default function GoogleCalendarSyncModal({
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 space-y-2">
               <h4 className="font-bold text-xs text-emerald-900 flex items-center gap-1.5">
                 <CheckCircle2 size={16} className="text-emerald-600" />
-                <span>اكتملت المزامنة: نجحت ({syncResults.success}) | فشلت ({syncResults.failed})</span>
+                <span>
+                  اكتملت المزامنة: نجحت ({syncResults.success}) | فشلت ({syncResults.failed})
+                </span>
               </h4>
               <div className="max-h-32 overflow-y-auto space-y-1 text-xs font-mono text-slate-700 bg-white/80 p-2.5 rounded-xl border border-emerald-100">
                 {syncResults.messages.map((m, idx) => (

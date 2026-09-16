@@ -1,7 +1,16 @@
 import React from "react";
 import {
-  ShieldCheck, FileSpreadsheet, ShieldAlert, RefreshCw, Search, Trash2, Plus,
-  UserCheck, Send, Edit2, Printer,
+  ShieldCheck,
+  FileSpreadsheet,
+  ShieldAlert,
+  RefreshCw,
+  Search,
+  Trash2,
+  Plus,
+  UserCheck,
+  Send,
+  Edit2,
+  Printer,
 } from "lucide-react";
 import { Badge, EmptyState } from "./AuthScreens";
 import { KycItem, KycWatchlistItem, StrReport, RolePermissions } from "../domain/types";
@@ -99,10 +108,12 @@ export default function KycView({
           <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-slate-200 shadow-xs">
             <div>
               <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">
-                <ShieldAlert className="text-red-600" /> قائمة الإرهاب المحلية والأشخاص المحظورين (AML/Sanctions)
+                <ShieldAlert className="text-red-600" /> قائمة الإرهاب المحلية والأشخاص المحظورين
+                (AML/Sanctions)
               </h2>
               <p className="text-xs text-slate-500 mt-1">
-                قائمة التدقيق المعتمدة للإرهاب والمنكشفين في دولة الإمارات العربية المتحدة ({kycWatchlist.length} سجل مسجل). يتم التدقيق والربط الآلي مع جميع الموكلين.
+                قائمة التدقيق المعتمدة للإرهاب والمنكشفين في دولة الإمارات العربية المتحدة (
+                {kycWatchlist.length} سجل مسجل). يتم التدقيق والربط الآلي مع جميع الموكلين.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -115,7 +126,14 @@ export default function KycView({
                     permKey: "deleteKyc",
                     actionName: "إعادة ضبط قائمة الحظر",
                     onConfirm: () => {
-                      logAuditAction("DELETE", "قوائم الامتثال والحظر KYC", "إعادة ضبط وتحديث قائمة الإرهاب المحلية", `تمت استعادة وتحميل قائمة الإرهاب والمنكشفين الرسمية بالكامل (${uaeTerroristList.length} شخص وكيان).`, undefined, "مؤكد");
+                      logAuditAction(
+                        "DELETE",
+                        "قوائم الامتثال والحظر KYC",
+                        "إعادة ضبط وتحديث قائمة الإرهاب المحلية",
+                        `تمت استعادة وتحميل قائمة الإرهاب والمنكشفين الرسمية بالكامل (${uaeTerroristList.length} شخص وكيان).`,
+                        undefined,
+                        "مؤكد",
+                      );
                       setKycWatchlist(() => uaeTerroristList);
                       saveStorage("firm_kyc_watchlist", uaeTerroristList);
                     },
@@ -151,7 +169,10 @@ export default function KycView({
 
             <div className="flex items-center gap-3">
               <div className="relative flex-1">
-                <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <Search
+                  size={16}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
                 <input
                   type="text"
                   value={kycWatchlistSearch}
@@ -187,20 +208,32 @@ export default function KycView({
                         <th className="px-4 py-3 font-semibold">الجنسية</th>
                         <th className="px-4 py-3 font-semibold">تاريخ الإدراج</th>
                         {/* عمود ثابت (sticky) حتى يبقى زر الحذف ظاهراً دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
-                        <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-[#faf9f6] shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
+                        <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-[#faf9f6] shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
+                          إجراءات
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100/80">
                       {filteredWatchlist.map((item) => (
                         <tr key={item.id} className="hover:bg-red-50/40 group">
                           <td className="px-4 py-3 font-bold text-slate-900">{item.fullName}</td>
-                          <td className="px-4 py-3 font-mono text-xs text-slate-600">{item.idNo || "—"}</td>
-                          <td className="px-4 py-3">
-                            <Badge className="bg-red-100 text-red-800 border border-red-200">{item.type}</Badge>
+                          <td className="px-4 py-3 font-mono text-xs text-slate-600">
+                            {item.idNo || "—"}
                           </td>
-                          <td className="px-4 py-3 text-xs text-slate-600 max-w-xs">{item.reason}</td>
-                          <td className="px-4 py-3 text-xs text-slate-500">{item.nationality || "أخرى"}</td>
-                          <td className="px-4 py-3 text-xs font-mono text-slate-500">{item.addedDate}</td>
+                          <td className="px-4 py-3">
+                            <Badge className="bg-red-100 text-red-800 border border-red-200">
+                              {item.type}
+                            </Badge>
+                          </td>
+                          <td className="px-4 py-3 text-xs text-slate-600 max-w-xs">
+                            {item.reason}
+                          </td>
+                          <td className="px-4 py-3 text-xs text-slate-500">
+                            {item.nationality || "أخرى"}
+                          </td>
+                          <td className="px-4 py-3 text-xs font-mono text-slate-500">
+                            {item.addedDate}
+                          </td>
                           <td className="sticky left-0 z-10 bg-white group-hover:bg-red-50/40 px-4 py-3 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
                             <button
                               onClick={() => {
@@ -211,7 +244,14 @@ export default function KycView({
                                   permKey: "deleteKyc",
                                   actionName: "حذف من قائمة الحظر",
                                   onConfirm: () => {
-                                    logAuditAction("DELETE", "قوائم الامتثال والحظر KYC", `سجل الحظر: ${item.fullName}`, `حذف الشخص/الكيان "${item.fullName}" (${item.type}) من قائمة الامتثال والحظر المحلية. سبب الإدراج السابق: ${item.reason}`, item.id, "مؤكد");
+                                    logAuditAction(
+                                      "DELETE",
+                                      "قوائم الامتثال والحظر KYC",
+                                      `سجل الحظر: ${item.fullName}`,
+                                      `حذف الشخص/الكيان "${item.fullName}" (${item.type}) من قائمة الامتثال والحظر المحلية. سبب الإدراج السابق: ${item.reason}`,
+                                      item.id,
+                                      "مؤكد",
+                                    );
                                     setKycWatchlist((prev) => prev.filter((w) => w.id !== item.id));
                                   },
                                 });
@@ -227,7 +267,9 @@ export default function KycView({
                     </tbody>
                   </table>
                   {filteredWatchlist.length === 0 && (
-                    <p className="py-10 text-center text-sm text-slate-400">لا توجد أسماء مسجلة تطابق شروط البحث الحالية</p>
+                    <p className="py-10 text-center text-sm text-slate-400">
+                      لا توجد أسماء مسجلة تطابق شروط البحث الحالية
+                    </p>
                   )}
                 </>
               );
@@ -243,20 +285,32 @@ export default function KycView({
               <h2 className="text-2xl font-bold flex items-center gap-2 text-red-700">
                 <ShieldAlert /> سجل بلاغات المعاملات المشبوهة (AML / STR)
               </h2>
-              <p className="text-xs text-slate-500">سجل إبلاغ وحدة المعلومات المالية بالدولة (FIU) الخاص بتنفيذ قوانين مواجهة غسل الأموال</p>
+              <p className="text-xs text-slate-500">
+                سجل إبلاغ وحدة المعلومات المالية بالدولة (FIU) الخاص بتنفيذ قوانين مواجهة غسل
+                الأموال
+              </p>
             </div>
-            <button onClick={() => openModalWithCheck("str")} className="flex items-center gap-2 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-800 shadow-sm">
+            <button
+              onClick={() => openModalWithCheck("str")}
+              className="flex items-center gap-2 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-800 shadow-sm"
+            >
               <Plus size={16} /> إضافة بلاغ اشتباه جديد
             </button>
           </div>
 
           <div className="space-y-3">
             {strReports.map((str) => (
-              <div key={str.id} className="rounded-2xl border border-red-200 bg-red-50/40 p-5 shadow-sm space-y-2">
+              <div
+                key={str.id}
+                className="rounded-2xl border border-red-200 bg-red-50/40 p-5 shadow-sm space-y-2"
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <h3 className="font-bold text-slate-900">{clientName(str.clientId)}</h3>
-                    <p className="text-xs text-slate-500">المبلغ المشتبه به: <b className="text-red-700">{fmtAED(str.amountFlagged)}</b> • التاريخ: {fmtDate(str.date)}</p>
+                    <p className="text-xs text-slate-500">
+                      المبلغ المشتبه به: <b className="text-red-700">{fmtAED(str.amountFlagged)}</b>{" "}
+                      • التاريخ: {fmtDate(str.date)}
+                    </p>
                   </div>
                   <Badge className="bg-red-100 text-red-800 font-bold">{str.status}</Badge>
                 </div>
@@ -274,9 +328,18 @@ export default function KycView({
               <h2 className="text-2xl font-bold flex items-center gap-2">
                 <ShieldCheck className="text-amber-600" /> اعرف عميلك والعناية الواجبة (KYC / AML)
               </h2>
-              <p className="text-xs text-slate-500">سجل التحقق من هويات الموكلين، المستفيد الحقيقي (UBO)، وفحص قوائم العقوبات وفق التشريعات الإماراتية</p>
+              <p className="text-xs text-slate-500">
+                سجل التحقق من هويات الموكلين، المستفيد الحقيقي (UBO)، وفحص قوائم العقوبات وفق
+                التشريعات الإماراتية
+              </p>
             </div>
-            <button onClick={() => { setForm({}); setModal("kyc"); }} className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]">
+            <button
+              onClick={() => {
+                setForm({});
+                setModal("kyc");
+              }}
+              className="flex items-center gap-2 rounded-xl bg-[#0D382B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#124d40] transition-colors shadow-[0_8px_20px_-8px_rgb(13,56,43,0.5)]"
+            >
               <Plus size={16} /> إضافة سجل KYC
             </button>
           </div>
@@ -288,8 +351,12 @@ export default function KycView({
               <p className="text-2xl font-bold text-slate-900">{kyc.length}</p>
             </div>
             <div className="rounded-2xl border border-red-200 bg-red-50/50 p-4 shadow-sm">
-              <p className="text-xs text-red-700 font-semibold">مخاطر مرتفعة / معرّضين سياسيًا (PEP)</p>
-              <p className="text-2xl font-bold text-red-700">{kyc.filter((k) => k.risk === "مرتفع" || k.pep).length}</p>
+              <p className="text-xs text-red-700 font-semibold">
+                مخاطر مرتفعة / معرّضين سياسيًا (PEP)
+              </p>
+              <p className="text-2xl font-bold text-red-700">
+                {kyc.filter((k) => k.risk === "مرتفع" || k.pep).length}
+              </p>
             </div>
             <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-4 shadow-sm">
               <p className="text-xs text-amber-800 font-semibold">مراجعة دورية مستحقة قريبًا</p>
@@ -297,7 +364,9 @@ export default function KycView({
             </div>
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-4 shadow-sm">
               <p className="text-xs text-emerald-800 font-semibold">ملفات مكتملة وسليمة</p>
-              <p className="text-2xl font-bold text-emerald-800">{kyc.filter((k) => k.status === "مكتمل" && k.sanctions === "سليم").length}</p>
+              <p className="text-2xl font-bold text-emerald-800">
+                {kyc.filter((k) => k.status === "مكتمل" && k.sanctions === "سليم").length}
+              </p>
             </div>
           </div>
 
@@ -319,7 +388,9 @@ export default function KycView({
                       <th className="px-4 py-3 font-semibold text-center">الحالة</th>
                       <th className="px-4 py-3 font-semibold text-center">المراجعة القادمة</th>
                       {/* عمود ثابت (sticky) حتى تبقى أزرار التعديل والطباعة والحذف ظاهرة دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
-                      <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-[#faf9f6] shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراءات</th>
+                      <th className="sticky left-0 z-10 px-4 py-3 font-semibold text-center bg-[#faf9f6] shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
+                        إجراءات
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100/80">
@@ -328,12 +399,21 @@ export default function KycView({
                       const daysToRev = daysUntil(nextRev);
                       return (
                         <tr key={k.id} className="hover:bg-amber-50/30 group">
-                          <td className="px-4 py-3 font-bold text-slate-900">{clientName(k.clientId)}</td>
+                          <td className="px-4 py-3 font-bold text-slate-900">
+                            {clientName(k.clientId)}
+                          </td>
                           <td className="px-4 py-3 text-xs">
                             <p className="font-semibold text-slate-800">{k.nationality}</p>
-                            <p className="text-slate-500">{k.idType} (تنسحب: {fmtDate(k.idExpiry)})</p>
+                            <p className="text-slate-500">
+                              {k.idType} (تنسحب: {fmtDate(k.idExpiry)})
+                            </p>
                           </td>
-                          <td className="px-4 py-3 text-xs text-slate-700 max-w-xs truncate" title={k.ubo}>{k.ubo}</td>
+                          <td
+                            className="px-4 py-3 text-xs text-slate-700 max-w-xs truncate"
+                            title={k.ubo}
+                          >
+                            {k.ubo}
+                          </td>
                           <td className="px-4 py-3 text-xs text-slate-600">{k.sourceOfFunds}</td>
                           <td className="px-4 py-3 text-center text-xs space-y-1">
                             {k.pep ? (
@@ -341,7 +421,17 @@ export default function KycView({
                             ) : (
                               <span className="text-slate-400">عادي</span>
                             )}
-                            <div><Badge className={k.sanctions === "سليم" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}>{k.sanctions}</Badge></div>
+                            <div>
+                              <Badge
+                                className={
+                                  k.sanctions === "سليم"
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : "bg-red-100 text-red-700"
+                                }
+                              >
+                                {k.sanctions}
+                              </Badge>
+                            </div>
                           </td>
                           <td className="px-4 py-3 text-center">
                             <Badge className={RISK_COLORS[k.risk]}>{k.risk}</Badge>
@@ -352,9 +442,13 @@ export default function KycView({
                           <td className="px-4 py-3 text-center text-xs">
                             <p className="font-semibold">{fmtDate(nextRev)}</p>
                             {daysToRev <= 30 ? (
-                              <span className="text-[10px] text-red-600 font-bold">مستحقة قريبًا ({daysToRev} يوم)</span>
+                              <span className="text-[10px] text-red-600 font-bold">
+                                مستحقة قريبًا ({daysToRev} يوم)
+                              </span>
                             ) : (
-                              <span className="text-[10px] text-slate-400">متبقي {daysToRev} يوم</span>
+                              <span className="text-[10px] text-slate-400">
+                                متبقي {daysToRev} يوم
+                              </span>
                             )}
                           </td>
                           <td className="sticky left-0 z-10 bg-white group-hover:bg-amber-50/30 px-4 py-3 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
@@ -367,7 +461,10 @@ export default function KycView({
                                 <Send size={14} /> تنبيه
                               </button>
                               <button
-                                onClick={() => { setForm({ ...k }); setModal("kyc-edit"); }}
+                                onClick={() => {
+                                  setForm({ ...k });
+                                  setModal("kyc-edit");
+                                }}
                                 className="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-[#0D382B]/[0.06] transition-colors rounded-lg"
                                 title="تعديل بيانات KYC"
                               >
@@ -389,7 +486,13 @@ export default function KycView({
                                     permKey: "deleteKyc",
                                     actionName: "حذف ملف KYC",
                                     onConfirm: () => {
-                                      logAuditAction("DELETE", "KYC والامتثال", `ملف KYC: ${clientName(k.clientId)}`, `حذف ملف KYC للموكل ${clientName(k.clientId)}`, k.id);
+                                      logAuditAction(
+                                        "DELETE",
+                                        "KYC والامتثال",
+                                        `ملف KYC: ${clientName(k.clientId)}`,
+                                        `حذف ملف KYC للموكل ${clientName(k.clientId)}`,
+                                        k.id,
+                                      );
                                       setKyc((prev) => prev.filter((x) => x.id !== k.id));
                                     },
                                   });

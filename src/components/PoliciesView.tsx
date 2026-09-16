@@ -61,7 +61,10 @@ export default function PoliciesView({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-1 items-center gap-2 min-w-[280px]">
             <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Search
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={16}
+              />
               <input
                 type="text"
                 value={policySearch}
@@ -78,7 +81,9 @@ export default function PoliciesView({
           >
             <option value="الكل">جميع التصنيفات</option>
             {POLICY_CATEGORIES.map((c) => (
-              <option key={c} value={c}>{c}</option>
+              <option key={c} value={c}>
+                {c}
+              </option>
             ))}
           </select>
         </div>
@@ -104,13 +109,21 @@ export default function PoliciesView({
                   </div>
                   <h3 className="text-base font-bold text-slate-900">{policy.title}</h3>
                 </div>
-                {isOpen ? <ChevronUp size={18} className="text-slate-400 shrink-0" /> : <ChevronDown size={18} className="text-slate-400 shrink-0" />}
+                {isOpen ? (
+                  <ChevronUp size={18} className="text-slate-400 shrink-0" />
+                ) : (
+                  <ChevronDown size={18} className="text-slate-400 shrink-0" />
+                )}
               </button>
               {isOpen && (
                 <div className="border-t border-slate-100 p-5 bg-stone-50/60">
-                  <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{policy.content}</p>
+                  <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                    {policy.content}
+                  </p>
                   {policy.effectiveDate && (
-                    <p className="text-[11px] text-slate-400 mt-3">تاريخ السريان: {policy.effectiveDate}</p>
+                    <p className="text-[11px] text-slate-400 mt-3">
+                      تاريخ السريان: {policy.effectiveDate}
+                    </p>
                   )}
                   {isSuperAdmin && (
                     <div className="flex items-center gap-2 mt-4 pt-3 border-t border-slate-200">
@@ -139,7 +152,9 @@ export default function PoliciesView({
         <div className="app-card py-12 text-center text-slate-400">
           <ScrollText size={40} className="mx-auto mb-2 text-slate-300" />
           <p className="text-sm font-semibold">
-            {policies.length === 0 ? "لم تُضَف أي سياسة داخلية بعد" : "لا توجد سياسات مطابقة للبحث والتصفية"}
+            {policies.length === 0
+              ? "لم تُضَف أي سياسة داخلية بعد"
+              : "لا توجد سياسات مطابقة للبحث والتصفية"}
           </p>
         </div>
       )}

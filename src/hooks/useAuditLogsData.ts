@@ -10,7 +10,7 @@ export function useAuditLogsData() {
     "firm_audit_logs",
     "audit_logs",
     () => loadStorage("firm_audit_logs", seedAuditLogs),
-    { limit: 500 }
+    { limit: 500 },
   );
   return { auditLogs, setAuditLogs };
 }

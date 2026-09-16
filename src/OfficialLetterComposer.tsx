@@ -1,13 +1,5 @@
-
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import {
-  Printer,
-  FileText,
-  RotateCcw,
-  Eye,
-  PenLine,
-  ImageIcon,
-} from "lucide-react";
+import { Printer, FileText, RotateCcw, Eye, PenLine, ImageIcon } from "lucide-react";
 import ReactQuill, { Quill } from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import { sanitizeHtml } from "./domain/utils";
@@ -16,10 +8,7 @@ const ReactQuillComponent = ReactQuill as any;
 
 // يقرأ نص تنسيق (سواء من style مضمّن أو من محتوى قاعدة CSS) ويحوّله لصيغ Quill
 // (bold/italic/underline/strike/align). يُستخدم من كلا مصدري التنسيق أدناه.
-function extractFormatsFromDeclarationText(
-  style: string,
-  formats: Record<string, unknown>
-) {
+function extractFormatsFromDeclarationText(style: string, formats: Record<string, unknown>) {
   if (/font-weight\s*:\s*(bold|[6-9]00)/i.test(style)) formats.bold = true;
   if (/font-style\s*:\s*italic/i.test(style)) formats.italic = true;
   if (/text-decoration[a-z-]*\s*:\s*[^;]*underline/i.test(style)) formats.underline = true;
@@ -93,9 +82,7 @@ function matchPastedInlineStyle(node: unknown, delta: any) {
       const elementClasses = className.split(/\s+/).filter(Boolean);
       const rules = getPastedClassRules(el.ownerDocument);
       rules.forEach((rule) => {
-        const allClassesPresent = rule.classes.every((c) =>
-          elementClasses.includes(c)
-        );
+        const allClassesPresent = rule.classes.every((c) => elementClasses.includes(c));
         if (allClassesPresent) {
           extractFormatsFromDeclarationText(rule.declarations, formats);
         }
@@ -298,25 +285,33 @@ function buildPrintDocument(
   headerStripImg: string,
   footerStripImg: string,
   signatureImg?: string | null,
-  stampImg?: string | null
+  stampImg?: string | null,
 ): string {
   const { headerMm, footerMm, sideMm, pageWidthMm, pageHeightMm } = LETTERHEAD_LAYOUT;
   const contentHeightMm = pageHeightMm - headerMm - footerMm;
-  const sigStampHtml = (signatureImg || stampImg)
-    ? "<div class=\"sig-stamp-wrap\">" +
-      (stampImg ? "<img class=\"stamp-img\" src=\"" + stampImg + "\" />" : "") +
-      (signatureImg ? "<img class=\"signature-img\" src=\"" + signatureImg + "\" />" : "") +
-      "</div>"
-    : "";
+  const sigStampHtml =
+    signatureImg || stampImg
+      ? '<div class="sig-stamp-wrap">' +
+        (stampImg ? '<img class="stamp-img" src="' + stampImg + '" />' : "") +
+        (signatureImg ? '<img class="signature-img" src="' + signatureImg + '" />' : "") +
+        "</div>"
+      : "";
 
-  const pagesToRender = pages.length > 0 ? pages : [{ showHeading: true, bodyHtml: data.bodyHtml, showSignature: true }];
+  const pagesToRender =
+    pages.length > 0
+      ? pages
+      : [{ showHeading: true, bodyHtml: data.bodyHtml, showSignature: true }];
 
   const pagesHtml = pagesToRender
     .map((page, idx) => {
       const isLast = idx === pagesToRender.length - 1;
       const headingHtml = page.showHeading
-        ? (data.recipient ? "<p class=\"recipient-line\">" + data.recipient + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;المحترمون</p>" : "") +
-          (data.subject ? "<p class=\"subject-line\">الموضوع: " + data.subject + "</p>" : "")
+        ? (data.recipient
+            ? '<p class="recipient-line">' +
+              data.recipient +
+              "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;المحترمون</p>"
+            : "") +
+          (data.subject ? '<p class="subject-line">الموضوع: ' + data.subject + "</p>" : "")
         : "";
       // مرجع داخلي خافت اللون للمكتب فقط — لا يظهر بارزاً أعلى المستند كما
       // كان سابقاً (كان يظهر رقم مرجعي وتاريخ بخط عريض أعلى كل مذكرة، وهو ما
@@ -325,54 +320,97 @@ function buildPrintDocument(
       // رمادي فاتح وحجم صغير جداً، ودون التاريخ (طلب المستخدمة الإبقاء على
       // الرقم المرجعي فقط).
       const signatureHtml = page.showSignature
-        ? "<div class=\"signature\">" +
+        ? '<div class="signature">' +
           sigStampHtml +
-          "<p class=\"sig-name\">" + data.signName + "</p>" +
-          "<p>" + data.signTitle + "</p>" +
-          "<p class=\"office-ref-mark\">مرجع داخلي: " + data.refNo + "</p>" +
+          '<p class="sig-name">' +
+          data.signName +
+          "</p>" +
+          "<p>" +
+          data.signTitle +
+          "</p>" +
+          '<p class="office-ref-mark">مرجع داخلي: ' +
+          data.refNo +
+          "</p>" +
           "</div>"
         : "";
       return (
-        "  <div class=\"print-page\"" +
-        (isLast ? "" : " style=\"page-break-after: always; break-after: page;\"") +
+        '  <div class="print-page"' +
+        (isLast ? "" : ' style="page-break-after: always; break-after: page;"') +
         ">\n" +
-        "    <img class=\"header-strip-img\" src=\"" + headerStripImg + "\" />\n" +
-        "    <div class=\"letter-content\">\n" +
-        "      " + headingHtml + "\n" +
-        "      <div class=\"letter-body\">" + page.bodyHtml + "</div>\n" +
-        "      " + signatureHtml + "\n" +
+        '    <img class="header-strip-img" src="' +
+        headerStripImg +
+        '" />\n' +
+        '    <div class="letter-content">\n' +
+        "      " +
+        headingHtml +
+        "\n" +
+        '      <div class="letter-body">' +
+        page.bodyHtml +
+        "</div>\n" +
+        "      " +
+        signatureHtml +
+        "\n" +
         "    </div>\n" +
-        "    <img class=\"footer-strip-img\" src=\"" + footerStripImg + "\" />\n" +
+        '    <img class="footer-strip-img" src="' +
+        footerStripImg +
+        '" />\n' +
         "  </div>\n"
       );
     })
     .join("");
 
-  return "<!DOCTYPE html>\n" +
-    "<html dir=\"rtl\" lang=\"ar\">\n" +
+  return (
+    "<!DOCTYPE html>\n" +
+    '<html dir="rtl" lang="ar">\n' +
     "<head>\n" +
-    "<meta charset=\"utf-8\">\n" +
-    "<title>" + (data.subject || "خطاب رسمي") + " — " + data.refNo + "</title>\n" +
-    "<link rel=\"stylesheet\" href=\"" + AMIRI_FONT_LINK + "\">\n" +
+    '<meta charset="utf-8">\n' +
+    "<title>" +
+    (data.subject || "خطاب رسمي") +
+    " — " +
+    data.refNo +
+    "</title>\n" +
+    '<link rel="stylesheet" href="' +
+    AMIRI_FONT_LINK +
+    '">\n' +
     "<style>\n" +
     "  @page { size: A4; margin: 0; }\n" +
     "  * { margin: 0; padding: 0; box-sizing: border-box; }\n" +
-    "  html, body { width: " + pageWidthMm + "mm; }\n" +
+    "  html, body { width: " +
+    pageWidthMm +
+    "mm; }\n" +
     "  body {\n" +
-    "    font-family: " + LETTER_FONT_STACK + ";\n" +
+    "    font-family: " +
+    LETTER_FONT_STACK +
+    ";\n" +
     "    font-size: 13pt;\n" +
     "    line-height: 2;\n" +
     "    color: #1a1a1a;\n" +
     "  }\n" +
     "  .print-page {\n" +
-    "    width: " + pageWidthMm + "mm; height: " + pageHeightMm + "mm;\n" +
+    "    width: " +
+    pageWidthMm +
+    "mm; height: " +
+    pageHeightMm +
+    "mm;\n" +
     "    display: flex; flex-direction: column; overflow: hidden;\n" +
     "  }\n" +
-    "  .header-strip-img { display: block; width: " + pageWidthMm + "mm; height: " + headerMm + "mm; flex: none; }\n" +
-    "  .footer-strip-img { display: block; width: " + pageWidthMm + "mm; height: " + footerMm + "mm; flex: none; }\n" +
+    "  .header-strip-img { display: block; width: " +
+    pageWidthMm +
+    "mm; height: " +
+    headerMm +
+    "mm; flex: none; }\n" +
+    "  .footer-strip-img { display: block; width: " +
+    pageWidthMm +
+    "mm; height: " +
+    footerMm +
+    "mm; flex: none; }\n" +
     "  .letter-content {\n" +
-    "    flex: none; height: " + contentHeightMm + "mm; overflow: hidden;\n" +
-    "    padding: 0 " + sideMm + "mm; text-align: justify;\n" +
+    "    flex: none; height: " +
+    contentHeightMm +
+    "mm; overflow: hidden;\n" +
+    "    padding: 0 " +
+    sideMm +
+    "mm; text-align: justify;\n" +
     "    display: flex; flex-direction: column;\n" +
     "  }\n" +
     "  .letter-content p { margin-bottom: 4mm; }\n" +
@@ -435,13 +473,16 @@ function buildPrintDocument(
     // فاصل الصفحة اليدوي لا يظهر إطلاقاً هنا عملياً (خوارزمية الترقيم تستبعده
     // مسبقاً من bodyHtml كل صفحة قبل وصوله لهذه الدالة) — هذه القاعدة قاعدة
     // أمان احتياطية فقط في حال وصل رمزه لسبب ما.
-    "  ." + MANUAL_PAGE_BREAK_CLASS + " { display: none; }\n" +
+    "  ." +
+    MANUAL_PAGE_BREAK_CLASS +
+    " { display: none; }\n" +
     "</style>\n" +
     "</head>\n" +
     "<body>\n" +
     pagesHtml +
     "</body>\n" +
-    "</html>";
+    "</html>"
+  );
 }
 
 // دالة عامة مشتركة: تطبع أي مستند HTML كامل (تم بناؤه مسبقاً كسلسلة نصية)
@@ -452,8 +493,7 @@ function buildPrintDocument(
 // تكرار منطق الانتظار وتحميل الصور/الخطوط.
 export async function printHtmlDocumentInHiddenIframe(html: string): Promise<void> {
   const iframe = document.createElement("iframe");
-  iframe.style.cssText =
-    "position:fixed;left:-10000px;top:0;width:0;height:0;border:0;";
+  iframe.style.cssText = "position:fixed;left:-10000px;top:0;width:0;height:0;border:0;";
   document.body.appendChild(iframe);
 
   const doc = iframe.contentDocument!;
@@ -476,8 +516,8 @@ export async function printHtmlDocumentInHiddenIframe(html: string): Promise<voi
             }
             img.addEventListener("load", () => resolve(), { once: true });
             img.addEventListener("error", () => resolve(), { once: true });
-          })
-      )
+          }),
+      ),
     );
   };
 
@@ -527,16 +567,16 @@ export async function printOfficialLetter(
   headerImg?: string | null,
   footerImg?: string | null,
   signatureImg?: string | null,
-  stampImg?: string | null
+  stampImg?: string | null,
 ) {
   if (!headerImg || !footerImg) {
     alert(
-      "يرجى أولاً اعتماد صورتي ترويسة وتذييل الورق الرسمي من قسم \"الهوية الرسمية والأختام\" المحمي في القائمة الجانبية."
+      'يرجى أولاً اعتماد صورتي ترويسة وتذييل الورق الرسمي من قسم "الهوية الرسمية والأختام" المحمي في القائمة الجانبية.',
     );
     return;
   }
   await printHtmlDocumentInHiddenIframe(
-    buildPrintDocument(data, pages, headerImg, footerImg, signatureImg, stampImg)
+    buildPrintDocument(data, pages, headerImg, footerImg, signatureImg, stampImg),
   );
 }
 
@@ -564,7 +604,8 @@ const COURT_MEMO_TEMPLATE = `
 <p class="ql-align-justify">1- في بيان التعاملات بين الطرفين ولبيان المبالغ الممنوحة للمدعى عليه وبيان نوعها ومستنداتها وبيان نوع وقيمة التسهيلات...</p>
 `;
 
-const DEFAULT_BODY_HTML = "<p>تحية طيبة وبعد،</p>\n<p>بالإشارة إلى الموضوع أعلاه، نود إحاطتكم علماً بأن ...</p>\n<p>وتفضلوا بقبول فائق الاحترام والتقدير،</p>";
+const DEFAULT_BODY_HTML =
+  "<p>تحية طيبة وبعد،</p>\n<p>بالإشارة إلى الموضوع أعلاه، نود إحاطتكم علماً بأن ...</p>\n<p>وتفضلوا بقبول فائق الاحترام والتقدير،</p>";
 
 /** تمثّل صفحة واحدة ضمن معاينة الخطاب متعددة الصفحات: هل تظهر بها ترويسة
  * المعلومات (الرقم المرجعي/المرسل إليه/الموضوع) — تظهر فقط في الصفحة الأولى،
@@ -643,7 +684,7 @@ export default function OfficialLetterComposer({
   const handleExport = () => {
     onUsageLog?.(
       `طباعة/تصدير خطاب رقم ${refNo}`,
-      `باستخدام الورق الرسمي${includeSigStamp ? " والتوقيع والختم المعتمدين" : ""} لطباعة أو تصدير الخطاب رقم ${refNo}${subject ? ` (الموضوع: ${subject})` : ""}`
+      `باستخدام الورق الرسمي${includeSigStamp ? " والتوقيع والختم المعتمدين" : ""} لطباعة أو تصدير الخطاب رقم ${refNo}${subject ? ` (الموضوع: ${subject})` : ""}`,
     );
     printOfficialLetter(
       {
@@ -659,7 +700,7 @@ export default function OfficialLetterComposer({
       headerImg,
       footerImg,
       includeSigStamp ? signatureImg : null,
-      includeSigStamp ? stampImg : null
+      includeSigStamp ? stampImg : null,
     );
   };
 
@@ -681,8 +722,7 @@ export default function OfficialLetterComposer({
   // نوزّعه على صفحات وفق المساحة المتاحة الحقيقية بين الترويسة والتذييل،
   // ونعرض صفحة واحدة في كل مرة مع أزرار تنقّل بين الصفحات.
   const contentWidthPx = A4_PX_WIDTH - 2 * mmToPx(sideMm);
-  const availableContentHeightPx =
-    A4_PX_WIDTH * (297 / 210) - mmToPx(headerMm) - mmToPx(footerMm);
+  const availableContentHeightPx = A4_PX_WIDTH * (297 / 210) - mmToPx(headerMm) - mmToPx(footerMm);
 
   const headingMeasureRef = useRef<HTMLDivElement>(null);
   const bodyMeasureRef = useRef<HTMLDivElement>(null);
@@ -727,7 +767,7 @@ export default function OfficialLetterComposer({
       const waitForMeasureImages = () => {
         const imgs = ([] as HTMLImageElement[]).concat(
           Array.prototype.slice.call(headingEl.querySelectorAll("img")),
-          Array.prototype.slice.call(bodyEl.querySelectorAll("img"))
+          Array.prototype.slice.call(bodyEl.querySelectorAll("img")),
         );
         return Promise.all(
           imgs.map(
@@ -739,8 +779,8 @@ export default function OfficialLetterComposer({
                 }
                 img.addEventListener("load", () => resolve(), { once: true });
                 img.addEventListener("error", () => resolve(), { once: true });
-              })
-          )
+              }),
+          ),
         );
       };
       await Promise.race([
@@ -844,7 +884,18 @@ export default function OfficialLetterComposer({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [bodyHtml, refNo, date, recipient, subject, includeSigStamp, signatureImg, stampImg, signName, signTitle]);
+  }, [
+    bodyHtml,
+    refNo,
+    date,
+    recipient,
+    subject,
+    includeSigStamp,
+    signatureImg,
+    stampImg,
+    signName,
+    signTitle,
+  ]);
 
   useEffect(() => {
     setCurrentPageIndex((idx) => Math.min(idx, Math.max(0, letterPages.length - 1)));
@@ -870,13 +921,10 @@ export default function OfficialLetterComposer({
         // اليدوي نفسه (بشريطه المميّز ونصّه الخاص) يوضّح ذلك أصلاً، ووضع
         // العلامتين معاً على نفس العنصر الصغير يُنتج تراكماً بصرياً مربكاً
         // (حدّان متقطّعان وتسميتان فوق بعضهما).
-        if (
-          endOfPageEl &&
-          !endOfPageEl.classList.contains(MANUAL_PAGE_BREAK_CLASS)
-        ) {
+        if (endOfPageEl && !endOfPageEl.classList.contains(MANUAL_PAGE_BREAK_CLASS)) {
           endOfPageEl.setAttribute(
             "data-ollc-page-end",
-            `نهاية الصفحة ${i + 1}  —  بداية الصفحة ${i + 2}`
+            `نهاية الصفحة ${i + 1}  —  بداية الصفحة ${i + 2}`,
           );
         }
       });
@@ -895,17 +943,13 @@ export default function OfficialLetterComposer({
           <div className="flex items-center gap-2.5">
             <div
               className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                hasLetterhead
-                  ? "bg-emerald-100 text-emerald-700"
-                  : "bg-amber-100 text-amber-700"
+                hasLetterhead ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
               }`}
             >
               <ImageIcon size={20} />
             </div>
             <div>
-              <p className="text-sm font-bold text-slate-800">
-                ترويسة وتذييل الورق الرسمي
-              </p>
+              <p className="text-sm font-bold text-slate-800">ترويسة وتذييل الورق الرسمي</p>
               <p className="text-xs text-slate-500">
                 {hasLetterhead
                   ? "✅ الورق الرسمي المعتمد جاهز للاستخدام في هذا الخطاب"
@@ -914,18 +958,25 @@ export default function OfficialLetterComposer({
             </div>
           </div>
           <span className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-3 py-2 text-[11px] font-semibold text-slate-500">
-            🔒 {canManageAssets
-              ? "تُدار صور الورق الرسمي حصراً من قسم \"الهوية الرسمية والأختام\""
-              : "محمي — راجع قسم \"الهوية الرسمية والأختام\" أو مدير النظام"}
+            🔒{" "}
+            {canManageAssets
+              ? 'تُدار صور الورق الرسمي حصراً من قسم "الهوية الرسمية والأختام"'
+              : 'محمي — راجع قسم "الهوية الرسمية والأختام" أو مدير النظام'}
           </span>
         </div>
         <p className="mt-3 text-[11px] font-semibold flex items-center gap-1.5">
           {includeSigStamp ? (
-            <span className="text-emerald-700">✅ سيتم إدراج التوقيع والختم الرسمي المعتمد تلقائياً عند التصدير</span>
+            <span className="text-emerald-700">
+              ✅ سيتم إدراج التوقيع والختم الرسمي المعتمد تلقائياً عند التصدير
+            </span>
           ) : canUseSignatureStamp ? (
-            <span className="text-slate-400">لم يتم اعتماد صورة توقيع أو ختم بعد — راجع قسم "الهوية الرسمية والأختام"</span>
+            <span className="text-slate-400">
+              لم يتم اعتماد صورة توقيع أو ختم بعد — راجع قسم "الهوية الرسمية والأختام"
+            </span>
           ) : (
-            <span className="text-slate-400">لا تملك صلاحية إدراج التوقيع والختم — راجع مدير النظام إذا لزم الأمر</span>
+            <span className="text-slate-400">
+              لا تملك صلاحية إدراج التوقيع والختم — راجع مدير النظام إذا لزم الأمر
+            </span>
           )}
         </p>
       </div>
@@ -947,9 +998,7 @@ export default function OfficialLetterComposer({
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="block">
-              <span className="mb-1 block text-xs font-bold text-slate-600">
-                الرقم المرجعي
-              </span>
+              <span className="mb-1 block text-xs font-bold text-slate-600">الرقم المرجعي</span>
               <input
                 className={inputCls}
                 value={refNo}
@@ -957,21 +1006,13 @@ export default function OfficialLetterComposer({
               />
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-bold text-slate-600">
-                التاريخ
-              </span>
-              <input
-                className={inputCls}
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-              />
+              <span className="mb-1 block text-xs font-bold text-slate-600">التاريخ</span>
+              <input className={inputCls} value={date} onChange={(e) => setDate(e.target.value)} />
             </label>
           </div>
 
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-slate-600">
-              المرسل إليه
-            </span>
+            <span className="mb-1 block text-xs font-bold text-slate-600">المرسل إليه</span>
             <input
               className={inputCls}
               placeholder="مثال: السادة / شركة الخليج للتجارة العامة ذ.م.م"
@@ -981,9 +1022,7 @@ export default function OfficialLetterComposer({
           </label>
 
           <label className="block">
-            <span className="mb-1 block text-xs font-bold text-slate-600">
-              موضوع الخطاب
-            </span>
+            <span className="mb-1 block text-xs font-bold text-slate-600">موضوع الخطاب</span>
             <input
               className={inputCls}
               placeholder="مثال: إنذار قانوني بالسداد"
@@ -1024,8 +1063,7 @@ export default function OfficialLetterComposer({
             {letterPages.length > 0 && (
               <p className="mb-2 -mt-1 text-[10px] font-bold text-slate-500">
                 📄 سيتوزع هذا النص على {letterPages.length}{" "}
-                {letterPages.length === 1 ? "صفحة" : "صفحات"} في الورق
-                الرسمي عند التصدير/الطباعة
+                {letterPages.length === 1 ? "صفحة" : "صفحات"} في الورق الرسمي عند التصدير/الطباعة
               </p>
             )}
             {/* ملاحظة: تعريفات الأنواع في react-quill-new لا تُقر بخاصية ref على
@@ -1033,7 +1071,10 @@ export default function OfficialLetterComposer({
                 فعلياً وقت التشغيل بشكل كامل — قصور في ملفات .d.ts الخاصة
                 بالمكتبة فقط، ولا تأثير له على سلوك المحرر أو عملية البناء
                 الفعلية (لا يوجد تحقق أنواع صارم ضمن خط أنابيب النشر). */}
-            <div className="ollc-quill-editor-wrap bg-white rounded-xl border border-slate-300 overflow-hidden" style={{ fontFamily: LETTER_FONT_STACK }}>
+            <div
+              className="ollc-quill-editor-wrap bg-white rounded-xl border border-slate-300 overflow-hidden"
+              style={{ fontFamily: LETTER_FONT_STACK }}
+            >
               <ReactQuillComponent
                 ref={quillRef}
                 theme="snow"
@@ -1041,43 +1082,50 @@ export default function OfficialLetterComposer({
                 onChange={setBodyHtml}
                 modules={{
                   toolbar: [
-                    [{ 'size': ['small', false, 'large', 'huge'] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'align': [] }],
-                    [{ 'direction': 'rtl' }],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    [{ 'indent': '-1'}, { 'indent': '+1' }],
-                    [{ 'color': [] }, { 'background': [] }],
-                    ['image'],
-                    ['clean']
+                    [{ size: ["small", false, "large", "huge"] }],
+                    ["bold", "italic", "underline", "strike"],
+                    [{ align: [] }],
+                    [{ direction: "rtl" }],
+                    [{ list: "ordered" }, { list: "bullet" }],
+                    [{ indent: "-1" }, { indent: "+1" }],
+                    [{ color: [] }, { background: [] }],
+                    ["image"],
+                    ["clean"],
                   ],
                   clipboard: {
                     matchVisual: true,
                     matchers: [
-                      ['span', matchPastedInlineStyle],
-                      ['p', matchPastedInlineStyle],
-                      ['div', matchPastedInlineStyle],
-                      ['li', matchPastedInlineStyle],
+                      ["span", matchPastedInlineStyle],
+                      ["p", matchPastedInlineStyle],
+                      ["div", matchPastedInlineStyle],
+                      ["li", matchPastedInlineStyle],
                     ],
                   },
                 }}
                 formats={[
-                  'size',
-                  'bold', 'italic', 'underline', 'strike',
-                  'align', 'direction',
-                  'list', 'bullet', 'indent',
-                  'color', 'background',
+                  "size",
+                  "bold",
+                  "italic",
+                  "underline",
+                  "strike",
+                  "align",
+                  "direction",
+                  "list",
+                  "bullet",
+                  "indent",
+                  "color",
+                  "background",
                   // 'image' كان غائباً عن هذه القائمة، وQuill يتجاهل صامتاً أي صيغة
                   // (بما فيها الصور الملصوقة من Word/الجوال) غير مدرجة هنا — وهو
                   // السبب الحقيقي وراء اختفاء الصور الموجودة داخل المذكرات الملصوقة
                   // دون أي رسالة خطأ. إضافتها تسمح للصور بالبقاء في المحتوى المحرَّر
                   // والظهور في المعاينة والطباعة كليهما.
-                  'image',
+                  "image",
                   // 'pageBreak' يسمح للفاصل اليدوي (الذي يُدرجه المستخدم عبر
                   // زر "إدراج فاصل صفحة هنا") بالبقاء في المحتوى المحفوظ —
                   // بدون إدراجها هنا سيُحذف الفاصل صامتاً بنفس آلية اختفاء
                   // الصور القديمة أعلاه.
-                  'pageBreak',
+                  "pageBreak",
                   // 'table' غائب أيضاً كان يسبب نفس المشكلة بالضبط مع أي جدول
                   // مَلصوق من الوورد أو جوجل شيتس: يُحوَّل الجدول أثناء اللصق
                   // إلى فقرات نصية عادية بلا أي بنية جدولية (تُفقد الحدود
@@ -1089,18 +1137,16 @@ export default function OfficialLetterComposer({
                   // نفسه) عبر سلسلة "الحاوية المطلوبة" الخاصة بكل صيغة، فيعود
                   // الجدول الملصوق يحتفظ ببنيته الكاملة (صفوف وأعمدة وحدود)
                   // داخل المحرر والمعاينة والمطبوع على حدٍ سواء.
-                  'table'
+                  "table",
                 ]}
-                style={{ direction: 'rtl', textAlign: 'right' }}
+                style={{ direction: "rtl", textAlign: "right" }}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-6">
             <label className="block">
-              <span className="mb-1 block text-xs font-bold text-slate-600">
-                اسم الموقّع
-              </span>
+              <span className="mb-1 block text-xs font-bold text-slate-600">اسم الموقّع</span>
               <input
                 className={inputCls}
                 value={signName}
@@ -1108,9 +1154,7 @@ export default function OfficialLetterComposer({
               />
             </label>
             <label className="block">
-              <span className="mb-1 block text-xs font-bold text-slate-600">
-                الصفة
-              </span>
+              <span className="mb-1 block text-xs font-bold text-slate-600">الصفة</span>
               <input
                 className={inputCls}
                 value={signTitle}
@@ -1129,16 +1173,15 @@ export default function OfficialLetterComposer({
           </button>
           <p className="flex items-center gap-1.5 text-[11px] text-slate-400">
             <FileText size={13} />
-            في نافذة الطباعة اختر «حفظ بتنسيق PDF» — النص يبقى نصاً حقيقياً
-            قابلاً للنسخ، والورق الرسمي بجودته الأصلية الكاملة.
+            في نافذة الطباعة اختر «حفظ بتنسيق PDF» — النص يبقى نصاً حقيقياً قابلاً للنسخ، والورق
+            الرسمي بجودته الأصلية الكاملة.
           </p>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-stone-100 p-4 shadow-sm">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
             <h3 className="flex items-center gap-2 text-sm font-bold text-slate-600">
-              <Eye size={16} className="text-amber-600" /> معاينة حية (مطابقة
-              للناتج النهائي)
+              <Eye size={16} className="text-amber-600" /> معاينة حية (مطابقة للناتج النهائي)
             </h3>
             {letterPages.length > 1 && (
               <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
@@ -1168,8 +1211,8 @@ export default function OfficialLetterComposer({
           </div>
           {letterPages.length > 1 && (
             <p className="mb-2 text-[11px] font-semibold text-amber-700">
-              ⚠️ يتكوّن هذا الخطاب من {letterPages.length} صفحات — يرجى تصفّح
-              جميع الصفحات قبل التصدير أو الاعتماد النهائي.
+              ⚠️ يتكوّن هذا الخطاب من {letterPages.length} صفحات — يرجى تصفّح جميع الصفحات قبل
+              التصدير أو الاعتماد النهائي.
             </p>
           )}
           <div ref={previewWrapRef} className="overflow-hidden">
@@ -1202,9 +1245,7 @@ export default function OfficialLetterComposer({
               ) : (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-slate-300 text-center px-6">
                   <ImageIcon size={60} />
-                  <p className="text-lg font-bold">
-                    لم يتم اعتماد صورتي الترويسة والتذييل بعد
-                  </p>
+                  <p className="text-lg font-bold">لم يتم اعتماد صورتي الترويسة والتذييل بعد</p>
                   <p className="text-xs font-semibold text-slate-400">
                     راجع قسم "الهوية الرسمية والأختام" المحمي في القائمة الجانبية
                   </p>
@@ -1251,10 +1292,18 @@ export default function OfficialLetterComposer({
                     {includeSigStamp && (
                       <div className="relative inline-block h-16 w-36 mb-1">
                         {stampImg && (
-                          <img src={stampImg} alt="ختم" className="absolute top-0 right-2 h-16 w-16 object-contain opacity-90 -rotate-6" />
+                          <img
+                            src={stampImg}
+                            alt="ختم"
+                            className="absolute top-0 right-2 h-16 w-16 object-contain opacity-90 -rotate-6"
+                          />
                         )}
                         {signatureImg && (
-                          <img src={signatureImg} alt="توقيع" className="absolute bottom-0 left-0 h-10 object-contain" />
+                          <img
+                            src={signatureImg}
+                            alt="توقيع"
+                            className="absolute bottom-0 left-0 h-10 object-contain"
+                          />
                         )}
                       </div>
                     )}
@@ -1292,9 +1341,7 @@ export default function OfficialLetterComposer({
                 </p>
               )}
               {subject && (
-                <p className="mb-4 font-bold underline underline-offset-4">
-                  الموضوع: {subject}
-                </p>
+                <p className="mb-4 font-bold underline underline-offset-4">الموضوع: {subject}</p>
               )}
             </div>
             <div
@@ -1306,10 +1353,18 @@ export default function OfficialLetterComposer({
               {includeSigStamp && (
                 <div className="relative inline-block h-16 w-36 mb-1">
                   {stampImg && (
-                    <img src={stampImg} alt="" className="absolute top-0 right-2 h-16 w-16 object-contain opacity-90 -rotate-6" />
+                    <img
+                      src={stampImg}
+                      alt=""
+                      className="absolute top-0 right-2 h-16 w-16 object-contain opacity-90 -rotate-6"
+                    />
                   )}
                   {signatureImg && (
-                    <img src={signatureImg} alt="" className="absolute bottom-0 left-0 h-10 object-contain" />
+                    <img
+                      src={signatureImg}
+                      alt=""
+                      className="absolute bottom-0 left-0 h-10 object-contain"
+                    />
                   )}
                 </div>
               )}

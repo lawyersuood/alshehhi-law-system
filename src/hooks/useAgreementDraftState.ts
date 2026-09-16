@@ -37,20 +37,30 @@ export function useAgreementDraftState() {
   const delegationBodyRef = useRef<HTMLDivElement>(null);
 
   const [editingAgreementClauses, setEditingAgreementClauses] = useState(false);
-  const [agreementClausesDraft, setAgreementClausesDraft] = useState<{ ar: string; en: string }[]>([]);
+  const [agreementClausesDraft, setAgreementClausesDraft] = useState<{ ar: string; en: string }[]>(
+    [],
+  );
 
   const [agrForm, setAgrForm] = useState<any>(emptyAgrForm());
 
   return {
-    agrPreviewId, setAgrPreviewId,
-    delegationPreviewId, setDelegationPreviewId,
-    deleteAgrConfirm, setDeleteAgrConfirm,
-    editingDelegationWording, setEditingDelegationWording,
-    delegationDraftHtml, setDelegationDraftHtml,
+    agrPreviewId,
+    setAgrPreviewId,
+    delegationPreviewId,
+    setDelegationPreviewId,
+    deleteAgrConfirm,
+    setDeleteAgrConfirm,
+    editingDelegationWording,
+    setEditingDelegationWording,
+    delegationDraftHtml,
+    setDelegationDraftHtml,
     delegationBodyRef,
-    editingAgreementClauses, setEditingAgreementClauses,
-    agreementClausesDraft, setAgreementClausesDraft,
-    agrForm, setAgrForm,
+    editingAgreementClauses,
+    setEditingAgreementClauses,
+    agreementClausesDraft,
+    setAgreementClausesDraft,
+    agrForm,
+    setAgrForm,
     emptyAgrForm,
   };
 }

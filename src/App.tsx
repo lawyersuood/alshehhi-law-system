@@ -12,16 +12,31 @@ import DashboardView from "./components/DashboardView";
 import CasesListView from "./components/CasesListView";
 import CaseDetailView from "./components/CaseDetailView";
 import HearingsView from "./components/HearingsView";
-import PublicConsultationPage, { BookingRecord, ConsultationSettings } from "./components/PublicConsultationPage";
+import PublicConsultationPage, {
+  BookingRecord,
+  ConsultationSettings,
+} from "./components/PublicConsultationPage";
 import AdminConsultationsView from "./components/AdminConsultationsView";
 import GoogleCalendarSyncModal from "./components/GoogleCalendarSyncModal";
 import { initAuth, createGoogleCalendarEvent, formatCalendarDateTime } from "./googleCalendar";
 import { User as FirebaseUser } from "firebase/auth";
-import { supabase, sendWhatsAppViaEdgeFunction, sendEmailViaServer, authedFetch } from "./supabaseClient";
+import {
+  supabase,
+  sendWhatsAppViaEdgeFunction,
+  sendEmailViaServer,
+  authedFetch,
+} from "./supabaseClient";
 import { hashPassword, isHashedPassword } from "./cryptoUtils";
 import {
-  sendWhatsAppMsg, sendEmailMsg, findMatchingClientByName, inputCls,
-  loadStorage, saveStorage, flushSaveStorage, fetchSupabaseTable, pushSupabaseTable,
+  sendWhatsAppMsg,
+  sendEmailMsg,
+  findMatchingClientByName,
+  inputCls,
+  loadStorage,
+  saveStorage,
+  flushSaveStorage,
+  fetchSupabaseTable,
+  pushSupabaseTable,
 } from "./domain/storageAndMessaging";
 import { usePolicies } from "./hooks/usePolicies";
 import { usePrecedents } from "./hooks/usePrecedents";
@@ -60,21 +75,121 @@ import { useAgreementDraftState } from "./hooks/useAgreementDraftState";
 import { useLetterhead } from "./hooks/useLetterhead";
 import { useNotifications } from "./hooks/useNotifications";
 import {
-  Scale, LayoutDashboard, Briefcase, Users, CalendarDays, ListChecks,
-  Receipt, FolderOpen, FileSignature, Plus, Search, X, Bell, BellRing, BellOff, Building2,
-  Gavel, Clock, AlertTriangle, CheckCircle2, ChevronLeft, Trash2, Printer,
-  Phone, Mail, MapPin, TrendingUp, ShieldCheck, Shield, Lock, UserCheck, Key,
-  Check, Minus, Info, UserPlus, ShieldAlert, Edit2, User, RefreshCw, Smartphone,
-  Send, MessageSquare, Share2, ExternalLink, FileText, CheckCheck, SendHorizontal, Filter,
-  Calculator, Globe, Landmark, DollarSign, FileCheck, AlertCircle, FileSpreadsheet, Hourglass, Copy, PhoneCall, CreditCard, Download, Database, Code, LogOut,
-  Inbox, Paperclip, RotateCw, QrCode, Settings, History, BookOpen, UploadCloud, Video,
-  Sparkles, Bot, Zap, PlusCircle, Layers, BarChart3, PieChart as LucidePieChart, Activity, CheckSquare, Target, Percent, Menu,
-  SlidersHorizontal, Eye, EyeOff, Hash, ArrowUpDown, RotateCcw, ChevronDown, ChevronUp,
-  Handshake, UserCog, Stamp, ScrollText, Save
+  Scale,
+  LayoutDashboard,
+  Briefcase,
+  Users,
+  CalendarDays,
+  ListChecks,
+  Receipt,
+  FolderOpen,
+  FileSignature,
+  Plus,
+  Search,
+  X,
+  Bell,
+  BellRing,
+  BellOff,
+  Building2,
+  Gavel,
+  Clock,
+  AlertTriangle,
+  CheckCircle2,
+  ChevronLeft,
+  Trash2,
+  Printer,
+  Phone,
+  Mail,
+  MapPin,
+  TrendingUp,
+  ShieldCheck,
+  Shield,
+  Lock,
+  UserCheck,
+  Key,
+  Check,
+  Minus,
+  Info,
+  UserPlus,
+  ShieldAlert,
+  Edit2,
+  User,
+  RefreshCw,
+  Smartphone,
+  Send,
+  MessageSquare,
+  Share2,
+  ExternalLink,
+  FileText,
+  CheckCheck,
+  SendHorizontal,
+  Filter,
+  Calculator,
+  Globe,
+  Landmark,
+  DollarSign,
+  FileCheck,
+  AlertCircle,
+  FileSpreadsheet,
+  Hourglass,
+  Copy,
+  PhoneCall,
+  CreditCard,
+  Download,
+  Database,
+  Code,
+  LogOut,
+  Inbox,
+  Paperclip,
+  RotateCw,
+  QrCode,
+  Settings,
+  History,
+  BookOpen,
+  UploadCloud,
+  Video,
+  Sparkles,
+  Bot,
+  Zap,
+  PlusCircle,
+  Layers,
+  BarChart3,
+  PieChart as LucidePieChart,
+  Activity,
+  CheckSquare,
+  Target,
+  Percent,
+  Menu,
+  SlidersHorizontal,
+  Eye,
+  EyeOff,
+  Hash,
+  ArrowUpDown,
+  RotateCcw,
+  ChevronDown,
+  ChevronUp,
+  Handshake,
+  UserCog,
+  Stamp,
+  ScrollText,
+  Save,
 } from "lucide-react";
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-  PieChart, Pie, Cell, Legend, RadialBarChart, RadialBar, AreaChart, Area
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  RadialBarChart,
+  RadialBar,
+  AreaChart,
+  Area,
 } from "recharts";
 import * as XLSX from "xlsx";
 import { uaeTerroristList } from "./data/uaeTerroristListData";
@@ -263,14 +378,11 @@ import PrecedentsView from "./components/PrecedentsView";
 
 // ---------- دوال معالجة وتطبيع النصوص العربية والأرقام للبحث الذكي ----------
 
-
 // تطبيع الأسماء العربية لأغراض مطابقة KYC/قوائم الحظر: توحيد الألف بجميع أشكال الهمزة (أ/إ/آ) إلى ألف عادية،
 // وتوحيد التاء المربوطة (ة) مع الهاء (ه)، والألف المقصورة (ى) مع الياء (ي)، وحذف التشكيل والمسافات الزائدة،
 // حتى لا يفشل التطابق بسبب اختلافات إملائية شائعة (مثل "فاطمه"/"فاطمة" أو "امنه"/"آمنة") وهي نفس الاسم فعلياً.
 // استخراج أول (n) كلمات من الاسم بعد التطبيع — تُستخدم لمطابقة الاسم الثلاثي (أول ثلاث مقاطع من الاسم)
 // بدل الاسم الكامل، لأن قوائم الحظر أو الموكلين قد تحتوي اسم رباعي/خماسي بينما المستخدم يدخل ثلاثة مقاطع فقط.
-
-
 
 // ---------- العلم الرئيسي للنظام المحاسبي المتكامل (المرحلة قيد الإنشاء) ----------
 // هذا الثابت هو المفتاح الوحيد لتفعيل النظام المحاسبي الجديد بكامله في الموقع لجميع المستخدمين.
@@ -303,46 +415,70 @@ import PrecedentsView from "./components/PrecedentsView";
 // بلا عنوان/رابط حقيقيين).
 function buildDelegationPrintHtml(d: DelegationPrintData): string {
   const sigStampHtml = d.showSignatureStamp
-    ? "<div class=\"sig-stamp-wrap\">" +
-      (d.stampImg ? "<img class=\"stamp-img\" src=\"" + d.stampImg + "\" />" : "") +
-      (d.signatureImg ? "<img class=\"signature-img\" src=\"" + d.signatureImg + "\" />" : "") +
+    ? '<div class="sig-stamp-wrap">' +
+      (d.stampImg ? '<img class="stamp-img" src="' + d.stampImg + '" />' : "") +
+      (d.signatureImg ? '<img class="signature-img" src="' + d.signatureImg + '" />' : "") +
       "</div>"
     : "";
 
   const defaultBodyHtml =
-    "<div class=\"row-between\">" +
-    "<span>الموكل :- <b>" + escapeHtmlText(d.clientName) + "</b></span>" +
-    "<span>الصفة :- <b>" + escapeHtmlText(d.clientCapacity) + "</b></span>" +
+    '<div class="row-between">' +
+    "<span>الموكل :- <b>" +
+    escapeHtmlText(d.clientName) +
+    "</b></span>" +
+    "<span>الصفة :- <b>" +
+    escapeHtmlText(d.clientCapacity) +
+    "</b></span>" +
     "</div>" +
-    "<p>ضـــد :- <b>" + escapeHtmlText(d.opponents) + "</b></p>" +
-    "<div class=\"row-between dashed-top\">" +
-    "<span>أنـــا المحامي :- <b>" + escapeHtmlText(d.issuedByName) + "</b></span>" +
-    "<span>قيد رقم :- <b>" + escapeHtmlText(d.issuerLicenseNumber) + "</b></span>" +
+    "<p>ضـــد :- <b>" +
+    escapeHtmlText(d.opponents) +
+    "</b></p>" +
+    '<div class="row-between dashed-top">' +
+    "<span>أنـــا المحامي :- <b>" +
+    escapeHtmlText(d.issuedByName) +
+    "</b></span>" +
+    "<span>قيد رقم :- <b>" +
+    escapeHtmlText(d.issuerLicenseNumber) +
+    "</b></span>" +
     "</div>" +
-    "<p class=\"body-para\">بموجب هذه الإنابة، وبصفتي وكيلاً عن الموكل المذكور أعلاه أنيب زميلي الأستاذ المحامي :- <b>" +
-    escapeHtmlText(d.colleagueName) + "</b>&nbsp;&nbsp;قيد رقم :- <b>" + escapeHtmlText(d.colleagueLicenseNumber) + "</b></p>" +
-    "<p class=\"body-para\">للحضور والترافع والقيام بجميع الإجراءات اللازمة نيابة عني في القضية المذكورة أعلاه" +
-    (d.sessionDateLabel ? " وذلك بجلسة يوم <b>" + escapeHtmlText(d.sessionDateLabel) + "</b>" : "") +
+    '<p class="body-para">بموجب هذه الإنابة، وبصفتي وكيلاً عن الموكل المذكور أعلاه أنيب زميلي الأستاذ المحامي :- <b>' +
+    escapeHtmlText(d.colleagueName) +
+    "</b>&nbsp;&nbsp;قيد رقم :- <b>" +
+    escapeHtmlText(d.colleagueLicenseNumber) +
+    "</b></p>" +
+    '<p class="body-para">للحضور والترافع والقيام بجميع الإجراءات اللازمة نيابة عني في القضية المذكورة أعلاه' +
+    (d.sessionDateLabel
+      ? " وذلك بجلسة يوم <b>" + escapeHtmlText(d.sessionDateLabel) + "</b>"
+      : "") +
     (d.caseTitleSnapshot ? " (" + escapeHtmlText(d.caseTitleSnapshot) + ")" : "") +
     ".</p>" +
-    "<div class=\"purpose-box\">" +
-    "<p class=\"title\">الغرض من الإنابة:</p>" +
-    "<p>" + escapeHtmlText(d.purpose).replace(/\n/g, "<br>") + "</p>" +
+    '<div class="purpose-box">' +
+    '<p class="title">الغرض من الإنابة:</p>' +
+    "<p>" +
+    escapeHtmlText(d.purpose).replace(/\n/g, "<br>") +
+    "</p>" +
     "</div>";
 
   const bodyHtml = d.customBodyHtml ? d.customBodyHtml : defaultBodyHtml;
 
-  return "<!DOCTYPE html>\n" +
-    "<html dir=\"rtl\" lang=\"ar\">\n" +
+  return (
+    "<!DOCTYPE html>\n" +
+    '<html dir="rtl" lang="ar">\n' +
     "<head>\n" +
-    "<meta charset=\"utf-8\">\n" +
-    "<title>إنابة — " + escapeHtmlText(d.refNo) + "</title>\n" +
-    "<link rel=\"stylesheet\" href=\"" + AMIRI_FONT_LINK + "\">\n" +
+    '<meta charset="utf-8">\n' +
+    "<title>إنابة — " +
+    escapeHtmlText(d.refNo) +
+    "</title>\n" +
+    '<link rel="stylesheet" href="' +
+    AMIRI_FONT_LINK +
+    '">\n' +
     "<style>\n" +
     "  @page { size: A4; margin: 0; }\n" +
     "  * { margin: 0; padding: 0; box-sizing: border-box; }\n" +
     "  html, body { width: 210mm; }\n" +
-    "  body { font-family: " + LETTER_FONT_STACK + "; font-size: 12.5pt; line-height: 1.9; color: #1a1a1a; }\n" +
+    "  body { font-family: " +
+    LETTER_FONT_STACK +
+    "; font-size: 12.5pt; line-height: 1.9; color: #1a1a1a; }\n" +
     "  .print-page { width: 210mm; min-height: 297mm; display: flex; flex-direction: column; }\n" +
     "  .header-strip-img { display: block; width: 210mm; height: 46mm; flex: none; }\n" +
     "  .footer-strip-img { display: block; width: 210mm; height: 20mm; flex: none; }\n" +
@@ -373,77 +509,55 @@ function buildDelegationPrintHtml(d: DelegationPrintData): string {
     "</style>\n" +
     "</head>\n" +
     "<body>\n" +
-    "  <div class=\"print-page\">\n" +
-    (d.headerImg ? "    <img class=\"header-strip-img\" src=\"" + d.headerImg + "\" />\n" : "") +
-    "    <div class=\"doc-content\">\n" +
-    "      <div class=\"doc-topbar\">\n" +
-    "        <span class=\"doc-date\">التاريخ: " + escapeHtmlText(d.dateLabel) + "</span>\n" +
-    "        <span class=\"doc-refno\">الرقم المرجعي: " + escapeHtmlText(d.refNo) + "</span>\n" +
+    '  <div class="print-page">\n' +
+    (d.headerImg ? '    <img class="header-strip-img" src="' + d.headerImg + '" />\n' : "") +
+    '    <div class="doc-content">\n' +
+    '      <div class="doc-topbar">\n' +
+    '        <span class="doc-date">التاريخ: ' +
+    escapeHtmlText(d.dateLabel) +
+    "</span>\n" +
+    '        <span class="doc-refno">الرقم المرجعي: ' +
+    escapeHtmlText(d.refNo) +
+    "</span>\n" +
     "      </div>\n" +
-    "      <p class=\"court-line\">لدى " + escapeHtmlText(d.courtName) + " الموقرة ,,,</p>\n" +
-    "      <p class=\"case-line\">في القضية رقم :- <b>" + escapeHtmlText(d.caseNumber) + "</b></p>\n" +
-    "      <h1 class=\"delegation-title\">إنـابـة</h1>\n" +
-    "      " + bodyHtml + "\n" +
-    "      <p class=\"closing-line\">وتفضلوا بقبول وافر الاحترام والتقدير.</p>\n" +
-    "      <div class=\"signature\">\n" +
-    "        <p class=\"sig-name-title\">المحامي الموكل</p>\n" +
-    "        <p>الاسم :- " + escapeHtmlText(d.issuedByName) + "</p>\n" +
-    sigStampHtml + "\n" +
-    "        <p class=\"sign-line\">التوقيع والختم</p>\n" +
+    '      <p class="court-line">لدى ' +
+    escapeHtmlText(d.courtName) +
+    " الموقرة ,,,</p>\n" +
+    '      <p class="case-line">في القضية رقم :- <b>' +
+    escapeHtmlText(d.caseNumber) +
+    "</b></p>\n" +
+    '      <h1 class="delegation-title">إنـابـة</h1>\n' +
+    "      " +
+    bodyHtml +
+    "\n" +
+    '      <p class="closing-line">وتفضلوا بقبول وافر الاحترام والتقدير.</p>\n' +
+    '      <div class="signature">\n' +
+    '        <p class="sig-name-title">المحامي الموكل</p>\n' +
+    "        <p>الاسم :- " +
+    escapeHtmlText(d.issuedByName) +
+    "</p>\n" +
+    sigStampHtml +
+    "\n" +
+    '        <p class="sign-line">التوقيع والختم</p>\n' +
     "      </div>\n" +
     "    </div>\n" +
-    (d.footerImg ? "    <img class=\"footer-strip-img\" src=\"" + d.footerImg + "\" />\n" : "") +
+    (d.footerImg ? '    <img class="footer-strip-img" src="' + d.footerImg + '" />\n' : "") +
     "  </div>\n" +
     "</body>\n" +
-    "</html>";
+    "</html>"
+  );
 }
 
 // ---------- الأنواع والواجهات ومصفوفة الصلاحيات الموسعة ----------
 
-
-
-
-
-
-
-
 // ---------- الزملاء المتعاونون وإنابات الحضور ----------
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // سجل سري بالإجراءات التأديبية الخاصة بموظف معين (تحقيق داخلي / إنذار / قرار) — مقتصر على الحساب الرئيسي فقط
 
 // البنود الثابتة للاتفاقية المعتمدة (1-8) — لا تتغير من عميل لآخر
 
-
-
-
-
 // loadLetterhead/saveLetterhead: انتقلت إلى ./domain/utils
 // ---------- مصفوفة أقسام وتبويبات النظام الـ 18 المعتمدة ----------
-
 
 // مصفوفة صلاحيات العمليات الإجرائية الدقيقة والتفويضات والحذف المقيد
 
@@ -453,41 +567,9 @@ function buildDelegationPrintHtml(d: DelegationPrintData): string {
 
 // ---------- القوالب المسبقة للأدوار (شاملة الـ 18 قسماً + العمليات) ----------
 
-
-
-
-
-
-
-
-
-
-
-
 // ---------- اعرف عميلك (KYC) — وفق متطلبات مكافحة غسل الأموال ----------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ---------- السياسات الداخلية للمكتب ----------
-
-
-
-
 
 // دوال إرسال واتساب/إيميل، تخزين محلي، ومزامنة Supabase — انتقلت إلى ./domain/storageAndMessaging
 
@@ -495,7 +577,10 @@ function buildDelegationPrintHtml(d: DelegationPrintData): string {
 export default function App() {
   const [currentRoute, setCurrentRoute] = useState<"admin" | "public_consultation">(() => {
     if (typeof window !== "undefined") {
-      if (window.location.pathname === "/consultation" || window.location.search.includes("page=consultation")) {
+      if (
+        window.location.pathname === "/consultation" ||
+        window.location.search.includes("page=consultation")
+      ) {
         return "public_consultation";
       }
     }
@@ -503,7 +588,10 @@ export default function App() {
   });
 
   const [consultationBookings, setConsultationBookings] = useState<BookingRecord[]>(() => {
-    const loaded = loadStorage<BookingRecord[]>("firm_consultation_bookings", seedConsultationBookings);
+    const loaded = loadStorage<BookingRecord[]>(
+      "firm_consultation_bookings",
+      seedConsultationBookings,
+    );
     return (loaded || []).filter((b) => b.id !== "b-101" && b.id !== "b-102");
   });
 
@@ -515,19 +603,25 @@ export default function App() {
     price30: 525,
     price60: 945,
     availableSlots: [
-      "09:00 AM", "10:30 AM", "12:00 PM", "02:00 PM",
-      "03:30 PM", "05:00 PM", "06:30 PM", "08:00 PM"
+      "09:00 AM",
+      "10:30 AM",
+      "12:00 PM",
+      "02:00 PM",
+      "03:30 PM",
+      "05:00 PM",
+      "06:30 PM",
+      "08:00 PM",
     ],
     blockedDates: [],
     // بيانات الحساب البنكي الرسمي المعتمد للمكتب — تُعرض للعملاء في صفحة الحجز العامة.
     // أي تعديل هنا يجب أن يطابق بيانات الحساب الفعلية لدى البنك، فهذه الأرقام تُستخدم لتحويل أموال حقيقية.
     mbankIban: "AE260973002451030000001",
     mbankBankName: "بنك المارية المحلي ذ.م.م.",
-    mbankAccountName: "SUOOD AHMED ALSHEHHI ADVOCATES & LEGAL CONSULTANTS"
+    mbankAccountName: "SUOOD AHMED ALSHEHHI ADVOCATES & LEGAL CONSULTANTS",
   };
 
   const [consultationSettings, setConsultationSettings] = useState<ConsultationSettings>(() =>
-    loadStorage("firm_consultation_settings", defaultConsultationSettings)
+    loadStorage("firm_consultation_settings", defaultConsultationSettings),
   );
 
   useEffect(() => {
@@ -537,7 +631,7 @@ export default function App() {
   const [tab, setTab] = useState("dashboard");
   const [users, setUsers] = useState<UserItem[]>(() => {
     const loaded = loadStorage<UserItem[]>("firm_users", seedUsers);
-    const initial = (!loaded || loaded.length === 0) ? seedUsers : loaded;
+    const initial = !loaded || loaded.length === 0 ? seedUsers : loaded;
     return initial.map((u) => {
       // تصحيح البريد الإلكتروني لحساب المالك الأساسي المزروع (id=1) فقط دون سواه
       if (u.id === 1) {
@@ -565,7 +659,10 @@ export default function App() {
   const [permissionNotice, setPermissionNotice] = useState<string | null>(null);
 
   // المستخدم الحالي والصلاحيات النشطة
-  const currentUser = useMemo(() => users.find((u) => u.id === currentUserId) || users[0], [users, currentUserId]);
+  const currentUser = useMemo(
+    () => users.find((u) => u.id === currentUserId) || users[0],
+    [users, currentUserId],
+  );
   const userPerms = currentUser.permissions;
 
   const isAdmin = useMemo(() => {
@@ -584,9 +681,16 @@ export default function App() {
     // يجب مطابقة نفس شرط hasTabPermission لتبويب "invoices" (بما في ذلك علم canViewFinances
     // المستقل على المستخدم)، وإلا يظهر التبويب بالتنقل لمستخدم ثم تُحجب عنه محتوياته فعلياً
     if (currentUser.canViewFinances) return true;
-    if (userPerms?.finance || userPerms?.viewInvoices || userPerms?.manageInvoices || userPerms?.agreements) return true;
+    if (
+      userPerms?.finance ||
+      userPerms?.viewInvoices ||
+      userPerms?.manageInvoices ||
+      userPerms?.agreements
+    )
+      return true;
     const preset = ROLE_PRESETS[currentUser.roleKey]?.permissions;
-    if (preset?.finance || preset?.viewInvoices || preset?.manageInvoices || preset?.agreements) return true;
+    if (preset?.finance || preset?.viewInvoices || preset?.manageInvoices || preset?.agreements)
+      return true;
     return false;
   }, [currentUser, isAdmin, isSuperAdmin, userPerms]);
 
@@ -611,13 +715,26 @@ export default function App() {
 
   // دالة توثيق العمليات والأنشطة مع تسجيل معرف المستخدم والتوقيت الكامل
   const logAuditAction = (
-    actionType: "DELETE" | "UPDATE" | "CREATE" | "STATUS_CHANGE" | "PERMISSION_CHANGE" | "UNAUTHORIZED_DELETE" | "UNAUTHORIZED_ACCESS",
+    actionType:
+      | "DELETE"
+      | "UPDATE"
+      | "CREATE"
+      | "STATUS_CHANGE"
+      | "PERMISSION_CHANGE"
+      | "UNAUTHORIZED_DELETE"
+      | "UNAUTHORIZED_ACCESS",
     targetModule: string,
     targetTitle: string,
     details: string,
     targetId?: string | number,
     statusOverride?: "مؤكد" | "محاولة غير مصرح بها - مرفوض" | "مكتمل" | "فشل",
-    userOverride?: { id?: string | number; name?: string; email?: string; roleTitle?: string; jobTitle?: string }
+    userOverride?: {
+      id?: string | number;
+      name?: string;
+      email?: string;
+      roleTitle?: string;
+      jobTitle?: string;
+    },
   ) => {
     const activeUser = userOverride || users.find((u) => u.id === currentUserId) || currentUser;
     const now = new Date();
@@ -638,7 +755,9 @@ export default function App() {
       userId: activeUser?.id ?? currentUserId ?? 1,
       userName: activeUser?.name || "مستخدم للنظام",
       userEmail: activeUser?.email || "info@lawyersuood.com",
-      userRole: (activeUser as any)?.roleTitle || (activeUser?.roleKey === "admin" ? "مدير النظام" : ((activeUser as any)?.jobTitle || "موظف")),
+      userRole:
+        (activeUser as any)?.roleTitle ||
+        (activeUser?.roleKey === "admin" ? "مدير النظام" : (activeUser as any)?.jobTitle || "موظف"),
       actionType,
       targetModule,
       targetId: targetId || "—",
@@ -658,10 +777,18 @@ export default function App() {
   const checkPerm = (
     permKey: keyof RolePermissions,
     actionName: string,
-    context?: { section?: string; title?: string; details?: string; targetId?: string | number; isDelete?: boolean }
+    context?: {
+      section?: string;
+      title?: string;
+      details?: string;
+      targetId?: string | number;
+      isDelete?: boolean;
+    },
   ): boolean => {
     if (isSuperAdmin) return true;
-    const hasPerm = Boolean(userPerms?.[permKey] ?? (ROLE_PRESETS[currentUser.roleKey]?.permissions?.[permKey] || false));
+    const hasPerm = Boolean(
+      userPerms?.[permKey] ?? (ROLE_PRESETS[currentUser.roleKey]?.permissions?.[permKey] || false),
+    );
     if (!hasPerm) {
       const label = PERMISSION_LABELS[permKey]?.label || permKey;
       const isDeletionAttempt = String(permKey).startsWith("delete") || Boolean(context?.isDelete);
@@ -669,14 +796,16 @@ export default function App() {
       // توثيق محاولة الإجراء غير المصرح بها فوراً في جدول سجل التدقيق مع معرف المستخدم والتوقيت الكامل
       logAuditAction(
         isDeletionAttempt ? "UNAUTHORIZED_DELETE" : "UNAUTHORIZED_ACCESS",
-        context?.section || (PERMISSION_LABELS[permKey]?.label || "إدارة الصلاحيات"),
+        context?.section || PERMISSION_LABELS[permKey]?.label || "إدارة الصلاحيات",
         context?.title || `محاولة ${actionName}`,
         `محاولة غير مصرح بها: قام المستخدم "${currentUser.name}" (معرف ID: #${currentUser.id}، البريد: ${currentUser.email}، الرتبة: ${currentUser.roleTitle}) بمحاولة تنفيذ [${actionName}] دون امتلاك الصلاحية المطلوبة [${label}]. تم حظر العملية وإحباطها تلقائياً.`,
         context?.targetId || "—",
-        "محاولة غير مصرح بها - مرفوض"
+        "محاولة غير مصرح بها - مرفوض",
       );
 
-      setPermissionNotice(`🚫 منع إجراء: حساب "${currentUser.name}" (معرف: #${currentUser.id}) دور (${currentUser.roleTitle}) لا يمتلك صلاحية [${label}]. تم توثيق المحاولة في سجل التدقيق الأمني، ولا يمكن التنفيذ إلا بعد منحك الصلاحية من قبل مدير النظام.`);
+      setPermissionNotice(
+        `🚫 منع إجراء: حساب "${currentUser.name}" (معرف: #${currentUser.id}) دور (${currentUser.roleTitle}) لا يمتلك صلاحية [${label}]. تم توثيق المحاولة في سجل التدقيق الأمني، ولا يمكن التنفيذ إلا بعد منحك الصلاحية من قبل مدير النظام.`,
+      );
       return false;
     }
     return true;
@@ -698,13 +827,26 @@ export default function App() {
       details: string;
       targetId?: string | number;
     },
-    action: () => void
+    action: () => void,
   ): boolean => {
-    if (!checkPerm(permKey, actionName, { section: audit.section, title: audit.title, details: audit.details, targetId: audit.targetId })) {
+    if (
+      !checkPerm(permKey, actionName, {
+        section: audit.section,
+        title: audit.title,
+        details: audit.details,
+        targetId: audit.targetId,
+      })
+    ) {
       return false;
     }
     action();
-    logAuditAction(audit.actionType || "CREATE", audit.section, audit.title, audit.details, audit.targetId ?? "—");
+    logAuditAction(
+      audit.actionType || "CREATE",
+      audit.section,
+      audit.title,
+      audit.details,
+      audit.targetId ?? "—",
+    );
     return true;
   };
 
@@ -730,13 +872,15 @@ export default function App() {
     actionName: string;
     onConfirm: () => void;
   }) => {
-    if (!checkPerm(opts.permKey, opts.actionName, {
-      section: opts.section,
-      title: opts.title,
-      details: opts.details,
-      targetId: opts.targetId,
-      isDelete: true,
-    })) {
+    if (
+      !checkPerm(opts.permKey, opts.actionName, {
+        section: opts.section,
+        title: opts.title,
+        details: opts.details,
+        targetId: opts.targetId,
+        isDelete: true,
+      })
+    ) {
       return;
     }
     setDeleteModalState({
@@ -767,7 +911,10 @@ export default function App() {
       lower.includes("قيد لائحة الاستئناف") ||
       lower.includes("عقد المقاولة") ||
       lower.includes("البوابة الذكية") ||
-      t.id === 1 || t.id === 2 || t.id === 3 || t.id === 4
+      t.id === 1 ||
+      t.id === 2 ||
+      t.id === 3 ||
+      t.id === 4
     );
   };
 
@@ -794,7 +941,9 @@ export default function App() {
       body.includes("فوزية المهيري") ||
       body.includes("دار سمرا للكمبيوتر") ||
       body.includes("INV-2026-TEST-VERIFIED") ||
-      e.id === 1 || e.id === 2 || e.id === 3
+      e.id === 1 ||
+      e.id === 2 ||
+      e.id === 3
     );
   };
 
@@ -804,17 +953,18 @@ export default function App() {
   // من useEffect الضخم "remainingSyncTables" بالأسفل)، بنفس منطق التهيئة الأصلي حرفياً.
   const { clients, setClients } = useClientsData();
   const { cases, setCases } = useCasesData();
-  const { feeAgreements, setFeeAgreements, payments, setPayments, invoices, setInvoices } = useFinancialCoreData();
+  const { feeAgreements, setFeeAgreements, payments, setPayments, invoices, setInvoices } =
+    useFinancialCoreData();
   const [hearings, setHearings] = useState<Hearing[]>(() => {
     const saved = loadStorage<Hearing[]>("firm_hearings", []);
-    const clean = (saved || []).filter(h => !isDemoHearing(h));
+    const clean = (saved || []).filter((h) => !isDemoHearing(h));
     saveStorage("firm_hearings", clean);
     return clean;
   });
   const [tasks, setTasks] = useState<TaskItem[]>(() => {
     try {
       const saved = loadStorage<TaskItem[]>("firm_tasks", []);
-      const clean = (saved || []).filter(t => !isDemoTask(t));
+      const clean = (saved || []).filter((t) => !isDemoTask(t));
       saveStorage("firm_tasks", clean);
       return clean;
     } catch {
@@ -824,21 +974,31 @@ export default function App() {
   const [docs, setDocs] = useState<DocItem[]>(() => loadStorage("firm_docs", seedDocs));
   const [poas, setPoas] = useState<PoaItem[]>(() => loadStorage("firm_poas", seedPoas));
   const {
-    colleagues, setColleagues,
-    colleagueDelegations, setColleagueDelegations,
-    colleagueSubTab, setColleagueSubTab,
-    editingColleagueId, setEditingColleagueId,
+    colleagues,
+    setColleagues,
+    colleagueDelegations,
+    setColleagueDelegations,
+    colleagueSubTab,
+    setColleagueSubTab,
+    editingColleagueId,
+    setEditingColleagueId,
   } = useColleagues();
   // kyc: انتقلت لهوك useKycData (مزامنة Supabase — نفس الملاحظة أعلاه)
   const { kyc, setKyc } = useKycData();
-  const { kycWatchlist, setKycWatchlist, kycWatchlistParsed, setKycWatchlistParsed } = useKycWatchlist();
+  const { kycWatchlist, setKycWatchlist, kycWatchlistParsed, setKycWatchlistParsed } =
+    useKycWatchlist();
   const { notifications, setNotifications } = useNotifications();
   const {
-    timeLogs, setTimeLogs,
-    caseExpenses, setCaseExpenses,
-    trustTransactions, setTrustTransactions,
-    installments, setInstallments,
-    strReports, setStrReports,
+    timeLogs,
+    setTimeLogs,
+    caseExpenses,
+    setCaseExpenses,
+    trustTransactions,
+    setTrustTransactions,
+    installments,
+    setInstallments,
+    strReports,
+    setStrReports,
   } = useBillingRecords();
   const { deadlines, setDeadlines } = useDeadlines();
   const [courtContacts, setCourtContacts] = useState<CourtContact[]>(() => {
@@ -854,24 +1014,40 @@ export default function App() {
     }
     return saved;
   });
-  const [officeAgreements, setOfficeAgreements] = useState<OfficeAgreement[]>(() => loadStorage("firm_office_agreements", []));
+  const [officeAgreements, setOfficeAgreements] = useState<OfficeAgreement[]>(() =>
+    loadStorage("firm_office_agreements", []),
+  );
 
   const {
-    autoCheckStatus, setAutoCheckStatus,
-    deadlineFilter, setDeadlineFilter,
-    selectedDeadlineLogs, setSelectedDeadlineLogs,
-    reassignDeadlineModal, setReassignDeadlineModal,
+    autoCheckStatus,
+    setAutoCheckStatus,
+    deadlineFilter,
+    setDeadlineFilter,
+    selectedDeadlineLogs,
+    setSelectedDeadlineLogs,
+    reassignDeadlineModal,
+    setReassignDeadlineModal,
   } = useDeadlineUiState();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // ملاحظة: الحفظ المحلي + المزامنة مع Supabase لـ clients/cases/feeAgreements/payments/invoices
   // أصبحت الآن تتم تلقائياً داخل هوكسها الخاصة (useClientsData/useCasesData/useFinancialCoreData) —
   // لا حاجة لـ useEffect منفصل هنا بعد الآن.
-  useEffect(() => { saveStorage("firm_hearings", hearings); }, [hearings]);
-  useEffect(() => { saveStorage("firm_tasks", tasks); }, [tasks]);
-  useEffect(() => { saveStorage("firm_users", users); }, [users]);
-  useEffect(() => { saveStorage("firm_office_agreements", officeAgreements); }, [officeAgreements]);
-  useEffect(() => { saveStorage("firm_docs", docs); }, [docs]);
+  useEffect(() => {
+    saveStorage("firm_hearings", hearings);
+  }, [hearings]);
+  useEffect(() => {
+    saveStorage("firm_tasks", tasks);
+  }, [tasks]);
+  useEffect(() => {
+    saveStorage("firm_users", users);
+  }, [users]);
+  useEffect(() => {
+    saveStorage("firm_office_agreements", officeAgreements);
+  }, [officeAgreements]);
+  useEffect(() => {
+    saveStorage("firm_docs", docs);
+  }, [docs]);
 
   // جلسات الدخول المحفوظة مسبقاً (قبل هذا التحديث) لا تملك جلسة Supabase Authentication فعلية
   // لأنها أُنشئت عبر تسجيل الدخول المحلي القديم فقط — نصلح هذا تلقائياً عند فتح النظام
@@ -887,7 +1063,10 @@ export default function App() {
         if (!rawPass) return; // لا يوجد كلمة مرور محفوظة — لا نُنشئ/نستخدم قيمة افتراضية عالمية (ثغرة أمنية سابقة)
         if (isHashedPassword(rawPass)) return; // القيمة مُجزّأة (pbkdf2) ولا يمكن استخدامها كنص عادي هنا؛ المزامنة تتم فعلياً عند تسجيل الدخول نفسه
         const pass = rawPass.length >= 6 ? rawPass : `${rawPass}-firm2024`;
-        const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password: pass });
+        const { error: signInErr } = await supabase.auth.signInWithPassword({
+          email,
+          password: pass,
+        });
         if (signInErr) {
           await supabase.auth.signUp({ email, password: pass });
         }
@@ -926,62 +1105,116 @@ export default function App() {
       }
     });
 
-    if (false /* تم تعطيل الدمج التلقائي الصامت للموكلين بعد المراجعة الامنية - اي دمج يتطلب الان تاكيدا صريحا من المستخدم */ && dupes.size > 0) {
-      setPoas((prev) => prev.map((p) => remap.has(p.clientId) ? { ...p, clientId: remap.get(p.clientId)! } : p));
-      setCases((prev) => prev.map((cs) => remap.has(cs.clientId) ? { ...cs, clientId: remap.get(cs.clientId)! } : cs));
-      setInvoices((prev) => prev.map((inv) => remap.has(inv.clientId) ? { ...inv, clientId: remap.get(inv.clientId)! } : inv));
-      setFeeAgreements((prev) => prev.map((fa) => remap.has(fa.clientId) ? { ...fa, clientId: remap.get(fa.clientId)! } : fa));
+    if (
+      // eslint-disable-next-line no-constant-binary-expression -- تعطيل مقصود ومؤقت، انظر التعليق أدناه
+      false /* تم تعطيل الدمج التلقائي الصامت للموكلين بعد المراجعة الامنية - اي دمج يتطلب الان تاكيدا صريحا من المستخدم */ &&
+      dupes.size > 0
+    ) {
+      setPoas((prev) =>
+        prev.map((p) => (remap.has(p.clientId) ? { ...p, clientId: remap.get(p.clientId)! } : p)),
+      );
+      setCases((prev) =>
+        prev.map((cs) =>
+          remap.has(cs.clientId) ? { ...cs, clientId: remap.get(cs.clientId)! } : cs,
+        ),
+      );
+      setInvoices((prev) =>
+        prev.map((inv) =>
+          remap.has(inv.clientId) ? { ...inv, clientId: remap.get(inv.clientId)! } : inv,
+        ),
+      );
+      setFeeAgreements((prev) =>
+        prev.map((fa) =>
+          remap.has(fa.clientId) ? { ...fa, clientId: remap.get(fa.clientId)! } : fa,
+        ),
+      );
       setClients((prev) => prev.filter((c) => !dupes.has(c.id)));
     }
   }, []);
-  useEffect(() => { saveStorage("firm_poas", poas); }, [poas]);
+  useEffect(() => {
+    saveStorage("firm_poas", poas);
+  }, [poas]);
   // kyc: الحفظ + المزامنة أصبحت داخل useKycData
-  useEffect(() => { saveStorage("firm_court_contacts", courtContacts); }, [courtContacts]);
+  useEffect(() => {
+    saveStorage("firm_court_contacts", courtContacts);
+  }, [courtContacts]);
 
   // ---------- حالات ميزات الاستيراد الذكي واستخراج البيانات ----------
-  const { showCasesExcelModal, setShowCasesExcelModal, excelCasesParsed, setExcelCasesParsed, casesExcelLoading, setCasesExcelLoading } = useCasesExcelImport();
+  const {
+    showCasesExcelModal,
+    setShowCasesExcelModal,
+    excelCasesParsed,
+    setExcelCasesParsed,
+    casesExcelLoading,
+    setCasesExcelLoading,
+  } = useCasesExcelImport();
 
   const {
-    showPoaAiUploadModal, setShowPoaAiUploadModal,
-    poaAiLoading, setPoaAiLoading,
-    poaAiExtracted, setPoaAiExtracted,
-    selectedPoaClientId, setSelectedPoaClientId,
-    showAgreementAiUploadModal, setShowAgreementAiUploadModal,
-    agreementAiLoading, setAgreementAiLoading,
-    agreementAiExtracted, setAgreementAiExtracted,
-    selectedAgrClientId, setSelectedAgrClientId,
-    showInvoiceImportModal, setShowInvoiceImportModal,
-    invoiceImportTab, setInvoiceImportTab,
-    invoiceAiLoading, setInvoiceAiLoading,
-    invoiceAiExtracted, setInvoiceAiExtracted,
-    excelInvoicesParsed, setExcelInvoicesParsed,
+    showPoaAiUploadModal,
+    setShowPoaAiUploadModal,
+    poaAiLoading,
+    setPoaAiLoading,
+    poaAiExtracted,
+    setPoaAiExtracted,
+    selectedPoaClientId,
+    setSelectedPoaClientId,
+    showAgreementAiUploadModal,
+    setShowAgreementAiUploadModal,
+    agreementAiLoading,
+    setAgreementAiLoading,
+    agreementAiExtracted,
+    setAgreementAiExtracted,
+    selectedAgrClientId,
+    setSelectedAgrClientId,
+    showInvoiceImportModal,
+    setShowInvoiceImportModal,
+    invoiceImportTab,
+    setInvoiceImportTab,
+    invoiceAiLoading,
+    setInvoiceAiLoading,
+    invoiceAiExtracted,
+    setInvoiceAiExtracted,
+    excelInvoicesParsed,
+    setExcelInvoicesParsed,
   } = useAiDocExtraction();
 
   const {
-    showKycWatchlistUploadModal, setShowKycWatchlistUploadModal,
-    kycWatchlistSearch, setKycWatchlistSearch,
-    kycTypeFilter, setKycTypeFilter,
-    kycSanctionAlert, setKycSanctionAlert,
-    kycSanctionAckReason, setKycSanctionAckReason,
+    showKycWatchlistUploadModal,
+    setShowKycWatchlistUploadModal,
+    kycWatchlistSearch,
+    setKycWatchlistSearch,
+    kycTypeFilter,
+    setKycTypeFilter,
+    kycSanctionAlert,
+    setKycSanctionAlert,
+    kycSanctionAckReason,
+    setKycSanctionAckReason,
   } = useKycWatchlistModal();
 
-    const filteredKycWatchlist = useMemo(() => {
-      return kycWatchlist.filter((item) => {
-        if (kycTypeFilter !== "الكل" && item.type !== kycTypeFilter) return false;
-        if (!kycWatchlistSearch.trim()) return true;
-        const q = kycWatchlistSearch.toLowerCase();
-        return (
-          (item.fullName && item.fullName.toLowerCase().includes(q)) ||
-          (item.idNo && item.idNo.toLowerCase().includes(q)) ||
-          (item.reason && item.reason.toLowerCase().includes(q)) ||
-          (item.type && item.type.toLowerCase().includes(q)) ||
-          (item.nationality && item.nationality.toLowerCase().includes(q))
-        );
-      });
-    }, [kycWatchlist, kycTypeFilter, kycWatchlistSearch]);
+  const filteredKycWatchlist = useMemo(() => {
+    return kycWatchlist.filter((item) => {
+      if (kycTypeFilter !== "الكل" && item.type !== kycTypeFilter) return false;
+      if (!kycWatchlistSearch.trim()) return true;
+      const q = kycWatchlistSearch.toLowerCase();
+      return (
+        (item.fullName && item.fullName.toLowerCase().includes(q)) ||
+        (item.idNo && item.idNo.toLowerCase().includes(q)) ||
+        (item.reason && item.reason.toLowerCase().includes(q)) ||
+        (item.type && item.type.toLowerCase().includes(q)) ||
+        (item.nationality && item.nationality.toLowerCase().includes(q))
+      );
+    });
+  }, [kycWatchlist, kycTypeFilter, kycWatchlistSearch]);
 
   // ---------- Google Calendar Integration State ----------
-  const { showGoogleCalendarModal, setShowGoogleCalendarModal, googleUser, setGoogleUser, googleToken, setGoogleToken } = useGoogleCalendarModal();
+  const {
+    showGoogleCalendarModal,
+    setShowGoogleCalendarModal,
+    googleUser,
+    setGoogleUser,
+    googleToken,
+    setGoogleToken,
+  } = useGoogleCalendarModal();
 
   useEffect(() => {
     const unsubscribe = initAuth(
@@ -992,7 +1225,7 @@ export default function App() {
       () => {
         setGoogleUser(null);
         setGoogleToken(null);
-      }
+      },
     );
     return () => {
       if (unsubscribe) unsubscribe();
@@ -1007,7 +1240,7 @@ export default function App() {
     const cs = cases.find((c) => c.id === hearing.caseId);
     const cl = cs ? clientName(cs.clientId) : "غير محدد";
     const confirmed = window.confirm(
-      `هل ترغب في تصدير ومزامنة جلسة القضية (${cs ? cs.number : hearing.id}) إلى تقويم Google الخاص بك (${googleUser?.email})؟`
+      `هل ترغب في تصدير ومزامنة جلسة القضية (${cs ? cs.number : hearing.id}) إلى تقويم Google الخاص بك (${googleUser?.email})؟`,
     );
     if (!confirmed) return;
 
@@ -1024,7 +1257,7 @@ export default function App() {
         `• القاعة والوقت: ${hearing.room} (${hearing.time})`,
         hearing.notes ? `• المطلوب في الجلسة: ${hearing.notes}` : "",
         `--------------------------------`,
-        `تمت المزامنة آلياً عبر نظام إدارة مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية.`
+        `تمت المزامنة آلياً عبر نظام إدارة مكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية.`,
       ]
         .filter(Boolean)
         .join("\n");
@@ -1039,10 +1272,10 @@ export default function App() {
           useDefault: false,
           overrides: [
             { method: "popup" as const, minutes: 1440 },
-            { method: "popup" as const, minutes: 120 }
-          ]
+            { method: "popup" as const, minutes: 120 },
+          ],
         },
-        colorId: "11"
+        colorId: "11",
       };
 
       const createdEvent = await createGoogleCalendarEvent(googleToken, payload);
@@ -1054,8 +1287,8 @@ export default function App() {
                 googleCalendarEventId: createdEvent.id,
                 googleSyncedAt: new Date().toISOString(),
               }
-            : h
-        )
+            : h,
+        ),
       );
       alert(`✅ تم تصدير الجلسة بنجاح إلى تقويم Google!`);
     } catch (err: any) {
@@ -1064,16 +1297,28 @@ export default function App() {
   };
 
   const {
-    employees, setEmployees,
-    leaveRequests, setLeaveRequests,
-    employeeExpenses, setEmployeeExpenses,
-    hrSubTab, setHrSubTab,
-    employeeSearchQuery, setEmployeeSearchQuery,
+    employees,
+    setEmployees,
+    leaveRequests,
+    setLeaveRequests,
+    employeeExpenses,
+    setEmployeeExpenses,
+    hrSubTab,
+    setHrSubTab,
+    employeeSearchQuery,
+    setEmployeeSearchQuery,
   } = useHrRecords();
   const { disciplinaryActions, setDisciplinaryActions } = useDisciplinaryActions();
 
   // ---------- سجل التدقيق والأنشطة (Audit Log Filters & Access) ----------
-  const { auditSearchTerm, setAuditSearchTerm, auditActionFilter, setAuditActionFilter, auditModuleFilter, setAuditModuleFilter } = useAuditFilters();
+  const {
+    auditSearchTerm,
+    setAuditSearchTerm,
+    auditActionFilter,
+    setAuditActionFilter,
+    auditModuleFilter,
+    setAuditModuleFilter,
+  } = useAuditFilters();
 
   const canViewAuditLog = useMemo(() => {
     const activeUser = users.find((u) => u.id === currentUserId);
@@ -1088,7 +1333,8 @@ export default function App() {
       const matchesAction = auditActionFilter === "الكل" || log.actionType === auditActionFilter;
       const matchesModule = auditModuleFilter === "الكل" || log.targetModule === auditModuleFilter;
       const q = auditSearchTerm.trim().toLowerCase();
-      const matchesQuery = !q ||
+      const matchesQuery =
+        !q ||
         (log.userName && log.userName.toLowerCase().includes(q)) ||
         (log.userEmail && log.userEmail.toLowerCase().includes(q)) ||
         (log.userRole && log.userRole.toLowerCase().includes(q)) ||
@@ -1107,7 +1353,9 @@ export default function App() {
   // بدل قائمة ثابتة يدوية كانت لا تطابق نصياً القيم الحقيقية التي تُسجَّل بها الأنشطة (مثال: "سجل الموكلين" في القائمة
   // مقابل "الموكلين" في السجل الفعلي) — ما كان يجعل اختيار أغلب الأقسام من الفلتر يُظهر نتائج فارغة رغم وجود أنشطة فعلية
   const auditModuleOptions = useMemo(() => {
-    return Array.from(new Set(auditLogs.map((a) => a.targetModule))).filter((m): m is string => Boolean(m)).sort((a, b) => a.localeCompare(b, "ar"));
+    return Array.from(new Set(auditLogs.map((a) => a.targetModule)))
+      .filter((m): m is string => Boolean(m))
+      .sort((a, b) => a.localeCompare(b, "ar"));
   }, [auditLogs]);
 
   // تبويبات تصنيف قوائم حظر KYC تُبنى ديناميكياً من القيم الفعلية الموجودة بالقائمة، بدل ثلاث قيم ثابتة
@@ -1119,31 +1367,50 @@ export default function App() {
     "تنظيم إرهابي": "تنظيمات إرهابية",
   };
   const kycTypeOptions = useMemo(() => {
-    const distinctTypes = Array.from(new Set(kycWatchlist.map((i) => i.type))).filter((t): t is string => Boolean(t)).sort((a, b) => a.localeCompare(b, "ar"));
-    return [{ label: "الكل", val: "الكل" }, ...distinctTypes.map((t) => ({ label: KYC_TYPE_LABELS[t] || t, val: t }))];
+    const distinctTypes = Array.from(new Set(kycWatchlist.map((i) => i.type)))
+      .filter((t): t is string => Boolean(t))
+      .sort((a, b) => a.localeCompare(b, "ar"));
+    return [
+      { label: "الكل", val: "الكل" },
+      ...distinctTypes.map((t) => ({ label: KYC_TYPE_LABELS[t] || t, val: t })),
+    ];
   }, [kycWatchlist]);
 
   // ---------- المبادئ والأحكام القضائية (Legal Precedents) ----------
   const {
-    precedents, setPrecedents,
-    precedentSearch, setPrecedentSearch,
-    precedentCourtFilter, setPrecedentCourtFilter,
-    precedentCategoryFilter, setPrecedentCategoryFilter,
-    precedentYearFilter, setPrecedentYearFilter,
-    showAddPrecedentModal, setShowAddPrecedentModal,
-    selectedPrecedent, setSelectedPrecedent,
+    precedents,
+    setPrecedents,
+    precedentSearch,
+    setPrecedentSearch,
+    precedentCourtFilter,
+    setPrecedentCourtFilter,
+    precedentCategoryFilter,
+    setPrecedentCategoryFilter,
+    precedentYearFilter,
+    setPrecedentYearFilter,
+    showAddPrecedentModal,
+    setShowAddPrecedentModal,
+    selectedPrecedent,
+    setSelectedPrecedent,
   } = usePrecedents();
 
   // ---------- السياسات الداخلية للمكتب ----------
   const {
-    policies, setPolicies,
-    policySearch, setPolicySearch,
-    policyCategoryFilter, setPolicyCategoryFilter,
-    showPolicyModal, setShowPolicyModal,
-    editingPolicy, setEditingPolicy,
-    selectedPolicy, setSelectedPolicy,
+    policies,
+    setPolicies,
+    policySearch,
+    setPolicySearch,
+    policyCategoryFilter,
+    setPolicyCategoryFilter,
+    showPolicyModal,
+    setShowPolicyModal,
+    editingPolicy,
+    setEditingPolicy,
+    selectedPolicy,
+    setSelectedPolicy,
     filteredPolicies,
-    policyForm, setPolicyForm,
+    policyForm,
+    setPolicyForm,
   } = usePolicies();
 
   // ================= مزامنة باقي الأقسام (مستندات/وكالات/زملاء/جلسات/مهام/جهات اتصال المحكمة/
@@ -1157,15 +1424,43 @@ export default function App() {
     { table: "docs", get: () => docs, set: (v) => setDocs(v as DocItem[]) },
     { table: "poas", get: () => poas, set: (v) => setPoas(v as PoaItem[]) },
     { table: "colleagues", get: () => colleagues, set: (v) => setColleagues(v as Colleague[]) },
-    { table: "colleague_delegations", get: () => colleagueDelegations, set: (v) => setColleagueDelegations(v as ColleagueDelegation[]) },
-    { table: "office_agreements", get: () => officeAgreements, set: (v) => setOfficeAgreements(v as OfficeAgreement[]) },
+    {
+      table: "colleague_delegations",
+      get: () => colleagueDelegations,
+      set: (v) => setColleagueDelegations(v as ColleagueDelegation[]),
+    },
+    {
+      table: "office_agreements",
+      get: () => officeAgreements,
+      set: (v) => setOfficeAgreements(v as OfficeAgreement[]),
+    },
     { table: "hearings", get: () => hearings, set: (v) => setHearings(v as Hearing[]) },
     { table: "tasks", get: () => tasks, set: (v) => setTasks(v as TaskItem[]) },
-    { table: "court_contacts", get: () => courtContacts, set: (v) => setCourtContacts(v as CourtContact[]) },
-    { table: "internal_policies", get: () => policies, set: (v) => setPolicies(v as InternalPolicy[]) },
-    { table: "disciplinary_actions", get: () => disciplinaryActions, set: (v) => setDisciplinaryActions(v as EmployeeDisciplinaryAction[]) },
-    { table: "judgment_deadlines", get: () => deadlines, set: (v) => setDeadlines(v as JudgmentDeadline[]) },
-    { table: "consultation_bookings", get: () => consultationBookings, set: (v) => setConsultationBookings(v as BookingRecord[]) },
+    {
+      table: "court_contacts",
+      get: () => courtContacts,
+      set: (v) => setCourtContacts(v as CourtContact[]),
+    },
+    {
+      table: "internal_policies",
+      get: () => policies,
+      set: (v) => setPolicies(v as InternalPolicy[]),
+    },
+    {
+      table: "disciplinary_actions",
+      get: () => disciplinaryActions,
+      set: (v) => setDisciplinaryActions(v as EmployeeDisciplinaryAction[]),
+    },
+    {
+      table: "judgment_deadlines",
+      get: () => deadlines,
+      set: (v) => setDeadlines(v as JudgmentDeadline[]),
+    },
+    {
+      table: "consultation_bookings",
+      get: () => consultationBookings,
+      set: (v) => setConsultationBookings(v as BookingRecord[]),
+    },
   ];
   const remainingSyncHydratedRef = React.useRef(false);
 
@@ -1182,47 +1477,144 @@ export default function App() {
         }
       }
       // إعدادات الاستشارات صف واحد فقط (ليست مصفوفة) — نتعامل معها بشكل منفصل
-      const remoteSettings = await fetchSupabaseTable<{ id: string; value: ConsultationSettings }>("consultation_settings");
+      const remoteSettings = await fetchSupabaseTable<{ id: string; value: ConsultationSettings }>(
+        "consultation_settings",
+      );
       if (!cancelled) {
         if (remoteSettings && remoteSettings.length > 0 && (remoteSettings[0] as any).value) {
           setConsultationSettings((remoteSettings[0] as any).value);
         } else if (remoteSettings !== null) {
-          supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "settings", value: consultationSettings } }], { onConflict: "id" });
+          supabase
+            .from("consultation_settings")
+            .upsert([{ id: "settings", data: { id: "settings", value: consultationSettings } }], {
+              onConflict: "id",
+            });
         }
       }
       remainingSyncHydratedRef.current = true;
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("docs", docs), 1500); return () => clearTimeout(t); } }, [docs]);
-  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("poas", poas), 1500); return () => clearTimeout(t); } }, [poas]);
-  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("colleagues", colleagues), 1500); return () => clearTimeout(t); } }, [colleagues]);
-  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("colleague_delegations", colleagueDelegations), 1500); return () => clearTimeout(t); } }, [colleagueDelegations]);
-  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("office_agreements", officeAgreements), 1500); return () => clearTimeout(t); } }, [officeAgreements]);
-  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("hearings", hearings), 1500); return () => clearTimeout(t); } }, [hearings]);
-  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("tasks", tasks), 1500); return () => clearTimeout(t); } }, [tasks]);
-  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("court_contacts", courtContacts), 1500); return () => clearTimeout(t); } }, [courtContacts]);
-  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("internal_policies", policies), 1500); return () => clearTimeout(t); } }, [policies]);
-  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("disciplinary_actions", disciplinaryActions), 1500); return () => clearTimeout(t); } }, [disciplinaryActions]);
-  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("judgment_deadlines", deadlines), 1500); return () => clearTimeout(t); } }, [deadlines]);
-  useEffect(() => { if (remainingSyncHydratedRef.current) { const t = setTimeout(() => pushSupabaseTable("consultation_bookings", consultationBookings), 1500); return () => clearTimeout(t); } }, [consultationBookings]);
+  useEffect(() => {
+    if (remainingSyncHydratedRef.current) {
+      const t = setTimeout(() => pushSupabaseTable("docs", docs), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [docs]);
+  useEffect(() => {
+    if (remainingSyncHydratedRef.current) {
+      const t = setTimeout(() => pushSupabaseTable("poas", poas), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [poas]);
+  useEffect(() => {
+    if (remainingSyncHydratedRef.current) {
+      const t = setTimeout(() => pushSupabaseTable("colleagues", colleagues), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [colleagues]);
+  useEffect(() => {
+    if (remainingSyncHydratedRef.current) {
+      const t = setTimeout(
+        () => pushSupabaseTable("colleague_delegations", colleagueDelegations),
+        1500,
+      );
+      return () => clearTimeout(t);
+    }
+  }, [colleagueDelegations]);
+  useEffect(() => {
+    if (remainingSyncHydratedRef.current) {
+      const t = setTimeout(() => pushSupabaseTable("office_agreements", officeAgreements), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [officeAgreements]);
+  useEffect(() => {
+    if (remainingSyncHydratedRef.current) {
+      const t = setTimeout(() => pushSupabaseTable("hearings", hearings), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [hearings]);
+  useEffect(() => {
+    if (remainingSyncHydratedRef.current) {
+      const t = setTimeout(() => pushSupabaseTable("tasks", tasks), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [tasks]);
+  useEffect(() => {
+    if (remainingSyncHydratedRef.current) {
+      const t = setTimeout(() => pushSupabaseTable("court_contacts", courtContacts), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [courtContacts]);
+  useEffect(() => {
+    if (remainingSyncHydratedRef.current) {
+      const t = setTimeout(() => pushSupabaseTable("internal_policies", policies), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [policies]);
+  useEffect(() => {
+    if (remainingSyncHydratedRef.current) {
+      const t = setTimeout(
+        () => pushSupabaseTable("disciplinary_actions", disciplinaryActions),
+        1500,
+      );
+      return () => clearTimeout(t);
+    }
+  }, [disciplinaryActions]);
+  useEffect(() => {
+    if (remainingSyncHydratedRef.current) {
+      const t = setTimeout(() => pushSupabaseTable("judgment_deadlines", deadlines), 1500);
+      return () => clearTimeout(t);
+    }
+  }, [deadlines]);
+  useEffect(() => {
+    if (remainingSyncHydratedRef.current) {
+      const t = setTimeout(
+        () => pushSupabaseTable("consultation_bookings", consultationBookings),
+        1500,
+      );
+      return () => clearTimeout(t);
+    }
+  }, [consultationBookings]);
   useEffect(() => {
     if (!remainingSyncHydratedRef.current) return;
     const t = setTimeout(() => {
-supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "settings", value: consultationSettings } }], { onConflict: "id" });
+      supabase
+        .from("consultation_settings")
+        .upsert([{ id: "settings", data: { id: "settings", value: consultationSettings } }], {
+          onConflict: "id",
+        });
     }, 1500);
     return () => clearTimeout(t);
   }, [consultationSettings]);
 
-  const handleSavePolicy = (data: { title: string; category: string; content: string; effectiveDate?: string }) => {
+  const handleSavePolicy = (data: {
+    title: string;
+    category: string;
+    content: string;
+    effectiveDate?: string;
+  }) => {
     if (!isSuperAdmin) return;
     const now = todayISO();
     if (editingPolicy) {
-      const updated: InternalPolicy = { ...editingPolicy, ...data, updatedAt: now, updatedBy: currentUser?.name };
+      const updated: InternalPolicy = {
+        ...editingPolicy,
+        ...data,
+        updatedAt: now,
+        updatedBy: currentUser?.name,
+      };
       setPolicies((prev) => prev.map((p) => (p.id === editingPolicy.id ? updated : p)));
-      logAuditAction("UPDATE", "السياسات الداخلية", data.title, "تعديل نص أو بيانات سياسة داخلية معتمدة", editingPolicy.id);
+      logAuditAction(
+        "UPDATE",
+        "السياسات الداخلية",
+        data.title,
+        "تعديل نص أو بيانات سياسة داخلية معتمدة",
+        editingPolicy.id,
+      );
     } else {
       const newPolicy: InternalPolicy = {
         id: nextId(policies),
@@ -1231,7 +1623,13 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         updatedBy: currentUser?.name,
       };
       setPolicies((prev) => [newPolicy, ...prev]);
-      logAuditAction("CREATE", "السياسات الداخلية", data.title, "إضافة سياسة داخلية جديدة معتمدة من المكتب", newPolicy.id);
+      logAuditAction(
+        "CREATE",
+        "السياسات الداخلية",
+        data.title,
+        "إضافة سياسة داخلية جديدة معتمدة من المكتب",
+        newPolicy.id,
+      );
     }
     setShowPolicyModal(false);
     setEditingPolicy(null);
@@ -1248,7 +1646,14 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       actionName: "حذف سياسة داخلية",
       onConfirm: () => {
         setPolicies((prev) => prev.filter((p) => p.id !== policy.id));
-        logAuditAction("DELETE", "السياسات الداخلية", policy.title, "حذف سياسة داخلية نهائياً من الأرشيف", policy.id, "مؤكد");
+        logAuditAction(
+          "DELETE",
+          "السياسات الداخلية",
+          policy.title,
+          "حذف سياسة داخلية نهائياً من الأرشيف",
+          policy.id,
+          "مؤكد",
+        );
         if (selectedPolicy?.id === policy.id) setSelectedPolicy(null);
       },
     });
@@ -1257,7 +1662,12 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const openAddPolicy = () => {
     if (!isSuperAdmin) return;
     setEditingPolicy(null);
-    setPolicyForm({ title: "", category: POLICY_CATEGORIES[0], content: "", effectiveDate: todayISO() });
+    setPolicyForm({
+      title: "",
+      category: POLICY_CATEGORIES[0],
+      content: "",
+      effectiveDate: todayISO(),
+    });
     setShowPolicyModal(true);
   };
 
@@ -1297,7 +1707,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           "firm_leave_requests",
           "firm_employee_expenses",
           "firm_fee_agreements",
-          "firm_payments"
+          "firm_payments",
         ];
         keysToRemove.forEach((k) => localStorage.removeItem(k));
         localStorage.setItem(PURGE_KEY, "true");
@@ -1328,7 +1738,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   useEffect(() => {
     async function fetchSupabasePrecedents() {
       try {
-        const { data, error } = await supabase.from("legal_precedents").select("*").order("ruling_year", { ascending: false });
+        const { data, error } = await supabase
+          .from("legal_precedents")
+          .select("*")
+          .order("ruling_year", { ascending: false });
         if (!error && data && data.length > 0) {
           setPrecedents((prev) => {
             const map = new Map<string, LegalPrecedent>();
@@ -1345,7 +1758,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
                 summary_text: p.summary_text || p.summary || p.principle || "",
                 pdf_file_url: p.pdf_file_url || p.pdf_url || undefined,
                 word_file_url: p.word_file_url || p.word_url || undefined,
-                created_at: p.created_at || new Date().toISOString()
+                created_at: p.created_at || new Date().toISOString(),
               });
             });
             return Array.from(map.values());
@@ -1360,10 +1773,14 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   // Form State for Add Precedent
   const {
-    precedentLoading, setPrecedentLoading,
-    precedentForm, setPrecedentForm,
-    precedentPdfFile, setPrecedentPdfFile,
-    precedentWordFile, setPrecedentWordFile,
+    precedentLoading,
+    setPrecedentLoading,
+    precedentForm,
+    setPrecedentForm,
+    precedentPdfFile,
+    setPrecedentPdfFile,
+    precedentWordFile,
+    setPrecedentWordFile,
   } = usePrecedentForm();
 
   // Helper to upload files to Supabase Storage or fallback to ObjectURL
@@ -1392,7 +1809,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     }
   };
 
-  const handlePrecedentSubmit = async (e: React.FormEvent) => { e.preventDefault(); if (!checkPerm("managePrecedents", "إضافة مبدأ قضائي")) return; if (!precedentForm.title.trim() || !precedentForm.summary_text.trim()) {
+  const handlePrecedentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!checkPerm("managePrecedents", "إضافة مبدأ قضائي")) return;
+    if (!precedentForm.title.trim() || !precedentForm.summary_text.trim()) {
       alert("يرجى إدخال عنوان المبدأ ونص القاعدة القانونية");
       return;
     }
@@ -1413,7 +1833,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         summary_text: precedentForm.summary_text.trim(),
         pdf_file_url: pdfUrl || undefined,
         word_file_url: wordUrl || undefined,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       };
 
       // Attempt Supabase DB Insert
@@ -1429,7 +1849,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
             summary_text: newPrecedent.summary_text,
             pdf_file_url: pdfUrl,
             word_file_url: wordUrl,
-          }
+          },
         ]);
       } catch (e) {
         console.warn("Supabase legal_precedents insert note:", e);
@@ -1442,7 +1862,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         "المبادئ والأحكام القضائية",
         `مبدأ: ${newPrecedent.title}`,
         `إضافة مبدأ قضائي جديد (${newPrecedent.court_name} - ${newPrecedent.category}) برقم طعن ${newPrecedent.appeal_number}`,
-        newPrecedent.id
+        newPrecedent.id,
       );
 
       alert("تم حفظ المبدأ القضائي بنجاح!");
@@ -1476,7 +1896,13 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       actionName: "حذف المبدأ القضائي",
       onConfirm: async () => {
         setPrecedents((prev) => prev.filter((p) => p.id !== precId));
-        logAuditAction("DELETE", "المبادئ والأحكام القضائية", `مبدأ: ${target.title}`, `حذف المبدأ القضائي (${target.court_name} - ${target.appeal_number}) نهائياً`, target.id);
+        logAuditAction(
+          "DELETE",
+          "المبادئ والأحكام القضائية",
+          `مبدأ: ${target.title}`,
+          `حذف المبدأ القضائي (${target.court_name} - ${target.appeal_number}) نهائياً`,
+          target.id,
+        );
         try {
           await supabase.from("legal_precedents").delete().eq("id", precId);
         } catch (e) {
@@ -1489,27 +1915,44 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const filteredPrecedents = useMemo(() => {
     return precedents.filter((p) => {
       const matchesCourt = precedentCourtFilter === "الكل" || p.court_name === precedentCourtFilter;
-      const matchesCategory = precedentCategoryFilter === "الكل" || p.category === precedentCategoryFilter;
-      const matchesYear = precedentYearFilter === "الكل" || String(p.ruling_year) === precedentYearFilter;
+      const matchesCategory =
+        precedentCategoryFilter === "الكل" || p.category === precedentCategoryFilter;
+      const matchesYear =
+        precedentYearFilter === "الكل" || String(p.ruling_year) === precedentYearFilter;
       const q = precedentSearch.trim().toLowerCase();
-      const matchesQuery = !q ||
+      const matchesQuery =
+        !q ||
         (p.title && p.title.toLowerCase().includes(q)) ||
         (p.summary_text && p.summary_text.toLowerCase().includes(q)) ||
         (p.appeal_number && p.appeal_number.toLowerCase().includes(q)) ||
         (p.circuit_name && p.circuit_name.toLowerCase().includes(q));
       return matchesCourt && matchesCategory && matchesYear && matchesQuery;
     });
-  }, [precedents, precedentCourtFilter, precedentCategoryFilter, precedentYearFilter, precedentSearch]);
+  }, [
+    precedents,
+    precedentCourtFilter,
+    precedentCategoryFilter,
+    precedentYearFilter,
+    precedentSearch,
+  ]);
   const {
-    agrPreviewId, setAgrPreviewId,
-    delegationPreviewId, setDelegationPreviewId,
-    deleteAgrConfirm, setDeleteAgrConfirm,
-    editingDelegationWording, setEditingDelegationWording,
-    delegationDraftHtml, setDelegationDraftHtml,
+    agrPreviewId,
+    setAgrPreviewId,
+    delegationPreviewId,
+    setDelegationPreviewId,
+    deleteAgrConfirm,
+    setDeleteAgrConfirm,
+    editingDelegationWording,
+    setEditingDelegationWording,
+    delegationDraftHtml,
+    setDelegationDraftHtml,
     delegationBodyRef,
-    editingAgreementClauses, setEditingAgreementClauses,
-    agreementClausesDraft, setAgreementClausesDraft,
-    agrForm, setAgrForm,
+    editingAgreementClauses,
+    setEditingAgreementClauses,
+    agreementClausesDraft,
+    setAgreementClausesDraft,
+    agrForm,
+    setAgrForm,
     emptyAgrForm,
   } = useAgreementDraftState();
 
@@ -1517,12 +1960,17 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const setAgrInst = (idx: number, k: string, v: any) =>
     setAgrForm((prev: any) => ({
       ...prev,
-      installments: prev.installments.map((it: any, i: number) => (i === idx ? { ...it, [k]: v } : it)),
+      installments: prev.installments.map((it: any, i: number) =>
+        i === idx ? { ...it, [k]: v } : it,
+      ),
     }));
   const addAgrInst = () =>
     setAgrForm((prev: any) => ({
       ...prev,
-      installments: [...prev.installments, { amount: "", dueDate: todayISO(), paidOnSigning: false }],
+      installments: [
+        ...prev.installments,
+        { amount: "", dueDate: todayISO(), paidOnSigning: false },
+      ],
     }));
   const removeAgrInst = (idx: number) =>
     setAgrForm((prev: any) => ({
@@ -1530,7 +1978,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       installments: prev.installments.filter((_: any, i: number) => i !== idx),
     }));
 
-  const agrTotal = (agrForm.installments || []).reduce((s: number, i: any) => s + (+i.amount || 0), 0);
+  const agrTotal = (agrForm.installments || []).reduce(
+    (s: number, i: any) => s + (+i.amount || 0),
+    0,
+  );
 
   // توليد نص "قيمة العقد وطريقة السداد" تلقائياً حسب الدفعات المدخلة
   const buildPaymentTerms = (insts: OfficeAgreementInstallment[], total: number) => {
@@ -1541,10 +1992,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       };
     }
     const arParts = insts
-      .map((i, idx) => `الدفعة ${idx + 1}: ${i.amount.toLocaleString("ar-AE")} درهم بتاريخ ${fmtDate(i.dueDate)}${i.paidOnSigning ? " (عند التوقيع)" : ""}`)
+      .map(
+        (i, idx) =>
+          `الدفعة ${idx + 1}: ${i.amount.toLocaleString("ar-AE")} درهم بتاريخ ${fmtDate(i.dueDate)}${i.paidOnSigning ? " (عند التوقيع)" : ""}`,
+      )
       .join("، ");
     const enParts = insts
-      .map((i, idx) => `Installment ${idx + 1}: AED ${i.amount.toLocaleString("en-US")} due on ${i.dueDate}${i.paidOnSigning ? " (upon signing)" : ""}`)
+      .map(
+        (i, idx) =>
+          `Installment ${idx + 1}: AED ${i.amount.toLocaleString("en-US")} due on ${i.dueDate}${i.paidOnSigning ? " (upon signing)" : ""}`,
+      )
       .join(", ");
     return {
       ar: `قيمة العقد ${total.toLocaleString("ar-AE")} درهم تُدفع على ${insts.length} دفعات كالتالي: ${arParts}.`,
@@ -1571,7 +2028,11 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     }
     const insts: OfficeAgreementInstallment[] = (agrForm.installments || [])
       .filter((i: any) => +i.amount > 0)
-      .map((i: any) => ({ amount: +i.amount, dueDate: i.dueDate || todayISO(), paidOnSigning: !!i.paidOnSigning }));
+      .map((i: any) => ({
+        amount: +i.amount,
+        dueDate: i.dueDate || todayISO(),
+        paidOnSigning: !!i.paidOnSigning,
+      }));
     if (insts.length === 0) {
       alert("يرجى إدخال دفعة واحدة على الأقل بمبلغ صحيح");
       return;
@@ -1606,7 +2067,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     // (2) اتفاقية الأتعاب + جدول الدفعات — تنزل تلقائياً في تبويب "اتفاقيات الأتعاب"
     const feeAgrId = nextId(feeAgreements);
     const agreementNumber = `AGR-${new Date().getFullYear()}-${String(feeAgrId + 100).padStart(3, "0")}`;
-    let maxInstId = feeAgreements.flatMap((a) => a.installments || []).reduce((m, i) => Math.max(m, i.id), 0);
+    let maxInstId = feeAgreements
+      .flatMap((a) => a.installments || [])
+      .reduce((m, i) => Math.max(m, i.id), 0);
     const feeInstallments: FeeAgreementInstallment[] = insts.map((i, idx) => ({
       id: ++maxInstId,
       feeAgreementId: feeAgrId,
@@ -1628,7 +2091,14 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       installments: feeInstallments,
       notes: `أُنشئت تلقائياً من نموذج اتفاقية المكتب المعتمدة بتاريخ ${fmtDate(todayISO())}`,
     };
-    setFeeAgreements((prev) => [...prev, newFeeAgreement]); logAuditAction("CREATE", "اتفاقيات الأتعاب", `اتفاقية: ${agreementNumber}`, `إنشاء اتفاقية أتعاب جديدة ${agreementNumber} للموكل ${clientNameArFinal} بإجمالي ${total}`, feeAgrId);
+    setFeeAgreements((prev) => [...prev, newFeeAgreement]);
+    logAuditAction(
+      "CREATE",
+      "اتفاقيات الأتعاب",
+      `اتفاقية: ${agreementNumber}`,
+      `إنشاء اتفاقية أتعاب جديدة ${agreementNumber} للموكل ${clientNameArFinal} بإجمالي ${total}`,
+      feeAgrId,
+    );
 
     // (3) سندات القبض — كل دفعة "مسددة عند التوقيع" تنزل تلقائياً في تبويب الدفعات
     const paidOnes = feeInstallments.filter((i) => i.status === "مدفوع");
@@ -1678,13 +2148,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   const handleExecuteDeleteAgreement = () => {
     if (!deleteAgrConfirm) return;
-    if (!checkPerm("deleteAgreements", "حذف اتفاقية الأتعاب", {
-      section: "اتفاقيات الأتعاب",
-      title: `اتفاقية أتعاب: ${deleteAgrConfirm.agreementNumber}`,
-      details: `الموكل: ${deleteAgrConfirm.clientNameAr} | المبلغ: ${fmtAED(deleteAgrConfirm.totalAmount)}`,
-      targetId: deleteAgrConfirm.id,
-      isDelete: true,
-    })) return;
+    if (
+      !checkPerm("deleteAgreements", "حذف اتفاقية الأتعاب", {
+        section: "اتفاقيات الأتعاب",
+        title: `اتفاقية أتعاب: ${deleteAgrConfirm.agreementNumber}`,
+        details: `الموكل: ${deleteAgrConfirm.clientNameAr} | المبلغ: ${fmtAED(deleteAgrConfirm.totalAmount)}`,
+        targetId: deleteAgrConfirm.id,
+        isDelete: true,
+      })
+    )
+      return;
     const targetId = deleteAgrConfirm.id;
     const feeAgrId = deleteAgrConfirm.feeAgreementId;
     const cid = deleteAgrConfirm.clientId;
@@ -1696,7 +2169,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       `اتفاقية رقم: ${deleteAgrConfirm.agreementNumber}`,
       `تم تأكيد حذف اتفاقية الأتعاب رقم ${deleteAgrConfirm.agreementNumber} للموكل ${deleteAgrConfirm.clientNameAr} بمبلغ إجمالي ${fmtAED(deleteAgrConfirm.totalAmount)}.`,
       deleteAgrConfirm.id,
-      "مؤكد"
+      "مؤكد",
     );
 
     // 1. Remove from officeAgreements archive
@@ -1708,13 +2181,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
     // 3. إلغاء الموكل تلقائياً إذا كانت هذه الاتفاقية هي سبب ارتباطه الوحيد بالمكتب ولا توجد أي سجلات أخرى
     if (cid) {
-      const hasOtherOfficeAgr = officeAgreements.some((a) => a.id !== targetId && a.clientId === cid);
+      const hasOtherOfficeAgr = officeAgreements.some(
+        (a) => a.id !== targetId && a.clientId === cid,
+      );
       const hasOtherFeeAgr = feeAgreements.some((fa) => fa.id !== feeAgrId && fa.clientId === cid);
       const hasCases = cases.some((c) => c.clientId === cid);
       const hasInvoices = invoices.some((inv) => inv.clientId === cid);
       const hasPoas = poas.some((p) => p.clientId === cid);
 
-      const hasOtherRecords = hasOtherOfficeAgr || hasOtherFeeAgr || hasCases || hasInvoices || hasPoas;
+      const hasOtherRecords =
+        hasOtherOfficeAgr || hasOtherFeeAgr || hasCases || hasInvoices || hasPoas;
 
       if (!hasOtherRecords) {
         setClients((prev) => prev.filter((c) => c.id !== cid));
@@ -1728,30 +2204,52 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     setDeleteAgrConfirm(null);
   };
   const {
-    courtSearchQuery, setCourtSearchQuery,
-    courtEmirateFilter, setCourtEmirateFilter,
-    courtCategoryFilter, setCourtCategoryFilter,
-    courtBranchFilter, setCourtBranchFilter,
-    courtFiltersExpanded, setCourtFiltersExpanded,
-    editingCourtContact, setEditingCourtContact,
+    courtSearchQuery,
+    setCourtSearchQuery,
+    courtEmirateFilter,
+    setCourtEmirateFilter,
+    courtCategoryFilter,
+    setCourtCategoryFilter,
+    courtBranchFilter,
+    setCourtBranchFilter,
+    courtFiltersExpanded,
+    setCourtFiltersExpanded,
+    editingCourtContact,
+    setEditingCourtContact,
   } = useCourtContactFilters();
-  const courtContactsFilterCache = React.useRef<{ contacts: typeof courtContacts; query: string; emirate: string; category: string; branch: string; result: typeof courtContacts } | null>(null);
+  const courtContactsFilterCache = React.useRef<{
+    contacts: typeof courtContacts;
+    query: string;
+    emirate: string;
+    category: string;
+    branch: string;
+    result: typeof courtContacts;
+  } | null>(null);
 
   // حالة استيراد ملفات الإكسل لدليل المحاكم والجهات القضائية
   const {
-    courtExcelModalOpen, setCourtExcelModalOpen,
-    courtImportPreviewList, setCourtImportPreviewList,
-    courtExcelImportMode, setCourtExcelImportMode,
-    courtExcelFileName, setCourtExcelFileName,
-    courtExcelImportStatus, setCourtExcelImportStatus,
+    courtExcelModalOpen,
+    setCourtExcelModalOpen,
+    courtImportPreviewList,
+    setCourtImportPreviewList,
+    courtExcelImportMode,
+    setCourtExcelImportMode,
+    courtExcelFileName,
+    setCourtExcelFileName,
+    courtExcelImportStatus,
+    setCourtExcelImportStatus,
   } = useCourtExcelImport();
 
   // Sub-tabs configuration
   const {
-    invoiceSubTab, setInvoiceSubTab,
-    docSubTab, setDocSubTab,
-    kycSubTab, setKycSubTab,
-    hearingSubTab, setHearingSubTab,
+    invoiceSubTab,
+    setInvoiceSubTab,
+    docSubTab,
+    setDocSubTab,
+    kycSubTab,
+    setKycSubTab,
+    hearingSubTab,
+    setHearingSubTab,
   } = useSubTabs();
 
   // ---------- 1. تدقيق ومقارنة أسماء الموكلين مع قائمة الأشخاص المحظورين والمنكشفين (KYC Watchlist Auto-Audit) ----------
@@ -1768,8 +2266,11 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       const wId = w.idNo ? w.idNo.trim().toLowerCase() : "";
       const wNameKey = firstNNameTokens(w.fullName, 3);
       const nameMatch =
-        cName.includes(wName) || wName.includes(cName) ||
-        (cNameKey.length > 0 && wNameKey.length > 0 && (cNameKey === wNameKey || cNameKey.includes(wNameKey) || wNameKey.includes(cNameKey)));
+        cName.includes(wName) ||
+        wName.includes(cName) ||
+        (cNameKey.length > 0 &&
+          wNameKey.length > 0 &&
+          (cNameKey === wNameKey || cNameKey.includes(wNameKey) || wNameKey.includes(cNameKey)));
       const idMatch = cId.length > 3 && wId.length > 3 && cId === wId;
       return nameMatch || idMatch;
     });
@@ -1778,7 +2279,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       setKycSanctionAlert({
         clientName,
         idNo,
-        watchlistItem: match
+        watchlistItem: match,
       });
       // إلزامي: تسجيل كل تطابق مع قوائم العقوبات في سجل التدقيق فوراً وبغض النظر عن نقطة الدخول
       // (استيراد، اتفاقية أتعاب، إضافة موكل...) — سابقاً كان يكفي ضغط "فهمت" لإغلاق التنبيه دون أي أثر موثّق
@@ -1788,7 +2289,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         "الامتثال KYC",
         `تطابق مع قائمة العقوبات: ${clientName}`,
         `رُصد تطابق محتمل بين الاسم المُدخل "${clientName}"${idNo ? ` (هوية/جواز: ${idNo})` : ""} وقائمة الأشخاص المحظورين — التصنيف: ${match.type}، السبب: ${match.reason}`,
-        0
+        0,
       );
     }
     return match;
@@ -1813,8 +2314,8 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           risk: "مرتفع",
           status: "قيد المراجعة",
           lastReview: todayISO(),
-          notes: `🚫 محظور تلقائياً — تطابق محتمل عند إضافة موكل جديد يدوياً (سبب: ${matchSanction.reason})`
-        }
+          notes: `🚫 محظور تلقائياً — تطابق محتمل عند إضافة موكل جديد يدوياً (سبب: ${matchSanction.reason})`,
+        },
       ]);
     }
     return matchSanction;
@@ -1842,20 +2343,44 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         }
 
         const parsed = rows.map((r, idx) => {
-          const caseNumber = String(r["رقم القضية"] || r["رقم/كود القضية"] || r["رقم القضيه"] || r["Case Number"] || r["number"] || `CAS-2026-${100 + idx}`).trim();
-          const cName = String(r["اسم الموكل"] || r["الموكل"] || r["Client Name"] || r["client"] || "موكل غير محدد").trim();
+          const caseNumber = String(
+            r["رقم القضية"] ||
+              r["رقم/كود القضية"] ||
+              r["رقم القضيه"] ||
+              r["Case Number"] ||
+              r["number"] ||
+              `CAS-2026-${100 + idx}`,
+          ).trim();
+          const cName = String(
+            r["اسم الموكل"] || r["الموكل"] || r["Client Name"] || r["client"] || "موكل غير محدد",
+          ).trim();
           // يدعم عمود "اسم الخصم" ذكر أكثر من خصم مفصولين بفاصلة أو "،" أو "و" فيقسّمهم إلى قائمة خصوم منفصلة
-          const opponentRaw = String(r["اسم الخصم"] || r["الخصم"] || r["Opponent"] || r["opponent"] || "").trim();
+          const opponentRaw = String(
+            r["اسم الخصم"] || r["الخصم"] || r["Opponent"] || r["opponent"] || "",
+          ).trim();
           const opponents = opponentRaw
-            ? opponentRaw.split(/[,،]| و /).map((o) => o.trim()).filter(Boolean)
+            ? opponentRaw
+                .split(/[,،]| و /)
+                .map((o) => o.trim())
+                .filter(Boolean)
             : [];
-          const type = String(r["نوع القضية"] || r["النوع"] || r["Type"] || r["type"] || "تجاري").trim();
-          const court = String(r["المحكمة"] || r["الجهة القضائية"] || r["Court"] || r["court"] || "محاكم دبي").trim();
-          const subject = String(r["موضوع القضية"] || r["الموضوع"] || r["العنوان"] || r["subject"] || "دعوى قضائية").trim();
-          const openDate = String(r["تاريخ القيد"] || r["تاريخ الفتح"] || r["openDate"] || todayISO()).trim();
+          const type = String(
+            r["نوع القضية"] || r["النوع"] || r["Type"] || r["type"] || "تجاري",
+          ).trim();
+          const court = String(
+            r["المحكمة"] || r["الجهة القضائية"] || r["Court"] || r["court"] || "محاكم دبي",
+          ).trim();
+          const subject = String(
+            r["موضوع القضية"] || r["الموضوع"] || r["العنوان"] || r["subject"] || "دعوى قضائية",
+          ).trim();
+          const openDate = String(
+            r["تاريخ القيد"] || r["تاريخ الفتح"] || r["openDate"] || todayISO(),
+          ).trim();
           const fee = Number(r["الأتعاب"] || r["الرسوم"] || r["fee"] || 10000);
 
-          const existingClient = clients.find((c) => c.name.trim().toLowerCase() === cName.toLowerCase());
+          const existingClient = clients.find(
+            (c) => c.name.trim().toLowerCase() === cName.toLowerCase(),
+          );
 
           return {
             id: idx + 1,
@@ -1868,7 +2393,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
             openDate,
             fee,
             matchedClientId: existingClient ? existingClient.id : null,
-            isNewClient: !existingClient
+            isNewClient: !existingClient,
           };
         });
 
@@ -1887,7 +2412,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     if (excelCasesParsed.length === 0) return;
     if (!checkPerm("manageCases", "استيراد قضايا من ملف Excel")) return;
 
-    let updatedClients = [...clients];
+    const updatedClients = [...clients];
     const newCasesList: CaseItem[] = [];
 
     excelCasesParsed.forEach((item) => {
@@ -1904,7 +2429,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           emirate: "دبي",
           phone: "",
           email: "",
-          address: ""
+          address: "",
         };
 
         // فحص قائمة الحظر للموكل المستورد
@@ -1925,8 +2450,8 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
               risk: "مرتفع",
               status: "قيد المراجعة",
               lastReview: todayISO(),
-              notes: `🚫 محظور تلقائياً — تنبيه حظر استيراد Excel: مسجل في قائمة المحظورين (سبب: ${matchSanction.reason})`
-            }
+              notes: `🚫 محظور تلقائياً — تنبيه حظر استيراد Excel: مسجل في قائمة المحظورين (سبب: ${matchSanction.reason})`,
+            },
           ]);
         }
 
@@ -1945,7 +2470,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         status: "قيد النظر",
         subject: item.subject,
         openDate: item.openDate,
-        fee: item.fee
+        fee: item.fee,
       };
 
       newCasesList.push(newCaseObj);
@@ -1953,7 +2478,13 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
     setClients(updatedClients);
     setCases((prev) => [...prev, ...newCasesList]);
-    logAuditAction("CREATE", "القضايا", "استيراد شامل Excel", `تم استيراد ${newCasesList.length} قضية من ملف Excel بنجاح وتحديث الموكلين`, 0);
+    logAuditAction(
+      "CREATE",
+      "القضايا",
+      "استيراد شامل Excel",
+      `تم استيراد ${newCasesList.length} قضية من ملف Excel بنجاح وتحديث الموكلين`,
+      0,
+    );
     alert(`تم استيراد ${newCasesList.length} قضية بنجاح وربطها بالموكلين!`);
     setShowCasesExcelModal(false);
     setExcelCasesParsed([]);
@@ -1967,21 +2498,21 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         "اسم الموكل": "شركة الخليج للتوريدات اللوجستية",
         "اسم الخصم": "مؤسسة النجم الذهبي للمقاولات",
         "نوع القضية": "تجاري",
-        "المحكمة": "محاكم دبي",
+        المحكمة: "محاكم دبي",
         "موضوع القضية": "دعوى مطالبة بمبلغ توريد 150,000 درهم عن عقد توريد أجهزة",
         "تاريخ القيد": todayISO(),
-        "الأتعاب": 0
+        الأتعاب: 0,
       },
       {
         "رقم القضية": "CAS-2026-802",
         "اسم الموكل": "سالم محمد الكعبي",
         "اسم الخصم": "شركة الأفق للاستثمار و سالم راشد المهيري",
         "نوع القضية": "عقاري",
-        "المحكمة": "دائرة القضاء - أبوظبي",
+        المحكمة: "دائرة القضاء - أبوظبي",
         "موضوع القضية": "نزاع استرداد مسددات وحدة عقارية تحت الإنشاء",
         "تاريخ القيد": todayISO(),
-        "الأتعاب": 0
-      }
+        الأتعاب: 0,
+      },
     ];
 
     const ws = XLSX.utils.json_to_sheet(sampleData);
@@ -1991,7 +2522,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   };
 
   // ---------- 5. استخراج المستندات القانونية بالذكاء الاصطناعي (POAs, Agreements, Invoices) ----------
-  const handleProcessDocAiExtract = async (docType: "poa" | "agreement" | "invoice", file: File) => {
+  const handleProcessDocAiExtract = async (
+    docType: "poa" | "agreement" | "invoice",
+    file: File,
+  ) => {
     if (!file) return;
 
     if (docType === "poa") setPoaAiLoading(true);
@@ -2010,8 +2544,8 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
             docType,
             fileBase64: base64Str,
             mimeType: file.type || "application/pdf",
-            fileName: file.name
-          })
+            fileName: file.name,
+          }),
         });
 
         const data = await response.json();
@@ -2047,8 +2581,13 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     if (!checkPerm("manageDocs", "إضافة توكيل")) return;
 
     const targetPoaNumber = (poaAiExtracted.poaNumber || "").trim();
-    if (targetPoaNumber && poas.some((p) => p.number.trim().toLowerCase() === targetPoaNumber.toLowerCase())) {
-      alert(`تنبيه: رقم الوكالة "${targetPoaNumber}" مسجل مسبقاً في قاعدة البيانات!\nلا يمكن تكرار إدراج نفس الوكالة.`);
+    if (
+      targetPoaNumber &&
+      poas.some((p) => p.number.trim().toLowerCase() === targetPoaNumber.toLowerCase())
+    ) {
+      alert(
+        `تنبيه: رقم الوكالة "${targetPoaNumber}" مسجل مسبقاً في قاعدة البيانات!\nلا يمكن تكرار إدراج نفس الوكالة.`,
+      );
       return;
     }
 
@@ -2070,7 +2609,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         emirate: "دبي",
         phone: "",
         email: "",
-        address: ""
+        address: "",
       };
       setClients((prev) => [...prev, newC]);
       clientId = newC.id;
@@ -2083,11 +2622,17 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       issuer: poaAiExtracted.issuer || "الكاتب العدل",
       issue: poaAiExtracted.issueDate || todayISO(),
       expiry: poaAiExtracted.expiryDate || addDays(730),
-      scope: poaAiExtracted.scope || "صلاحية مرافعة وتوكيل عام أمام جميع المحاكم"
+      scope: poaAiExtracted.scope || "صلاحية مرافعة وتوكيل عام أمام جميع المحاكم",
     };
 
     setPoas((prev) => [newPoaItem, ...prev]);
-    logAuditAction("CREATE", "الوكالات", `وكالة رقم ${newPoaItem.number}`, "إضافة وكالة قانونية عبر الذكاء الاصطناعي", newPoaItem.id);
+    logAuditAction(
+      "CREATE",
+      "الوكالات",
+      `وكالة رقم ${newPoaItem.number}`,
+      "إضافة وكالة قانونية عبر الذكاء الاصطناعي",
+      newPoaItem.id,
+    );
     alert("تم حفظ الوكالة القانونية وربطها بالموكل بنجاح!");
     setShowPoaAiUploadModal(false);
     setPoaAiExtracted(null);
@@ -2118,7 +2663,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         emirate: "دبي",
         phone: "",
         email: "",
-        address: ""
+        address: "",
       };
       setClients((prev) => [...prev, newC]);
       clientId = newC.id;
@@ -2129,11 +2674,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
     // (1) اتفاقية الأتعاب المالية + قسط إجمالي واحد (الاستخراج الآلي لا يوفر تفصيلاً بالأقساط)
     const feeAgrId = nextId(feeAgreements);
-    const agreementNumber = agreementAiExtracted.agreementNumber || `AGR-2026-${Math.floor(100 + Math.random() * 900)}`;
+    const agreementNumber =
+      agreementAiExtracted.agreementNumber || `AGR-2026-${Math.floor(100 + Math.random() * 900)}`;
     const totalAmount = Number(agreementAiExtracted.totalAmount || 25000);
     const contractDate = agreementAiExtracted.date || todayISO();
-    const insts: OfficeAgreementInstallment[] = [{ amount: totalAmount, dueDate: contractDate, paidOnSigning: false }];
-    let maxInstId = feeAgreements.flatMap((a) => a.installments || []).reduce((m, i) => Math.max(m, i.id), 0);
+    const insts: OfficeAgreementInstallment[] = [
+      { amount: totalAmount, dueDate: contractDate, paidOnSigning: false },
+    ];
+    let maxInstId = feeAgreements
+      .flatMap((a) => a.installments || [])
+      .reduce((m, i) => Math.max(m, i.id), 0);
     const feeInstallments: FeeAgreementInstallment[] = insts.map((i, idx) => ({
       id: ++maxInstId,
       feeAgreementId: feeAgrId,
@@ -2152,7 +2702,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       date: contractDate,
       status: "نشطة",
       installments: feeInstallments,
-      notes: agreementAiExtracted.installmentsNotes || agreementAiExtracted.notes || "اتفاقية أتعاب سابقة مستخرجة آلياً"
+      notes:
+        agreementAiExtracted.installmentsNotes ||
+        agreementAiExtracted.notes ||
+        "اتفاقية أتعاب سابقة مستخرجة آلياً",
     };
     setFeeAgreements((prev) => [newFeeAgr, ...prev]);
 
@@ -2170,7 +2723,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       representativeAr: "",
       representativeEn: "",
       phone: clientPhoneFinal,
-      caseDetailsAr: agreementAiExtracted.installmentsNotes || agreementAiExtracted.notes || "اتفاقية أتعاب سابقة مستخرجة آلياً من مستند مرفق (PDF)، تم إدراجها عبر الذكاء الاصطناعي.",
+      caseDetailsAr:
+        agreementAiExtracted.installmentsNotes ||
+        agreementAiExtracted.notes ||
+        "اتفاقية أتعاب سابقة مستخرجة آلياً من مستند مرفق (PDF)، تم إدراجها عبر الذكاء الاصطناعي.",
       caseDetailsEn: "",
       totalAmount,
       paymentTermsAr: terms.ar,
@@ -2180,8 +2736,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     };
     setOfficeAgreements((prev) => [...prev, oa]);
 
-    logAuditAction("CREATE", "اتفاقيات الأتعاب", `اتفاقية رقم ${agreementNumber}`, "إدراج اتفاقية أتعاب عبر الذكاء الاصطناعي (مع إنشاء العقد الرسمي المقابل تلقائياً)", feeAgrId);
-    alert("تم حفظ اتفاقية الأتعاب وربطها بالموكل بنجاح، وأُنشئ لها تلقائياً العقد الرسمي المقابل في أرشيف اتفاقية أتعاب المكتب.");
+    logAuditAction(
+      "CREATE",
+      "اتفاقيات الأتعاب",
+      `اتفاقية رقم ${agreementNumber}`,
+      "إدراج اتفاقية أتعاب عبر الذكاء الاصطناعي (مع إنشاء العقد الرسمي المقابل تلقائياً)",
+      feeAgrId,
+    );
+    alert(
+      "تم حفظ اتفاقية الأتعاب وربطها بالموكل بنجاح، وأُنشئ لها تلقائياً العقد الرسمي المقابل في أرشيف اتفاقية أتعاب المكتب.",
+    );
     setShowAgreementAiUploadModal(false);
     setAgreementAiExtracted(null);
   };
@@ -2205,12 +2769,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         }
 
         const parsed = rows.map((r, idx) => {
-          const invNum = String(r["رقم الفاتورة"] || r["Invoice Number"] || `INV-2026-${200 + idx}`);
+          const invNum = String(
+            r["رقم الفاتورة"] || r["Invoice Number"] || `INV-2026-${200 + idx}`,
+          );
           const cName = String(r["اسم الموكل"] || r["الموكل"] || r["Client"] || "موكل فاتورة");
           const amt = Number(r["المبلغ"] || r["المبلغ الأساسي"] || r["Amount"] || 5000);
           const date = String(r["تاريخ الفاتورة"] || r["التاريخ"] || todayISO());
           const due = String(r["تاريخ الاستحقاق"] || r["الاستحقاق"] || addDays(30));
-          const desc = String(r["الوصف"] || r["الخدمة"] || r["Description"] || "أتعاب واستشارات قانونية");
+          const desc = String(
+            r["الوصف"] || r["الخدمة"] || r["Description"] || "أتعاب واستشارات قانونية",
+          );
 
           return { number: invNum, clientName: cName, amount: amt, date, due, desc };
         });
@@ -2226,16 +2794,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   // ---------- 9. تأكيد استيراد الفواتير (Excel أو AI) ----------
   const handleConfirmImportInvoices = () => {
     if (!checkPerm("manageInvoices", "استيراد فواتير")) return;
-    let updatedClients = [...clients];
+    const updatedClients = [...clients];
     const newInvoicesList: Invoice[] = [];
 
     if (invoiceImportTab === "excel") {
       const clientNameToId = new Map<string, number>();
-            updatedClients.forEach((c) => clientNameToId.set(c.name.toLowerCase().trim(), c.id));
+      updatedClients.forEach((c) => clientNameToId.set(c.name.toLowerCase().trim(), c.id));
       excelInvoicesParsed.forEach((item) => {
         const key = item.clientName.toLowerCase().trim();
-                let cId: number | undefined = clientNameToId.get(key);
-                if (cId === undefined) {
+        let cId: number | undefined = clientNameToId.get(key);
+        if (cId === undefined) {
           cId = nextId(updatedClients);
           checkAndAuditClientKyc(item.clientName);
           updatedClients.push({
@@ -2246,10 +2814,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
             emirate: "دبي",
             phone: "",
             email: "",
-            address: ""
+            address: "",
           });
-                          clientNameToId.set(key, cId);
-                }
+          clientNameToId.set(key, cId);
+        }
 
         newInvoicesList.push({
           id: nextId(invoices) + newInvoicesList.length,
@@ -2260,12 +2828,14 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           due: item.due,
           amount: item.amount,
           status: "غير مدفوعة",
-          desc: item.desc
+          desc: item.desc,
         });
       });
     } else if (invoiceImportTab === "pdf_ai" && invoiceAiExtracted) {
       const cName = invoiceAiExtracted.clientName || "موكل فاتورة AI";
-      let matchedC = updatedClients.find((c) => c.name.toLowerCase().trim() === cName.toLowerCase().trim());
+      const matchedC = updatedClients.find(
+        (c) => c.name.toLowerCase().trim() === cName.toLowerCase().trim(),
+      );
       let cId: number;
       if (!matchedC) {
         cId = nextId(updatedClients);
@@ -2278,7 +2848,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           emirate: "دبي",
           phone: "",
           email: "",
-          address: ""
+          address: "",
         });
       } else {
         cId = matchedC.id;
@@ -2286,20 +2856,27 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
       newInvoicesList.push({
         id: nextId(invoices),
-        number: invoiceAiExtracted.invoiceNumber || `INV-2026-${Math.floor(100 + Math.random() * 900)}`,
+        number:
+          invoiceAiExtracted.invoiceNumber || `INV-2026-${Math.floor(100 + Math.random() * 900)}`,
         clientId: cId,
         caseId: null,
         date: invoiceAiExtracted.date || todayISO(),
         due: invoiceAiExtracted.due || addDays(15),
         amount: Number(invoiceAiExtracted.amount || invoiceAiExtracted.totalAmount || 10000),
         status: "غير مدفوعة",
-        desc: invoiceAiExtracted.description || "فاتورة خدمات قانونية أصلية مستخرجة آلياً"
+        desc: invoiceAiExtracted.description || "فاتورة خدمات قانونية أصلية مستخرجة آلياً",
       });
     }
 
     setClients(updatedClients);
     setInvoices((prev) => [...prev, ...newInvoicesList]);
-    logAuditAction("CREATE", "الفواتير", "استيراد فواتير", `تم استيراد ${newInvoicesList.length} فاتورة وتحديث الموكلين`, 0);
+    logAuditAction(
+      "CREATE",
+      "الفواتير",
+      "استيراد فواتير",
+      `تم استيراد ${newInvoicesList.length} فاتورة وتحديث الموكلين`,
+      0,
+    );
     alert(`تم استيراد وإدراج ${newInvoicesList.length} فاتورة بنجاح!`);
     setShowInvoiceImportModal(false);
     setExcelInvoicesParsed([]);
@@ -2327,12 +2904,27 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         const parsed: KycWatchlistItem[] = rows.map((r, idx) => {
           return {
             id: idx + 1,
-            fullName: String(r["الاسم الكامل"] || r["اسم الشخص/الجهة"] || r["Full Name"] || r["Name"] || "اسم غير محدد").trim(),
-            idNo: String(r["رقم الهوية"] || r["رقم الجواز"] || r["ID Number"] || r["Passport"] || "").trim(),
-            type: String(r["تصنيف الحظر"] || r["نوع الحظر"] || r["Type"] || "شخص منكشف سياسياً (PEP)").trim(),
-            reason: String(r["سبب الحظر"] || r["السبب"] || r["Reason"] || "إدراج في قوائم الامتثال ومكافحة غسل الأموال").trim(),
+            fullName: String(
+              r["الاسم الكامل"] ||
+                r["اسم الشخص/الجهة"] ||
+                r["Full Name"] ||
+                r["Name"] ||
+                "اسم غير محدد",
+            ).trim(),
+            idNo: String(
+              r["رقم الهوية"] || r["رقم الجواز"] || r["ID Number"] || r["Passport"] || "",
+            ).trim(),
+            type: String(
+              r["تصنيف الحظر"] || r["نوع الحظر"] || r["Type"] || "شخص منكشف سياسياً (PEP)",
+            ).trim(),
+            reason: String(
+              r["سبب الحظر"] ||
+                r["السبب"] ||
+                r["Reason"] ||
+                "إدراج في قوائم الامتثال ومكافحة غسل الأموال",
+            ).trim(),
             nationality: String(r["الجنسية"] || r["Nationality"] || "أخرى").trim(),
-            addedDate: todayISO()
+            addedDate: todayISO(),
           };
         });
 
@@ -2351,56 +2943,74 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
     const newWatchlistItems = kycWatchlistParsed.map((item, idx) => ({
       ...item,
-      id: nextId(kycWatchlist) + idx
+      id: nextId(kycWatchlist) + idx,
     }));
 
     const updatedWatchlist = [...kycWatchlist, ...newWatchlistItems];
     setKycWatchlist(updatedWatchlist);
 
     // تدقيق فوري ومباشر مع أسماء الموكلين المسجلين بالنظام حالياً (نسخة محسّنة الأداء: مسح واحد بدل O(n×m) وتحديث دفعة واحدة لحالة KYC)
-        const normalizedWatchlistNames = newWatchlistItems.map((w) => w.fullName.toLowerCase().trim());
-        let matchedCount = 0;
-        const matchedClientIds = new Set<number>();
-        clients.forEach((c) => {
-                const cName = c.name.toLowerCase().trim();
-                const isBlocked = normalizedWatchlistNames.some((wName) => cName.includes(wName) || wName.includes(cName));
-                if (isBlocked) {
-                          matchedCount++;
-                          matchedClientIds.add(c.id);
-                }
-        });
+    const normalizedWatchlistNames = newWatchlistItems.map((w) => w.fullName.toLowerCase().trim());
+    let matchedCount = 0;
+    const matchedClientIds = new Set<number>();
+    clients.forEach((c) => {
+      const cName = c.name.toLowerCase().trim();
+      const isBlocked = normalizedWatchlistNames.some(
+        (wName) => cName.includes(wName) || wName.includes(cName),
+      );
+      if (isBlocked) {
+        matchedCount++;
+        matchedClientIds.add(c.id);
+      }
+    });
 
-        if (matchedClientIds.size > 0) {
-                setKyc((prev) => {
-                          const existingClientIds = new Set(prev.map((k) => k.clientId));
-                          const updated = prev.map((k) =>
-                                      matchedClientIds.has(k.clientId)
-                                        ? { ...k, pep: true, sanctions: "تطابق محتمل", risk: "مرتفع", notes: "🚫 محظور تلقائياً — تطابق تلقائي مع القائمة السوداء المستوردة حديثاً!" }
-                                        : k
-                                    );
-                          const clientsNeedingNewRecord = clients.filter((c) => matchedClientIds.has(c.id) && !existingClientIds.has(c.id));
-                          const baseId = nextId(prev);
-                          const additions = clientsNeedingNewRecord.map((c, idx) => ({
-                                      id: baseId + idx,
-                                      clientId: c.id,
-                                      nationality: c.emirate,
-                                      idType: "هوية إماراتية",
-                                      idExpiry: addDays(365),
-                                      ubo: c.name,
-                                      sourceOfFunds: "نشاط تجاري",
-                                      pep: true,
-                                      sanctions: "تطابق محتمل",
-                                      risk: "مرتفع",
-                                      status: "قيد المراجعة",
-                                      lastReview: todayISO(),
-                                      notes: "🚫 محظور تلقائياً — تطابق تلقائي عند رفع قائمة الحظر الجديدة!"
-                          }));
-                          return [...updated, ...additions];
-                });
-        }
+    if (matchedClientIds.size > 0) {
+      setKyc((prev) => {
+        const existingClientIds = new Set(prev.map((k) => k.clientId));
+        const updated = prev.map((k) =>
+          matchedClientIds.has(k.clientId)
+            ? {
+                ...k,
+                pep: true,
+                sanctions: "تطابق محتمل",
+                risk: "مرتفع",
+                notes: "🚫 محظور تلقائياً — تطابق تلقائي مع القائمة السوداء المستوردة حديثاً!",
+              }
+            : k,
+        );
+        const clientsNeedingNewRecord = clients.filter(
+          (c) => matchedClientIds.has(c.id) && !existingClientIds.has(c.id),
+        );
+        const baseId = nextId(prev);
+        const additions = clientsNeedingNewRecord.map((c, idx) => ({
+          id: baseId + idx,
+          clientId: c.id,
+          nationality: c.emirate,
+          idType: "هوية إماراتية",
+          idExpiry: addDays(365),
+          ubo: c.name,
+          sourceOfFunds: "نشاط تجاري",
+          pep: true,
+          sanctions: "تطابق محتمل",
+          risk: "مرتفع",
+          status: "قيد المراجعة",
+          lastReview: todayISO(),
+          notes: "🚫 محظور تلقائياً — تطابق تلقائي عند رفع قائمة الحظر الجديدة!",
+        }));
+        return [...updated, ...additions];
+      });
+    }
 
-    logAuditAction("CREATE", "الامتثال KYC/AML", "استيراد قائمة محظورين", `تم استيراد ${newWatchlistItems.length} اسم لقائمة المحظورين`, 0);
-    alert(`تم استيراد ${newWatchlistItems.length} اسم لقائمة المحظورين والمنكشفين بنجاح! ${matchedCount > 0 ? `🚨 تم العثور على (${matchedCount}) موكل حالي متطابق مع القائمة!` : "لم يتطابق أي موكل حالي."}`);
+    logAuditAction(
+      "CREATE",
+      "الامتثال KYC/AML",
+      "استيراد قائمة محظورين",
+      `تم استيراد ${newWatchlistItems.length} اسم لقائمة المحظورين`,
+      0,
+    );
+    alert(
+      `تم استيراد ${newWatchlistItems.length} اسم لقائمة المحظورين والمنكشفين بنجاح! ${matchedCount > 0 ? `🚨 تم العثور على (${matchedCount}) موكل حالي متطابق مع القائمة!` : "لم يتطابق أي موكل حالي."}`,
+    );
     setShowKycWatchlistUploadModal(false);
     setKycWatchlistParsed([]);
   };
@@ -2413,15 +3023,15 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         "رقم الهوية": "PASSPORT-US-887192",
         "تصنيف الحظر": "شخص منكشف سياسياً (PEP)",
         "سبب الحظر": "إفصاح سياسي عالي المخاطر - تجميد أصول تحرزي",
-        "الجنسية": "الولايات المتحدة"
+        الجنسية: "الولايات المتحدة",
       },
       {
         "الاسم الكامل": "شركة الشرق الأوسط للمشتقات القابضة",
         "رقم الهوية": "CR-772810",
         "تصنيف الحظر": "قائمة حظر عقوبات دولية / محلية",
         "سبب الحظر": "قرار حظر تعامل تجاري ومالي صادرة من وحدة المعلومات المالية FIU",
-        "الجنسية": "أخرى"
-      }
+        الجنسية: "أخرى",
+      },
     ];
 
     const ws = XLSX.utils.json_to_sheet(sampleData);
@@ -2450,7 +3060,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   // والتذييل تلقائياً عبر canvas، حتى تستمر جميع أماكن استخدام الورق الرسمي
   // في النظام (محرر الخطابات، معاينة اتفاقية أتعاب المكتب، ...) بالعمل دون أي
   // تعديل إضافي — فهي تستهلك headerImg/footerImg كما هي تماماً كالسابق.
-  const deriveHeaderFooterFromFullPage = (fullPageDataUrl: string): Promise<{ headerImg: string; footerImg: string }> => {
+  const deriveHeaderFooterFromFullPage = (
+    fullPageDataUrl: string,
+  ): Promise<{ headerImg: string; footerImg: string }> => {
     return new Promise((resolve, reject) => {
       const img = new (window as any).Image();
       img.onload = () => {
@@ -2486,12 +3098,18 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   // Client portal & Doc generator states
   const {
-    clientPortalId, setClientPortalId,
-    selectedTemplateId, setSelectedTemplateId,
-    selectedGenCaseId, setSelectedGenCaseId,
-    notifyModal, setNotifyModal,
-    selectedRollDate, setSelectedRollDate,
-    rollCourtFilter, setRollCourtFilter,
+    clientPortalId,
+    setClientPortalId,
+    selectedTemplateId,
+    setSelectedTemplateId,
+    selectedGenCaseId,
+    setSelectedGenCaseId,
+    notifyModal,
+    setNotifyModal,
+    selectedRollDate,
+    setSelectedRollDate,
+    rollCourtFilter,
+    setRollCourtFilter,
   } = useDocGenState();
 
   const [report, setReport] = useState<any>(null);
@@ -2500,25 +3118,38 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const [caseView, setCaseView] = useState<number | null>(null);
   const [q, setQ] = useState("");
   const {
-    caseStageFilter, setCaseStageFilter,
-    caseFilter, setCaseFilter,
-    caseJudgeFilter, setCaseJudgeFilter,
-    caseCourtFilter, setCaseCourtFilter,
-    caseTypeFilter, setCaseTypeFilter,
-    caseEmirateFilter, setCaseEmirateFilter,
-    caseClientFilter, setCaseClientFilter,
-    caseClientTypeFilter, setCaseClientTypeFilter,
-    caseYearFilter, setCaseYearFilter,
-    caseSortBy, setCaseSortBy,
-    showAdvancedFilters, setShowAdvancedFilters,
-    showCaseStatsOnDemand, setShowCaseStatsOnDemand,
+    caseStageFilter,
+    setCaseStageFilter,
+    caseFilter,
+    setCaseFilter,
+    caseJudgeFilter,
+    setCaseJudgeFilter,
+    caseCourtFilter,
+    setCaseCourtFilter,
+    caseTypeFilter,
+    setCaseTypeFilter,
+    caseEmirateFilter,
+    setCaseEmirateFilter,
+    caseClientFilter,
+    setCaseClientFilter,
+    caseClientTypeFilter,
+    setCaseClientTypeFilter,
+    caseYearFilter,
+    setCaseYearFilter,
+    caseSortBy,
+    setCaseSortBy,
+    showAdvancedFilters,
+    setShowAdvancedFilters,
+    showCaseStatsOnDemand,
+    setShowCaseStatsOnDemand,
   } = useCaseFilters();
 
   // حالة تعديل قضية موجودة (عند عدم التعيين، نافذة القضية تُنشئ قضية جديدة بدلاً من تعديل قضية قائمة)
   const [editingCase, setEditingCase] = useState<CaseItem | null>(null);
 
   // حالات إدارة الموكلين
-  const { clientCategoryFilter, setClientCategoryFilter, clientSearch, setClientSearch } = useClientFilters();
+  const { clientCategoryFilter, setClientCategoryFilter, clientSearch, setClientSearch } =
+    useClientFilters();
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [clientToast, setClientToast] = useState<string | null>(null);
 
@@ -2536,7 +3167,14 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const saveEditClient = () => {
     if (!checkPerm("manageClients", "تعديل بيانات الموكل")) return;
     if (!editingClient || !editingClient.name) return;
-    setClients((prev) => prev.map((c) => (c.id === editingClient.id ? editingClient : c))); logAuditAction("UPDATE", "الموكلين والشركات", `الموكل: ${editingClient.name}`, `تعديل بيانات الموكل ${editingClient.name} من نافذة التعديل السريع`, editingClient.id);
+    setClients((prev) => prev.map((c) => (c.id === editingClient.id ? editingClient : c)));
+    logAuditAction(
+      "UPDATE",
+      "الموكلين والشركات",
+      `الموكل: ${editingClient.name}`,
+      `تعديل بيانات الموكل ${editingClient.name} من نافذة التعديل السريع`,
+      editingClient.id,
+    );
     setEditingClient(null);
     setClientToast(`تم تحديث بيانات "${editingClient.name}" بنجاح`);
     setTimeout(() => setClientToast(null), 4000);
@@ -2554,7 +3192,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     const details = `النوع: ${cObj.type} | الهوية/الرخصة: ${cObj.idNo || "غير محدد"} | الهاتف: ${cObj.phone || "—"}${
       linkedCases.length > 0 ? `\n⚠️ مرتبط بـ (${linkedCases.length}) قضايا مسجلة بالنظام.` : ""
     }${linkedPoas.length > 0 ? `\n⚠️ مرتبط بـ (${linkedPoas.length}) وكالات قانونية.` : ""}${
-      linkedAgreements.length > 0 ? `\n⚠️ مرتبط بـ (${linkedAgreements.length}) اتفاقيات أتعاب.` : ""
+      linkedAgreements.length > 0
+        ? `\n⚠️ مرتبط بـ (${linkedAgreements.length}) اتفاقيات أتعاب.`
+        : ""
     }${linkedInvoices.length > 0 ? `\n⚠️ مرتبط بـ (${linkedInvoices.length}) فواتير مالية.` : ""}`;
 
     requestDelete({
@@ -2564,7 +3204,13 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       permKey: "deleteClients",
       actionName: "حذف الموكل",
       onConfirm: () => {
-        logAuditAction("DELETE", "الموكلين", `الموكل: ${cObj.name}`, `حذف الموكل ${cObj.name} (${cObj.type}) يدويًا من سجلات المكتب`, cObj.id);
+        logAuditAction(
+          "DELETE",
+          "الموكلين",
+          `الموكل: ${cObj.name}`,
+          `حذف الموكل ${cObj.name} (${cObj.type}) يدويًا من سجلات المكتب`,
+          cObj.id,
+        );
         setClients((prev) => prev.filter((c) => c.id !== clientId));
         if (editingClient?.id === clientId) {
           setEditingClient(null);
@@ -2577,30 +3223,58 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   // حالة مودال Supabase SQL وتحديد المستخدمين المعلقين
   const {
-    showSupabaseModal, setShowSupabaseModal,
-    showBackupModal, setShowBackupModal,
-    backupActiveTab, setBackupActiveTab,
-    restorePreview, setRestorePreview,
-    restoreError, setRestoreError,
-    restoreSuccessMsg, setRestoreSuccessMsg,
+    showSupabaseModal,
+    setShowSupabaseModal,
+    showBackupModal,
+    setShowBackupModal,
+    backupActiveTab,
+    setBackupActiveTab,
+    restorePreview,
+    setRestorePreview,
+    restoreError,
+    setRestoreError,
+    restoreSuccessMsg,
+    setRestoreSuccessMsg,
   } = useBackupRestoreModal();
 
   // حالات المساعد الذكي القانوني لجميع الأقسام (Legal AI Assistant - Gemini 3.6 Flash)
   const {
-    isAiAssistantEnabled, setIsAiAssistantEnabled,
-    showAiModal, setShowAiModal,
-    aiDepartment, setAiDepartment,
-    aiQuery, setAiQuery,
-    aiResponse, setAiResponse,
-    aiLoading, setAiLoading,
-    aiError, setAiError,
-    aiMode, setAiMode,
+    isAiAssistantEnabled,
+    setIsAiAssistantEnabled,
+    showAiModal,
+    setShowAiModal,
+    aiDepartment,
+    setAiDepartment,
+    aiQuery,
+    setAiQuery,
+    aiResponse,
+    setAiResponse,
+    aiLoading,
+    setAiLoading,
+    aiError,
+    setAiError,
+    aiMode,
+    setAiMode,
   } = useAiAssistantModal();
 
   const { handleAskAiAssistant, openAiForCurrentSection } = useAiAssistant({
-    tab, cases, clients, hearings, invoices, tasks,
-    aiQuery, setAiQuery, aiDepartment, setAiDepartment, aiMode,
-    aiResponse, setAiResponse, aiLoading, setAiLoading, aiError, setAiError,
+    tab,
+    cases,
+    clients,
+    hearings,
+    invoices,
+    tasks,
+    aiQuery,
+    setAiQuery,
+    aiDepartment,
+    setAiDepartment,
+    aiMode,
+    aiResponse,
+    setAiResponse,
+    aiLoading,
+    setAiLoading,
+    aiError,
+    setAiError,
     setShowAiModal,
   });
 
@@ -2609,51 +3283,122 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   // حالات البريد الإلكتروني المدمج (In-App Email & Supabase Sync)
   const {
-    emailFolder, setEmailFolder,
-    emailSearch, setEmailSearch,
-    selectedEmailId, setSelectedEmailId,
-    showComposeEmail, setShowComposeEmail,
-    showEmailSettingsModal, setShowEmailSettingsModal,
-    composeTo, setComposeTo,
-    composeSubject, setComposeSubject,
-    composeBody, setComposeBody,
-    composeAttachment, setComposeAttachment,
-    emailConfig, setEmailConfig,
-    testSmtpLoading, setTestSmtpLoading,
-    testSmtpResult, setTestSmtpResult,
-    testInvoiceLoading, setTestInvoiceLoading,
-    testInvoiceRecipient, setTestInvoiceRecipient,
-    testInvoiceResult, setTestInvoiceResult,
-    inAppEmails, setInAppEmails,
+    emailFolder,
+    setEmailFolder,
+    emailSearch,
+    setEmailSearch,
+    selectedEmailId,
+    setSelectedEmailId,
+    showComposeEmail,
+    setShowComposeEmail,
+    showEmailSettingsModal,
+    setShowEmailSettingsModal,
+    composeTo,
+    setComposeTo,
+    composeSubject,
+    setComposeSubject,
+    composeBody,
+    setComposeBody,
+    composeAttachment,
+    setComposeAttachment,
+    emailConfig,
+    setEmailConfig,
+    testSmtpLoading,
+    setTestSmtpLoading,
+    testSmtpResult,
+    setTestSmtpResult,
+    testInvoiceLoading,
+    setTestInvoiceLoading,
+    testInvoiceRecipient,
+    setTestInvoiceRecipient,
+    testInvoiceResult,
+    setTestInvoiceResult,
+    inAppEmails,
+    setInAppEmails,
   } = useEmailModule(isDemoEmail);
 
   const {
-    waBackendSession, setWaBackendSession,
-    isGeneratingQr, setIsGeneratingQr,
-    selectedWaChatId, setSelectedWaChatId,
-    waInputText, setWaInputText,
-    waSearchTerm, setWaSearchTerm,
-    showNewWaChatModal, setShowNewWaChatModal,
-    newWaName, setNewWaName,
-    newWaPhone, setNewWaPhone,
-    waChats, setWaChats,
+    waBackendSession,
+    setWaBackendSession,
+    isGeneratingQr,
+    setIsGeneratingQr,
+    selectedWaChatId,
+    setSelectedWaChatId,
+    waInputText,
+    setWaInputText,
+    waSearchTerm,
+    setWaSearchTerm,
+    showNewWaChatModal,
+    setShowNewWaChatModal,
+    newWaName,
+    setNewWaName,
+    newWaPhone,
+    setNewWaPhone,
+    waChats,
+    setWaChats,
   } = useWhatsAppModule();
 
-  const { handleExportBackup, handleFileChangeForRestore, executeRestore } = useBackupExportRestore({
-    currentUser, clients, setClients, cases, setCases, hearings, setHearings, tasks, setTasks,
-    invoices, setInvoices, docs, setDocs, poas, setPoas, kyc, setKyc, courtContacts, setCourtContacts,
-    officeAgreements, setOfficeAgreements, employees, setEmployees, leaveRequests, setLeaveRequests,
-    employeeExpenses, setEmployeeExpenses, disciplinaryActions, setDisciplinaryActions,
-    auditLogs, setAuditLogs, precedents, setPrecedents, policies, setPolicies, users, setUsers,
-    feeAgreements, setFeeAgreements, payments, setPayments, consultationBookings, setConsultationBookings,
-    consultationSettings, setConsultationSettings, waChats, setWaChats,
-    restorePreview, setRestorePreview, setRestoreError, setRestoreSuccessMsg, logAuditAction,
-  });
+  const { handleExportBackup, handleFileChangeForRestore, executeRestore } = useBackupExportRestore(
+    {
+      currentUser,
+      clients,
+      setClients,
+      cases,
+      setCases,
+      hearings,
+      setHearings,
+      tasks,
+      setTasks,
+      invoices,
+      setInvoices,
+      docs,
+      setDocs,
+      poas,
+      setPoas,
+      kyc,
+      setKyc,
+      courtContacts,
+      setCourtContacts,
+      officeAgreements,
+      setOfficeAgreements,
+      employees,
+      setEmployees,
+      leaveRequests,
+      setLeaveRequests,
+      employeeExpenses,
+      setEmployeeExpenses,
+      disciplinaryActions,
+      setDisciplinaryActions,
+      auditLogs,
+      setAuditLogs,
+      precedents,
+      setPrecedents,
+      policies,
+      setPolicies,
+      users,
+      setUsers,
+      feeAgreements,
+      setFeeAgreements,
+      payments,
+      setPayments,
+      consultationBookings,
+      setConsultationBookings,
+      consultationSettings,
+      setConsultationSettings,
+      waChats,
+      setWaChats,
+      restorePreview,
+      setRestorePreview,
+      setRestoreError,
+      setRestoreSuccessMsg,
+      logAuditAction,
+    },
+  );
 
   // استعلام حالة واتساب الحقيقية من السيرفر
   const fetchWaStatus = async () => {
     try {
-      const res = await authedFetch('/api/whatsapp/status');
+      const res = await authedFetch("/api/whatsapp/status");
       if (res.ok) {
         const data = await res.json();
         setWaBackendSession(data);
@@ -2666,7 +3411,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const generateWaQrCode = async () => {
     setIsGeneratingQr(true);
     try {
-      const res = await authedFetch('/api/whatsapp/generate-qr', { method: 'POST' });
+      const res = await authedFetch("/api/whatsapp/generate-qr", { method: "POST" });
       if (res.ok) {
         const data = await res.json();
         setWaBackendSession(data.session);
@@ -2680,10 +3425,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   const simulateScanQr = async () => {
     try {
-      const res = await authedFetch('/api/whatsapp/connect-simulated', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: '+971 50 889 9123' })
+      const res = await authedFetch("/api/whatsapp/connect-simulated", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: "+971 50 889 9123" }),
       });
       if (res.ok) {
         const data = await res.json();
@@ -2697,7 +3442,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   const disconnectWaSession = async () => {
     try {
-      const res = await authedFetch('/api/whatsapp/disconnect', { method: 'POST' });
+      const res = await authedFetch("/api/whatsapp/disconnect", { method: "POST" });
       if (res.ok) {
         const data = await res.json();
         setWaBackendSession(data.session);
@@ -2711,22 +3456,23 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   // ================= محرك البريد الإلكتروني الذكي ومزامنة Supabase =================
   const fetchEmailSettings = async () => {
     try {
-      const res = await authedFetch('/api/email/settings');
+      const res = await authedFetch("/api/email/settings");
       if (res.ok) {
         const data = await res.json();
         if (data.settings) {
-          setEmailConfig(prev => ({
+          setEmailConfig((prev) => ({
             ...prev,
             email: data.settings.email || prev.email,
             senderName: data.settings.senderName || prev.senderName,
             smtpHost: data.settings.host || prev.smtpHost,
             smtpPort: data.settings.port || prev.smtpPort,
             secure: data.settings.secure ?? prev.secure,
-            protocol: data.settings.protocol || (data.settings.port === 465 ? 'ssl_tls' : 'starttls'),
+            protocol:
+              data.settings.protocol || (data.settings.port === 465 ? "ssl_tls" : "starttls"),
             rejectUnauthorized: data.settings.rejectUnauthorized ?? false,
             lastTestedAt: data.settings.lastTestedAt,
             lastTestStatus: data.settings.lastTestStatus,
-            isConfigured: true
+            isConfigured: true,
           }));
         }
       }
@@ -2742,7 +3488,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         // Deduplicate fetched profiles before processing
         const fetchedProfiles = data || [];
         const uniqueProfiles = Array.from(
-          new Map(fetchedProfiles.map((p: any) => [p.id || p.email?.trim().toLowerCase(), p])).values()
+          new Map(
+            fetchedProfiles.map((p: any) => [p.id || p.email?.trim().toLowerCase(), p]),
+          ).values(),
         );
 
         setUsers((prev) => {
@@ -2750,13 +3498,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           let changed = false;
 
           const dbIds = new Set(uniqueProfiles.map((p: any) => p.id).filter(Boolean));
-          const dbEmails = new Set(uniqueProfiles.map((p: any) => p.email?.trim().toLowerCase()).filter(Boolean));
+          const dbEmails = new Set(
+            uniqueProfiles.map((p: any) => p.email?.trim().toLowerCase()).filter(Boolean),
+          );
 
           // Filter out users that were removed from Supabase profiles (unless primary local admin, id=1)
           const initialLen = updated.length;
           updated = updated.filter((u) => {
             if (u.id === 1) return true;
-            if (u.supabaseId && !dbIds.has(u.supabaseId) && !dbEmails.has(u.email.toLowerCase())) return false;
+            if (u.supabaseId && !dbIds.has(u.supabaseId) && !dbEmails.has(u.email.toLowerCase()))
+              return false;
             return true;
           });
           if (updated.length !== initialLen) changed = true;
@@ -2764,10 +3515,17 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           uniqueProfiles.forEach((p: any) => {
             const emailClean = p.email?.trim().toLowerCase();
             if (!emailClean) return;
-            const existingIdx = updated.findIndex((u) => u.email.toLowerCase() === emailClean || (p.id && u.supabaseId === p.id));
+            const existingIdx = updated.findIndex(
+              (u) => u.email.toLowerCase() === emailClean || (p.id && u.supabaseId === p.id),
+            );
             const pPhone = p.phone || p.phone_number || "0500000000";
             const pName = p.full_name || p.name || emailClean.split("@")[0];
-            const pStatus = (p.status === "pending" || p.status === "معلق") ? "pending" : (p.status === "approved" || p.status === "نشط" || p.status === "active") ? "approved" : "rejected";
+            const pStatus =
+              p.status === "pending" || p.status === "معلق"
+                ? "pending"
+                : p.status === "approved" || p.status === "نشط" || p.status === "active"
+                  ? "approved"
+                  : "rejected";
 
             // If profile status is rejected or deleted, remove from state
             if (pStatus === "rejected") {
@@ -2785,7 +3543,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
               let dbPerms = cur.permissions;
               if (p.permissions) {
                 if (typeof p.permissions === "string") {
-                  try { dbPerms = JSON.parse(p.permissions); } catch (e) {}
+                  try {
+                    dbPerms = JSON.parse(p.permissions);
+                  } catch (e) {}
                 } else if (typeof p.permissions === "object") {
                   dbPerms = p.permissions;
                 }
@@ -2800,25 +3560,27 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
                 cur.roleTitle !== pRoleTitle ||
                 JSON.stringify(cur.permissions) !== JSON.stringify(dbPerms)
               ) {
-                updated[existingIdx] = { 
-                  ...cur, 
+                updated[existingIdx] = {
+                  ...cur,
                   status: pStatus,
                   phone: pPhone || cur.phone,
                   name: pName || cur.name,
                   supabaseId: p.id || cur.supabaseId,
                   roleKey: pRoleKey,
                   roleTitle: pRoleTitle,
-                  permissions: dbPerms
+                  permissions: dbPerms,
                 };
                 changed = true;
               }
             } else {
               const roleKey = (p.role as any) || "lawyer";
-              const roleTitle = p.role_title || (ROLE_PRESETS[roleKey]?.title) || "محامٍ ومستشار";
+              const roleTitle = p.role_title || ROLE_PRESETS[roleKey]?.title || "محامٍ ومستشار";
               let dbPerms = ROLE_PRESETS[roleKey]?.permissions || ROLE_PRESETS.lawyer.permissions;
               if (p.permissions) {
                 if (typeof p.permissions === "string") {
-                  try { dbPerms = JSON.parse(p.permissions); } catch (e) {}
+                  try {
+                    dbPerms = JSON.parse(p.permissions);
+                  } catch (e) {}
                 } else if (typeof p.permissions === "object") {
                   dbPerms = p.permissions;
                 }
@@ -2836,7 +3598,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
                 status: pStatus,
                 avatarBg: "bg-amber-600 text-white",
                 avatarText: pName.slice(0, 2),
-                permissions: dbPerms
+                permissions: dbPerms,
               };
               updated.push(newUser);
               changed = true;
@@ -2860,8 +3622,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           return prev;
         });
       }
-    } catch (err) {
-    }
+    } catch (err) {}
   };
 
   const fetchSupabaseEmailMessages = async () => {
@@ -2872,21 +3633,26 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         .order("created_at", { ascending: false });
 
       if (!error && data && data.length > 0) {
-        const nonDemoData = data.filter((row: any) => !isDemoEmail({
-          id: row.id,
-          subject: row.subject,
-          sender: row.sender_name,
-          senderEmail: row.sender_email,
-          body: row.body || row.message_body
-        }));
+        const nonDemoData = data.filter(
+          (row: any) =>
+            !isDemoEmail({
+              id: row.id,
+              subject: row.subject,
+              sender: row.sender_name,
+              senderEmail: row.sender_email,
+              body: row.body || row.message_body,
+            }),
+        );
 
         if (nonDemoData.length > 0) {
-          setInAppEmails(prev => {
+          setInAppEmails((prev) => {
             const updated = [...prev];
             nonDemoData.forEach((row: any) => {
               const mappedMsg = {
                 id: row.id || Date.now() + Math.random(),
-                folder: (row.folder as any) || (row.sender_email === emailConfig.email ? "sent" : "inbox"),
+                folder:
+                  (row.folder as any) ||
+                  (row.sender_email === emailConfig.email ? "sent" : "inbox"),
                 sender: row.sender_name || row.sender_email || "مرسل غير معروف",
                 senderEmail: row.sender_email || "",
                 recipient: row.recipient_name || row.recipient_email || "",
@@ -2896,9 +3662,13 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
                 date: row.created_at ? new Date(row.created_at).toLocaleString("ar-AE") : "الآن",
                 isRead: row.is_read ?? false,
                 hasAttachment: !!row.attachment_name,
-                attachmentName: row.attachment_name || ""
+                attachmentName: row.attachment_name || "",
               };
-              const existingIndex = updated.findIndex(m => m.id === mappedMsg.id || (m.subject === mappedMsg.subject && m.date === mappedMsg.date));
+              const existingIndex = updated.findIndex(
+                (m) =>
+                  m.id === mappedMsg.id ||
+                  (m.subject === mappedMsg.subject && m.date === mappedMsg.date),
+              );
               if (existingIndex >= 0) {
                 updated[existingIndex] = mappedMsg;
               } else {
@@ -2909,8 +3679,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           });
         }
       }
-    } catch (err) {
-    }
+    } catch (err) {}
   };
 
   const handleTestSmtpConnection = async () => {
@@ -2922,9 +3691,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     setTestSmtpResult(null);
 
     try {
-      const res = await authedFetch('/api/email/test-connection', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await authedFetch("/api/email/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: emailConfig.email,
           senderName: emailConfig.senderName,
@@ -2933,34 +3702,39 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           port: emailConfig.smtpPort,
           secure: emailConfig.protocol === "ssl_tls",
           protocol: emailConfig.protocol,
-          rejectUnauthorized: emailConfig.rejectUnauthorized
-        })
+          rejectUnauthorized: emailConfig.rejectUnauthorized,
+        }),
       });
 
       const data = await res.json();
       setTestSmtpResult({
         success: Boolean(data.success),
-        message: data.message || (data.success ? "تم الاتصال واختبار الأمان بنجاح!" : "فشل اختبار اتصال SMTP"),
+        message:
+          data.message ||
+          (data.success ? "تم الاتصال واختبار الأمان بنجاح!" : "فشل اختبار اتصال SMTP"),
         latencyMs: data.latencyMs,
         code: data.code,
         recommendation: data.recommendation,
-        details: data.details
+        details: data.details,
       });
 
       if (data.success) {
-        setEmailConfig(prev => ({
+        setEmailConfig((prev) => ({
           ...prev,
-          lastTestedAt: new Date().toLocaleTimeString("ar-AE", { hour: '2-digit', minute: '2-digit' }),
-          lastTestStatus: "success"
+          lastTestedAt: new Date().toLocaleTimeString("ar-AE", {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          lastTestStatus: "success",
         }));
       } else {
-        setEmailConfig(prev => ({ ...prev, lastTestStatus: "failed" }));
+        setEmailConfig((prev) => ({ ...prev, lastTestStatus: "failed" }));
       }
     } catch (err: any) {
       setTestSmtpResult({
         success: false,
         message: "تعذر الاتصال بالخادم المحلي أو انقطع الاتصال ببروتوكول الأمان",
-        recommendation: "يرجى التأكد من تشغيل خادم التطبيق المحلي وإعادة المحاولة."
+        recommendation: "يرجى التأكد من تشغيل خادم التطبيق المحلي وإعادة المحاولة.",
       });
     } finally {
       setTestSmtpLoading(false);
@@ -2981,24 +3755,24 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       const { success, error } = await sendEmailViaServer({
         to: targetEmail,
         subject: `📄 [فحص تسليم فاتورة ضريبية] - مكتب سعود أحمد الشحي للمحاماة (${emailConfig.protocol.toUpperCase()})`,
-        html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">الموكل الفاضل / المستلم المحترم،\n\nتحية طيبة وبعد،\n\nهذا بريد فحص آلي صادر من نظام الفواتير والمراسلات الموحد بمكتب المحاماة للتأكد من وصول الفواتير الضريبية والإشعارات القانونية بنجاح إلى صندوق البريد الوارد الخاص بكم.\n\nتفاصيل العينة التجريبية للفاتورة:\n• رقم الفاتورة: INV-2026-TEST-VERIFIED\n• بيان الخدمة: أتعاب استشارة واستحقاق قضائي تجريبي\n• المبلغ الأولي: 5,000 درهم إماراتي\n• ضريبة القيمة المضافة VAT (5%): 250 درهم إماراتي\n• الإجمالي المستحق: 5,250 درهم إماراتي\n\nتاريخ وساعة الإرسال: ${new Date().toLocaleString("ar-AE")}\n\nمع تحيات،\nمكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية</div>`
+        html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">الموكل الفاضل / المستلم المحترم،\n\nتحية طيبة وبعد،\n\nهذا بريد فحص آلي صادر من نظام الفواتير والمراسلات الموحد بمكتب المحاماة للتأكد من وصول الفواتير الضريبية والإشعارات القانونية بنجاح إلى صندوق البريد الوارد الخاص بكم.\n\nتفاصيل العينة التجريبية للفاتورة:\n• رقم الفاتورة: INV-2026-TEST-VERIFIED\n• بيان الخدمة: أتعاب استشارة واستحقاق قضائي تجريبي\n• المبلغ الأولي: 5,000 درهم إماراتي\n• ضريبة القيمة المضافة VAT (5%): 250 درهم إماراتي\n• الإجمالي المستحق: 5,250 درهم إماراتي\n\nتاريخ وساعة الإرسال: ${new Date().toLocaleString("ar-AE")}\n\nمع تحيات،\nمكتب سعود أحمد الشحي للمحاماة والاستشارات القانونية</div>`,
       });
 
       if (!error) {
         setTestInvoiceResult({
           success: true,
-          message: `تم إرسال الفاتورة التجريبية بنجاح إلى البريد (${targetEmail})!`
+          message: `تم إرسال الفاتورة التجريبية بنجاح إلى البريد (${targetEmail})!`,
         });
       } else {
         setTestInvoiceResult({
           success: false,
-          message: `تعذر إرسال البريد: ${error.message || "تعذر الاتصال بخادم البريد — راجع إعدادات الخادم"}`
+          message: `تعذر إرسال البريد: ${error.message || "تعذر الاتصال بخادم البريد — راجع إعدادات الخادم"}`,
         });
       }
     } catch (err: any) {
       setTestInvoiceResult({
         success: false,
-        message: `فشل في إرسال طلب الفاتورة التجريبية: ${err?.message || ""}`
+        message: `فشل في إرسال طلب الفاتورة التجريبية: ${err?.message || ""}`,
       });
     } finally {
       setTestInvoiceLoading(false);
@@ -3012,9 +3786,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     }
 
     try {
-      await authedFetch('/api/email/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await authedFetch("/api/email/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: emailConfig.email,
           senderName: emailConfig.senderName,
@@ -3023,15 +3797,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           port: emailConfig.smtpPort,
           secure: emailConfig.protocol === "ssl_tls",
           protocol: emailConfig.protocol,
-          rejectUnauthorized: emailConfig.rejectUnauthorized
-        })
+          rejectUnauthorized: emailConfig.rejectUnauthorized,
+        }),
       });
-    } catch (e) {
-    }
+    } catch (e) {}
 
-    setEmailConfig(prev => ({ ...prev, isConfigured: true }));
+    setEmailConfig((prev) => ({ ...prev, isConfigured: true }));
     setShowEmailSettingsModal(false);
-    setPermissionNotice(`تم حفظ وتفعيل إعدادات البريد الإلكتروني وبروتوكول (${emailConfig.protocol.toUpperCase()}) بنجاح لـ (${emailConfig.email})`);
+    setPermissionNotice(
+      `تم حفظ وتفعيل إعدادات البريد الإلكتروني وبروتوكول (${emailConfig.protocol.toUpperCase()}) بنجاح لـ (${emailConfig.email})`,
+    );
   };
 
   const handleSendInAppEmail = async () => {
@@ -3052,10 +3827,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       date: "الآن",
       isRead: true,
       hasAttachment: !!composeAttachment,
-      attachmentName: composeAttachment || undefined
+      attachmentName: composeAttachment || undefined,
     };
 
-    setInAppEmails(prev => [newSentMail, ...prev]);
+    setInAppEmails((prev) => [newSentMail, ...prev]);
     setShowComposeEmail(false);
     setEmailFolder("sent");
     setSelectedEmailId(newSentMail.id);
@@ -3067,7 +3842,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       const { success, error } = await sendEmailViaServer({
         to: composeTo,
         subject: composeSubject,
-        html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${composeBody}</div>`
+        html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${composeBody}</div>`,
       });
       if (!success) throw new Error(error || "فشل إرسال البريد");
       sendSucceeded = true;
@@ -3085,17 +3860,24 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         body: composeBody,
         is_read: true,
         attachment_name: composeAttachment || null,
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       });
-    } catch (err) {
-    }
+    } catch (err) {}
 
     if (sendSucceeded) {
       setPermissionNotice("تم إرسال الرسالة الإلكترونية بنجاح وحفظها في السجل!");
     } else {
-      setPermissionNotice(`تنبيه: تعذر إرسال الرسالة فعلياً عبر الخادم (${sendErrorMessage}) — تم حفظ نسخة منها في السجل فقط دون إرسالها. يرجى مراجعة إعدادات خادم البريد أو التواصل مع الدعم الفني.`);
+      setPermissionNotice(
+        `تنبيه: تعذر إرسال الرسالة فعلياً عبر الخادم (${sendErrorMessage}) — تم حفظ نسخة منها في السجل فقط دون إرسالها. يرجى مراجعة إعدادات خادم البريد أو التواصل مع الدعم الفني.`,
+      );
     }
-    logAuditAction("CREATE", "المراسلات والبريد", `بريد إلى: ${composeTo}`, `إرسال رسالة بريد إلكتروني رسمية بموضوع "${composeSubject}" إلى ${composeTo}${sendSucceeded ? "" : " (تنبيه: فشل الإرسال الفعلي عبر الخادم)"}`, newSentMail.id);
+    logAuditAction(
+      "CREATE",
+      "المراسلات والبريد",
+      `بريد إلى: ${composeTo}`,
+      `إرسال رسالة بريد إلكتروني رسمية بموضوع "${composeSubject}" إلى ${composeTo}${sendSucceeded ? "" : " (تنبيه: فشل الإرسال الفعلي عبر الخادم)"}`,
+      newSentMail.id,
+    );
     setComposeTo("");
     setComposeSubject("");
     setComposeBody("");
@@ -3115,31 +3897,31 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   useEffect(() => {
     // تفريغ فوري ومؤكد لأي معطيات تجريبية متبقية في الـ LocalStorage للمهام والبريد والقضايا والجلسات
-    setCases(prev => {
-      const cleanList = prev.filter(c => !isDemoCase(c)).map(sanitizeCase);
+    setCases((prev) => {
+      const cleanList = prev.filter((c) => !isDemoCase(c)).map(sanitizeCase);
       const combined = [...cleanList, ...seedCases];
       const unique = deduplicateCases(combined);
       saveStorage("firm_cases", unique);
       return unique;
     });
-    setClients(prev => {
+    setClients((prev) => {
       const combined = [...prev, ...seedClients];
       const unique = deduplicateClients(combined);
       saveStorage("firm_clients", unique);
       return unique;
     });
-    setHearings(prev => {
-      const clean = prev.filter(h => !isDemoHearing(h));
+    setHearings((prev) => {
+      const clean = prev.filter((h) => !isDemoHearing(h));
       saveStorage("firm_hearings", clean);
       return clean;
     });
-    setTasks(prev => {
-      const clean = prev.filter(t => !isDemoTask(t));
+    setTasks((prev) => {
+      const clean = prev.filter((t) => !isDemoTask(t));
       saveStorage("firm_tasks", clean);
       return clean;
     });
-    setInAppEmails(prev => {
-      const clean = prev.filter(e => !isDemoEmail(e));
+    setInAppEmails((prev) => {
+      const clean = prev.filter((e) => !isDemoEmail(e));
       saveStorage("firm_in_app_emails", clean);
       return clean;
     });
@@ -3170,7 +3952,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       }
     });
 
-    const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription: authSub },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user?.email) {
         const email = session.user.email.toLowerCase();
         const found = users.find((u) => u.email.toLowerCase() === email);
@@ -3199,13 +3983,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     // الاشتراك اللحظي في جدول Supabase profiles
     const profilesChannel = supabase
       .channel("realtime_profiles_channel")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "profiles" },
-        () => {
-          fetchSupabaseProfiles();
-        }
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
+        fetchSupabaseProfiles();
+      })
       .subscribe();
 
     // الاشتراك اللحظي في جدول Supabase email_messages
@@ -3217,10 +3997,12 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         (payload) => {
           const newRow = payload.new as any;
           if (newRow) {
-            setInAppEmails(prev => {
+            setInAppEmails((prev) => {
               const mapped = {
                 id: newRow.id || Date.now(),
-                folder: (newRow.folder as any) || (newRow.sender_email === emailConfig.email ? "sent" : "inbox"),
+                folder:
+                  (newRow.folder as any) ||
+                  (newRow.sender_email === emailConfig.email ? "sent" : "inbox"),
                 sender: newRow.sender_name || newRow.sender_email || "رسالة جديدة",
                 senderEmail: newRow.sender_email || "",
                 recipient: newRow.recipient_name || newRow.recipient_email || "",
@@ -3230,16 +4012,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
                 date: new Date().toLocaleString("ar-AE"),
                 isRead: newRow.is_read ?? false,
                 hasAttachment: !!newRow.attachment_name,
-                attachmentName: newRow.attachment_name || ""
+                attachmentName: newRow.attachment_name || "",
               };
-              const exists = prev.some(m => m.id === mapped.id);
+              const exists = prev.some((m) => m.id === mapped.id);
               if (exists) {
-                return prev.map(m => m.id === mapped.id ? mapped : m);
+                return prev.map((m) => (m.id === mapped.id ? mapped : m));
               }
               return [mapped, ...prev];
             });
           }
-        }
+        },
       )
       .subscribe();
 
@@ -3259,20 +4041,28 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         .order("created_at", { ascending: true });
 
       if (!error && data && data.length > 0) {
-        setWaChats(prev => {
+        setWaChats((prev) => {
           const updated = [...prev];
           data.forEach((row: any) => {
             const rowPhoneClean = row.phone_number?.replace(/[^\d]/g, "");
-            const targetChat = updated.find(c => c.phone.replace(/[^\d]/g, "") === rowPhoneClean);
+            const targetChat = updated.find((c) => c.phone.replace(/[^\d]/g, "") === rowPhoneClean);
             if (targetChat) {
-              const msgExists = targetChat.messages.some(m => m.text === row.message_body && m.sender === (row.sender === "me" ? "me" : "them"));
+              const msgExists = targetChat.messages.some(
+                (m) =>
+                  m.text === row.message_body && m.sender === (row.sender === "me" ? "me" : "them"),
+              );
               if (!msgExists) {
                 targetChat.messages.push({
                   id: row.id || Date.now() + Math.random(),
                   sender: row.sender === "me" ? "me" : "them",
                   text: row.message_body,
-                  time: row.created_at ? new Date(row.created_at).toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" }) : "الآن",
-                  status: (row.status as any) || "sent"
+                  time: row.created_at
+                    ? new Date(row.created_at).toLocaleTimeString("ar-AE", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "الآن",
+                  status: (row.status as any) || "sent",
                 });
               }
             } else if (row.phone_number) {
@@ -3283,21 +4073,27 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
                 role: "عميل عبر الواتساب",
                 avatarBg: "bg-teal-600 text-white",
                 unreadCount: 0,
-                messages: [{
-                  id: row.id || Date.now(),
-                  sender: row.sender === "me" ? "me" : "them",
-                  text: row.message_body,
-                  time: row.created_at ? new Date(row.created_at).toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" }) : "الآن",
-                  status: (row.status as any) || "sent"
-                }]
+                messages: [
+                  {
+                    id: row.id || Date.now(),
+                    sender: row.sender === "me" ? "me" : "them",
+                    text: row.message_body,
+                    time: row.created_at
+                      ? new Date(row.created_at).toLocaleTimeString("ar-AE", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : "الآن",
+                    status: (row.status as any) || "sent",
+                  },
+                ],
               });
             }
           });
           return [...updated];
         });
       }
-    } catch (err) {
-    }
+    } catch (err) {}
   };
 
   useEffect(() => {
@@ -3307,31 +4103,32 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       const todayDate = todayISO();
       const lastCheck = localStorage.getItem("firm_last_task_reminder_check");
       if (lastCheck === todayDate) return;
-      
-      const upcomingTasks = tasks.filter(t => !t.done && daysUntil(t.due) <= 1 && daysUntil(t.due) >= -7);
-      
+
+      const upcomingTasks = tasks.filter(
+        (t) => !t.done && daysUntil(t.due) <= 1 && daysUntil(t.due) >= -7,
+      );
+
       if (upcomingTasks.length > 0) {
         let allSuccess = true;
         for (const t of upcomingTasks) {
-          const user = users.find(u => u.name === t.assignee);
+          const user = users.find((u) => u.name === t.assignee);
           if (user && user.phone) {
             const message = `مرحباً ${user.name}،\nتذكير بمهمة: "${t.title}"\nتاريخ الاستحقاق: ${t.due}\nيرجى المتابعة عبر نظام المكتب.`;
             try {
               await sendWhatsAppViaEdgeFunction({
                 to: user.phone.replace(/[^0-9]/g, ""),
                 message: message,
-                contact_name: user.name
+                contact_name: user.name,
               });
-              
+
               // محاولة إرسال التنبيه التلقائي عبر البريد الإلكتروني أيضاً إذا تم تكوينه
               if (user.email && typeof supabase.functions !== "undefined") {
-                 sendEmailViaServer({
-                    to: user.email,
-                    subject: `تذكير بمهمة مستحقة: ${t.title}`,
-                    html: `<p>مرحباً ${user.name}،</p><p>نذكرك بضرورة إنجاز المهمة التالية:</p><p><strong>${t.title}</strong></p><p>تاريخ الاستحقاق: ${t.due}</p>`
-                 }).catch(e => console.warn("Email reminder failed or not configured", e));
+                sendEmailViaServer({
+                  to: user.email,
+                  subject: `تذكير بمهمة مستحقة: ${t.title}`,
+                  html: `<p>مرحباً ${user.name}،</p><p>نذكرك بضرورة إنجاز المهمة التالية:</p><p><strong>${t.title}</strong></p><p>تاريخ الاستحقاق: ${t.due}</p>`,
+                }).catch((e) => console.warn("Email reminder failed or not configured", e));
               }
-
             } catch (err) {
               console.error("Failed to send WhatsApp task reminder", err);
               allSuccess = false;
@@ -3345,7 +4142,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         localStorage.setItem("firm_last_task_reminder_check", todayDate);
       }
     };
-    
+
     checkTasksForWhatsAppReminders();
   }, [isLoggedIn, tasks, users]);
 
@@ -3361,28 +4158,39 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         (payload) => {
           const newRow = payload.new;
           if (newRow && newRow.phone_number) {
-            setWaChats(prev => {
+            setWaChats((prev) => {
               const rowPhoneClean = newRow.phone_number.replace(/[^\d]/g, "");
-              const matchesChat = prev.find(chat => chat.phone.replace(/[^\d]/g, "") === rowPhoneClean);
+              const matchesChat = prev.find(
+                (chat) => chat.phone.replace(/[^\d]/g, "") === rowPhoneClean,
+              );
 
               if (matchesChat) {
-                return prev.map(chat => {
+                return prev.map((chat) => {
                   if (chat.phone.replace(/[^\d]/g, "") === rowPhoneClean) {
-                    const alreadyHas = chat.messages.some(m => m.id === newRow.id || (m.text === newRow.message_body && m.sender === (newRow.sender === "me" ? "me" : "them")));
+                    const alreadyHas = chat.messages.some(
+                      (m) =>
+                        m.id === newRow.id ||
+                        (m.text === newRow.message_body &&
+                          m.sender === (newRow.sender === "me" ? "me" : "them")),
+                    );
                     if (!alreadyHas) {
                       return {
                         ...chat,
-                        unreadCount: newRow.sender !== "me" ? chat.unreadCount + 1 : chat.unreadCount,
+                        unreadCount:
+                          newRow.sender !== "me" ? chat.unreadCount + 1 : chat.unreadCount,
                         messages: [
                           ...chat.messages,
                           {
                             id: newRow.id || Date.now(),
                             sender: newRow.sender === "me" ? "me" : "them",
                             text: newRow.message_body,
-                            time: new Date().toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" }),
-                            status: (newRow.status as any) || "sent"
-                          }
-                        ]
+                            time: new Date().toLocaleTimeString("ar-AE", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            }),
+                            status: (newRow.status as any) || "sent",
+                          },
+                        ],
                       };
                     }
                   }
@@ -3398,19 +4206,24 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
                     role: "عميل عبر الواتساب",
                     avatarBg: "bg-teal-600 text-white",
                     unreadCount: newRow.sender !== "me" ? 1 : 0,
-                    messages: [{
-                      id: newRow.id || Date.now(),
-                      sender: newRow.sender === "me" ? "me" : "them",
-                      text: newRow.message_body,
-                      time: new Date().toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" }),
-                      status: (newRow.status as any) || "sent"
-                    }]
-                  }
+                    messages: [
+                      {
+                        id: newRow.id || Date.now(),
+                        sender: newRow.sender === "me" ? "me" : "them",
+                        text: newRow.message_body,
+                        time: new Date().toLocaleTimeString("ar-AE", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }),
+                        status: (newRow.status as any) || "sent",
+                      },
+                    ],
+                  },
                 ];
               }
             });
           }
-        }
+        },
       )
       .subscribe();
 
@@ -3425,7 +4238,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     const textToSend = waInputText.trim();
     setWaInputText("");
 
-    const activeChat = waChats.find(c => c.id === targetChatId);
+    const activeChat = waChats.find((c) => c.id === targetChatId);
     if (!activeChat) return;
 
     // 1. تحديث واجهة المستخدم فورياً
@@ -3434,15 +4247,17 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       sender: "me" as const,
       text: textToSend,
       time: "الآن",
-      status: "sent" as const
+      status: "sent" as const,
     };
-    setWaChats(prev => prev.map(c => c.id === activeChat.id ? { ...c, messages: [...c.messages, newMsg] } : c));
+    setWaChats((prev) =>
+      prev.map((c) => (c.id === activeChat.id ? { ...c, messages: [...c.messages, newMsg] } : c)),
+    );
 
     // 2. استدعاء Edge Function المسماة send-whatsapp-message
     sendWhatsAppViaEdgeFunction({
       to: activeChat.phone,
       message: textToSend,
-      contact_name: activeChat.name
+      contact_name: activeChat.name,
     });
 
     // 3. حفظ السجل في جدول whatsapp_messages في Supabase
@@ -3452,11 +4267,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         contact_name: activeChat.name,
         sender: "me",
         message_body: textToSend,
-        status: "sent"
+        status: "sent",
       });
-    } catch (e) {
-    }
-    logAuditAction("CREATE", "واتساب الأعمال", `محادثة: ${activeChat.name}`, `إرسال رسالة واتساب إلى ${activeChat.name} (${activeChat.phone})`, activeChat.id);
+    } catch (e) {}
+    logAuditAction(
+      "CREATE",
+      "واتساب الأعمال",
+      `محادثة: ${activeChat.name}`,
+      `إرسال رسالة واتساب إلى ${activeChat.name} (${activeChat.phone})`,
+      activeChat.id,
+    );
   };
 
   // دالة إنشاء محادثة جديدة وتفعيلها فوراً
@@ -3466,8 +4286,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     const cleanName = name.trim() || cleanPhone;
 
     let targetId: number;
-    const existing = waChats.find(c => c.phone.replace(/[^\d]/g, "") === cleanPhone.replace(/[^\d]/g, ""));
-    
+    const existing = waChats.find(
+      (c) => c.phone.replace(/[^\d]/g, "") === cleanPhone.replace(/[^\d]/g, ""),
+    );
+
     if (existing) {
       targetId = existing.id;
     } else {
@@ -3479,30 +4301,39 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         role: "عميل - محادثة جديدة",
         avatarBg: "bg-emerald-600 text-white",
         unreadCount: 0,
-        messages: []
+        messages: [],
       };
-      setWaChats(prev => [newChatObj, ...prev]);
+      setWaChats((prev) => [newChatObj, ...prev]);
     }
 
     setSelectedWaChatId(targetId);
 
     if (initialMsg && initialMsg.trim()) {
       const msgText = initialMsg.trim();
-      setWaChats(prev => prev.map(c => c.id === targetId ? {
-        ...c,
-        messages: [...c.messages, {
-          id: Date.now(),
-          sender: "me",
-          text: msgText,
-          time: "الآن",
-          status: "sent"
-        }]
-      } : c));
+      setWaChats((prev) =>
+        prev.map((c) =>
+          c.id === targetId
+            ? {
+                ...c,
+                messages: [
+                  ...c.messages,
+                  {
+                    id: Date.now(),
+                    sender: "me",
+                    text: msgText,
+                    time: "الآن",
+                    status: "sent",
+                  },
+                ],
+              }
+            : c,
+        ),
+      );
 
       sendWhatsAppViaEdgeFunction({
         to: cleanPhone,
         message: msgText,
-        contact_name: cleanName
+        contact_name: cleanName,
       });
 
       try {
@@ -3511,23 +4342,35 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           contact_name: cleanName,
           sender: "me",
           message_body: msgText,
-          status: "sent"
+          status: "sent",
         });
-      } catch (e) {
-      }
-      logAuditAction("CREATE", "واتساب الأعمال", `محادثة جديدة: ${cleanName}`, `بدء محادثة واتساب جديدة مع ${cleanName} (${cleanPhone}) وإرسال رسالة أولى`, targetId);
+      } catch (e) {}
+      logAuditAction(
+        "CREATE",
+        "واتساب الأعمال",
+        `محادثة جديدة: ${cleanName}`,
+        `بدء محادثة واتساب جديدة مع ${cleanName} (${cleanPhone}) وإرسال رسالة أولى`,
+        targetId,
+      );
     }
   };
 
   // حالات مودال تخصيص الصلاحيات عند قبول وتفعيل المستخدم الجدد
   const {
-    approvingUser, setApprovingUser,
-    assignRoleTitle, setAssignRoleTitle,
-    assignRoleKey, setAssignRoleKey,
-    assignCanTransfer, setAssignCanTransfer,
-    assignCanAgreements, setAssignCanAgreements,
-    assignCanWhatsapp, setAssignCanWhatsapp,
-    assignCanFinances, setAssignCanFinances,
+    approvingUser,
+    setApprovingUser,
+    assignRoleTitle,
+    setAssignRoleTitle,
+    assignRoleKey,
+    setAssignRoleKey,
+    assignCanTransfer,
+    setAssignCanTransfer,
+    assignCanAgreements,
+    setAssignCanAgreements,
+    assignCanWhatsapp,
+    setAssignCanWhatsapp,
+    assignCanFinances,
+    setAssignCanFinances,
   } = useApproveUserModal();
 
   const pendingUsers = useMemo(() => {
@@ -3561,7 +4404,6 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     const preset = ROLE_PRESETS[assignRoleKey];
     const targetUserId = approvingUser.supabaseId || approvingUser.id;
 
-
     try {
       // Direct update in Supabase profiles by ID
       const { data, error } = await supabase
@@ -3569,11 +4411,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         .update({
           status: "approved",
           role: assignRoleKey,
-          role_title: assignRoleTitle || preset.title
+          role_title: assignRoleTitle || preset.title,
         })
         .eq("id", targetUserId)
         .select();
-
 
       let isSuccess = !error && data && data.length > 0;
 
@@ -3584,11 +4425,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           .update({
             status: "approved",
             role: assignRoleKey,
-            role_title: assignRoleTitle || preset.title
+            role_title: assignRoleTitle || preset.title,
           })
           .eq("email", approvingUser.email.toLowerCase())
           .select();
-
 
         if (!emailError && emailData && emailData.length > 0) {
           isSuccess = true;
@@ -3619,14 +4459,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
                   canAccessWhatsapp: assignCanWhatsapp,
                   canViewFinances: assignCanFinances,
                 }
-              : u
-          )
+              : u,
+          ),
         );
 
         // Re-fetch users from database to ensure source of truth
         await fetchSupabaseProfiles();
 
-        setPermissionNotice(`تم القبول والاعتماد الصريح لحساب "${approvingUser.name}" وإسناد الصلاحيات المحددة بنجاح!`);
+        setPermissionNotice(
+          `تم القبول والاعتماد الصريح لحساب "${approvingUser.name}" وإسناد الصلاحيات المحددة بنجاح!`,
+        );
         setApprovingUser(null);
       }
     } catch (e: any) {
@@ -3656,7 +4498,13 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       actionName: "حذف حساب المستخدم",
       onConfirm: async () => {
         // Immediately remove from active state so row disappears
-        logAuditAction("DELETE", "المستخدمون والصلاحيات", `حساب: ${target.name}`, `حذف حساب المستخدم ${target.name} (${target.email}) نهائياً من نظام المكتب`, target.id);
+        logAuditAction(
+          "DELETE",
+          "المستخدمون والصلاحيات",
+          `حساب: ${target.name}`,
+          `حذف حساب المستخدم ${target.name} (${target.email}) نهائياً من نظام المكتب`,
+          target.id,
+        );
         setUsers((prev) => prev.filter((u) => u.id !== userId));
 
         const targetUserId = target.supabaseId || target.id;
@@ -3696,8 +4544,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
               .from("profiles")
               .update({ status: "rejected" })
               .eq("email", target.email.toLowerCase());
-          } catch (err) {
-          }
+          } catch (err) {}
         }
 
         setPermissionNotice(`تم حذف واستبعاد حساب "${target.name}" بنجاح.`);
@@ -3709,22 +4556,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     if (!checkPerm("manageUsers", "إدارة المستخدمين")) return;
     const target = users.find((u) => u.id === userId);
     if (!target) return;
-    
+
     // Instantly remove from state
     setUsers((prev) => prev.filter((u) => u.id !== userId));
 
     const targetUserId = target.supabaseId || target.id;
     try {
-      const { error: deleteErr } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", targetUserId);
+      const { error: deleteErr } = await supabase.from("profiles").delete().eq("id", targetUserId);
 
       if (deleteErr) {
-        await supabase
-          .from("profiles")
-          .update({ status: "rejected" })
-          .eq("id", targetUserId);
+        await supabase.from("profiles").update({ status: "rejected" }).eq("id", targetUserId);
       }
     } catch (e) {
       await supabase
@@ -3737,25 +4578,33 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   const clientName = (id: number) => clients.find((c) => c.id === id)?.name || "—";
   const caseNo = (id: number) => cases.find((c) => c.id === id)?.number || "—";
-  const nextId = <T extends { id: number }>(arr: T[]) => (arr.length ? Math.max(...arr.map((x) => x.id)) + 1 : 1);
+  const nextId = <T extends { id: number }>(arr: T[]) =>
+    arr.length ? Math.max(...arr.map((x) => x.id)) + 1 : 1;
 
   // ---------- نظام التنبيهات التلقائي لمواعيد الطعون (7 أيام و 3 أيام) ----------
-  const runAutoAppealDeadlineChecker = async (deadlinesList: JudgmentDeadline[], forceManual = false) => {
-    setAutoCheckStatus(prev => ({ ...prev, isChecking: true }));
-    let updatedList = [...deadlinesList];
-    let newLogs: NotificationLog[] = [];
+  const runAutoAppealDeadlineChecker = async (
+    deadlinesList: JudgmentDeadline[],
+    forceManual = false,
+  ) => {
+    setAutoCheckStatus((prev) => ({ ...prev, isChecking: true }));
+    const updatedList = [...deadlinesList];
+    const newLogs: NotificationLog[] = [];
     let sentCount7Days = 0;
     let sentCount3Days = 0;
     let overdueCount = 0;
 
     const timestampNow = new Date().toLocaleString("ar-AE", {
       dateStyle: "short",
-      timeStyle: "short"
+      timeStyle: "short",
     });
 
     for (let i = 0; i < updatedList.length; i++) {
       const item = { ...updatedList[i] };
-      if (item.status === "تم قيد الطعن" || item.status === "تم تقديم الطعن" || item.status === "لا حاجة لطعن") {
+      if (
+        item.status === "تم قيد الطعن" ||
+        item.status === "تم تقديم الطعن" ||
+        item.status === "لا حاجة لطعن"
+      ) {
         continue;
       }
 
@@ -3779,10 +4628,12 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
             sendEmailViaServer({
               to: lawyerEmail,
               subject,
-              html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${emailContent}</div>`
-            }).then(({ success, error }) => {
-              if (!success) console.warn("SMTP Auto Dispatch Error (3-day alert):", error);
-            }).catch(e => console.warn("SMTP Auto Dispatch Error (3-day alert):", e));
+              html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${emailContent}</div>`,
+            })
+              .then(({ success, error }) => {
+                if (!success) console.warn("SMTP Auto Dispatch Error (3-day alert):", error);
+              })
+              .catch((e) => console.warn("SMTP Auto Dispatch Error (3-day alert):", e));
           } catch (e) {
             console.warn("SMTP Auto Dispatch Error:", e);
           }
@@ -3792,12 +4643,17 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
             recipientName: lawyerName,
             recipientPhone: lawyerPhone,
             recipientEmail: lawyerEmail,
-            channel: item.preferredChannel === "whatsapp" ? "واتساب" : item.preferredChannel === "both" ? "كلاهما" : "إيميل",
+            channel:
+              item.preferredChannel === "whatsapp"
+                ? "واتساب"
+                : item.preferredChannel === "both"
+                  ? "كلاهما"
+                  : "إيميل",
             type: "تنبيه ميعاد طعن / استئناف",
             message: emailContent,
             sentAt: timestampNow,
             status: "تم الإرسال",
-            relatedRef: `طوارئ الطعون - قضية ${caseNum}`
+            relatedRef: `طوارئ الطعون - قضية ${caseNum}`,
           });
 
           const logEntry: JudgmentDeadlineLog = {
@@ -3808,7 +4664,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
             lawyerName,
             recipientContact: lawyerEmail,
             status: "sent",
-            messageSnippet: `🚨 تم إرسال تنبيه حرج قبل 3 أيام من انقضاء المهلة (آخر موعد: ${fmtDate(item.appealDeadlineDate)})`
+            messageSnippet: `🚨 تم إرسال تنبيه حرج قبل 3 أيام من انقضاء المهلة (آخر موعد: ${fmtDate(item.appealDeadlineDate)})`,
           };
 
           item.alert3DaysSent = true;
@@ -3816,7 +4672,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           item.autoAlertLogs = [logEntry, ...(item.autoAlertLogs || [])];
           sentCount3Days++;
         }
-      } 
+      }
       // 2. Check 7-Day Early Threshold
       else if (daysLeft <= 7 && daysLeft > 3) {
         if (!item.alert7DaysSent || forceManual) {
@@ -3827,10 +4683,12 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
             sendEmailViaServer({
               to: lawyerEmail,
               subject,
-              html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${emailContent}</div>`
-            }).then(({ success, error }) => {
-              if (!success) console.warn("SMTP Auto Dispatch Error (7-day alert):", error);
-            }).catch(e => console.warn("SMTP Auto Dispatch Error (7-day alert):", e));
+              html: `<div style="white-space:pre-wrap;font-family:Arial,sans-serif;font-size:14px;line-height:1.7">${emailContent}</div>`,
+            })
+              .then(({ success, error }) => {
+                if (!success) console.warn("SMTP Auto Dispatch Error (7-day alert):", error);
+              })
+              .catch((e) => console.warn("SMTP Auto Dispatch Error (7-day alert):", e));
           } catch (e) {
             console.warn("SMTP Auto Dispatch Error:", e);
           }
@@ -3840,12 +4698,17 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
             recipientName: lawyerName,
             recipientPhone: lawyerPhone,
             recipientEmail: lawyerEmail,
-            channel: item.preferredChannel === "whatsapp" ? "واتساب" : item.preferredChannel === "both" ? "كلاهما" : "إيميل",
+            channel:
+              item.preferredChannel === "whatsapp"
+                ? "واتساب"
+                : item.preferredChannel === "both"
+                  ? "كلاهما"
+                  : "إيميل",
             type: "تنبيه ميعاد طعن / استئناف",
             message: emailContent,
             sentAt: timestampNow,
             status: "تم الإرسال",
-            relatedRef: `تنبيه الطعون (7 أيام) - قضية ${caseNum}`
+            relatedRef: `تنبيه الطعون (7 أيام) - قضية ${caseNum}`,
           });
 
           const logEntry: JudgmentDeadlineLog = {
@@ -3856,7 +4719,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
             lawyerName,
             recipientContact: lawyerEmail,
             status: "sent",
-            messageSnippet: `⚠️ تم إرسال تنبيه استباقي قبل 7 أيام من انقضاء المهلة (آخر موعد: ${fmtDate(item.appealDeadlineDate)})`
+            messageSnippet: `⚠️ تم إرسال تنبيه استباقي قبل 7 أيام من انقضاء المهلة (آخر موعد: ${fmtDate(item.appealDeadlineDate)})`,
           };
 
           item.alert7DaysSent = true;
@@ -3876,14 +4739,14 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
     setDeadlines(updatedList);
     if (newLogs.length > 0) {
-      setNotifications(prev => [...newLogs, ...prev]);
+      setNotifications((prev) => [...newLogs, ...prev]);
     }
 
     const statusMsg = `تم فحص ${updatedList.length} طعن: تم إرسال (${sentCount3Days}) تنبيه حرج (3 أيام) و (${sentCount7Days}) تنبيه استباقي (7 أيام).`;
     setAutoCheckStatus({
       lastCheckedAt: timestampNow,
       message: statusMsg,
-      isChecking: false
+      isChecking: false,
     });
 
     return { sentCount7Days, sentCount3Days, overdueCount, totalProcessed: updatedList.length };
@@ -3905,7 +4768,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
     sendWhatsAppMsg(lawyerPhone, msg);
 
-    const timestampNow = new Date().toLocaleString("ar-AE", { dateStyle: "short", timeStyle: "short" });
+    const timestampNow = new Date().toLocaleString("ar-AE", {
+      dateStyle: "short",
+      timeStyle: "short",
+    });
     const logEntry: JudgmentDeadlineLog = {
       id: Math.random().toString(36).substring(2, 9),
       timestamp: timestampNow,
@@ -3914,19 +4780,33 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       lawyerName,
       recipientContact: lawyerPhone,
       status: "sent",
-      messageSnippet: `📱 تم إرسال تنبيه واتساب مباشر للمحامي المسؤول (متبقي ${daysLeft} أيام)`
+      messageSnippet: `📱 تم إرسال تنبيه واتساب مباشر للمحامي المسؤول (متبقي ${daysLeft} أيام)`,
     };
 
-    setDeadlines(prev => prev.map(x => x.id === d.id ? {
-      ...x,
-      autoAlertLogs: [logEntry, ...(x.autoAlertLogs || [])]
-    } : x));
+    setDeadlines((prev) =>
+      prev.map((x) =>
+        x.id === d.id
+          ? {
+              ...x,
+              autoAlertLogs: [logEntry, ...(x.autoAlertLogs || [])],
+            }
+          : x,
+      ),
+    );
   };
 
   // ---------- فتح نموذج التنبيهات وإرسال الواتساب والبريد ----------
   const openNotificationComposer = (
-    type: "تنبيه جلسة" | "تحديث قضية" | "تذكير فاتورة" | "تجديد وثائق / KYC" | "تجديد وكالة / POA" | "تنبيه ميعاد طعن / استئناف" | "تذكير قسط فاتورة" | "رسالة عامة",
-    data?: any
+    type:
+      | "تنبيه جلسة"
+      | "تحديث قضية"
+      | "تذكير فاتورة"
+      | "تجديد وثائق / KYC"
+      | "تجديد وكالة / POA"
+      | "تنبيه ميعاد طعن / استئناف"
+      | "تذكير قسط فاتورة"
+      | "رسالة عامة",
+    data?: any,
   ) => {
     let name = "";
     let phone = "";
@@ -4025,7 +4905,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   const dispatchNotification = () => {
     if (!notifyModal) return;
-    const { recipientName, recipientPhone, recipientEmail, channel, type, subject, message, relatedRef } = notifyModal;
+    const {
+      recipientName,
+      recipientPhone,
+      recipientEmail,
+      channel,
+      type,
+      subject,
+      message,
+      relatedRef,
+    } = notifyModal;
 
     if (channel === "واتساب" || channel === "كلاهما") {
       sendWhatsAppMsg(recipientPhone, message);
@@ -4042,7 +4931,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       channel,
       type,
       message,
-      sentAt: new Date().toLocaleDateString("ar-AE") + " " + new Date().toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" }),
+      sentAt:
+        new Date().toLocaleDateString("ar-AE") +
+        " " +
+        new Date().toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit" }),
       status: "تم الإرسال",
       relatedRef,
     };
@@ -4056,24 +4948,32 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     // القضايا "النشطة" هي فقط القضايا الجارية فعلياً (متداولة / قيد النظر / محجوزة للحكم)،
     // بنفس التعريف المعتمد في caseStatsBreakdown.stageStatusMap — القيم القديمة "مغلقة"/"صدر الحكم"
     // لم تعد ضمن CASE_STATUS الفعلية، ما كان يجعل هذا العداد يساوي دائماً إجمالي عدد القضايا
-    const active = cases.filter((c) => c.status === "متداولة" || c.status === "قيد النظر" || c.status === "محجوزة للحكم").length;
-    const weekHearings = hearings.filter((h) => !h.done && daysUntil(h.date) >= 0 && daysUntil(h.date) <= 7).length;
-    const dueAmount = invoices.filter((i) => ["مرسلة", "متأخرة"].includes(effectiveInvoiceStatus(i))).reduce((s, i) => s + i.amount * (1 + VAT_RATE), 0);
-    const expiringPoa = poas.filter((p) => daysUntil(p.expiry) <= 60 && daysUntil(p.expiry) >= 0).length;
+    const active = cases.filter(
+      (c) => c.status === "متداولة" || c.status === "قيد النظر" || c.status === "محجوزة للحكم",
+    ).length;
+    const weekHearings = hearings.filter(
+      (h) => !h.done && daysUntil(h.date) >= 0 && daysUntil(h.date) <= 7,
+    ).length;
+    const dueAmount = invoices
+      .filter((i) => ["مرسلة", "متأخرة"].includes(effectiveInvoiceStatus(i)))
+      .reduce((s, i) => s + i.amount * (1 + VAT_RATE), 0);
+    const expiringPoa = poas.filter(
+      (p) => daysUntil(p.expiry) <= 60 && daysUntil(p.expiry) >= 0,
+    ).length;
     return { active, weekHearings, dueAmount, expiringPoa };
   }, [cases, hearings, invoices, poas]);
 
   const CASE_TYPE_PALETTE: Record<string, string> = {
-    "مدني": "#d97706",
-    "تجاري": "#2563eb",
-    "عمالي": "#059669",
-    "جزائي": "#dc2626",
+    مدني: "#d97706",
+    تجاري: "#2563eb",
+    عمالي: "#059669",
+    جزائي: "#dc2626",
     "أحوال شخصية": "#7c3aed",
-    "عقاري": "#0891b2",
-    "إيجاري": "#b45309",
-    "إداري": "#475569",
-    "تنفيذ": "#4f46e5",
-    "تحكيم": "#be185d",
+    عقاري: "#0891b2",
+    إيجاري: "#b45309",
+    إداري: "#475569",
+    تنفيذ: "#4f46e5",
+    تحكيم: "#be185d",
   };
 
   const casesByType = useMemo(() => {
@@ -4083,14 +4983,25 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       m[typeName] = (m[typeName] || 0) + 1;
     });
     const total = cases.length || 1;
-    const palette = ["#d97706", "#2563eb", "#059669", "#7c3aed", "#dc2626", "#0891b2", "#b45309", "#475569", "#4f46e5", "#be185d"];
-    
+    const palette = [
+      "#d97706",
+      "#2563eb",
+      "#059669",
+      "#7c3aed",
+      "#dc2626",
+      "#0891b2",
+      "#b45309",
+      "#475569",
+      "#4f46e5",
+      "#be185d",
+    ];
+
     const allItems = Object.entries(m)
       .map(([name, value], idx) => ({
         name,
         value,
         percentage: Math.round((value / total) * 100),
-        color: CASE_TYPE_PALETTE[name] || palette[idx % palette.length]
+        color: CASE_TYPE_PALETTE[name] || palette[idx % palette.length],
       }))
       .sort((a, b) => b.value - a.value);
 
@@ -4103,7 +5014,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         name: "أخرى",
         value: restValue,
         percentage: Math.round((restValue / total) * 100),
-        color: "#94a3b8"
+        color: "#94a3b8",
       });
       return top;
     }
@@ -4116,8 +5027,8 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     let sentDueAmount = 0;
     let overdueAmount = 0;
     let draftAmount = 0;
-    const countMap: Record<string, number> = { "مدفوعة": 0, "مرسلة": 0, "متأخرة": 0, "مسودة": 0 };
-    const amountMap: Record<string, number> = { "مدفوعة": 0, "مرسلة": 0, "متأخرة": 0, "مسودة": 0 };
+    const countMap: Record<string, number> = { مدفوعة: 0, مرسلة: 0, متأخرة: 0, مسودة: 0 };
+    const amountMap: Record<string, number> = { مدفوعة: 0, مرسلة: 0, متأخرة: 0, مسودة: 0 };
 
     invoices.forEach((i) => {
       const val = i.amount * (1 + VAT_RATE);
@@ -4135,10 +5046,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
     const collectionRate = totalInvoiced > 0 ? Math.round((paidAmount / totalInvoiced) * 100) : 0;
     const colors: Record<string, string> = {
-      "مدفوعة": "#059669",
-      "مرسلة": "#0284c7",
-      "متأخرة": "#dc2626",
-      "مسودة": "#94a3b8",
+      مدفوعة: "#059669",
+      مرسلة: "#0284c7",
+      متأخرة: "#dc2626",
+      مسودة: "#94a3b8",
     };
 
     const summaryByAmount = Object.entries(amountMap).map(([name, value]) => ({
@@ -4146,7 +5057,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       value: Math.round(value),
       count: countMap[name] || 0,
       color: colors[name] || "#94a3b8",
-      percentage: totalInvoiced > 0 ? Math.round((value / totalInvoiced) * 100) : 0
+      percentage: totalInvoiced > 0 ? Math.round((value / totalInvoiced) * 100) : 0,
     }));
 
     const summaryByCount = Object.entries(countMap).map(([name, value]) => ({
@@ -4154,7 +5065,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       value,
       amount: Math.round(amountMap[name] || 0),
       color: colors[name] || "#94a3b8",
-      percentage: invoices.length > 0 ? Math.round((value / (invoices.length || 1)) * 100) : 0
+      percentage: invoices.length > 0 ? Math.round((value / (invoices.length || 1)) * 100) : 0,
     }));
 
     return {
@@ -4166,7 +5077,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       collectionRate,
       summaryByAmount,
       summaryByCount,
-      totalCount: invoices.length
+      totalCount: invoices.length,
     };
   }, [invoices]);
 
@@ -4186,9 +5097,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
     const priorityCounts: Record<string, { total: number; done: number }> = {
-      "عالية": { total: 0, done: 0 },
-      "متوسطة": { total: 0, done: 0 },
-      "منخفضة": { total: 0, done: 0 }
+      عالية: { total: 0, done: 0 },
+      متوسطة: { total: 0, done: 0 },
+      منخفضة: { total: 0, done: 0 },
     };
 
     tasks.forEach((t) => {
@@ -4199,30 +5110,50 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     });
 
     const statusChartData = [
-      { name: "مهام منجزة", value: completed, color: "#059669", percentage: total > 0 ? Math.round((completed / total) * 100) : 0 },
-      { name: "جارية بالموعد", value: inProgress, color: "#2563eb", percentage: total > 0 ? Math.round((inProgress / total) * 100) : 0 },
-      { name: "مستحقة اليوم", value: dueToday, color: "#d97706", percentage: total > 0 ? Math.round((dueToday / total) * 100) : 0 },
-      { name: "متأخرة", value: overdue, color: "#dc2626", percentage: total > 0 ? Math.round((overdue / total) * 100) : 0 },
-    ].filter(item => item.value > 0);
+      {
+        name: "مهام منجزة",
+        value: completed,
+        color: "#059669",
+        percentage: total > 0 ? Math.round((completed / total) * 100) : 0,
+      },
+      {
+        name: "جارية بالموعد",
+        value: inProgress,
+        color: "#2563eb",
+        percentage: total > 0 ? Math.round((inProgress / total) * 100) : 0,
+      },
+      {
+        name: "مستحقة اليوم",
+        value: dueToday,
+        color: "#d97706",
+        percentage: total > 0 ? Math.round((dueToday / total) * 100) : 0,
+      },
+      {
+        name: "متأخرة",
+        value: overdue,
+        color: "#dc2626",
+        percentage: total > 0 ? Math.round((overdue / total) * 100) : 0,
+      },
+    ].filter((item) => item.value > 0);
 
     const priorityChartData = [
       {
         name: "عالية",
         منجزة: priorityCounts["عالية"].done,
         معلقة: priorityCounts["عالية"].total - priorityCounts["عالية"].done,
-        total: priorityCounts["عالية"].total
+        total: priorityCounts["عالية"].total,
       },
       {
         name: "متوسطة",
         منجزة: priorityCounts["متوسطة"].done,
         معلقة: priorityCounts["متوسطة"].total - priorityCounts["متوسطة"].done,
-        total: priorityCounts["متوسطة"].total
+        total: priorityCounts["متوسطة"].total,
       },
       {
         name: "منخفضة",
         منجزة: priorityCounts["منخفضة"].done,
         معلقة: priorityCounts["منخفضة"].total - priorityCounts["منخفضة"].done,
-        total: priorityCounts["منخفضة"].total
+        total: priorityCounts["منخفضة"].total,
       },
     ];
 
@@ -4235,7 +5166,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       inProgress,
       completionRate,
       statusChartData,
-      priorityChartData
+      priorityChartData,
     };
   }, [tasks]);
 
@@ -4248,18 +5179,33 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     setModal(kind);
   };
 
-  const f = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setForm((prev) => ({ ...prev, [k]: e.target.value }));
+  const f =
+    (k: string) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+      setForm((prev) => ({ ...prev, [k]: e.target.value }));
 
-  const handleDeduplicateCasesManual = () => { if (!checkPerm("manageCases", "دمج/حذف القضايا المكررة")) return; const beforeCount = cases.length;
+  const handleDeduplicateCasesManual = () => {
+    if (!checkPerm("manageCases", "دمج/حذف القضايا المكررة")) return;
+    const beforeCount = cases.length;
     const cleaned = deduplicateCases(cases);
     setCases(cleaned);
     saveStorage("firm_cases", cleaned);
     const removedCount = beforeCount - cleaned.length;
     if (removedCount > 0) {
-      alert(`تم بنجاح فحص وتنظيف القضايا المكررة وإزالة ${removedCount} سجل مكرر! العدد الحالي الآن: ${cleaned.length} قضية فريدة وموثقة.`);
-      logAuditAction("DELETE", "القضايا", "إزالة التكرار", `تم حذف ${removedCount} قضية مكررة بنجاح`, 0);
+      alert(
+        `تم بنجاح فحص وتنظيف القضايا المكررة وإزالة ${removedCount} سجل مكرر! العدد الحالي الآن: ${cleaned.length} قضية فريدة وموثقة.`,
+      );
+      logAuditAction(
+        "DELETE",
+        "القضايا",
+        "إزالة التكرار",
+        `تم حذف ${removedCount} قضية مكررة بنجاح`,
+        0,
+      );
     } else {
-      alert(`سجلات القضايا سليمة ومدققة تماماً ولا يوجد أي تكرار (${cleaned.length} قضية فريدة ومسجلة).`);
+      alert(
+        `سجلات القضايا سليمة ومدققة تماماً ولا يوجد أي تكرار (${cleaned.length} قضية فريدة ومسجلة).`,
+      );
     }
   };
 
@@ -4269,36 +5215,92 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
     const normNum = normalizeCaseNumberKey(form.number);
     // عند التعديل، نستثني القضية نفسها من فحص تكرار رقم الملف حتى يمكن حفظها بدون تغيير رقمها
-    const existing = cases.find(c => normalizeCaseNumberKey(c.number) === normNum && c.id !== editingCase?.id);
+    const existing = cases.find(
+      (c) => normalizeCaseNumberKey(c.number) === normNum && c.id !== editingCase?.id,
+    );
     if (existing) {
-      alert(`تنبيه: يوجد قضية مسجلة مسبقاً بنفس رقم الملف/الدعوى (${form.number}) بالرقم التعريفي #${existing.id}. يرجى التحقق من الرقم لمنع تكرار القضايا.`);
+      alert(
+        `تنبيه: يوجد قضية مسجلة مسبقاً بنفس رقم الملف/الدعوى (${form.number}) بالرقم التعريفي #${existing.id}. يرجى التحقق من الرقم لمنع تكرار القضايا.`,
+      );
       return;
     }
 
     const openDate = form.openDate || todayISO();
     const stage = form.stage || "الابتدائية";
     const status = form.status || "متداولة";
-    const opponents: string[] = (form.opponents || []).map((o: string) => (o || "").trim()).filter(Boolean); if (!editingCase) { const newClientNameForConflict = clientName(+form.clientId); const conflictReasons: string[] = []; cases.forEach((c) => { if ((c.opponents || []).some((o) => o.trim().toLowerCase() === newClientNameForConflict.trim().toLowerCase())) { conflictReasons.push(`الموكل الجديد "${newClientNameForConflict}" كان خصماً سابقاً في القضية رقم ${c.number}`); } }); opponents.forEach((opp) => { const oppAsClient = clients.find((cl) => cl.name.trim().toLowerCase() === opp.trim().toLowerCase()); if (oppAsClient) { conflictReasons.push(`الخصم "${opp}" مسجل كموكل حالي للمكتب (${oppAsClient.name})`); } }); if (conflictReasons.length > 0) { const proceedDespiteConflict = window.confirm(`⚠️ تنبيه تضارب مصالح محتمل: ${conflictReasons.join(" — ")} — هذا قد يشكل تضارب مصالح يستوجب مراجعة قانونية/أخلاقية قبل قبول الوكالة. هل تريد المتابعة رغم ذلك على مسؤوليتك؟`); if (!proceedDespiteConflict) { return; } logAuditAction("CREATE", "تضارب المصالح", `تنبيه عند فتح قضية جديدة رقم ${form.number}`, `تم المتابعة بفتح قضية رقم ${form.number} رغم تنبيه تضارب مصالح محتمل: ${conflictReasons.join(" | ")}`, 0); } }
+    const opponents: string[] = (form.opponents || [])
+      .map((o: string) => (o || "").trim())
+      .filter(Boolean);
+    if (!editingCase) {
+      const newClientNameForConflict = clientName(+form.clientId);
+      const conflictReasons: string[] = [];
+      cases.forEach((c) => {
+        if (
+          (c.opponents || []).some(
+            (o) => o.trim().toLowerCase() === newClientNameForConflict.trim().toLowerCase(),
+          )
+        ) {
+          conflictReasons.push(
+            `الموكل الجديد "${newClientNameForConflict}" كان خصماً سابقاً في القضية رقم ${c.number}`,
+          );
+        }
+      });
+      opponents.forEach((opp) => {
+        const oppAsClient = clients.find(
+          (cl) => cl.name.trim().toLowerCase() === opp.trim().toLowerCase(),
+        );
+        if (oppAsClient) {
+          conflictReasons.push(`الخصم "${opp}" مسجل كموكل حالي للمكتب (${oppAsClient.name})`);
+        }
+      });
+      if (conflictReasons.length > 0) {
+        const proceedDespiteConflict = window.confirm(
+          `⚠️ تنبيه تضارب مصالح محتمل: ${conflictReasons.join(" — ")} — هذا قد يشكل تضارب مصالح يستوجب مراجعة قانونية/أخلاقية قبل قبول الوكالة. هل تريد المتابعة رغم ذلك على مسؤوليتك؟`,
+        );
+        if (!proceedDespiteConflict) {
+          return;
+        }
+        logAuditAction(
+          "CREATE",
+          "تضارب المصالح",
+          `تنبيه عند فتح قضية جديدة رقم ${form.number}`,
+          `تم المتابعة بفتح قضية رقم ${form.number} رغم تنبيه تضارب مصالح محتمل: ${conflictReasons.join(" | ")}`,
+          0,
+        );
+      }
+    }
 
     if (editingCase) {
-      setCases(prev => prev.map(c => c.id === editingCase.id ? {
-        ...c,
-        number: form.number,
-        clientId: +form.clientId,
-        opponents,
-        type: form.type || c.type,
-        court: form.court || c.court,
-        judge: form.judge ?? c.judge,
-        stage: stage,
-        status: status,
-        subject: form.subject ?? c.subject,
-        // في وضع التعديل: نحافظ على تاريخ القيد كما هو محفوظ (أو كما عدّله المستخدم صراحة عبر الحقل)، ولا نستبدله بتاريخ اليوم تلقائياً
-        openDate: form.openDate ?? c.openDate,
-        fee: form.fee !== undefined && form.fee !== "" ? +form.fee : c.fee,
-        emirate: form.emirate ?? c.emirate,
-        clientCapacity: form.clientCapacity ?? c.clientCapacity,
-      } : c));
-      logAuditAction("UPDATE", "القضايا", `قضية رقم ${form.number}`, `تعديل بيانات القضية رقم ${form.number} (الخصوم، الأطراف، أو التفاصيل الأساسية)`, editingCase.id);
+      setCases((prev) =>
+        prev.map((c) =>
+          c.id === editingCase.id
+            ? {
+                ...c,
+                number: form.number,
+                clientId: +form.clientId,
+                opponents,
+                type: form.type || c.type,
+                court: form.court || c.court,
+                judge: form.judge ?? c.judge,
+                stage: stage,
+                status: status,
+                subject: form.subject ?? c.subject,
+                // في وضع التعديل: نحافظ على تاريخ القيد كما هو محفوظ (أو كما عدّله المستخدم صراحة عبر الحقل)، ولا نستبدله بتاريخ اليوم تلقائياً
+                openDate: form.openDate ?? c.openDate,
+                fee: form.fee !== undefined && form.fee !== "" ? +form.fee : c.fee,
+                emirate: form.emirate ?? c.emirate,
+                clientCapacity: form.clientCapacity ?? c.clientCapacity,
+              }
+            : c,
+        ),
+      );
+      logAuditAction(
+        "UPDATE",
+        "القضايا",
+        `قضية رقم ${form.number}`,
+        `تعديل بيانات القضية رقم ${form.number} (الخصوم، الأطراف، أو التفاصيل الأساسية)`,
+        editingCase.id,
+      );
       setEditingCase(null);
       setModal(null);
       return;
@@ -4306,21 +5308,41 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
     const newCaseId = nextId(cases);
 
-    setCases(prev => deduplicateCases([...prev, { id: newCaseId, number: form.number, clientId: +form.clientId, opponents, type: form.type || CASE_TYPES[0], court: form.court || COURTS[0], judge: form.judge || "", stage: stage, status: status, subject: form.subject || "", openDate: openDate, fee: +form.fee || 0, emirate: form.emirate || "", clientCapacity: form.clientCapacity || "" }]));
+    setCases((prev) =>
+      deduplicateCases([
+        ...prev,
+        {
+          id: newCaseId,
+          number: form.number,
+          clientId: +form.clientId,
+          opponents,
+          type: form.type || CASE_TYPES[0],
+          court: form.court || COURTS[0],
+          judge: form.judge || "",
+          stage: stage,
+          status: status,
+          subject: form.subject || "",
+          openDate: openDate,
+          fee: +form.fee || 0,
+          emirate: form.emirate || "",
+          clientCapacity: form.clientCapacity || "",
+        },
+      ]),
+    );
 
     if (form.taskTemplate) {
-      const template = TASK_TEMPLATES.find(t => t.id === form.taskTemplate);
+      const template = TASK_TEMPLATES.find((t) => t.id === form.taskTemplate);
       if (template) {
         setTasks((prev) => {
           let currentId = nextId(prev);
-          const newTasks = template.tasks.map(t => ({
+          const newTasks = template.tasks.map((t) => ({
             id: currentId++,
             title: t.title,
             caseId: newCaseId,
             assignee: currentUser.name,
             due: addDaysFrom(openDate, t.daysOffset),
             priority: t.priority,
-            done: false
+            done: false,
           }));
           return [...prev, ...newTasks];
         });
@@ -4335,7 +5357,26 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     if (!form.name) return;
     const newClientId = nextId(clients);
     auditNewClientKyc(form.name, form.idNo, newClientId);
-    setClients([...clients, { id: newClientId, name: form.name, type: form.type || "فرد", idNo: form.idNo || "", phone: form.phone || "", email: form.email || "", emirate: form.emirate || "دبي", address: form.address || "" }]); logAuditAction("CREATE", "الموكلين والشركات", `الموكل: ${form.name}`, `إضافة موكل جديد ${form.name} (${form.type || "فرد"})`, newClientId);
+    setClients([
+      ...clients,
+      {
+        id: newClientId,
+        name: form.name,
+        type: form.type || "فرد",
+        idNo: form.idNo || "",
+        phone: form.phone || "",
+        email: form.email || "",
+        emirate: form.emirate || "دبي",
+        address: form.address || "",
+      },
+    ]);
+    logAuditAction(
+      "CREATE",
+      "الموكلين والشركات",
+      `الموكل: ${form.name}`,
+      `إضافة موكل جديد ${form.name} (${form.type || "فرد"})`,
+      newClientId,
+    );
     setModal(null);
   };
 
@@ -4343,8 +5384,26 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     if (!checkPerm("manageHearings", "جدولة جلسة")) return;
     if (!form.caseId || !form.date) return;
     const newHearingId = nextId(hearings);
-    setHearings([...hearings, { id: newHearingId, caseId: +form.caseId, date: form.date, time: form.time || "09:00", type: form.type || HEARING_TYPES[0], room: form.room || "", notes: form.notes || "", done: false }]);
-    logAuditAction("CREATE", "الجلسات", `جلسة بتاريخ ${form.date}`, `جدولة جلسة جديدة بتاريخ ${form.date} (${form.type || HEARING_TYPES[0]})`, newHearingId);
+    setHearings([
+      ...hearings,
+      {
+        id: newHearingId,
+        caseId: +form.caseId,
+        date: form.date,
+        time: form.time || "09:00",
+        type: form.type || HEARING_TYPES[0],
+        room: form.room || "",
+        notes: form.notes || "",
+        done: false,
+      },
+    ]);
+    logAuditAction(
+      "CREATE",
+      "الجلسات",
+      `جلسة بتاريخ ${form.date}`,
+      `جدولة جلسة جديدة بتاريخ ${form.date} (${form.type || HEARING_TYPES[0]})`,
+      newHearingId,
+    );
     setModal(null);
   };
 
@@ -4352,15 +5411,53 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     if (!checkPerm("manageTasks", "إضافة مهمة")) return;
     if (!form.title) return;
     const newTaskId = nextId(tasks);
-    setTasks([...tasks, { id: newTaskId, title: form.title, caseId: form.caseId ? +form.caseId : null, assignee: form.assignee || currentUser.name, due: form.due || todayISO(), priority: form.priority || "متوسطة", done: false }]);
-    logAuditAction("CREATE", "المهام", `مهمة: ${form.title}`, `إضافة مهمة جديدة: ${form.title}`, newTaskId);
+    setTasks([
+      ...tasks,
+      {
+        id: newTaskId,
+        title: form.title,
+        caseId: form.caseId ? +form.caseId : null,
+        assignee: form.assignee || currentUser.name,
+        due: form.due || todayISO(),
+        priority: form.priority || "متوسطة",
+        done: false,
+      },
+    ]);
+    logAuditAction(
+      "CREATE",
+      "المهام",
+      `مهمة: ${form.title}`,
+      `إضافة مهمة جديدة: ${form.title}`,
+      newTaskId,
+    );
     setModal(null);
   };
 
   const saveInvoice = () => {
     if (!checkPerm("manageInvoices", "إصدار فاتورة")) return;
     if (!form.clientId || !form.amount) return;
-    const newInvNumber = `INV-2026-${String(60 + nextId(invoices)).padStart(3, "0")}`; setInvoices([...invoices, { id: nextId(invoices), number: newInvNumber, clientId: +form.clientId, caseId: form.caseId ? +form.caseId : null, date: todayISO(), due: form.due || addDays(30), amount: +form.amount, status: "مسودة", desc: form.desc || "" }]); logAuditAction("CREATE", "الفواتير", `فاتورة: ${newInvNumber}`, `إصدار فاتورة جديدة ${newInvNumber} للموكل ${clientName(+form.clientId)} بمبلغ ${+form.amount}`, +form.clientId);
+    const newInvNumber = `INV-2026-${String(60 + nextId(invoices)).padStart(3, "0")}`;
+    setInvoices([
+      ...invoices,
+      {
+        id: nextId(invoices),
+        number: newInvNumber,
+        clientId: +form.clientId,
+        caseId: form.caseId ? +form.caseId : null,
+        date: todayISO(),
+        due: form.due || addDays(30),
+        amount: +form.amount,
+        status: "مسودة",
+        desc: form.desc || "",
+      },
+    ]);
+    logAuditAction(
+      "CREATE",
+      "الفواتير",
+      `فاتورة: ${newInvNumber}`,
+      `إصدار فاتورة جديدة ${newInvNumber} للموكل ${clientName(+form.clientId)} بمبلغ ${+form.amount}`,
+      +form.clientId,
+    );
     setModal(null);
   };
 
@@ -4371,10 +5468,18 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     const inv = invoices.find((i) => i.id === invId);
     if (!inv) return;
     setInvoices((prev) => prev.map((i) => (i.id === invId ? { ...i, status: newStatus } : i)));
-    logAuditAction("STATUS_CHANGE", "الفواتير", `فاتورة: ${inv.number}`, `تحديث حالة الفاتورة ${inv.number} للموكل ${clientName(inv.clientId)} من "${inv.status}" إلى "${newStatus}"`, inv.id);
+    logAuditAction(
+      "STATUS_CHANGE",
+      "الفواتير",
+      `فاتورة: ${inv.number}`,
+      `تحديث حالة الفاتورة ${inv.number} للموكل ${clientName(inv.clientId)} من "${inv.status}" إلى "${newStatus}"`,
+      inv.id,
+    );
   };
 
-  const saveEmployee = async () => { if (!checkPerm("manageEmployees", "حفظ بيانات الموظف")) return; if (!form.fullName || !form.email) return;
+  const saveEmployee = async () => {
+    if (!checkPerm("manageEmployees", "حفظ بيانات الموظف")) return;
+    if (!form.fullName || !form.email) return;
     const isEdit = Boolean(form.id);
     const empId = form.id || `emp-${Date.now()}`;
     const newEmp: Employee = {
@@ -4392,30 +5497,44 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       transportAllowance: Number(form.transportAllowance) || 0,
       joinDate: form.joinDate || todayISO(),
       status: form.status || "ACTIVE",
-      createdAt: form.createdAt || todayISO()
+      createdAt: form.createdAt || todayISO(),
     };
 
-    if (isEdit) { setEmployees(employees.map(e => e.id === empId ? newEmp : e)); } else { setEmployees([...employees, newEmp]); } logAuditAction(isEdit ? "UPDATE" : "CREATE", "الكادر والرواتب HR", `الموظف: ${newEmp.fullName}`, isEdit ? `تحديث بيانات الموظف ${newEmp.fullName} (الراتب الأساسي: ${newEmp.basicSalary})` : `إضافة موظف جديد ${newEmp.fullName} (${newEmp.jobTitle})`, empId);
+    if (isEdit) {
+      setEmployees(employees.map((e) => (e.id === empId ? newEmp : e)));
+    } else {
+      setEmployees([...employees, newEmp]);
+    }
+    logAuditAction(
+      isEdit ? "UPDATE" : "CREATE",
+      "الكادر والرواتب HR",
+      `الموظف: ${newEmp.fullName}`,
+      isEdit
+        ? `تحديث بيانات الموظف ${newEmp.fullName} (الراتب الأساسي: ${newEmp.basicSalary})`
+        : `إضافة موظف جديد ${newEmp.fullName} (${newEmp.jobTitle})`,
+      empId,
+    );
 
     try {
-      await supabase.from("employees").upsert([{
-        id: empId.startsWith("emp-") ? undefined : empId,
-        full_name: newEmp.fullName,
-        job_title: newEmp.jobTitle,
-        email: newEmp.email,
-        phone: newEmp.phone,
-        passport_number: newEmp.passportNumber,
-        emirates_id: newEmp.emiratesId,
-        id_expiry_date: newEmp.idExpiryDate || null,
-        license_number: newEmp.licenseNumber || null,
-        basic_salary: newEmp.basicSalary,
-        housing_allowance: newEmp.housingAllowance,
-        transport_allowance: newEmp.transportAllowance,
-        join_date: newEmp.joinDate,
-        status: newEmp.status
-      }]);
-    } catch (e) {
-    }
+      await supabase.from("employees").upsert([
+        {
+          id: empId.startsWith("emp-") ? undefined : empId,
+          full_name: newEmp.fullName,
+          job_title: newEmp.jobTitle,
+          email: newEmp.email,
+          phone: newEmp.phone,
+          passport_number: newEmp.passportNumber,
+          emirates_id: newEmp.emiratesId,
+          id_expiry_date: newEmp.idExpiryDate || null,
+          license_number: newEmp.licenseNumber || null,
+          basic_salary: newEmp.basicSalary,
+          housing_allowance: newEmp.housingAllowance,
+          transport_allowance: newEmp.transportAllowance,
+          join_date: newEmp.joinDate,
+          status: newEmp.status,
+        },
+      ]);
+    } catch (e) {}
 
     setModal(null);
   };
@@ -4430,12 +5549,17 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       permKey: "deleteEmployees",
       actionName: "حذف موظف من الكادر",
       onConfirm: async () => {
-        logAuditAction("DELETE", "الكادر والرواتب HR", `الموظف: ${targetEmp.name || targetEmp.fullName || empId}`, `حذف سجّل الموظف ${targetEmp.name || targetEmp.fullName || empId} (${targetEmp.jobTitle || ""}) من كادر العمل`, empId);
-        setEmployees(employees.filter(e => e.id !== empId));
+        logAuditAction(
+          "DELETE",
+          "الكادر والرواتب HR",
+          `الموظف: ${targetEmp.name || targetEmp.fullName || empId}`,
+          `حذف سجّل الموظف ${targetEmp.name || targetEmp.fullName || empId} (${targetEmp.jobTitle || ""}) من كادر العمل`,
+          empId,
+        );
+        setEmployees(employees.filter((e) => e.id !== empId));
         try {
           await supabase.from("employees").delete().eq("id", empId);
-        } catch (e) {
-        }
+        } catch (e) {}
       },
     });
   };
@@ -4444,7 +5568,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const saveDisciplinaryAction = () => {
     if (!isSuperAdmin) return;
     if (!form.employeeId || !form.subject) return;
-    const emp = employees.find(e => e.id === form.employeeId);
+    const emp = employees.find((e) => e.id === form.employeeId);
     const newAction: EmployeeDisciplinaryAction = {
       id: nextId(disciplinaryActions),
       employeeId: form.employeeId,
@@ -4464,7 +5588,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       `${newAction.type}: ${newAction.employeeName}`,
       `تسجيل إجراء (${newAction.type}) بحق الموظف ${newAction.employeeName} — الموضوع: ${newAction.subject}`,
       newAction.id,
-      "مؤكد"
+      "مؤكد",
     );
     setModal(null);
   };
@@ -4481,7 +5605,14 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       permKey: "deleteEmployees",
       actionName: "حذف إجراء تأديبي سري",
       onConfirm: () => {
-        logAuditAction("DELETE", "الإجراءات التأديبية السرية", `${target.type}: ${target.employeeName}`, `حذف سجل إجراء (${target.type}) الخاص بالموظف ${target.employeeName} — الموضوع: ${target.subject}`, target.id, "مؤكد");
+        logAuditAction(
+          "DELETE",
+          "الإجراءات التأديبية السرية",
+          `${target.type}: ${target.employeeName}`,
+          `حذف سجل إجراء (${target.type}) الخاص بالموظف ${target.employeeName} — الموضوع: ${target.subject}`,
+          target.id,
+          "مؤكد",
+        );
         setDisciplinaryActions((prev) => prev.filter((a) => a.id !== actionId));
       },
     });
@@ -4489,14 +5620,20 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   const saveLeaveRequest = async () => {
     if (!form.employeeId || !form.startDate || !form.endDate) return;
-    const emp = employees.find(e => e.id === form.employeeId);
+    const emp = employees.find((e) => e.id === form.employeeId);
     // السماح بتقديم طلب إجازة عن النفس دائماً، أو عن موظف آخر فقط لمن يملك صلاحية إدارة الموظفين —
     // بدون هذا الشرط كان أي مستخدم مسجّل دخول يقدر يختار أي موظف آخر ويقدّم طلبات نيابة عنه.
-    const isOwnRecord = !!emp?.email && !!currentUser?.email && emp.email.trim().toLowerCase() === currentUser.email.trim().toLowerCase();
+    const isOwnRecord =
+      !!emp?.email &&
+      !!currentUser?.email &&
+      emp.email.trim().toLowerCase() === currentUser.email.trim().toLowerCase();
     if (!isOwnRecord && !checkPerm("manageEmployees", "تقديم طلب إجازة نيابة عن موظف آخر")) return;
     const start = new Date(form.startDate);
     const end = new Date(form.endDate);
-    const diffDays = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)) + 1);
+    const diffDays = Math.max(
+      1,
+      Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)) + 1,
+    );
 
     const newLeave: LeaveRequest = {
       id: `leave-${Date.now()}`,
@@ -4508,41 +5645,65 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       totalDays: diffDays,
       reason: form.reason || "",
       status: "PENDING",
-      createdAt: todayISO()
+      createdAt: todayISO(),
     };
 
     setLeaveRequests([newLeave, ...leaveRequests]);
 
     try {
-      await supabase.from("leave_requests").insert([{
-        employee_id: newLeave.employeeId.startsWith("emp-") ? null : newLeave.employeeId,
-        leave_type: newLeave.leaveType,
-        start_date: newLeave.startDate,
-        end_date: newLeave.endDate,
-        total_days: newLeave.totalDays,
-        reason: newLeave.reason,
-        status: "PENDING"
-      }]);
-    } catch (e) {
-    }
+      await supabase.from("leave_requests").insert([
+        {
+          employee_id: newLeave.employeeId.startsWith("emp-") ? null : newLeave.employeeId,
+          leave_type: newLeave.leaveType,
+          start_date: newLeave.startDate,
+          end_date: newLeave.endDate,
+          total_days: newLeave.totalDays,
+          reason: newLeave.reason,
+          status: "PENDING",
+        },
+      ]);
+    } catch (e) {}
 
-    logAuditAction("CREATE", "الكادر والرواتب HR", `طلب إجازة: ${newLeave.employeeName}`, `تقديم طلب إجازة جديد (${newLeave.leaveType}) لمدة ${newLeave.totalDays} يوم`, newLeave.id);
+    logAuditAction(
+      "CREATE",
+      "الكادر والرواتب HR",
+      `طلب إجازة: ${newLeave.employeeName}`,
+      `تقديم طلب إجازة جديد (${newLeave.leaveType}) لمدة ${newLeave.totalDays} يوم`,
+      newLeave.id,
+    );
     setModal(null);
   };
 
-  const updateLeaveStatus = async (leaveId: string, newStatus: "APPROVED" | "REJECTED") => { if (!checkPerm("manageEmployees", "اعتماد/رفض طلب إجازة")) return; const targetLeave = leaveRequests.find(l => l.id === leaveId); setLeaveRequests(leaveRequests.map(l => l.id === leaveId ? { ...l, status: newStatus, approvedBy: currentUser.name } : l)); logAuditAction("STATUS_CHANGE", "الكادر والرواتب HR", `طلب إجازة: ${targetLeave?.employeeName || leaveId}`, `${newStatus === "APPROVED" ? "اعتماد" : "رفض"} طلب إجازة الموظف ${targetLeave?.employeeName || ""} (${targetLeave?.leaveType || ""}, ${targetLeave?.totalDays || 0} يوم)`, leaveId);
+  const updateLeaveStatus = async (leaveId: string, newStatus: "APPROVED" | "REJECTED") => {
+    if (!checkPerm("manageEmployees", "اعتماد/رفض طلب إجازة")) return;
+    const targetLeave = leaveRequests.find((l) => l.id === leaveId);
+    setLeaveRequests(
+      leaveRequests.map((l) =>
+        l.id === leaveId ? { ...l, status: newStatus, approvedBy: currentUser.name } : l,
+      ),
+    );
+    logAuditAction(
+      "STATUS_CHANGE",
+      "الكادر والرواتب HR",
+      `طلب إجازة: ${targetLeave?.employeeName || leaveId}`,
+      `${newStatus === "APPROVED" ? "اعتماد" : "رفض"} طلب إجازة الموظف ${targetLeave?.employeeName || ""} (${targetLeave?.leaveType || ""}, ${targetLeave?.totalDays || 0} يوم)`,
+      leaveId,
+    );
     try {
       await supabase.from("leave_requests").update({ status: newStatus }).eq("id", leaveId);
-    } catch (e) {
-    }
+    } catch (e) {}
   };
 
   const saveEmployeeExpense = async () => {
     if (!form.employeeId || !form.amount) return;
-    const emp = employees.find(e => e.id === form.employeeId);
+    const emp = employees.find((e) => e.id === form.employeeId);
     // نفس مبدأ طلب الإجازة: تقديم مصروف عن النفس مسموح دائماً، وعن موظف آخر يتطلب صلاحية إدارة الموظفين
-    const isOwnExpenseRecord = !!emp?.email && !!currentUser?.email && emp.email.trim().toLowerCase() === currentUser.email.trim().toLowerCase();
-    if (!isOwnExpenseRecord && !checkPerm("manageEmployees", "تقديم طلب مصروف نيابة عن موظف آخر")) return;
+    const isOwnExpenseRecord =
+      !!emp?.email &&
+      !!currentUser?.email &&
+      emp.email.trim().toLowerCase() === currentUser.email.trim().toLowerCase();
+    if (!isOwnExpenseRecord && !checkPerm("manageEmployees", "تقديم طلب مصروف نيابة عن موظف آخر"))
+      return;
 
     const newExp: EmployeeExpense = {
       id: `exp-${Date.now()}`,
@@ -4553,32 +5714,50 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       category: form.category || "COURT_FEES",
       receiptUrl: form.receiptUrl || "",
       status: "PENDING",
-      createdAt: todayISO()
+      createdAt: todayISO(),
     };
 
     setEmployeeExpenses([newExp, ...employeeExpenses]);
 
     try {
-      await supabase.from("employee_expenses").insert([{
-        employee_id: newExp.employeeId.startsWith("emp-") ? null : newExp.employeeId,
-        case_id: newExp.caseId || null,
-        amount: newExp.amount,
-        category: newExp.category,
-        receipt_url: newExp.receiptUrl,
-        status: "PENDING"
-      }]);
-    } catch (e) {
-    }
+      await supabase.from("employee_expenses").insert([
+        {
+          employee_id: newExp.employeeId.startsWith("emp-") ? null : newExp.employeeId,
+          case_id: newExp.caseId || null,
+          amount: newExp.amount,
+          category: newExp.category,
+          receipt_url: newExp.receiptUrl,
+          status: "PENDING",
+        },
+      ]);
+    } catch (e) {}
 
-    logAuditAction("CREATE", "الكادر والرواتب HR", `مصروف: ${newExp.employeeName}`, `تقديم طلب مصروف جديد بمبلغ ${newExp.amount} (${newExp.category})`, newExp.id);
+    logAuditAction(
+      "CREATE",
+      "الكادر والرواتب HR",
+      `مصروف: ${newExp.employeeName}`,
+      `تقديم طلب مصروف جديد بمبلغ ${newExp.amount} (${newExp.category})`,
+      newExp.id,
+    );
     setModal(null);
   };
 
-  const updateExpenseStatus = async (expId: string, newStatus: "PAID" | "REJECTED") => { if (!checkPerm("manageEmployees", "اعتماد/رفض مصروف موظف")) return; const targetExp = employeeExpenses.find(x => x.id === expId); setEmployeeExpenses(employeeExpenses.map(x => x.id === expId ? { ...x, status: newStatus } : x)); logAuditAction("STATUS_CHANGE", "الكادر والرواتب HR", `مصروف: ${targetExp?.employeeName || expId}`, `${newStatus === "PAID" ? "اعتماد صرف" : "رفض"} مصروف الموظف ${targetExp?.employeeName || ""} بمبلغ ${targetExp?.amount || 0} (${targetExp?.category || ""})`, expId);
+  const updateExpenseStatus = async (expId: string, newStatus: "PAID" | "REJECTED") => {
+    if (!checkPerm("manageEmployees", "اعتماد/رفض مصروف موظف")) return;
+    const targetExp = employeeExpenses.find((x) => x.id === expId);
+    setEmployeeExpenses(
+      employeeExpenses.map((x) => (x.id === expId ? { ...x, status: newStatus } : x)),
+    );
+    logAuditAction(
+      "STATUS_CHANGE",
+      "الكادر والرواتب HR",
+      `مصروف: ${targetExp?.employeeName || expId}`,
+      `${newStatus === "PAID" ? "اعتماد صرف" : "رفض"} مصروف الموظف ${targetExp?.employeeName || ""} بمبلغ ${targetExp?.amount || 0} (${targetExp?.category || ""})`,
+      expId,
+    );
     try {
       await supabase.from("employee_expenses").update({ status: newStatus }).eq("id", expId);
-    } catch (e) {
-    }
+    } catch (e) {}
   };
 
   // ---------- حسابات اتفاقيات الأتعاب والدفعات ----------
@@ -4600,7 +5779,13 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   const getClientUnallocatedBalance = (clientId: number) => {
     return payments
-      .filter((p) => p.clientId === clientId && (p.feeAgreementId === "unallocated" || p.feeAgreementId === null || p.feeAgreementId === undefined))
+      .filter(
+        (p) =>
+          p.clientId === clientId &&
+          (p.feeAgreementId === "unallocated" ||
+            p.feeAgreementId === null ||
+            p.feeAgreementId === undefined),
+      )
       .reduce((sum, p) => sum + p.amount, 0);
   };
 
@@ -4635,7 +5820,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
       const remaining = getRemainingForAgreement(agr);
       if (remaining <= 0) {
-        alert("⚠️ اتفقاقة الأتعاب مسددة بالكامل (المتبقي: 0 د.إ)، لا يمكن إضافة دفعات جديدة عليها.");
+        alert(
+          "⚠️ اتفقاقة الأتعاب مسددة بالكامل (المتبقي: 0 د.إ)، لا يمكن إضافة دفعات جديدة عليها.",
+        );
         return;
       }
 
@@ -4649,15 +5836,24 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         date: form.date || todayISO(),
         paymentMethod: form.paymentMethod || "تحويل بنكي",
         referenceNo: form.referenceNo || `REC-${Math.floor(100000 + Math.random() * 900000)}`,
-        notes: form.notes || ""
+        notes: form.notes || "",
       };
 
-      setPayments((prev) => [...prev, newPayment]); logAuditAction("CREATE", "المدفوعات", `دفعة: ${newPayment.referenceNo}`, `تسجيل دفعة بمبلغ ${amt} من الموكل ${clientName(clientId)} (المرجع: ${newPayment.referenceNo})`, newPayment.id);
+      setPayments((prev) => [...prev, newPayment]);
+      logAuditAction(
+        "CREATE",
+        "المدفوعات",
+        `دفعة: ${newPayment.referenceNo}`,
+        `تسجيل دفعة بمبلغ ${amt} من الموكل ${clientName(clientId)} (المرجع: ${newPayment.referenceNo})`,
+        newPayment.id,
+      );
 
       // تحديث حالة الاتفاقية إذا سددت بالكامل
       const totalPaidAfter = getPaidForAgreement(agr.id) + amt;
       if (totalPaidAfter >= agr.totalAmount) {
-        setFeeAgreements((prev) => prev.map((a) => a.id === agr.id ? { ...a, status: "مسددة بالكامل" } : a));
+        setFeeAgreements((prev) =>
+          prev.map((a) => (a.id === agr.id ? { ...a, status: "مسددة بالكامل" } : a)),
+        );
       }
     } else {
       // دفعة غير مخصصة — تنحفظ برصيد معلّق للموكل
@@ -4671,10 +5867,17 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         date: form.date || todayISO(),
         paymentMethod: form.paymentMethod || "تحويل بنكي",
         referenceNo: form.referenceNo || `REC-${Math.floor(100000 + Math.random() * 900000)}`,
-        notes: form.notes || "دفعة غير مخصصة — رصيد معلّق للموكل"
+        notes: form.notes || "دفعة غير مخصصة — رصيد معلّق للموكل",
       };
 
-      setPayments((prev) => [...prev, newPayment]); logAuditAction("CREATE", "المدفوعات", `دفعة: ${newPayment.referenceNo}`, `تسجيل دفعة بمبلغ ${amt} من الموكل ${clientName(clientId)} (المرجع: ${newPayment.referenceNo})`, newPayment.id);
+      setPayments((prev) => [...prev, newPayment]);
+      logAuditAction(
+        "CREATE",
+        "المدفوعات",
+        `دفعة: ${newPayment.referenceNo}`,
+        `تسجيل دفعة بمبلغ ${amt} من الموكل ${clientName(clientId)} (المرجع: ${newPayment.referenceNo})`,
+        newPayment.id,
+      );
     }
 
     setModal(null);
@@ -4684,12 +5887,30 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     if (!checkPerm("manageDocs", "رفع مستند")) return;
     if (!form.name) return;
     const newDocId = nextId(docs);
-    setDocs([...docs, { id: newDocId, name: form.name, type: form.type || DOC_TYPES[0], caseId: form.caseId ? +form.caseId : null, date: todayISO(), by: currentUser.name }]);
-    logAuditAction("CREATE", "المستندات", `مستند: ${form.name}`, `رفع مستند جديد: ${form.name} (${form.type || DOC_TYPES[0]})`, newDocId);
+    setDocs([
+      ...docs,
+      {
+        id: newDocId,
+        name: form.name,
+        type: form.type || DOC_TYPES[0],
+        caseId: form.caseId ? +form.caseId : null,
+        date: todayISO(),
+        by: currentUser.name,
+      },
+    ]);
+    logAuditAction(
+      "CREATE",
+      "المستندات",
+      `مستند: ${form.name}`,
+      `رفع مستند جديد: ${form.name} (${form.type || DOC_TYPES[0]})`,
+      newDocId,
+    );
     setModal(null);
   };
 
-  const saveKyc = () => { if (!checkPerm("manageKyc", "حفظ استمارة اعرف عميلك KYC")) return; if (!form.clientId) return;
+  const saveKyc = () => {
+    if (!checkPerm("manageKyc", "حفظ استمارة اعرف عميلك KYC")) return;
+    if (!form.clientId) return;
     const rec = {
       clientId: +form.clientId,
       nationality: form.nationality || "الإمارات",
@@ -4704,7 +5925,23 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       lastReview: form.lastReview || todayISO(),
       notes: form.notes || "",
     };
-    const isKycEdit = modal === "kyc-edit" && form.id; if (isKycEdit) { setKyc(kyc.map((x) => x.id === form.id ? { ...x, ...rec } : x)); } else { setKyc([...kyc, { id: nextId(kyc), ...rec }]); } logAuditAction(isKycEdit ? "UPDATE" : "CREATE", "الامتثال KYC", `ملف KYC للموكل: ${clientName(rec.clientId)}`, isKycEdit ? `تحديث استمارة KYC للموكل ${clientName(rec.clientId)} (الفحص: ${rec.sanctions}, المخاطر: ${rec.risk})` : `إنشاء استمارة KYC جديدة للموكل ${clientName(rec.clientId)} (الفحص: ${rec.sanctions}, المخاطر: ${rec.risk})`, rec.clientId); setModal(null); };
+    const isKycEdit = modal === "kyc-edit" && form.id;
+    if (isKycEdit) {
+      setKyc(kyc.map((x) => (x.id === form.id ? { ...x, ...rec } : x)));
+    } else {
+      setKyc([...kyc, { id: nextId(kyc), ...rec }]);
+    }
+    logAuditAction(
+      isKycEdit ? "UPDATE" : "CREATE",
+      "الامتثال KYC",
+      `ملف KYC للموكل: ${clientName(rec.clientId)}`,
+      isKycEdit
+        ? `تحديث استمارة KYC للموكل ${clientName(rec.clientId)} (الفحص: ${rec.sanctions}, المخاطر: ${rec.risk})`
+        : `إنشاء استمارة KYC جديدة للموكل ${clientName(rec.clientId)} (الفحص: ${rec.sanctions}, المخاطر: ${rec.risk})`,
+      rec.clientId,
+    );
+    setModal(null);
+  };
 
   const savePoa = () => {
     if (!checkPerm("manageDocs", "إضافة توكيل")) return;
@@ -4714,13 +5951,32 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     if (!poaNum) return;
 
     if (poas.some((p) => p.number.trim().toLowerCase() === poaNum.toLowerCase())) {
-      alert(`تنبيه: رقم الوكالة "${poaNum}" مسجل مسبقاً في قاعدة البيانات!\nيرجى التثبت من رقم الوكالة لمنع التكرار.`);
+      alert(
+        `تنبيه: رقم الوكالة "${poaNum}" مسجل مسبقاً في قاعدة البيانات!\nيرجى التثبت من رقم الوكالة لمنع التكرار.`,
+      );
       return;
     }
 
     const newPoaId = nextId(poas);
-    setPoas([...poas, { id: newPoaId, clientId: +form.clientId, number: poaNum, issuer: form.issuer || "كاتب العدل - دبي", issue: form.issue || todayISO(), expiry: form.expiry || addDays(730), scope: form.scope || "" }]);
-    logAuditAction("CREATE", "التوكيلات", `توكيل رقم: ${poaNum}`, `إضافة توكيل جديد رقم ${poaNum} للموكل ${clientName(+form.clientId)}`, newPoaId);
+    setPoas([
+      ...poas,
+      {
+        id: newPoaId,
+        clientId: +form.clientId,
+        number: poaNum,
+        issuer: form.issuer || "كاتب العدل - دبي",
+        issue: form.issue || todayISO(),
+        expiry: form.expiry || addDays(730),
+        scope: form.scope || "",
+      },
+    ]);
+    logAuditAction(
+      "CREATE",
+      "التوكيلات",
+      `توكيل رقم: ${poaNum}`,
+      `إضافة توكيل جديد رقم ${poaNum} للموكل ${clientName(+form.clientId)}`,
+      newPoaId,
+    );
     setModal(null);
   };
 
@@ -4742,18 +5998,29 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     if (!form.name || !form.phone) return;
 
     if (editingColleagueId) {
-      setColleagues((prev) => prev.map((c) => c.id === editingColleagueId ? {
-        ...c,
-        name: form.name.trim(),
-        phone: form.phone.trim(),
-        email: form.email?.trim() || undefined,
-        specialization: form.specialization?.trim() || undefined,
-        coverageArea: form.coverageArea?.trim() || undefined,
-        notes: form.notes?.trim() || undefined,
-        status: (form.status === "غير متاح" ? "غير متاح" : "متاح"),
-        licenseNumber: form.licenseNumber?.trim() || undefined,
-      } : c));
-      logAuditAction("UPDATE", "الزملاء والإنابات", `الزميل: ${form.name}`, `تعديل بيانات الزميل المتعاون ${form.name}`);
+      setColleagues((prev) =>
+        prev.map((c) =>
+          c.id === editingColleagueId
+            ? {
+                ...c,
+                name: form.name.trim(),
+                phone: form.phone.trim(),
+                email: form.email?.trim() || undefined,
+                specialization: form.specialization?.trim() || undefined,
+                coverageArea: form.coverageArea?.trim() || undefined,
+                notes: form.notes?.trim() || undefined,
+                status: form.status === "غير متاح" ? "غير متاح" : "متاح",
+                licenseNumber: form.licenseNumber?.trim() || undefined,
+              }
+            : c,
+        ),
+      );
+      logAuditAction(
+        "UPDATE",
+        "الزملاء والإنابات",
+        `الزميل: ${form.name}`,
+        `تعديل بيانات الزميل المتعاون ${form.name}`,
+      );
     } else {
       const newColleague: Colleague = {
         id: nextId(colleagues),
@@ -4763,13 +6030,18 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         specialization: form.specialization?.trim() || undefined,
         coverageArea: form.coverageArea?.trim() || undefined,
         notes: form.notes?.trim() || undefined,
-        status: (form.status === "غير متاح" ? "غير متاح" : "متاح"),
+        status: form.status === "غير متاح" ? "غير متاح" : "متاح",
         licenseNumber: form.licenseNumber?.trim() || undefined,
         addedBy: currentUser?.name,
         createdAt: new Date().toISOString(),
       };
       setColleagues((prev) => [...prev, newColleague]);
-      logAuditAction("CREATE", "الزملاء والإنابات", `الزميل: ${newColleague.name}`, `إضافة زميل متعاون جديد: ${newColleague.name} (${newColleague.phone})`);
+      logAuditAction(
+        "CREATE",
+        "الزملاء والإنابات",
+        `الزميل: ${newColleague.name}`,
+        `إضافة زميل متعاون جديد: ${newColleague.name} (${newColleague.phone})`,
+      );
     }
     setModal(null);
     setEditingColleagueId(null);
@@ -4783,7 +6055,13 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       permKey: "deleteColleagues",
       actionName: "حذف بيانات الزميل",
       onConfirm: () => {
-        logAuditAction("DELETE", "الزملاء والإنابات", `الزميل: ${c.name}`, `حذف بيانات الزميل المتعاون ${c.name}`, c.id);
+        logAuditAction(
+          "DELETE",
+          "الزملاء والإنابات",
+          `الزميل: ${c.name}`,
+          `حذف بيانات الزميل المتعاون ${c.name}`,
+          c.id,
+        );
         setColleagues((prev) => prev.filter((x) => x.id !== c.id));
       },
     });
@@ -4811,7 +6089,12 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     // هذا يمنع تكرار نفس الرقم المرجعي لو صدرت إنابتان بسرعة قبل اكتمال إعادة الرسم (race condition).
     let issuedDelegation: ColleagueDelegation | null = null;
     setColleagueDelegations((prev) => {
-      const seq = (prev.filter((d) => d.refNo.startsWith(`INB-${year}-`)).map((d) => parseInt(d.refNo.slice(`INB-${year}-`.length), 10)).filter((n) => !isNaN(n)).reduce((m, n) => Math.max(m, n), 0)) + 1;
+      const seq =
+        prev
+          .filter((d) => d.refNo.startsWith(`INB-${year}-`))
+          .map((d) => parseInt(d.refNo.slice(`INB-${year}-`.length), 10))
+          .filter((n) => !isNaN(n))
+          .reduce((m, n) => Math.max(m, n), 0) + 1;
       const refNo = `INB-${year}-${String(seq).padStart(3, "0")}`;
       const newDelegation: ColleagueDelegation = {
         id: nextId(prev),
@@ -4834,7 +6117,13 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
     if (issuedDelegation) {
       const d = issuedDelegation as ColleagueDelegation;
-      logAuditAction("CREATE", "الزملاء والإنابات", `إنابة رقم: ${d.refNo}`, `إصدار إنابة حضور رقم ${d.refNo} للزميل ${colleague?.name || "—"}`, d.id);
+      logAuditAction(
+        "CREATE",
+        "الزملاء والإنابات",
+        `إنابة رقم: ${d.refNo}`,
+        `إصدار إنابة حضور رقم ${d.refNo} للزميل ${colleague?.name || "—"}`,
+        d.id,
+      );
       setModal(null);
       setDelegationPreviewId(d.id);
     }
@@ -4849,7 +6138,13 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       permKey: "deleteColleagues",
       actionName: "حذف الإنابة الصادرة",
       onConfirm: () => {
-        logAuditAction("DELETE", "الزملاء والإنابات", `إنابة رقم: ${d.refNo}`, `حذف الإنابة الصادرة رقم ${d.refNo}`, d.id);
+        logAuditAction(
+          "DELETE",
+          "الزملاء والإنابات",
+          `إنابة رقم: ${d.refNo}`,
+          `حذف الإنابة الصادرة رقم ${d.refNo}`,
+          d.id,
+        );
         setColleagueDelegations((prev) => prev.filter((x) => x.id !== d.id));
       },
     });
@@ -4873,22 +6168,33 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     let updatedList: UserItem[] = [];
 
     if (editingUser) {
-      updatedList = users.map((u) => u.id === editingUser.id ? {
-        ...u,
-        name: form.name,
-        email: form.email,
-        phone: form.phone || u.phone,
-        password: hashedFormPassword || u.password, // إن تُرك حقل كلمة المرور فارغاً تبقى كلمة المرور الحالية كما هي — لا قيمة افتراضية معروفة
-        roleKey: rKey,
-        roleTitle: form.roleTitle || preset.title,
-        status: form.status || u.status,
-        permissions: userPermissions,
-        canTransferContacts: form.canTransferContacts !== undefined ? form.canTransferContacts : u.canTransferContacts,
-        canViewAgreements: form.canViewAgreements !== undefined ? form.canViewAgreements : u.canViewAgreements,
-        canAccessWhatsapp: form.canAccessWhatsapp !== undefined ? form.canAccessWhatsapp : u.canAccessWhatsapp,
-        canViewFinances: form.canViewFinances !== undefined ? form.canViewFinances : u.canViewFinances,
-        licenseNumber: form.licenseNumber !== undefined ? form.licenseNumber : u.licenseNumber,
-      } : u);
+      updatedList = users.map((u) =>
+        u.id === editingUser.id
+          ? {
+              ...u,
+              name: form.name,
+              email: form.email,
+              phone: form.phone || u.phone,
+              password: hashedFormPassword || u.password, // إن تُرك حقل كلمة المرور فارغاً تبقى كلمة المرور الحالية كما هي — لا قيمة افتراضية معروفة
+              roleKey: rKey,
+              roleTitle: form.roleTitle || preset.title,
+              status: form.status || u.status,
+              permissions: userPermissions,
+              canTransferContacts:
+                form.canTransferContacts !== undefined
+                  ? form.canTransferContacts
+                  : u.canTransferContacts,
+              canViewAgreements:
+                form.canViewAgreements !== undefined ? form.canViewAgreements : u.canViewAgreements,
+              canAccessWhatsapp:
+                form.canAccessWhatsapp !== undefined ? form.canAccessWhatsapp : u.canAccessWhatsapp,
+              canViewFinances:
+                form.canViewFinances !== undefined ? form.canViewFinances : u.canViewFinances,
+              licenseNumber:
+                form.licenseNumber !== undefined ? form.licenseNumber : u.licenseNumber,
+            }
+          : u,
+      );
     } else {
       const newUser: UserItem = {
         id: nextId(users),
@@ -4899,7 +6205,14 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         roleKey: rKey,
         roleTitle: form.roleTitle || preset.title,
         status: "نشط",
-        avatarBg: rKey === "admin" ? "bg-amber-500 text-slate-900" : rKey === "lawyer" ? "bg-indigo-600 text-white" : rKey === "accountant" ? "bg-emerald-600 text-white" : "bg-purple-600 text-white",
+        avatarBg:
+          rKey === "admin"
+            ? "bg-amber-500 text-slate-900"
+            : rKey === "lawyer"
+              ? "bg-indigo-600 text-white"
+              : rKey === "accountant"
+                ? "bg-emerald-600 text-white"
+                : "bg-purple-600 text-white",
         avatarText: form.name.charAt(0),
         permissions: userPermissions,
         canTransferContacts: form.canTransferContacts || false,
@@ -4911,24 +6224,40 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       updatedList = [...users, newUser];
     }
 
-    setUsers(updatedList); saveStorage("firm_users", updatedList); logAuditAction(editingUser ? "UPDATE" : "CREATE", "المستخدمون والصلاحيات", `المستخدم: ${form.name}`, editingUser ? `تحديث بيانات/صلاحيات المستخدم ${form.name} (${form.email}) - الدور: ${rKey}` : `إنشاء حساب مستخدم جديد ${form.name} (${form.email}) - الدور: ${rKey}`, editingUser?.id || 0);
+    setUsers(updatedList);
+    saveStorage("firm_users", updatedList);
+    logAuditAction(
+      editingUser ? "UPDATE" : "CREATE",
+      "المستخدمون والصلاحيات",
+      `المستخدم: ${form.name}`,
+      editingUser
+        ? `تحديث بيانات/صلاحيات المستخدم ${form.name} (${form.email}) - الدور: ${rKey}`
+        : `إنشاء حساب مستخدم جديد ${form.name} (${form.email}) - الدور: ${rKey}`,
+      editingUser?.id || 0,
+    );
 
     // المزامنة الفورية المباشرة مع جدول public.profiles في Supabase
     try {
-      supabase.from("profiles").upsert([
-        {
-          ...(editingUser?.supabaseId ? { id: editingUser.supabaseId } : {}),
-          email: form.email.trim().toLowerCase(),
-          full_name: form.name,
-          phone: form.phone || "050-0000000",
-          role: rKey,
-          role_title: form.roleTitle || preset.title,
-          permissions: userPermissions,
-          status: "approved"
-        }
-      ], { onConflict: "email" }).then(({ error }) => {
-        if (error) console.warn("Supabase profiles update note:", error.message);
-      });
+      supabase
+        .from("profiles")
+        .upsert(
+          [
+            {
+              ...(editingUser?.supabaseId ? { id: editingUser.supabaseId } : {}),
+              email: form.email.trim().toLowerCase(),
+              full_name: form.name,
+              phone: form.phone || "050-0000000",
+              role: rKey,
+              role_title: form.roleTitle || preset.title,
+              permissions: userPermissions,
+              status: "approved",
+            },
+          ],
+          { onConflict: "email" },
+        )
+        .then(({ error }) => {
+          if (error) console.warn("Supabase profiles update note:", error.message);
+        });
     } catch (e) {
       console.warn("Supabase profiles save exception:", e);
     }
@@ -4943,25 +6272,34 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     setUsers((prevUsers) => {
       const updated = prevUsers.map((u) => {
         if (u.id === userId) {
-          const currentVal = Boolean(hasTabPermission(u, permKey as string) || u.permissions?.[permKey]);
+          const currentVal = Boolean(
+            hasTabPermission(u, permKey as string) || u.permissions?.[permKey],
+          );
           const newPerms = {
             ...(u.permissions || {}),
-            [permKey]: !currentVal
+            [permKey]: !currentVal,
           };
 
           // المزامنة الفورية المباشرة مع جدول public.profiles في Supabase
           if (u.email) {
             try {
-              supabase.from("profiles").upsert([
-                {
-                  ...(u.supabaseId ? { id: u.supabaseId } : {}),
-                  email: u.email.trim().toLowerCase(),
-                  full_name: u.name,
-                  permissions: newPerms
-                }
-              ], { onConflict: "email" }).then(({ error }) => {
-                if (error) console.warn("Supabase profile toggle permission note:", error.message);
-              });
+              supabase
+                .from("profiles")
+                .upsert(
+                  [
+                    {
+                      ...(u.supabaseId ? { id: u.supabaseId } : {}),
+                      email: u.email.trim().toLowerCase(),
+                      full_name: u.name,
+                      permissions: newPerms,
+                    },
+                  ],
+                  { onConflict: "email" },
+                )
+                .then(({ error }) => {
+                  if (error)
+                    console.warn("Supabase profile toggle permission note:", error.message);
+                });
             } catch (e) {
               console.warn("Supabase profile toggle exception:", e);
             }
@@ -4969,7 +6307,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
           return {
             ...u,
-            permissions: newPerms
+            permissions: newPerms,
           };
         }
         return u;
@@ -4977,7 +6315,13 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       saveStorage("firm_users", updated);
       return updated;
     });
-    logAuditAction("UPDATE", "المستخدمون والصلاحيات", `تعديل صلاحية: ${targetUserForAudit?.name || userId}`, `تبديل صلاحية "${String(permKey)}" للمستخدم ${targetUserForAudit?.name || userId}`, userId);
+    logAuditAction(
+      "UPDATE",
+      "المستخدمون والصلاحيات",
+      `تعديل صلاحية: ${targetUserForAudit?.name || userId}`,
+      `تبديل صلاحية "${String(permKey)}" للمستخدم ${targetUserForAudit?.name || userId}`,
+      userId,
+    );
   };
 
   const saveTimeLog = () => {
@@ -4994,10 +6338,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         hours: +form.hours,
         hourlyRate: +form.hourlyRate || 750,
         description: form.description || "ساعات مرافعة واستشارات قانونية",
-        billed: false
-      }
+        billed: false,
+      },
     ]);
-    logAuditAction("CREATE", "ساعات العمل", `ساعات عمل: ${form.hours} ساعة`, `تسجيل ${form.hours} ساعة عمل على القضية`, newTimeLogId);
+    logAuditAction(
+      "CREATE",
+      "ساعات العمل",
+      `ساعات عمل: ${form.hours} ساعة`,
+      `تسجيل ${form.hours} ساعة عمل على القضية`,
+      newTimeLogId,
+    );
     setModal(null);
   };
 
@@ -5015,10 +6365,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         amount: +form.amount,
         description: form.description || "",
         billable: form.billable !== "لا",
-        billed: false
-      }
+        billed: false,
+      },
     ]);
-    logAuditAction("CREATE", "مصاريف القضايا", `مصروف: ${form.amount}`, `تسجيل مصروف قضية بمبلغ ${form.amount} (${form.category || "رسوم قضائية"})`, newCaseExpenseId);
+    logAuditAction(
+      "CREATE",
+      "مصاريف القضايا",
+      `مصروف: ${form.amount}`,
+      `تسجيل مصروف قضية بمبلغ ${form.amount} (${form.category || "رسوم قضائية"})`,
+      newCaseExpenseId,
+    );
     setModal(null);
   };
 
@@ -5037,10 +6393,16 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         type: form.type || "إيداع أمانة",
         amount: +form.amount,
         refNo: trustRefNo,
-        notes: form.notes || ""
-      }
+        notes: form.notes || "",
+      },
     ]);
-    logAuditAction("CREATE", "حساب الأمانة", `معاملة أمانة: ${trustRefNo}`, `تسجيل معاملة حساب أمانة (${form.type || "إيداع أمانة"}) بمبلغ ${form.amount} للموكل ${clientName(+form.clientId)}`, newTrustTxId);
+    logAuditAction(
+      "CREATE",
+      "حساب الأمانة",
+      `معاملة أمانة: ${trustRefNo}`,
+      `تسجيل معاملة حساب أمانة (${form.type || "إيداع أمانة"}) بمبلغ ${form.amount} للموكل ${clientName(+form.clientId)}`,
+      newTrustTxId,
+    );
     setModal(null);
   };
 
@@ -5050,7 +6412,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     const days = +form.appealDays || 30;
     const deadlineStr = addDaysFrom(form.rulingDate, days);
 
-    const selUser = users.find(u => u.id === Number(form.assignedLawyerId)) || users[0];
+    const selUser = users.find((u) => u.id === Number(form.assignedLawyerId)) || users[0];
 
     const newDeadline: JudgmentDeadline = {
       id: nextId(deadlines),
@@ -5062,7 +6424,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       appealDays: days,
       appealDeadlineDate: deadlineStr,
       status: "جارٍ حساب الميعاد",
-      notes: form.notes || `تم احتساب مهلة الطعن تلقائياً (${days} يوماً) — ${form.caseNature === "جزائي" ? "دعوى جزائية" : "دعوى مدنية/تجارية"}`,
+      notes:
+        form.notes ||
+        `تم احتساب مهلة الطعن تلقائياً (${days} يوماً) — ${form.caseNature === "جزائي" ? "دعوى جزائية" : "دعوى مدنية/تجارية"}`,
       assignedLawyerId: selUser?.id || 1,
       assignedLawyerName: form.assignedLawyerName || selUser?.name || "المحامي سعود أحمد الشحي",
       assignedLawyerPhone: form.assignedLawyerPhone || selUser?.phone || "0501234567",
@@ -5070,36 +6434,73 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       preferredChannel: form.preferredChannel || "both",
       alert7DaysSent: false,
       alert3DaysSent: false,
-      autoAlertLogs: []
+      autoAlertLogs: [],
     };
 
     const updatedDeadlines = [...deadlines, newDeadline];
     setDeadlines(updatedDeadlines);
-    logAuditAction("CREATE", "مواعيد الأحكام والطعون", `موعد طعن للقضية #${form.caseId}`, `تسجيل حكم بتاريخ ${form.rulingDate} واحتساب مهلة طعن ${days} يوماً (آخر موعد: ${deadlineStr})`, newDeadline.id);
+    logAuditAction(
+      "CREATE",
+      "مواعيد الأحكام والطعون",
+      `موعد طعن للقضية #${form.caseId}`,
+      `تسجيل حكم بتاريخ ${form.rulingDate} واحتساب مهلة طعن ${days} يوماً (آخر موعد: ${deadlineStr})`,
+      newDeadline.id,
+    );
     setModal(null);
 
     runAutoAppealDeadlineChecker(updatedDeadlines);
   };
 
-  const saveStrReport = () => { if (!checkPerm("manageKyc", "تسجيل بلاغ اشتباه STR")) return; if (!form.clientId || !form.suspicionReason) return;
-    const newStrId = nextId(strReports); setStrReports([...strReports, { id: newStrId, clientId: +form.clientId, caseId: form.caseId ? +form.caseId : null, date: form.date || todayISO(), suspicionReason: form.suspicionReason, amountFlagged: +form.amountFlagged || 0, reportedBy: currentUser.name + " (مسؤول الامتثال)", status: form.status || "تحقيق داخلي", confidentialNotes: form.confidentialNotes || "" }]); logAuditAction("CREATE", "بلاغات الاشتباه AML/STR", `بلاغ اشتباه: ${clientName(+form.clientId)}`, `تسجيل بلاغ اشتباه (STR) جديد بخصوص الموكل ${clientName(+form.clientId)} - سبب الاشتباه: ${form.suspicionReason} - المبلغ: ${+form.amountFlagged || 0}`, newStrId); setModal(null); };
+  const saveStrReport = () => {
+    if (!checkPerm("manageKyc", "تسجيل بلاغ اشتباه STR")) return;
+    if (!form.clientId || !form.suspicionReason) return;
+    const newStrId = nextId(strReports);
+    setStrReports([
+      ...strReports,
+      {
+        id: newStrId,
+        clientId: +form.clientId,
+        caseId: form.caseId ? +form.caseId : null,
+        date: form.date || todayISO(),
+        suspicionReason: form.suspicionReason,
+        amountFlagged: +form.amountFlagged || 0,
+        reportedBy: currentUser.name + " (مسؤول الامتثال)",
+        status: form.status || "تحقيق داخلي",
+        confidentialNotes: form.confidentialNotes || "",
+      },
+    ]);
+    logAuditAction(
+      "CREATE",
+      "بلاغات الاشتباه AML/STR",
+      `بلاغ اشتباه: ${clientName(+form.clientId)}`,
+      `تسجيل بلاغ اشتباه (STR) جديد بخصوص الموكل ${clientName(+form.clientId)} - سبب الاشتباه: ${form.suspicionReason} - المبلغ: ${+form.amountFlagged || 0}`,
+      newStrId,
+    );
+    setModal(null);
+  };
 
   const saveCourtContact = () => {
     if (!form.courtName || !form.department) return;
     if (editingCourtContact) {
-      setCourtContacts(courtContacts.map((c) => c.id === editingCourtContact.id ? {
-        ...c,
-        courtName: form.courtName,
-        emirate: form.emirate || "دبي",
-        department: form.department,
-        titleOrEmployee: form.titleOrEmployee || "مسؤول التواصل",
-        phone: form.phone || "",
-        extOrSeal: form.extOrSeal || "",
-        email: form.email || "",
-        operatingHours: form.operatingHours || "07:30 ص - 02:30 م",
-        location: form.location || "",
-        notes: form.notes || ""
-      } : c));
+      setCourtContacts(
+        courtContacts.map((c) =>
+          c.id === editingCourtContact.id
+            ? {
+                ...c,
+                courtName: form.courtName,
+                emirate: form.emirate || "دبي",
+                department: form.department,
+                titleOrEmployee: form.titleOrEmployee || "مسؤول التواصل",
+                phone: form.phone || "",
+                extOrSeal: form.extOrSeal || "",
+                email: form.email || "",
+                operatingHours: form.operatingHours || "07:30 ص - 02:30 م",
+                location: form.location || "",
+                notes: form.notes || "",
+              }
+            : c,
+        ),
+      );
     } else {
       setCourtContacts([
         ...courtContacts,
@@ -5114,8 +6515,8 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
           email: form.email || "",
           operatingHours: form.operatingHours || "07:30 ص - 02:30 م",
           location: form.location || "",
-          notes: form.notes || ""
-        }
+          notes: form.notes || "",
+        },
       ]);
     }
     setEditingCourtContact(null);
@@ -5127,7 +6528,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     const sampleData = [
       {
         "اسم المحكمة": "محكمة دبي الابتدائية",
-        "الإمارة": "دبي",
+        الإمارة: "دبي",
         "القسم / التخصص": "قيد الدعاوى والمذكرات",
         "اسم الموظف / المسمى": "أ. أحمد المنصوري - رئيس قسم القيد",
         "رقم الهاتف": "043401111",
@@ -5135,11 +6536,11 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         "البريد الإلكتروني": "registration@dc.gov.ae",
         "أوقات الدوام": "07:30 ص - 02:30 م",
         "الموقع / العنوان": "مبنى محاكم دبي - أم هرير 2",
-        "ملاحظات": "استلام مذكرات الدفاع حتى الساعة 12 ظهراً"
+        ملاحظات: "استلام مذكرات الدفاع حتى الساعة 12 ظهراً",
       },
       {
         "اسم المحكمة": "دائرة القضاء - أبوظبي",
-        "الإمارة": "أبوظبي",
+        الإمارة: "أبوظبي",
         "القسم / التخصص": "إدارة التنفيذ والإنابات",
         "اسم الموظف / المسمى": "المستشار سلطان الشامسي",
         "رقم الهاتف": "026512222",
@@ -5147,11 +6548,11 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         "البريد الإلكتروني": "execution@adjd.gov.ae",
         "أوقات الدوام": "07:30 ص - 03:00 م",
         "الموقع / العنوان": "مقر دائرة القضاء - شارع المطار",
-        "ملاحظات": "متابعة قرارات الإنابات والتنفيذ التجاري"
+        ملاحظات: "متابعة قرارات الإنابات والتنفيذ التجاري",
       },
       {
         "اسم المحكمة": "محكمة الشارقة الاتحادية",
-        "الإمارة": "الشارقة",
+        الإمارة: "الشارقة",
         "القسم / التخصص": "أمانات الخبراء والتقارير",
         "اسم الموظف / المسمى": "م. خالد الحوسني - أمين سر الخبراء",
         "رقم الهاتف": "065003333",
@@ -5159,15 +6560,22 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         "البريد الإلكتروني": "experts@moj.gov.ae",
         "أوقات الدوام": "07:30 ص - 02:30 م",
         "الموقع / العنوان": "مجمع المحاكم الاتحادية - الخزامية",
-        "ملاحظات": "تقديم اعتراضات وتقارير الخبراء المعتمدين"
-      }
+        ملاحظات: "تقديم اعتراضات وتقارير الخبراء المعتمدين",
+      },
     ];
 
     const worksheet = XLSX.utils.json_to_sheet(sampleData);
     worksheet["!cols"] = [
-      { wch: 25 }, { wch: 12 }, { wch: 25 }, { wch: 30 },
-      { wch: 15 }, { wch: 18 }, { wch: 25 }, { wch: 18 },
-      { wch: 30 }, { wch: 35 }
+      { wch: 25 },
+      { wch: 12 },
+      { wch: 25 },
+      { wch: 30 },
+      { wch: 15 },
+      { wch: 18 },
+      { wch: 25 },
+      { wch: 18 },
+      { wch: 30 },
+      { wch: 35 },
     ];
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "دليل_المحاكم");
@@ -5191,55 +6599,112 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         const rawJson: any[] = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
 
         if (!rawJson || rawJson.length === 0) {
-          setCourtExcelImportStatus({ message: "ملف الإكسل فارغ أو لا يحتوي على صفوف بيانات", isError: true });
+          setCourtExcelImportStatus({
+            message: "ملف الإكسل فارغ أو لا يحتوي على صفوف بيانات",
+            isError: true,
+          });
           return;
         }
 
-        const parsedRows: Partial<CourtContact>[] = rawJson.map((row) => {
-          const getVal = (keys: string[]) => {
-            for (const k of keys) {
-              for (const rowKey of Object.keys(row)) {
-                if (rowKey.trim().toLowerCase() === k.trim().toLowerCase()) {
-                  return String(row[rowKey] || "").trim();
+        const parsedRows: Partial<CourtContact>[] = rawJson
+          .map((row) => {
+            const getVal = (keys: string[]) => {
+              for (const k of keys) {
+                for (const rowKey of Object.keys(row)) {
+                  if (rowKey.trim().toLowerCase() === k.trim().toLowerCase()) {
+                    return String(row[rowKey] || "").trim();
+                  }
                 }
               }
-            }
-            return "";
-          };
+              return "";
+            };
 
-          const courtName = getVal(["اسم المحكمة", "المحكمة", "courtName", "court_name", "Court", "جهة المحكمة", "اسم الجهة"]);
-          const emirate = getVal(["الإمارة", "إمارة", "emirate", "Emirate"]) || "دبي";
-          const department = getVal(["القسم / التخصص", "القسم", "التخصص", "department", "Department"]);
-          const titleOrEmployee = getVal(["اسم الموظف / المسمى", "الموظف", "المسمى الوظيفي", "اسم الموظف", "titleOrEmployee", "Employee", "Title"]);
-          const phone = getVal(["رقم الهاتف", "الهاتف", "تلفون", "phone", "Phone", "Mobile"]);
-          const extOrSeal = getVal(["التمديدة / رقم الختم", "التمديدة", "الختم", "رقم الختم", "extOrSeal", "Ext", "Seal"]);
-          const email = getVal(["البريد الإلكتروني", "البريد الاكتروني", "الإيميل", "البريد", "email", "Email"]);
-          const operatingHours = getVal(["أوقات الدوام", "ساعات العمل", "الدوام", "operatingHours", "Hours"]) || "07:30 ص - 02:30 م";
-          const location = getVal(["الموقع / العنوان", "الموقع", "العنوان", "location", "Address"]);
-          const notes = getVal(["ملاحظات", "الملاحظات", "notes", "Notes"]);
+            const courtName = getVal([
+              "اسم المحكمة",
+              "المحكمة",
+              "courtName",
+              "court_name",
+              "Court",
+              "جهة المحكمة",
+              "اسم الجهة",
+            ]);
+            const emirate = getVal(["الإمارة", "إمارة", "emirate", "Emirate"]) || "دبي";
+            const department = getVal([
+              "القسم / التخصص",
+              "القسم",
+              "التخصص",
+              "department",
+              "Department",
+            ]);
+            const titleOrEmployee = getVal([
+              "اسم الموظف / المسمى",
+              "الموظف",
+              "المسمى الوظيفي",
+              "اسم الموظف",
+              "titleOrEmployee",
+              "Employee",
+              "Title",
+            ]);
+            const phone = getVal(["رقم الهاتف", "الهاتف", "تلفون", "phone", "Phone", "Mobile"]);
+            const extOrSeal = getVal([
+              "التمديدة / رقم الختم",
+              "التمديدة",
+              "الختم",
+              "رقم الختم",
+              "extOrSeal",
+              "Ext",
+              "Seal",
+            ]);
+            const email = getVal([
+              "البريد الإلكتروني",
+              "البريد الاكتروني",
+              "الإيميل",
+              "البريد",
+              "email",
+              "Email",
+            ]);
+            const operatingHours =
+              getVal(["أوقات الدوام", "ساعات العمل", "الدوام", "operatingHours", "Hours"]) ||
+              "07:30 ص - 02:30 م";
+            const location = getVal([
+              "الموقع / العنوان",
+              "الموقع",
+              "العنوان",
+              "location",
+              "Address",
+            ]);
+            const notes = getVal(["ملاحظات", "الملاحظات", "notes", "Notes"]);
 
-          return {
-            courtName: courtName || "جهة قضائية",
-            emirate,
-            department: department || "عام",
-            titleOrEmployee: titleOrEmployee || "—",
-            phone: phone || "—",
-            extOrSeal: extOrSeal || "—",
-            email: email || "—",
-            operatingHours,
-            location: location || "الإمارات",
-            notes: notes || "مستورد من ملف إكسل"
-          };
-        }).filter(item => item.courtName || item.department);
+            return {
+              courtName: courtName || "جهة قضائية",
+              emirate,
+              department: department || "عام",
+              titleOrEmployee: titleOrEmployee || "—",
+              phone: phone || "—",
+              extOrSeal: extOrSeal || "—",
+              email: email || "—",
+              operatingHours,
+              location: location || "الإمارات",
+              notes: notes || "مستورد من ملف إكسل",
+            };
+          })
+          .filter((item) => item.courtName || item.department);
 
         if (parsedRows.length === 0) {
-          setCourtExcelImportStatus({ message: "لم يتم العثور على أعمدة متطابقة في ملف الإكسل. يرجى تحميل النموذج المعتمد والتعبئة ببيانات الجهات.", isError: true });
+          setCourtExcelImportStatus({
+            message:
+              "لم يتم العثور على أعمدة متطابقة في ملف الإكسل. يرجى تحميل النموذج المعتمد والتعبئة ببيانات الجهات.",
+            isError: true,
+          });
         } else {
           setCourtImportPreviewList(parsedRows);
           setCourtExcelModalOpen(true);
         }
       } catch (err: any) {
-        setCourtExcelImportStatus({ message: `خطأ في قراءة ملف الإكسل: ${err.message || "تأكد من سلامة وصيغة الملف"}`, isError: true });
+        setCourtExcelImportStatus({
+          message: `خطأ في قراءة ملف الإكسل: ${err.message || "تأكد من سلامة وصيغة الملف"}`,
+          isError: true,
+        });
       }
     };
     reader.readAsBinaryString(file);
@@ -5249,7 +6714,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
   const confirmCourtExcelImport = () => {
     if (!courtImportPreviewList || courtImportPreviewList.length === 0) return;
 
-    let baseId = nextId(courtContacts);
+    const baseId = nextId(courtContacts);
     const newContacts: CourtContact[] = courtImportPreviewList.map((item, idx) => ({
       id: baseId + idx,
       courtName: item.courtName || "جهة قضائية",
@@ -5261,7 +6726,7 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       email: item.email || "—",
       operatingHours: item.operatingHours || "07:30 ص - 02:30 م",
       location: item.location || "الإمارات",
-      notes: item.notes || "مستورد من ملف إكسل"
+      notes: item.notes || "مستورد من ملف إكسل",
     }));
 
     let updatedList: CourtContact[];
@@ -5295,57 +6760,121 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
       due: addDays(30),
       amount: totalAmount,
       status: "مرسلة",
-      desc: `أتعاب ساعات عمل قانونية (${log.hours} ساعة × ${log.hourlyRate} درهم): ${log.description}`
+      desc: `أتعاب ساعات عمل قانونية (${log.hours} ساعة × ${log.hourlyRate} درهم): ${log.description}`,
     };
     setInvoices([...invoices, newInv]);
-    setTimeLogs(timeLogs.map((t) => t.id === log.id ? { ...t, billed: true } : t));
+    setTimeLogs(timeLogs.map((t) => (t.id === log.id ? { ...t, billed: true } : t)));
   };
 
   // ---------- التبويبات حسب الأولوية التنظيمية للمكتب ----------
   const NAV = [
     // 1. العمليات القانونية الرئيسية
-    { id: "dashboard", label: "لوحة التحكم", icon: LayoutDashboard, category: "العمليات القانونية" },
+    {
+      id: "dashboard",
+      label: "لوحة التحكم",
+      icon: LayoutDashboard,
+      category: "العمليات القانونية",
+    },
     { id: "cases", label: "القضايا", icon: Briefcase, category: "العمليات القانونية" },
     { id: "hearings", label: "الجلسات والرول", icon: CalendarDays, category: "العمليات القانونية" },
     { id: "clients", label: "الموكلين والعملاء", icon: Users, category: "العمليات القانونية" },
-    { id: "booking_consultation", label: "حجز استشارة مرئية", icon: Video, category: "العمليات القانونية" },
+    {
+      id: "booking_consultation",
+      label: "حجز استشارة مرئية",
+      icon: Video,
+      category: "العمليات القانونية",
+    },
 
     // 2. التواصل والمهام اليومية
     { id: "tasks", label: "المهام والتكليفات", icon: ListChecks, category: "التواصل والمهام" },
-    { id: "whatsapp_office", label: "واتساب المكتب المدمج", icon: MessageSquare, category: "التواصل والمهام" },
-    { id: "inapp_email", label: "البريد الإلكتروني المدمج", icon: Mail, category: "التواصل والمهام" },
-    { id: "courts_directory", label: "دليل المحاكم والجهات", icon: PhoneCall, category: "التواصل والمهام" },
+    {
+      id: "whatsapp_office",
+      label: "واتساب المكتب المدمج",
+      icon: MessageSquare,
+      category: "التواصل والمهام",
+    },
+    {
+      id: "inapp_email",
+      label: "البريد الإلكتروني المدمج",
+      icon: Mail,
+      category: "التواصل والمهام",
+    },
+    {
+      id: "courts_directory",
+      label: "دليل المحاكم والجهات",
+      icon: PhoneCall,
+      category: "التواصل والمهام",
+    },
     { id: "colleagues", label: "الزملاء والإنابات", icon: Handshake, category: "التواصل والمهام" },
 
     // 3. المستندات والعقود والتوثيق
     { id: "docs", label: "المستندات والأرشيف", icon: FolderOpen, category: "المستندات والعقود" },
     { id: "poa", label: "الوكالات القانونية", icon: FileSignature, category: "المستندات والعقود" },
-    { id: "office_agreement", label: "اتفاقية أتعاب المكتب", icon: FileCheck, category: "المستندات والعقود" },
+    {
+      id: "office_agreement",
+      label: "اتفاقية أتعاب المكتب",
+      icon: FileCheck,
+      category: "المستندات والعقود",
+    },
 
     // 3.5 الفواتير والضريبة (تصنيف مستقل)
     { id: "invoices", label: "الفواتير والضريبة", icon: Receipt, category: "الفواتير والضريبة" },
 
     // 3.6 النظام المحاسبي المتكامل — يظهر فقط إذا تم تفعيل العلم ACCOUNTING_MODULE_ENABLED للجميع،
     // أو لحساب ضمن قائمة التفعيل التجريبي المحدود ACCOUNTING_TRIAL_USER_EMAILS
-    ...((ACCOUNTING_MODULE_ENABLED || ACCOUNTING_TRIAL_USER_EMAILS.includes(currentUser?.email || "")) ? [{ id: "accounting", label: "المحاسبة (تجريبي)", icon: Calculator, category: "الفواتير والضريبة" }] : []),
+    ...(ACCOUNTING_MODULE_ENABLED || ACCOUNTING_TRIAL_USER_EMAILS.includes(currentUser?.email || "")
+      ? [
+          {
+            id: "accounting",
+            label: "المحاسبة (تجريبي)",
+            icon: Calculator,
+            category: "الفواتير والضريبة",
+          },
+        ]
+      : []),
 
     // 4. الامتثال والإدارة
     { id: "kyc", label: "اعرف عميلك (KYC)", icon: ShieldCheck, category: "الإدارة والامتثال" },
-    { id: "precedents", label: "المبادئ والأحكام القضائية", icon: BookOpen, category: "الإدارة والامتثال" },
-    { id: "policies", label: "السياسات الداخلية للمكتب", icon: ScrollText, category: "الإدارة والامتثال" },
-    { id: "employees", label: "الموظفون والكادر (HR)", icon: UserCheck, category: "الإدارة والامتثال" },
-    { id: "audit_log", label: "سجل التدقيق والأنشطة", icon: History, category: "الإدارة والامتثال" },
+    {
+      id: "precedents",
+      label: "المبادئ والأحكام القضائية",
+      icon: BookOpen,
+      category: "الإدارة والامتثال",
+    },
+    {
+      id: "policies",
+      label: "السياسات الداخلية للمكتب",
+      icon: ScrollText,
+      category: "الإدارة والامتثال",
+    },
+    {
+      id: "employees",
+      label: "الموظفون والكادر (HR)",
+      icon: UserCheck,
+      category: "الإدارة والامتثال",
+    },
+    {
+      id: "audit_log",
+      label: "سجل التدقيق والأنشطة",
+      icon: History,
+      category: "الإدارة والامتثال",
+    },
     { id: "users", label: "المستخدمون والصلاحيات", icon: Lock, category: "الإدارة والامتثال" },
-    { id: "official_identity", label: "الهوية الرسمية والأختام", icon: Stamp, category: "الإدارة والامتثال" },
+    {
+      id: "official_identity",
+      label: "الهوية الرسمية والأختام",
+      icon: Stamp,
+      category: "الإدارة والامتثال",
+    },
   ];
 
   // مراجعات KYC المستحقة أو القريبة (خلال 30 يومًا)
   const kycDue = kyc.filter((k) => daysUntil(nextReviewDate(k.lastReview, k.risk)) <= 30).length;
-  
+
   // المهام المستحقة اليوم أو المتأخرة
-  const overdueTasks = tasks.filter(t => !t.done && daysUntil(t.due) <= 0).length;
+  const overdueTasks = tasks.filter((t) => !t.done && daysUntil(t.due) <= 0).length;
   const urgentTodayOrOverdueTasks = useMemo(() => {
-    return tasks.filter(t => !t.done && daysUntil(t.due) <= 0);
+    return tasks.filter((t) => !t.done && daysUntil(t.due) <= 0);
   }, [tasks]);
 
   // المهام العاجلة التي اقترب موعدها خلال أقل من 24 ساعة (أو مستحقة اليوم أو متأخرة)
@@ -5356,24 +6885,38 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         const dA = daysUntil(a.due);
         const dB = daysUntil(b.due);
         if (dA !== dB) return dA - dB;
-        const pOrder: Record<string, number> = { "عالية": 0, "متوسطة": 1, "منخفضة": 2 };
+        const pOrder: Record<string, number> = { عالية: 0, متوسطة: 1, منخفضة: 2 };
         return (pOrder[a.priority] ?? 1) - (pOrder[b.priority] ?? 1);
       });
   }, [tasks]);
 
-  const upcoming = hearings.filter((h) => !h.done && daysUntil(h.date) >= 0).sort((a, b) => a.date.localeCompare(b.date));
-  const notifCount = stats.expiringPoa + invoices.filter((i) => effectiveInvoiceStatus(i) === "متأخرة").length + upcoming.filter((h) => daysUntil(h.date) <= 2).length + kycDue + overdueTasks;
+  const upcoming = hearings
+    .filter((h) => !h.done && daysUntil(h.date) >= 0)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const notifCount =
+    stats.expiringPoa +
+    invoices.filter((i) => effectiveInvoiceStatus(i) === "متأخرة").length +
+    upcoming.filter((h) => daysUntil(h.date) <= 2).length +
+    kycDue +
+    overdueTasks;
 
-  const clientMap = useMemo(() => new Map(clients.map(c => [c.id, c])), [clients]);
+  const clientMap = useMemo(() => new Map(clients.map((c) => [c.id, c])), [clients]);
 
   const getCaseEmirate = (c: CaseItem): string => {
     if (c.emirate) return c.emirate;
     const cObj = clientMap.get(c.clientId);
-    const text = ((c.court || "") + " " + (cObj?.emirate || "") + " " + (cObj?.address || "")).toLowerCase();
+    const text = (
+      (c.court || "") +
+      " " +
+      (cObj?.emirate || "") +
+      " " +
+      (cObj?.address || "")
+    ).toLowerCase();
     if (text.includes("دبي")) return "دبي";
     if (text.includes("عجمان")) return "عجمان";
     if (text.includes("أم القيوين") || text.includes("ام القيوين")) return "أم القيوين";
-    if (text.includes("الشارقة") || text.includes("كلباء") || text.includes("خورفكان")) return "الشارقة";
+    if (text.includes("الشارقة") || text.includes("كلباء") || text.includes("خورفكان"))
+      return "الشارقة";
     if (text.includes("رأس الخيمة") || text.includes("راس الخيمة")) return "رأس الخيمة";
     if (text.includes("أبوظبي") || text.includes("ابوظبي")) return "أبوظبي";
     if (text.includes("الفجيرة")) return "الفجيرة";
@@ -5417,7 +6960,15 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     return Array.from(set).sort();
   }, [cases]);
 
-  const uniqueEmirates = ["دبي", "عجمان", "أم القيوين", "الشارقة", "رأس الخيمة", "أبوظبي", "الفجيرة"];
+  const uniqueEmirates = [
+    "دبي",
+    "عجمان",
+    "أم القيوين",
+    "الشارقة",
+    "رأس الخيمة",
+    "أبوظبي",
+    "الفجيرة",
+  ];
 
   const uniqueCaseYears = useMemo(() => {
     const set = new Set<string>();
@@ -5430,7 +6981,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
 
   const uniqueCaseClients = useMemo(() => {
     const clientIdsWithCases = new Set(cases.map((c) => c.clientId));
-    return clients.filter((cl) => clientIdsWithCases.has(cl.id)).sort((a, b) => a.name.localeCompare(b.name, "ar"));
+    return clients
+      .filter((cl) => clientIdsWithCases.has(cl.id))
+      .sort((a, b) => a.name.localeCompare(b.name, "ar"));
   }, [cases, clients]);
 
   const isCaseMatchingStatus = (c: CaseItem, filter: string): boolean => {
@@ -5493,15 +7046,12 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
         caseTypeFilter === "الكل" ||
         c.type === caseTypeFilter ||
         (c.subject && c.subject.includes(caseTypeFilter));
-      const matchEmirate =
-        caseEmirateFilter === "الكل" || getCaseEmirate(c) === caseEmirateFilter;
-      const matchClient =
-        caseClientFilter === "الكل" || String(c.clientId) === caseClientFilter;
+      const matchEmirate = caseEmirateFilter === "الكل" || getCaseEmirate(c) === caseEmirateFilter;
+      const matchClient = caseClientFilter === "الكل" || String(c.clientId) === caseClientFilter;
       const clientObj = clientMap.get(c.clientId);
       const matchClientType =
         caseClientTypeFilter === "الكل" || (clientObj && clientObj.type === caseClientTypeFilter);
-      const matchYear =
-        caseYearFilter === "الكل" || getCaseYear(c.number) === caseYearFilter;
+      const matchYear = caseYearFilter === "الكل" || getCaseYear(c.number) === caseYearFilter;
 
       const matchQuery =
         !query ||
@@ -5536,7 +7086,9 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     } else if (caseSortBy === "number") {
       return [...result].sort((a, b) => a.number.localeCompare(b.number, "ar", { numeric: true }));
     } else if (caseSortBy === "client") {
-      return [...result].sort((a, b) => clientName(a.clientId).localeCompare(clientName(b.clientId), "ar"));
+      return [...result].sort((a, b) =>
+        clientName(a.clientId).localeCompare(clientName(b.clientId), "ar"),
+      );
     } else if (caseSortBy === "court") {
       return [...result].sort((a, b) => (a.court || "").localeCompare(b.court || "", "ar"));
     }
@@ -5555,10 +7107,10 @@ supabase.from("consultation_settings").upsert([{ id: "settings", data: { id: "se
     caseYearFilter,
     caseSortBy,
     q,
-    clientMap
+    clientMap,
   ]);
 
-const filteredClientsList = useMemo(() => {
+  const filteredClientsList = useMemo(() => {
     const query = normalizeArabicSearch(clientSearch);
     return clients.filter((c) => {
       const matchesCategory = clientCategoryFilter === "الكل" || c.type === clientCategoryFilter;
@@ -5571,9 +7123,9 @@ const filteredClientsList = useMemo(() => {
         (c.emirate && normalizeArabicSearch(c.emirate).includes(query)) ||
         (c.address && normalizeArabicSearch(c.address).includes(query));
       return matchesCategory && matchesSearch;
-      });
-      }, [clients, clientCategoryFilter, clientSearch]);
-const activeFiltersCount = useMemo(() => {
+    });
+  }, [clients, clientCategoryFilter, clientSearch]);
+  const activeFiltersCount = useMemo(() => {
     let count = 0;
     if (caseStageFilter !== "الكل") count++;
     if (caseFilter !== "الكل") count++;
@@ -5598,7 +7150,7 @@ const activeFiltersCount = useMemo(() => {
     caseClientTypeFilter,
     caseYearFilter,
     caseSortBy,
-    q
+    q,
   ]);
 
   const resetAllCaseFilters = () => {
@@ -5617,34 +7169,34 @@ const activeFiltersCount = useMemo(() => {
 
   const caseStatsBreakdown = useMemo(() => {
     const statusMap: Record<string, number> = {
-      "الكل": cases.length,
-      "متداولة": 0,
-      "منتهية": 0,
-      "محكومة": 0,
+      الكل: cases.length,
+      متداولة: 0,
+      منتهية: 0,
+      محكومة: 0,
       "صدر الحكم": 0,
       "قيد النظر": 0,
       "محجوزة للحكم": 0,
-      "مشطوبة": 0,
-      "معلقة": 0,
-      "مغلقة": 0,
+      مشطوبة: 0,
+      معلقة: 0,
+      مغلقة: 0,
     };
     const stageMap: Record<string, number> = {
-      "الكل": cases.length,
-      "الابتدائية": 0,
-      "الاستئناف": 0,
+      الكل: cases.length,
+      الابتدائية: 0,
+      الاستئناف: 0,
       "التمييز / النقض": 0,
-      "التنفيذ": 0,
+      التنفيذ: 0,
       "لجان فض المنازعات": 0,
     };
     const stageStatusMap: Record<string, { total: number; ongoing: number; finished: number }> = {
-      "الابتدائية": { total: 0, ongoing: 0, finished: 0 },
-      "الاستئناف": { total: 0, ongoing: 0, finished: 0 },
+      الابتدائية: { total: 0, ongoing: 0, finished: 0 },
+      الاستئناف: { total: 0, ongoing: 0, finished: 0 },
       "التمييز / النقض": { total: 0, ongoing: 0, finished: 0 },
-      "التنفيذ": { total: 0, ongoing: 0, finished: 0 },
+      التنفيذ: { total: 0, ongoing: 0, finished: 0 },
       "لجان فض المنازعات": { total: 0, ongoing: 0, finished: 0 },
     };
     const emirateMap: Record<string, number> = {};
-    const clientTypeMap: Record<string, number> = { "شركة": 0, "فرد": 0 };
+    const clientTypeMap: Record<string, number> = { شركة: 0, فرد: 0 };
     const typeMap: Record<string, number> = {};
 
     cases.forEach((c) => {
@@ -5666,7 +7218,6 @@ const activeFiltersCount = useMemo(() => {
       if (st === "محجوزة للحكم") statusMap["محجوزة للحكم"] = (statusMap["محجوزة للحكم"] || 0) + 1;
       if (st === "مشطوبة") statusMap["مشطوبة"] = (statusMap["مشطوبة"] || 0) + 1;
       if (st === "معلقة") statusMap["معلقة"] = (statusMap["معلقة"] || 0) + 1;
-
 
       // Stage aggregation
       stageMap[stage] = (stageMap[stage] || 0) + 1;
@@ -5697,7 +7248,7 @@ const activeFiltersCount = useMemo(() => {
       stageStatusMap,
       emirateMap,
       clientTypeMap,
-      typeMap
+      typeMap,
     };
   }, [cases, clientMap]);
 
@@ -5712,7 +7263,19 @@ const activeFiltersCount = useMemo(() => {
           setConsultationBookings((prev) => [newBooking, ...prev]);
 
           // Automatically record invoice and payment receipt in office financial system
-          const normPhone = (p: string) => (p || "").replace(/\D/g, "").slice(-9); let matchedBookingClient = clients.find((c) => normPhone(c.phone) && normPhone(c.phone) === normPhone(newBooking.whatsapp)); if (!matchedBookingClient && newBooking.email) { matchedBookingClient = clients.find((c) => c.email && c.email.trim().toLowerCase() === newBooking.email.trim().toLowerCase()); } if (!matchedBookingClient) { matchedBookingClient = findMatchingClientByName(clients, newBooking.clientName); }
+          const normPhone = (p: string) => (p || "").replace(/\D/g, "").slice(-9);
+          let matchedBookingClient = clients.find(
+            (c) => normPhone(c.phone) && normPhone(c.phone) === normPhone(newBooking.whatsapp),
+          );
+          if (!matchedBookingClient && newBooking.email) {
+            matchedBookingClient = clients.find(
+              (c) =>
+                c.email && c.email.trim().toLowerCase() === newBooking.email.trim().toLowerCase(),
+            );
+          }
+          if (!matchedBookingClient) {
+            matchedBookingClient = findMatchingClientByName(clients, newBooking.clientName);
+          }
           // لم يوجد موكل مطابق (لا هاتف ولا بريد ولا اسم) — ننشئ سجل موكل حقيقي جديد بدل استخدام
           // معرّف ثابت وهمي (0)، حتى ترتبط الفاتورة والدفعة بموكل فعلي موجود في سجلات المكتب.
           let bookingClientId: number;
@@ -5736,11 +7299,11 @@ const activeFiltersCount = useMemo(() => {
               "الموكلون",
               `إنشاء موكل تلقائي من حجز استشارة مرئية: ${autoClient.name}`,
               `أُنشئ هذا السجل تلقائياً لعدم وجود موكل مطابق (بالهاتف/البريد/الاسم) عند حجز الاستشارة رقم ${newBooking.reference}`,
-              newClientId
+              newClientId,
             );
             bookingClientId = newClientId;
           }
-          const newInvoiceId = invoices.length > 0 ? Math.max(...invoices.map(i => i.id)) + 1 : 1;
+          const newInvoiceId = invoices.length > 0 ? Math.max(...invoices.map((i) => i.id)) + 1 : 1;
           const invoiceNumber = `INV-2026-${String(100 + newInvoiceId).padStart(3, "0")}`;
 
           const newInvoice: Invoice = {
@@ -5753,13 +7316,13 @@ const activeFiltersCount = useMemo(() => {
             due: newBooking.date,
             amount: newBooking.amountPaid,
             status: "مدفوع",
-            desc: `استشارة قانونية مرئية أونلاين (${newBooking.duration} دقيقة) - الموكل: ${newBooking.clientName} (مرجع: ${newBooking.reference})`
+            desc: `استشارة قانونية مرئية أونلاين (${newBooking.duration} دقيقة) - الموكل: ${newBooking.clientName} (مرجع: ${newBooking.reference})`,
           };
 
           setInvoices((prev) => [newInvoice, ...prev]);
 
           const newPayment: PaymentReceipt = {
-            id: payments.length > 0 ? Math.max(...payments.map(p => p.id)) + 1 : 1,
+            id: payments.length > 0 ? Math.max(...payments.map((p) => p.id)) + 1 : 1,
             clientId: bookingClientId,
             caseId: null,
             feeAgreementId: "unallocated",
@@ -5768,7 +7331,7 @@ const activeFiltersCount = useMemo(() => {
             date: newBooking.date,
             paymentMethod: "بوابة الدفع الإلكترونية الآمنة (Online Secure Gateway)",
             referenceNo: newBooking.reference,
-            notes: `سداد أونلاين استشارة مرئية - ${newBooking.clientName}`
+            notes: `سداد أونلاين استشارة مرئية - ${newBooking.clientName}`,
           };
 
           setPayments((prev) => [newPayment, ...prev]);
@@ -5777,7 +7340,7 @@ const activeFiltersCount = useMemo(() => {
             "CREATE",
             "استشارات مرئية",
             `حجز جديد #${newBooking.reference} وتم السداد بنجاح`,
-            `تم حجز استشارة مرئية أونلاين وسداد مبلغ ${newBooking.amountPaid} درهم وتوليد الفاتورة التلقائية للموكل: ${newBooking.clientName}`
+            `تم حجز استشارة مرئية أونلاين وسداد مبلغ ${newBooking.amountPaid} درهم وتوليد الفاتورة التلقائية للموكل: ${newBooking.clientName}`,
           );
         }}
       />
@@ -5804,7 +7367,8 @@ const activeFiltersCount = useMemo(() => {
               status: "معلق",
               avatarBg: "bg-amber-600 text-white",
               avatarText: newUser.name.slice(0, 2),
-              permissions: ROLE_PRESETS[newUser.roleKey]?.permissions || ROLE_PRESETS.lawyer.permissions
+              permissions:
+                ROLE_PRESETS[newUser.roleKey]?.permissions || ROLE_PRESETS.lawyer.permissions,
             };
             setUsers((prev) => {
               const updated = [...prev, created];
@@ -5819,16 +7383,16 @@ const activeFiltersCount = useMemo(() => {
                 desc: `قدم ${newUser.name} (${newUser.email}) طلب حساب بدور (${newUser.roleTitle}). الطلب ينتظر موافقة مدير النظام.`,
                 date: todayISO(),
                 type: "تأكيد",
-                read: false
+                read: false,
               },
-              ...prev
+              ...prev,
             ]);
             try {
               supabase.from("profiles").insert({
                 email: newUser.email,
                 full_name: newUser.name,
                 role: newUser.roleKey,
-                status: "pending"
+                status: "pending",
               });
             } catch (e) {
               // ignore
@@ -5842,7 +7406,10 @@ const activeFiltersCount = useMemo(() => {
   }
 
   return (
-    <div dir="rtl" className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-[#faf8f5] text-slate-800 font-sans selection:bg-[#b89b6a]/30">
+    <div
+      dir="rtl"
+      className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-[#faf8f5] text-slate-800 font-sans selection:bg-[#b89b6a]/30"
+    >
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700;800&display=swap');
         @media print {
@@ -5881,7 +7448,8 @@ const activeFiltersCount = useMemo(() => {
                 {currentUser.roleKey.toUpperCase()}
               </span>
             </div>
-            {currentUser.roleKey === "admin" && (currentUser.status === "نشط" || currentUser.status === "approved") ? (
+            {currentUser.roleKey === "admin" &&
+            (currentUser.status === "نشط" || currentUser.status === "approved") ? (
               <select
                 value={currentUserId}
                 onChange={(e) => setCurrentUserId(+e.target.value)}
@@ -5901,43 +7469,75 @@ const activeFiltersCount = useMemo(() => {
           </div>
 
           <nav className="flex-1 space-y-0.5 p-3 overflow-y-auto max-h-[calc(100vh-140px)] custom-scrollbar">
-            {NAV.filter(({ id }) => hasTabPermission(currentUser, id)).map(({ id, label, icon: Icon, category }, idx, filteredNav) => {
-              const showCategoryHeader = idx === 0 || category !== filteredNav[idx - 1].category;
-              return (
-                <React.Fragment key={id}>
-                  {showCategoryHeader && category && (
-                    <div className="px-2.5 pt-4 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 mb-0.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#C5A059]" />
-                      <span>{category}</span>
-                    </div>
-                  )}
-                  <button onClick={() => { setTab(id); setCaseView(null); }}
-                    className={`flex w-full items-center gap-3 rounded-[11px] px-3.5 py-2.5 text-xs font-semibold transition-all duration-150 ${tab === id ? "bg-[#0D382B] text-white font-black shadow-[0_6px_14px_-6px_rgb(13,56,43,0.5)]" : "text-slate-600 hover:bg-slate-50"}`}>
-                    <Icon size={17} /><span>{label}</span>
-                    {id === "poa" && stats.expiringPoa > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{stats.expiringPoa}</span>}
-                    {id === "kyc" && kycDue > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{kycDue}</span>}
-                    {id === "tasks" && overdueTasks > 0 && <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">{overdueTasks}</span>}
-                    {id === "employees" && (leaveRequests.filter(l => l.status === "PENDING").length + employeeExpenses.filter(e => e.status === "PENDING").length) > 0 && (
-                      <span className="mr-auto rounded-full bg-amber-500 px-2 text-xs font-bold text-slate-950">
-                        {leaveRequests.filter(l => l.status === "PENDING").length + employeeExpenses.filter(e => e.status === "PENDING").length}
-                      </span>
+            {NAV.filter(({ id }) => hasTabPermission(currentUser, id)).map(
+              ({ id, label, icon: Icon, category }, idx, filteredNav) => {
+                const showCategoryHeader = idx === 0 || category !== filteredNav[idx - 1].category;
+                return (
+                  <React.Fragment key={id}>
+                    {showCategoryHeader && category && (
+                      <div className="px-2.5 pt-4 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 mb-0.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-[#C5A059]" />
+                        <span>{category}</span>
+                      </div>
                     )}
-                    {id === "booking_consultation" && consultationBookings.filter(b => b.status === "pending_assignment").length > 0 && (
-                      <span className="mr-auto rounded-full bg-amber-400 text-slate-950 px-2 text-xs font-black animate-pulse">
-                        {consultationBookings.filter(b => b.status === "pending_assignment").length} جديد
-                      </span>
-                    )}
-                    {id === "users" && pendingUsers.length > 0 && isAdmin ? (
-                      <span className="mr-auto rounded-full bg-amber-500 text-slate-950 px-2 py-0.5 text-[11px] font-bold animate-pulse">
-                        {pendingUsers.length} معلق
-                      </span>
-                    ) : id === "users" ? (
-                      <span className="mr-auto rounded-full bg-emerald-100 border border-emerald-300 text-[10px] px-1.5 py-0.2 text-[#0D382B] font-mono">{users.length}</span>
-                    ) : null}
-                  </button>
-                </React.Fragment>
-              );
-            })}
+                    <button
+                      onClick={() => {
+                        setTab(id);
+                        setCaseView(null);
+                      }}
+                      className={`flex w-full items-center gap-3 rounded-[11px] px-3.5 py-2.5 text-xs font-semibold transition-all duration-150 ${tab === id ? "bg-[#0D382B] text-white font-black shadow-[0_6px_14px_-6px_rgb(13,56,43,0.5)]" : "text-slate-600 hover:bg-slate-50"}`}
+                    >
+                      <Icon size={17} />
+                      <span>{label}</span>
+                      {id === "poa" && stats.expiringPoa > 0 && (
+                        <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">
+                          {stats.expiringPoa}
+                        </span>
+                      )}
+                      {id === "kyc" && kycDue > 0 && (
+                        <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">
+                          {kycDue}
+                        </span>
+                      )}
+                      {id === "tasks" && overdueTasks > 0 && (
+                        <span className="mr-auto rounded-full bg-red-500 px-2 text-xs font-bold text-white">
+                          {overdueTasks}
+                        </span>
+                      )}
+                      {id === "employees" &&
+                        leaveRequests.filter((l) => l.status === "PENDING").length +
+                          employeeExpenses.filter((e) => e.status === "PENDING").length >
+                          0 && (
+                          <span className="mr-auto rounded-full bg-amber-500 px-2 text-xs font-bold text-slate-950">
+                            {leaveRequests.filter((l) => l.status === "PENDING").length +
+                              employeeExpenses.filter((e) => e.status === "PENDING").length}
+                          </span>
+                        )}
+                      {id === "booking_consultation" &&
+                        consultationBookings.filter((b) => b.status === "pending_assignment")
+                          .length > 0 && (
+                          <span className="mr-auto rounded-full bg-amber-400 text-slate-950 px-2 text-xs font-black animate-pulse">
+                            {
+                              consultationBookings.filter((b) => b.status === "pending_assignment")
+                                .length
+                            }{" "}
+                            جديد
+                          </span>
+                        )}
+                      {id === "users" && pendingUsers.length > 0 && isAdmin ? (
+                        <span className="mr-auto rounded-full bg-amber-500 text-slate-950 px-2 py-0.5 text-[11px] font-bold animate-pulse">
+                          {pendingUsers.length} معلق
+                        </span>
+                      ) : id === "users" ? (
+                        <span className="mr-auto rounded-full bg-emerald-100 border border-emerald-300 text-[10px] px-1.5 py-0.2 text-[#0D382B] font-mono">
+                          {users.length}
+                        </span>
+                      ) : null}
+                    </button>
+                  </React.Fragment>
+                );
+              },
+            )}
 
             <button
               onClick={() => setCurrentRoute("public_consultation")}
@@ -5975,7 +7575,6 @@ const activeFiltersCount = useMemo(() => {
               </div>
               <Download size={14} className="text-slate-600" />
             </button>
-
           </nav>
           <div className="border-t border-slate-100 p-4 text-xs text-slate-500 space-y-2 bg-slate-50">
             <button
@@ -5985,7 +7584,9 @@ const activeFiltersCount = useMemo(() => {
             >
               <LogOut size={15} /> تسجيل الخروج
             </button>
-            <p className="text-[11px] text-center text-slate-400">ضريبة القيمة المضافة: 5% (UAE VAT)</p>
+            <p className="text-[11px] text-center text-slate-400">
+              ضريبة القيمة المضافة: 5% (UAE VAT)
+            </p>
           </div>
         </aside>
 
@@ -6022,7 +7623,8 @@ const activeFiltersCount = useMemo(() => {
                     {currentUser.roleKey.toUpperCase()}
                   </span>
                 </div>
-                {currentUser.roleKey === "admin" && (currentUser.status === "نشط" || currentUser.status === "approved") ? (
+                {currentUser.roleKey === "admin" &&
+                (currentUser.status === "نشط" || currentUser.status === "approved") ? (
                   <select
                     value={currentUserId}
                     onChange={(e) => setCurrentUserId(+e.target.value)}
@@ -6056,68 +7658,82 @@ const activeFiltersCount = useMemo(() => {
 
               {/* روابط جميع أقسام النظام الـ 18 مصنفة بالكامل */}
               <nav className="flex-1 space-y-1 p-3 overflow-y-auto custom-scrollbar">
-                {NAV.filter(({ id }) => hasTabPermission(currentUser, id)).map(({ id, label, icon: Icon, category }, idx, filteredNav) => {
-                  const showCategoryHeader = idx === 0 || category !== filteredNav[idx - 1].category;
-                  return (
-                    <React.Fragment key={`mob-${id}`}>
-                      {showCategoryHeader && category && (
-                        <div className="px-2 pt-3 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[#0D382B] flex items-center gap-1.5 border-b border-slate-100 mb-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#C5A059]" />
-                          <span>{category}</span>
-                        </div>
-                      )}
-                      <button
-                        onClick={() => {
-                          setTab(id);
-                          setCaseView(null);
-                          setMobileMenuOpen(false);
-                        }}
-                        className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition ${
-                          tab === id
-                            ? "bg-[#0D382B] text-white font-black shadow-md"
-                            : "text-slate-600 hover:bg-emerald-50 hover:text-[#0D382B]"
-                        }`}
-                      >
-                        <Icon size={18} />
-                        <span className="text-right">{label}</span>
-                        {id === "poa" && stats.expiringPoa > 0 && (
-                          <span className="mr-auto rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white">
-                            {stats.expiringPoa}
-                          </span>
+                {NAV.filter(({ id }) => hasTabPermission(currentUser, id)).map(
+                  ({ id, label, icon: Icon, category }, idx, filteredNav) => {
+                    const showCategoryHeader =
+                      idx === 0 || category !== filteredNav[idx - 1].category;
+                    return (
+                      <React.Fragment key={`mob-${id}`}>
+                        {showCategoryHeader && category && (
+                          <div className="px-2 pt-3 pb-1.5 text-[10px] font-extrabold uppercase tracking-wider text-[#0D382B] flex items-center gap-1.5 border-b border-slate-100 mb-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#C5A059]" />
+                            <span>{category}</span>
+                          </div>
                         )}
-                        {id === "kyc" && kycDue > 0 && (
-                          <span className="mr-auto rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white">
-                            {kycDue}
-                          </span>
-                        )}
-                        {id === "tasks" && overdueTasks > 0 && (
-                          <span className="mr-auto rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white">
-                            {overdueTasks}
-                          </span>
-                        )}
-                        {id === "employees" && (leaveRequests.filter(l => l.status === "PENDING").length + employeeExpenses.filter(e => e.status === "PENDING").length) > 0 && (
-                          <span className="mr-auto rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-slate-950">
-                            {leaveRequests.filter(l => l.status === "PENDING").length + employeeExpenses.filter(e => e.status === "PENDING").length}
-                          </span>
-                        )}
-                        {id === "booking_consultation" && consultationBookings.filter(b => b.status === "pending_assignment").length > 0 && (
-                          <span className="mr-auto rounded-full bg-amber-400 text-slate-950 px-2 py-0.5 text-[10px] font-black animate-pulse">
-                            {consultationBookings.filter(b => b.status === "pending_assignment").length} جديد
-                          </span>
-                        )}
-                        {id === "users" && pendingUsers.length > 0 && isAdmin ? (
-                          <span className="mr-auto rounded-full bg-amber-500 text-slate-950 px-2 py-0.5 text-[11px] font-bold animate-pulse">
-                            {pendingUsers.length} معلق
-                          </span>
-                        ) : id === "users" ? (
-                          <span className="mr-auto rounded-full bg-emerald-100 border border-emerald-300 text-[10px] px-1.5 py-0.2 text-[#0D382B] font-mono">
-                            {users.length}
-                          </span>
-                        ) : null}
-                      </button>
-                    </React.Fragment>
-                  );
-                })}
+                        <button
+                          onClick={() => {
+                            setTab(id);
+                            setCaseView(null);
+                            setMobileMenuOpen(false);
+                          }}
+                          className={`flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition ${
+                            tab === id
+                              ? "bg-[#0D382B] text-white font-black shadow-md"
+                              : "text-slate-600 hover:bg-emerald-50 hover:text-[#0D382B]"
+                          }`}
+                        >
+                          <Icon size={18} />
+                          <span className="text-right">{label}</span>
+                          {id === "poa" && stats.expiringPoa > 0 && (
+                            <span className="mr-auto rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white">
+                              {stats.expiringPoa}
+                            </span>
+                          )}
+                          {id === "kyc" && kycDue > 0 && (
+                            <span className="mr-auto rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white">
+                              {kycDue}
+                            </span>
+                          )}
+                          {id === "tasks" && overdueTasks > 0 && (
+                            <span className="mr-auto rounded-full bg-red-500 px-2 py-0.5 text-[11px] font-bold text-white">
+                              {overdueTasks}
+                            </span>
+                          )}
+                          {id === "employees" &&
+                            leaveRequests.filter((l) => l.status === "PENDING").length +
+                              employeeExpenses.filter((e) => e.status === "PENDING").length >
+                              0 && (
+                              <span className="mr-auto rounded-full bg-amber-500 px-2 py-0.5 text-[11px] font-bold text-slate-950">
+                                {leaveRequests.filter((l) => l.status === "PENDING").length +
+                                  employeeExpenses.filter((e) => e.status === "PENDING").length}
+                              </span>
+                            )}
+                          {id === "booking_consultation" &&
+                            consultationBookings.filter((b) => b.status === "pending_assignment")
+                              .length > 0 && (
+                              <span className="mr-auto rounded-full bg-amber-400 text-slate-950 px-2 py-0.5 text-[10px] font-black animate-pulse">
+                                {
+                                  consultationBookings.filter(
+                                    (b) => b.status === "pending_assignment",
+                                  ).length
+                                }{" "}
+                                جديد
+                              </span>
+                            )}
+                          {id === "users" && pendingUsers.length > 0 && isAdmin ? (
+                            <span className="mr-auto rounded-full bg-amber-500 text-slate-950 px-2 py-0.5 text-[11px] font-bold animate-pulse">
+                              {pendingUsers.length} معلق
+                            </span>
+                          ) : id === "users" ? (
+                            <span className="mr-auto rounded-full bg-emerald-100 border border-emerald-300 text-[10px] px-1.5 py-0.2 text-[#0D382B] font-mono">
+                              {users.length}
+                            </span>
+                          ) : null}
+                        </button>
+                      </React.Fragment>
+                    );
+                  },
+                )}
 
                 {/* روابط سريعة إضافية داخل قائمة الجوال */}
                 <div className="pt-2 space-y-1.5 border-t border-slate-100 mt-2">
@@ -6192,7 +7808,6 @@ const activeFiltersCount = useMemo(() => {
                     </div>
                     <ChevronLeft size={14} className="text-slate-600" />
                   </button>
-
                 </div>
               </nav>
 
@@ -6207,7 +7822,9 @@ const activeFiltersCount = useMemo(() => {
                 >
                   <LogOut size={15} /> تسجيل الخروج
                 </button>
-                <p className="text-[10px] text-center text-slate-400">ضريبة القيمة المضافة: 5% (UAE VAT)</p>
+                <p className="text-[10px] text-center text-slate-400">
+                  ضريبة القيمة المضافة: 5% (UAE VAT)
+                </p>
               </div>
             </div>
           </div>
@@ -6238,34 +7855,44 @@ const activeFiltersCount = useMemo(() => {
             {/* شريط البحث لسطح المكتب */}
             <div className="relative mr-auto hidden max-w-xs flex-1 md:block">
               <Search size={16} className="absolute right-3 top-2.5 text-slate-400" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="بحث في القضايا والموكلين…" className={`${inputCls} pr-9`} />
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="بحث في القضايا والموكلين…"
+                className={`${inputCls} pr-9`}
+              />
             </div>
 
             {/* أزرار الإجراءات السريعة للجوال وسطح المكتب */}
             <div className="flex items-center gap-1.5 sm:gap-2">
               {/* شريط معلومات المستخدم النشط */}
               <div className="flex items-center gap-1.5 sm:gap-2 border-r border-slate-200 pr-2 sm:pr-3 mr-1">
-                <div className={`flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full text-xs font-bold shrink-0 ${currentUser.avatarBg}`}>
+                <div
+                  className={`flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full text-xs font-bold shrink-0 ${currentUser.avatarBg}`}
+                >
                   {currentUser.avatarText}
                 </div>
                 <div className="hidden sm:block text-xs leading-tight">
-                  <p className="font-bold text-slate-900 truncate max-w-[120px]">{currentUser.name}</p>
+                  <p className="font-bold text-slate-900 truncate max-w-[120px]">
+                    {currentUser.name}
+                  </p>
                   <p className="text-[11px] text-[#b89b6a] font-bold">{currentUser.roleTitle}</p>
                 </div>
-                {currentUser.roleKey === "admin" && (currentUser.status === "نشط" || currentUser.status === "approved") && (
-                  <select
-                    value={currentUserId}
-                    onChange={(e) => setCurrentUserId(+e.target.value)}
-                    className="hidden sm:block text-xs bg-stone-100 border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#b89b6a]"
-                    title="اختبار أداء الصلاحيات بأدوار مختلفة (للمدير فقط)"
-                  >
-                    {users.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.name} ({u.roleTitle})
-                      </option>
-                    ))}
-                  </select>
-                )}
+                {currentUser.roleKey === "admin" &&
+                  (currentUser.status === "نشط" || currentUser.status === "approved") && (
+                    <select
+                      value={currentUserId}
+                      onChange={(e) => setCurrentUserId(+e.target.value)}
+                      className="hidden sm:block text-xs bg-stone-100 border border-slate-300 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-[#b89b6a]"
+                      title="اختبار أداء الصلاحيات بأدوار مختلفة (للمدير فقط)"
+                    >
+                      {users.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name} ({u.roleTitle})
+                        </option>
+                      ))}
+                    </select>
+                  )}
               </div>
 
               {isAiAssistantEnabled && (
@@ -6280,7 +7907,11 @@ const activeFiltersCount = useMemo(() => {
               )}
 
               {/* أزرار سطح المكتب */}
-              <button onClick={() => setClientPortalId(clients[0]?.id || 1)} className="hidden md:flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 shadow-sm" title="معاينة بوابة الموكل الإلكترونية">
+              <button
+                onClick={() => setClientPortalId(clients[0]?.id || 1)}
+                className="hidden md:flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 shadow-sm"
+                title="معاينة بوابة الموكل الإلكترونية"
+              >
                 <Globe size={15} /> <span className="hidden sm:inline">بوابة الموكل</span>
               </button>
 
@@ -6293,7 +7924,11 @@ const activeFiltersCount = useMemo(() => {
                 <span className="hidden sm:inline">النسخ الاحتياطي</span>
               </button>
 
-              <button onClick={() => setReport("section")} className="hidden md:flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors" title="تقرير قابل للطباعة للقسم الحالي">
+              <button
+                onClick={() => setReport("section")}
+                className="hidden md:flex items-center gap-1.5 rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors"
+                title="تقرير قابل للطباعة للقسم الحالي"
+              >
                 <Printer size={15} /> <span className="hidden sm:inline">تقرير القسم</span>
               </button>
 
@@ -6305,9 +7940,16 @@ const activeFiltersCount = useMemo(() => {
                 <LogOut size={15} /> <span className="hidden sm:inline">تسجيل الخروج</span>
               </button>
 
-              <button className="relative rounded-full p-2 text-slate-500 hover:bg-[#0D382B]/[0.06] transition-colors" aria-label="التنبيهات">
+              <button
+                className="relative rounded-full p-2 text-slate-500 hover:bg-[#0D382B]/[0.06] transition-colors"
+                aria-label="التنبيهات"
+              >
                 <Bell size={18} />
-                {notifCount > 0 && <span className="absolute -left-0.5 -top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">{notifCount}</span>}
+                {notifCount > 0 && (
+                  <span className="absolute -left-0.5 -top-0.5 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                    {notifCount}
+                  </span>
+                )}
               </button>
             </div>
           </header>
@@ -6329,47 +7971,82 @@ const activeFiltersCount = useMemo(() => {
           )}
 
           {/* شريط التنقل السفلي الذكي للجوال (Smart Bottom Navigation Bar) */}
-          <div className="fixed bottom-0 right-0 left-0 z-30 flex items-center justify-around border-t border-slate-200 bg-white/95 backdrop-blur-md py-1.5 px-1 sm:px-2 md:hidden shadow-lg" dir="rtl">
+          <div
+            className="fixed bottom-0 right-0 left-0 z-30 flex items-center justify-around border-t border-slate-200 bg-white/95 backdrop-blur-md py-1.5 px-1 sm:px-2 md:hidden shadow-lg"
+            dir="rtl"
+          >
             <button
-              onClick={() => { setTab("dashboard"); setCaseView(null); }}
+              onClick={() => {
+                setTab("dashboard");
+                setCaseView(null);
+              }}
               className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-bold transition ${
-                tab === "dashboard" ? "text-[#0D382B] font-extrabold" : "text-slate-500 hover:text-slate-800"
+                tab === "dashboard"
+                  ? "text-[#0D382B] font-extrabold"
+                  : "text-slate-500 hover:text-slate-800"
               }`}
             >
-              <LayoutDashboard size={20} className={tab === "dashboard" ? "text-[#0D382B]" : "text-slate-400"} />
+              <LayoutDashboard
+                size={20}
+                className={tab === "dashboard" ? "text-[#0D382B]" : "text-slate-400"}
+              />
               <span>الرئيسية</span>
             </button>
 
             <button
-              onClick={() => { setTab("cases"); setCaseView(null); }}
+              onClick={() => {
+                setTab("cases");
+                setCaseView(null);
+              }}
               className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-bold transition ${
-                tab === "cases" ? "text-[#0D382B] font-extrabold" : "text-slate-500 hover:text-slate-800"
+                tab === "cases"
+                  ? "text-[#0D382B] font-extrabold"
+                  : "text-slate-500 hover:text-slate-800"
               }`}
             >
-              <Briefcase size={20} className={tab === "cases" ? "text-[#0D382B]" : "text-slate-400"} />
+              <Briefcase
+                size={20}
+                className={tab === "cases" ? "text-[#0D382B]" : "text-slate-400"}
+              />
               <span>القضايا</span>
             </button>
 
             <button
-              onClick={() => { setTab("hearings"); setCaseView(null); }}
+              onClick={() => {
+                setTab("hearings");
+                setCaseView(null);
+              }}
               className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-bold transition relative ${
-                tab === "hearings" ? "text-[#0D382B] font-extrabold" : "text-slate-500 hover:text-slate-800"
+                tab === "hearings"
+                  ? "text-[#0D382B] font-extrabold"
+                  : "text-slate-500 hover:text-slate-800"
               }`}
             >
-              <CalendarDays size={20} className={tab === "hearings" ? "text-[#0D382B]" : "text-slate-400"} />
+              <CalendarDays
+                size={20}
+                className={tab === "hearings" ? "text-[#0D382B]" : "text-slate-400"}
+              />
               <span>الجلسات</span>
-              {upcoming.filter(h => daysUntil(h.date) <= 2).length > 0 && (
+              {upcoming.filter((h) => daysUntil(h.date) <= 2).length > 0 && (
                 <span className="absolute top-0 right-2 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
               )}
             </button>
 
             <button
-              onClick={() => { setTab("tasks"); setCaseView(null); }}
+              onClick={() => {
+                setTab("tasks");
+                setCaseView(null);
+              }}
               className={`flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-bold transition relative ${
-                tab === "tasks" ? "text-[#0D382B] font-extrabold" : "text-slate-500 hover:text-slate-800"
+                tab === "tasks"
+                  ? "text-[#0D382B] font-extrabold"
+                  : "text-slate-500 hover:text-slate-800"
               }`}
             >
-              <ListChecks size={20} className={tab === "tasks" ? "text-[#0D382B]" : "text-slate-400"} />
+              <ListChecks
+                size={20}
+                className={tab === "tasks" ? "text-[#0D382B]" : "text-slate-400"}
+              />
               <span>المهام</span>
               {overdueTasks > 0 && (
                 <span className="absolute top-0 right-2 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white" />
@@ -6393,7 +8070,6 @@ const activeFiltersCount = useMemo(() => {
           </div>
 
           <div className="mx-auto max-w-7xl w-full min-w-0 overflow-x-hidden space-y-6 p-3 sm:p-4 pb-24 md:p-6 md:pb-8">
-
             {currentUser.status === "معلق" || currentUser.status === "pending" ? (
               <PendingApprovalScreen
                 currentUser={currentUser}
@@ -6426,678 +8102,761 @@ const activeFiltersCount = useMemo(() => {
                   />
                 )}
 
-            {/* ================= القضايا ================= */}
-            {tab === "cases" && !caseView && (
-              <CasesListView
-                filteredCases={filteredCases}
-                cases={cases}
-                showCaseStatsOnDemand={showCaseStatsOnDemand}
-                setShowCaseStatsOnDemand={setShowCaseStatsOnDemand}
-                showAdvancedFilters={showAdvancedFilters}
-                setShowAdvancedFilters={setShowAdvancedFilters}
-                activeFiltersCount={activeFiltersCount}
-                handleDeduplicateCasesManual={handleDeduplicateCasesManual}
-                setShowCasesExcelModal={setShowCasesExcelModal}
-                openModalWithCheck={openModalWithCheck}
-                caseFilter={caseFilter}
-                setCaseFilter={setCaseFilter}
-                caseStageFilter={caseStageFilter}
-                setCaseStageFilter={setCaseStageFilter}
-                caseStatsBreakdown={caseStatsBreakdown}
-                caseClientTypeFilter={caseClientTypeFilter}
-                setCaseClientTypeFilter={setCaseClientTypeFilter}
-                caseTypeFilter={caseTypeFilter}
-                setCaseTypeFilter={setCaseTypeFilter}
-                resetAllCaseFilters={resetAllCaseFilters}
-                uniqueCaseTypes={uniqueCaseTypes}
-                uniqueEmirates={uniqueEmirates}
-                caseEmirateFilter={caseEmirateFilter}
-                setCaseEmirateFilter={setCaseEmirateFilter}
-                caseClientFilter={caseClientFilter}
-                setCaseClientFilter={setCaseClientFilter}
-                uniqueCaseClients={uniqueCaseClients}
-                caseYearFilter={caseYearFilter}
-                setCaseYearFilter={setCaseYearFilter}
-                uniqueCaseYears={uniqueCaseYears}
-                caseSortBy={caseSortBy}
-                setCaseSortBy={setCaseSortBy}
-                caseCourtFilter={caseCourtFilter}
-                setCaseCourtFilter={setCaseCourtFilter}
-                uniqueCourts={uniqueCourts}
-                q={q}
-                setQ={setQ}
-                caseJudgeFilter={caseJudgeFilter}
-                setCaseJudgeFilter={setCaseJudgeFilter}
-                uniqueJudges={uniqueJudges}
-                clientName={clientName}
-                setCaseView={setCaseView}
-                setEditingCase={setEditingCase}
-                setForm={setForm}
-                setModal={setModal}
-                requestDelete={requestDelete}
-                logAuditAction={logAuditAction}
-                setCases={setCases}
-              />
-            )}
+                {/* ================= القضايا ================= */}
+                {tab === "cases" && !caseView && (
+                  <CasesListView
+                    filteredCases={filteredCases}
+                    cases={cases}
+                    showCaseStatsOnDemand={showCaseStatsOnDemand}
+                    setShowCaseStatsOnDemand={setShowCaseStatsOnDemand}
+                    showAdvancedFilters={showAdvancedFilters}
+                    setShowAdvancedFilters={setShowAdvancedFilters}
+                    activeFiltersCount={activeFiltersCount}
+                    handleDeduplicateCasesManual={handleDeduplicateCasesManual}
+                    setShowCasesExcelModal={setShowCasesExcelModal}
+                    openModalWithCheck={openModalWithCheck}
+                    caseFilter={caseFilter}
+                    setCaseFilter={setCaseFilter}
+                    caseStageFilter={caseStageFilter}
+                    setCaseStageFilter={setCaseStageFilter}
+                    caseStatsBreakdown={caseStatsBreakdown}
+                    caseClientTypeFilter={caseClientTypeFilter}
+                    setCaseClientTypeFilter={setCaseClientTypeFilter}
+                    caseTypeFilter={caseTypeFilter}
+                    setCaseTypeFilter={setCaseTypeFilter}
+                    resetAllCaseFilters={resetAllCaseFilters}
+                    uniqueCaseTypes={uniqueCaseTypes}
+                    uniqueEmirates={uniqueEmirates}
+                    caseEmirateFilter={caseEmirateFilter}
+                    setCaseEmirateFilter={setCaseEmirateFilter}
+                    caseClientFilter={caseClientFilter}
+                    setCaseClientFilter={setCaseClientFilter}
+                    uniqueCaseClients={uniqueCaseClients}
+                    caseYearFilter={caseYearFilter}
+                    setCaseYearFilter={setCaseYearFilter}
+                    uniqueCaseYears={uniqueCaseYears}
+                    caseSortBy={caseSortBy}
+                    setCaseSortBy={setCaseSortBy}
+                    caseCourtFilter={caseCourtFilter}
+                    setCaseCourtFilter={setCaseCourtFilter}
+                    uniqueCourts={uniqueCourts}
+                    q={q}
+                    setQ={setQ}
+                    caseJudgeFilter={caseJudgeFilter}
+                    setCaseJudgeFilter={setCaseJudgeFilter}
+                    uniqueJudges={uniqueJudges}
+                    clientName={clientName}
+                    setCaseView={setCaseView}
+                    setEditingCase={setEditingCase}
+                    setForm={setForm}
+                    setModal={setModal}
+                    requestDelete={requestDelete}
+                    logAuditAction={logAuditAction}
+                    setCases={setCases}
+                  />
+                )}
 
-            {/* ----- تفاصيل قضية ----- */}
-            {tab === "cases" && selectedCase && (
-              <CaseDetailView
-                selectedCase={selectedCase}
-                setCaseView={setCaseView}
-                userPerms={userPerms}
-                setEditingCase={setEditingCase}
-                setForm={setForm}
-                setModal={setModal}
-                logAuditAction={logAuditAction}
-                cases={cases}
-                setCases={setCases}
-                clientName={clientName}
-                canViewFinancials={canViewFinancials}
-              />
-            )}
+                {/* ----- تفاصيل قضية ----- */}
+                {tab === "cases" && selectedCase && (
+                  <CaseDetailView
+                    selectedCase={selectedCase}
+                    setCaseView={setCaseView}
+                    userPerms={userPerms}
+                    setEditingCase={setEditingCase}
+                    setForm={setForm}
+                    setModal={setModal}
+                    logAuditAction={logAuditAction}
+                    cases={cases}
+                    setCases={setCases}
+                    clientName={clientName}
+                    canViewFinancials={canViewFinancials}
+                  />
+                )}
 
-            {/* ================= الموكلين ================= */}
-            {tab === "clients" && (
-              <ClientsView
-                clientToast={clientToast}
-                setClientToast={setClientToast}
-                openModalWithCheck={openModalWithCheck}
-                clients={clients}
-                clientCategoryFilter={clientCategoryFilter}
-                setClientCategoryFilter={setClientCategoryFilter}
-                clientSearch={clientSearch}
-                setClientSearch={setClientSearch}
-                filteredClientsList={filteredClientsList}
-                cases={cases}
-                setEditingClient={setEditingClient}
-                deleteClient={deleteClient}
-                moveClientCategory={moveClientCategory}
-                setTab={setTab}
-                setQ={setQ}
-                editingClient={editingClient}
-                saveEditClient={saveEditClient}
-              />
-            )}
+                {/* ================= الموكلين ================= */}
+                {tab === "clients" && (
+                  <ClientsView
+                    clientToast={clientToast}
+                    setClientToast={setClientToast}
+                    openModalWithCheck={openModalWithCheck}
+                    clients={clients}
+                    clientCategoryFilter={clientCategoryFilter}
+                    setClientCategoryFilter={setClientCategoryFilter}
+                    clientSearch={clientSearch}
+                    setClientSearch={setClientSearch}
+                    filteredClientsList={filteredClientsList}
+                    cases={cases}
+                    setEditingClient={setEditingClient}
+                    deleteClient={deleteClient}
+                    moveClientCategory={moveClientCategory}
+                    setTab={setTab}
+                    setQ={setQ}
+                    editingClient={editingClient}
+                    saveEditClient={saveEditClient}
+                  />
+                )}
 
-            {/* ================= الجلسات والرول والمواعيد ================= */}
-            {tab === "hearings" && (
-              <HearingsView
-                hearingSubTab={hearingSubTab}
-                setHearingSubTab={setHearingSubTab}
-                deadlines={deadlines}
-                setDeadlines={setDeadlines}
-                setPermissionNotice={setPermissionNotice}
-                runAutoAppealDeadlineChecker={runAutoAppealDeadlineChecker}
-                autoCheckStatus={autoCheckStatus}
-                openModalWithCheck={openModalWithCheck}
-                deadlineFilter={deadlineFilter}
-                setDeadlineFilter={setDeadlineFilter}
-                cases={cases}
-                clientName={clientName}
-                setReassignDeadlineModal={setReassignDeadlineModal}
-                handleSendWhatsAppDeadlineAlert={handleSendWhatsAppDeadlineAlert}
-                openNotificationComposer={openNotificationComposer}
-                setSelectedDeadlineLogs={setSelectedDeadlineLogs}
-                setShowGoogleCalendarModal={setShowGoogleCalendarModal}
-                googleUser={googleUser}
-                setReport={setReport}
-                selectedRollDate={selectedRollDate}
-                rollCourtFilter={rollCourtFilter}
-                setSelectedRollDate={setSelectedRollDate}
-                setRollCourtFilter={setRollCourtFilter}
-                hearings={hearings}
-                setHearings={setHearings}
-                caseNo={caseNo}
-                setNotifyModal={setNotifyModal}
-                handleSingleHearingGoogleSync={handleSingleHearingGoogleSync}
-                checkPerm={checkPerm}
-                requestDelete={requestDelete}
-                logAuditAction={logAuditAction}
-              />
-            )}
+                {/* ================= الجلسات والرول والمواعيد ================= */}
+                {tab === "hearings" && (
+                  <HearingsView
+                    hearingSubTab={hearingSubTab}
+                    setHearingSubTab={setHearingSubTab}
+                    deadlines={deadlines}
+                    setDeadlines={setDeadlines}
+                    setPermissionNotice={setPermissionNotice}
+                    runAutoAppealDeadlineChecker={runAutoAppealDeadlineChecker}
+                    autoCheckStatus={autoCheckStatus}
+                    openModalWithCheck={openModalWithCheck}
+                    deadlineFilter={deadlineFilter}
+                    setDeadlineFilter={setDeadlineFilter}
+                    cases={cases}
+                    clientName={clientName}
+                    setReassignDeadlineModal={setReassignDeadlineModal}
+                    handleSendWhatsAppDeadlineAlert={handleSendWhatsAppDeadlineAlert}
+                    openNotificationComposer={openNotificationComposer}
+                    setSelectedDeadlineLogs={setSelectedDeadlineLogs}
+                    setShowGoogleCalendarModal={setShowGoogleCalendarModal}
+                    googleUser={googleUser}
+                    setReport={setReport}
+                    selectedRollDate={selectedRollDate}
+                    rollCourtFilter={rollCourtFilter}
+                    setSelectedRollDate={setSelectedRollDate}
+                    setRollCourtFilter={setRollCourtFilter}
+                    hearings={hearings}
+                    setHearings={setHearings}
+                    caseNo={caseNo}
+                    setNotifyModal={setNotifyModal}
+                    handleSingleHearingGoogleSync={handleSingleHearingGoogleSync}
+                    checkPerm={checkPerm}
+                    requestDelete={requestDelete}
+                    logAuditAction={logAuditAction}
+                  />
+                )}
 
-            {/* ================= المهام ================= */}
-            {tab === "tasks" && (
-              <TasksView
-                tasks={tasks}
-                setTasks={setTasks}
-                checkPerm={checkPerm}
-                openModalWithCheck={openModalWithCheck}
-                requestDelete={requestDelete}
-                logAuditAction={logAuditAction}
-                setPermissionNotice={setPermissionNotice}
-                saveStorage={saveStorage}
-              />
-            )}
+                {/* ================= المهام ================= */}
+                {tab === "tasks" && (
+                  <TasksView
+                    tasks={tasks}
+                    setTasks={setTasks}
+                    checkPerm={checkPerm}
+                    openModalWithCheck={openModalWithCheck}
+                    requestDelete={requestDelete}
+                    logAuditAction={logAuditAction}
+                    setPermissionNotice={setPermissionNotice}
+                    saveStorage={saveStorage}
+                  />
+                )}
 
-            {/* ================= البريد الإلكتروني المدمج In-App Email ================= */}
-            {tab === "inapp_email" && (
-              <InAppEmailView
-                emailConfig={emailConfig}
-                setEmailConfig={setEmailConfig}
-                inAppEmails={inAppEmails}
-                setInAppEmails={setInAppEmails}
-                selectedEmailId={selectedEmailId}
-                setSelectedEmailId={setSelectedEmailId}
-                emailFolder={emailFolder}
-                setEmailFolder={setEmailFolder}
-                emailSearch={emailSearch}
-                setEmailSearch={setEmailSearch}
-                showEmailSettingsModal={showEmailSettingsModal}
-                setShowEmailSettingsModal={setShowEmailSettingsModal}
-                showComposeEmail={showComposeEmail}
-                setShowComposeEmail={setShowComposeEmail}
-                composeTo={composeTo}
-                setComposeTo={setComposeTo}
-                composeSubject={composeSubject}
-                setComposeSubject={setComposeSubject}
-                composeBody={composeBody}
-                setComposeBody={setComposeBody}
-                composeAttachment={composeAttachment}
-                setComposeAttachment={setComposeAttachment}
-                testSmtpLoading={testSmtpLoading}
-                testSmtpResult={testSmtpResult}
-                setTestSmtpResult={setTestSmtpResult}
-                testInvoiceLoading={testInvoiceLoading}
-                testInvoiceRecipient={testInvoiceRecipient}
-                setTestInvoiceRecipient={setTestInvoiceRecipient}
-                testInvoiceResult={testInvoiceResult}
-                handleTestSmtpConnection={handleTestSmtpConnection}
-                handleSendTestInvoice={handleSendTestInvoice}
-                handleSaveEmailSettings={handleSaveEmailSettings}
-                handleSendInAppEmail={handleSendInAppEmail}
-                fetchSupabaseEmailMessages={fetchSupabaseEmailMessages}
-                requestDelete={requestDelete}
-                logAuditAction={logAuditAction}
-                saveStorage={saveStorage}
-                setPermissionNotice={setPermissionNotice}
-              />
-            )}
+                {/* ================= البريد الإلكتروني المدمج In-App Email ================= */}
+                {tab === "inapp_email" && (
+                  <InAppEmailView
+                    emailConfig={emailConfig}
+                    setEmailConfig={setEmailConfig}
+                    inAppEmails={inAppEmails}
+                    setInAppEmails={setInAppEmails}
+                    selectedEmailId={selectedEmailId}
+                    setSelectedEmailId={setSelectedEmailId}
+                    emailFolder={emailFolder}
+                    setEmailFolder={setEmailFolder}
+                    emailSearch={emailSearch}
+                    setEmailSearch={setEmailSearch}
+                    showEmailSettingsModal={showEmailSettingsModal}
+                    setShowEmailSettingsModal={setShowEmailSettingsModal}
+                    showComposeEmail={showComposeEmail}
+                    setShowComposeEmail={setShowComposeEmail}
+                    composeTo={composeTo}
+                    setComposeTo={setComposeTo}
+                    composeSubject={composeSubject}
+                    setComposeSubject={setComposeSubject}
+                    composeBody={composeBody}
+                    setComposeBody={setComposeBody}
+                    composeAttachment={composeAttachment}
+                    setComposeAttachment={setComposeAttachment}
+                    testSmtpLoading={testSmtpLoading}
+                    testSmtpResult={testSmtpResult}
+                    setTestSmtpResult={setTestSmtpResult}
+                    testInvoiceLoading={testInvoiceLoading}
+                    testInvoiceRecipient={testInvoiceRecipient}
+                    setTestInvoiceRecipient={setTestInvoiceRecipient}
+                    testInvoiceResult={testInvoiceResult}
+                    handleTestSmtpConnection={handleTestSmtpConnection}
+                    handleSendTestInvoice={handleSendTestInvoice}
+                    handleSaveEmailSettings={handleSaveEmailSettings}
+                    handleSendInAppEmail={handleSendInAppEmail}
+                    fetchSupabaseEmailMessages={fetchSupabaseEmailMessages}
+                    requestDelete={requestDelete}
+                    logAuditAction={logAuditAction}
+                    saveStorage={saveStorage}
+                    setPermissionNotice={setPermissionNotice}
+                  />
+                )}
 
-            {/* ================= واتساب المكتب المدمج WhatsApp Office ================= */}
-            {tab === "whatsapp_office" && (
-              <WhatsappOfficeView
-                isSuperAdmin={isSuperAdmin}
-                currentUser={currentUser}
-                fetchSupabaseWhatsAppMessages={fetchSupabaseWhatsAppMessages}
-                setShowNewWaChatModal={setShowNewWaChatModal}
-                waChats={waChats}
-                setWaChats={setWaChats}
-                waSearchTerm={waSearchTerm}
-                setWaSearchTerm={setWaSearchTerm}
-                selectedWaChatId={selectedWaChatId}
-                setSelectedWaChatId={setSelectedWaChatId}
-                waInputText={waInputText}
-                setWaInputText={setWaInputText}
-                handleSendWaMessage={handleSendWaMessage}
-              />
-            )}
+                {/* ================= واتساب المكتب المدمج WhatsApp Office ================= */}
+                {tab === "whatsapp_office" && (
+                  <WhatsappOfficeView
+                    isSuperAdmin={isSuperAdmin}
+                    currentUser={currentUser}
+                    fetchSupabaseWhatsAppMessages={fetchSupabaseWhatsAppMessages}
+                    setShowNewWaChatModal={setShowNewWaChatModal}
+                    waChats={waChats}
+                    setWaChats={setWaChats}
+                    waSearchTerm={waSearchTerm}
+                    setWaSearchTerm={setWaSearchTerm}
+                    selectedWaChatId={selectedWaChatId}
+                    setSelectedWaChatId={setSelectedWaChatId}
+                    waInputText={waInputText}
+                    setWaInputText={setWaInputText}
+                    handleSendWaMessage={handleSendWaMessage}
+                  />
+                )}
 
-            {/* مودال إنشاء محادثة جديدة */}
-            {showNewWaChatModal && (
-              <Modal title="بدء محادثة واتساب جديدة" onClose={() => setShowNewWaChatModal(false)}>
-                <div className="space-y-4 text-sm">
-                  <Field label="اسم العميل / الموكل">
-                    <input
-                      type="text"
-                      value={newWaName}
-                      onChange={(e) => setNewWaName(e.target.value)}
-                      placeholder="مثال: أستاذ أحمد علي المنصوري"
-                      className={inputCls}
-                    />
-                  </Field>
-
-                  <Field label="رقم هاتف الواتساب (مع الرمز الدولي)">
-                    <input
-                      type="text"
-                      value={newWaPhone}
-                      onChange={(e) => setNewWaPhone(e.target.value)}
-                      placeholder="+971501234567"
-                      className={inputCls}
-                    />
-                  </Field>
-
-                  <button
-                    onClick={() => {
-                      if (!newWaPhone.trim()) {
-                        alert("يرجى إدخال رقم الهاتف أولاً");
-                        return;
-                      }
-                      handleStartNewWaChat(newWaName, newWaPhone);
-                      setNewWaName("");
-                      setNewWaPhone("");
-                      setShowNewWaChatModal(false);
-                    }}
-                    className="w-full rounded-xl bg-emerald-600 py-3 font-bold text-white hover:bg-emerald-700 transition flex items-center justify-center gap-2"
+                {/* مودال إنشاء محادثة جديدة */}
+                {showNewWaChatModal && (
+                  <Modal
+                    title="بدء محادثة واتساب جديدة"
+                    onClose={() => setShowNewWaChatModal(false)}
                   >
-                    <Send size={16} /> فتح شاشة المحادثة المباشرة
-                  </button>
-                </div>
-              </Modal>
-            )}
+                    <div className="space-y-4 text-sm">
+                      <Field label="اسم العميل / الموكل">
+                        <input
+                          type="text"
+                          value={newWaName}
+                          onChange={(e) => setNewWaName(e.target.value)}
+                          placeholder="مثال: أستاذ أحمد علي المنصوري"
+                          className={inputCls}
+                        />
+                      </Field>
 
-            {/* ================= النظام المالي والأتعاب والضريبة ================= */}
-            {tab === "invoices" && (
-              <InvoicesView
-                canViewFinancials={canViewFinancials}
-                currentUser={currentUser}
-                invoiceSubTab={invoiceSubTab}
-                setInvoiceSubTab={setInvoiceSubTab}
-                payments={payments}
-                setPayments={setPayments}
-                feeAgreements={feeAgreements}
-                clients={clients}
-                openModalWithCheck={openModalWithCheck}
-                requestDelete={requestDelete}
-                logAuditAction={logAuditAction}
-                getPaidForAgreement={getPaidForAgreement}
-                getRemainingForAgreement={getRemainingForAgreement}
-                isAgreementFullyPaid={isAgreementFullyPaid}
-                setForm={setForm}
-                checkPerm={checkPerm}
-                officeAgreements={officeAgreements}
-                setDeleteAgrConfirm={setDeleteAgrConfirm}
-                setShowInvoiceImportModal={setShowInvoiceImportModal}
-                invoices={invoices}
-                setInvoices={setInvoices}
-                clientName={clientName}
-                setInvoiceStatus={setInvoiceStatus}
-                openNotificationComposer={openNotificationComposer}
-                setReport={setReport}
-                timeLogs={timeLogs}
-                cases={cases}
-                convertTimeToInvoice={convertTimeToInvoice}
-                trustTransactions={trustTransactions}
-                caseNo={caseNo}
-                caseExpenses={caseExpenses}
-              />
-            )}
+                      <Field label="رقم هاتف الواتساب (مع الرمز الدولي)">
+                        <input
+                          type="text"
+                          value={newWaPhone}
+                          onChange={(e) => setNewWaPhone(e.target.value)}
+                          placeholder="+971501234567"
+                          className={inputCls}
+                        />
+                      </Field>
 
-{tab === "office_agreement" && (
-              <OfficeAgreementView
-                setShowAgreementAiUploadModal={setShowAgreementAiUploadModal}
-                agrForm={agrForm}
-                setAgr={setAgr}
-                clients={clients}
-                addAgrInst={addAgrInst}
-                setAgrInst={setAgrInst}
-                removeAgrInst={removeAgrInst}
-                agrTotal={agrTotal}
-                saveOfficeAgreement={saveOfficeAgreement}
-                officeAgreements={officeAgreements}
-                setAgrPreviewId={setAgrPreviewId}
-                checkPerm={checkPerm}
-                setDeleteAgrConfirm={setDeleteAgrConfirm}
-              />
-            )}
-
-            {/* ================= المستندات ومولد المذكرات ================= */}
-            {tab === "docs" && (
-              <DocsView
-                docSubTab={docSubTab}
-                setDocSubTab={setDocSubTab}
-                canManageLetterhead={canManageLetterhead}
-                canUseSignatureStamp={canUseSignatureStamp}
-                letterhead={letterhead}
-                logAuditAction={logAuditAction}
-                currentUser={currentUser}
-                selectedTemplateId={selectedTemplateId}
-                setSelectedTemplateId={setSelectedTemplateId}
-                cases={cases}
-                selectedGenCaseId={selectedGenCaseId}
-                setSelectedGenCaseId={setSelectedGenCaseId}
-                clients={clients}
-                clientName={clientName}
-                docs={docs}
-                openModalWithCheck={openModalWithCheck}
-                requestDelete={requestDelete}
-                setDocs={setDocs}
-              />
-            )}
-
-            {/* ================= الهوية الرسمية والأختام (قسم محمي) ================= */}
-            {tab === "official_identity" && (
-              <OfficialIdentityView
-                canManageLetterhead={canManageLetterhead}
-                letterhead={letterhead}
-                updateLetterhead={updateLetterhead}
-                deriveHeaderFooterFromFullPage={deriveHeaderFooterFromFullPage}
-                logAuditAction={logAuditAction}
-                currentUser={currentUser}
-                auditLogs={auditLogs}
-              />
-            )}
-
-            {/* ================= الوكالات ================= */}
-            {tab === "poa" && (
-              <PoaView
-                poas={poas}
-                setPoas={setPoas}
-                clientName={clientName}
-                setShowPoaAiUploadModal={setShowPoaAiUploadModal}
-                openModalWithCheck={openModalWithCheck}
-                openNotificationComposer={openNotificationComposer}
-                requestDelete={requestDelete}
-                logAuditAction={logAuditAction}
-              />
-            )}
-
-            {/* ================= الزملاء المتعاونون وإنابات الحضور ================= */}
-            {tab === "colleagues" && (
-              <ColleaguesView
-                colleagues={colleagues}
-                colleagueDelegations={colleagueDelegations}
-                colleagueSubTab={colleagueSubTab}
-                setColleagueSubTab={setColleagueSubTab}
-                cases={cases}
-                openColleagueModal={openColleagueModal}
-                openIssueDelegationModal={openIssueDelegationModal}
-                deleteColleagueHandler={deleteColleagueHandler}
-                deleteDelegationHandler={deleteDelegationHandler}
-                setDelegationPreviewId={setDelegationPreviewId}
-              />
-            )}
-
-            {/* ================= اعرف عميلك KYC وعناية AML ================= */}
-            {tab === "kyc" && (
-              <KycView
-                kycSubTab={kycSubTab}
-                setKycSubTab={setKycSubTab}
-                kycWatchlist={kycWatchlist}
-                setKycWatchlist={setKycWatchlist}
-                strReports={strReports}
-                requestDelete={requestDelete}
-                uaeTerroristList={uaeTerroristList}
-                logAuditAction={logAuditAction}
-                saveStorage={saveStorage}
-                setShowKycWatchlistUploadModal={setShowKycWatchlistUploadModal}
-                kycTypeOptions={kycTypeOptions}
-                kycTypeFilter={kycTypeFilter}
-                setKycTypeFilter={setKycTypeFilter}
-                kycWatchlistSearch={kycWatchlistSearch}
-                setKycWatchlistSearch={setKycWatchlistSearch}
-                filteredKycWatchlist={filteredKycWatchlist}
-                openModalWithCheck={openModalWithCheck}
-                clientName={clientName}
-                kyc={kyc}
-                kycDue={kycDue}
-                setForm={setForm}
-                setModal={setModal}
-                openNotificationComposer={openNotificationComposer}
-                setReport={setReport}
-                setKyc={setKyc}
-              />
-            )}
-
-            {/* ================= سجل التدقيق والأنشطة (Audit Log) ================= */}
-            {tab === "audit_log" && (
-              <AuditLogView
-                filteredAuditLogs={filteredAuditLogs}
-                canViewAuditLog={canViewAuditLog}
-                auditLogs={auditLogs}
-                auditSearchTerm={auditSearchTerm}
-                setAuditSearchTerm={setAuditSearchTerm}
-                auditActionFilter={auditActionFilter}
-                setAuditActionFilter={setAuditActionFilter}
-                auditModuleFilter={auditModuleFilter}
-                setAuditModuleFilter={setAuditModuleFilter}
-                auditModuleOptions={auditModuleOptions}
-              />
-            )}
-
-            {/* ================= المبادئ والأحكام القضائية ================= */}
-            {tab === "precedents" && (
-              <PrecedentsView
-                setShowAddPrecedentModal={setShowAddPrecedentModal}
-                precedentSearch={precedentSearch}
-                setPrecedentSearch={setPrecedentSearch}
-                precedentCourtFilter={precedentCourtFilter}
-                setPrecedentCourtFilter={setPrecedentCourtFilter}
-                precedentCategoryFilter={precedentCategoryFilter}
-                setPrecedentCategoryFilter={setPrecedentCategoryFilter}
-                precedentYearFilter={precedentYearFilter}
-                setPrecedentYearFilter={setPrecedentYearFilter}
-                filteredPrecedents={filteredPrecedents}
-                setSelectedPrecedent={setSelectedPrecedent}
-                userPerms={userPerms}
-                deletePrecedent={deletePrecedent}
-              />
-            )}
-
-            {/* ================= السياسات الداخلية للمكتب ================= */}
-            {tab === "policies" && (
-              <PoliciesView
-                isSuperAdmin={isSuperAdmin}
-                openAddPolicy={openAddPolicy}
-                policySearch={policySearch}
-                setPolicySearch={setPolicySearch}
-                policyCategoryFilter={policyCategoryFilter}
-                setPolicyCategoryFilter={setPolicyCategoryFilter}
-                filteredPolicies={filteredPolicies}
-                policies={policies}
-                selectedPolicy={selectedPolicy}
-                setSelectedPolicy={setSelectedPolicy}
-                openEditPolicy={openEditPolicy}
-                handleDeletePolicy={handleDeletePolicy}
-              />
-            )}
-
-            {/* ================= المستخدمون والصلاحيات ================= */}
-            {tab === "users" && (
-              <UsersView
-                setShowBackupModal={setShowBackupModal}
-                checkPerm={checkPerm}
-                setEditingUser={setEditingUser}
-                setForm={setForm}
-                setModal={setModal}
-                isAiAssistantEnabled={isAiAssistantEnabled}
-                setIsAiAssistantEnabled={setIsAiAssistantEnabled}
-                isAdmin={isAdmin}
-                pendingUsers={pendingUsers}
-                approveUser={approveUser}
-                rejectUser={rejectUser}
-                currentUser={currentUser}
-                currentUserId={currentUserId}
-                users={users}
-                setCurrentUserId={setCurrentUserId}
-                logAuditAction={logAuditAction}
-                isSuperAdmin={isSuperAdmin}
-                handleDeleteUser={handleDeleteUser}
-                toggleUserPermission={toggleUserPermission}
-              />
-            )}
-
-            {/* ================= دليل المحاكم والجهات القضائية ================= */}
-            {tab === "courts_directory" && (
-              <CourtsDirectoryView
-                courtContacts={courtContacts}
-                setCourtContacts={setCourtContacts}
-                courtSearchQuery={courtSearchQuery}
-                setCourtSearchQuery={setCourtSearchQuery}
-                courtEmirateFilter={courtEmirateFilter}
-                setCourtEmirateFilter={setCourtEmirateFilter}
-                courtCategoryFilter={courtCategoryFilter}
-                setCourtCategoryFilter={setCourtCategoryFilter}
-                courtBranchFilter={courtBranchFilter}
-                setCourtBranchFilter={setCourtBranchFilter}
-                courtContactsFilterCache={courtContactsFilterCache}
-                courtFiltersExpanded={courtFiltersExpanded}
-                setCourtFiltersExpanded={setCourtFiltersExpanded}
-                courtExcelImportStatus={courtExcelImportStatus}
-                setCourtExcelImportStatus={setCourtExcelImportStatus}
-                downloadCourtContactsTemplate={downloadCourtContactsTemplate}
-                handleCourtExcelUpload={handleCourtExcelUpload}
-                requestDelete={requestDelete}
-                logAuditAction={logAuditAction}
-                setReport={setReport}
-                setEditingCourtContact={setEditingCourtContact}
-                setForm={setForm}
-                setModal={setModal}
-                sendWhatsAppMsg={sendWhatsAppMsg}
-                saveStorage={saveStorage}
-                seedCourtContacts={seedCourtContacts}
-              />
-            )}
-
-            {/* ================= الموظفون والكادر (HR) ================= */}
-            {tab === "employees" && (
-              <EmployeesView
-                setForm={setForm}
-                setModal={setModal}
-                isSuperAdmin={isSuperAdmin}
-                employees={employees}
-                leaveRequests={leaveRequests}
-                employeeExpenses={employeeExpenses}
-                hrSubTab={hrSubTab}
-                setHrSubTab={setHrSubTab}
-                disciplinaryActions={disciplinaryActions}
-                employeeSearchQuery={employeeSearchQuery}
-                setEmployeeSearchQuery={setEmployeeSearchQuery}
-                deleteEmployee={deleteEmployee}
-                updateLeaveStatus={updateLeaveStatus}
-                updateExpenseStatus={updateExpenseStatus}
-                deleteDisciplinaryAction={deleteDisciplinaryAction}
-                cases={cases}
-              />
-            )}
-
-            {/* ================= حجز استشارة مرئية والتعيين ================= */}
-            {tab === "booking_consultation" && (
-              <AdminConsultationsView
-                bookings={consultationBookings}
-                employees={users.map((u) => ({
-                  id: u.id,
-                  name: u.name,
-                  jobTitle: u.jobTitle || u.roleTitle || "محامي ومستشار"
-                }))}
-                onAssignLawyer={(bookingId, lawyerId, lawyerName) => {
-                  setConsultationBookings((prev) =>
-                    prev.map((b) =>
-                      b.id === bookingId
-                        ? {
-                            ...b,
-                            status: "assigned",
-                            assignedLawyerId: lawyerId,
-                            assignedLawyerName: lawyerName
+                      <button
+                        onClick={() => {
+                          if (!newWaPhone.trim()) {
+                            alert("يرجى إدخال رقم الهاتف أولاً");
+                            return;
                           }
-                        : b
-                    )
-                  );
-                  logAuditAction(
-                    "UPDATE",
-                    "استشارات مرئية",
-                    `تعيين محامٍ للطلب #${bookingId}`,
-                    `تم تحويل الاستشارة ورابط Google Meet إلى المحامي: ${lawyerName}`
-                  );
-                }}
-                onUpdateStatus={(bookingId, status) => {
-                  setConsultationBookings((prev) =>
-                    prev.map((b) => (b.id === bookingId ? { ...b, status } : b))
-                  );
-                }}
-                settings={consultationSettings}
-                onUpdateSettings={(newSettings) => {
-                  setConsultationSettings(newSettings);
-                  logAuditAction(
-                    "UPDATE",
-                    "استشارات مرئية",
-                    "تحديث إعدادات الأسعار والمواعيد",
-                    `تم تعديل أسعار المواعيد أونلاين (30د: ${newSettings.price30}درهم، 60د: ${newSettings.price60}درهم)`
-                  );
-                }}
-                onOpenPublicPage={() => setCurrentRoute("public_consultation")}
-              />
-            )}
+                          handleStartNewWaChat(newWaName, newWaPhone);
+                          setNewWaName("");
+                          setNewWaPhone("");
+                          setShowNewWaChatModal(false);
+                        }}
+                        className="w-full rounded-xl bg-emerald-600 py-3 font-bold text-white hover:bg-emerald-700 transition flex items-center justify-center gap-2"
+                      >
+                        <Send size={16} /> فتح شاشة المحادثة المباشرة
+                      </button>
+                    </div>
+                  </Modal>
+                )}
 
-            {(ACCOUNTING_MODULE_ENABLED || ACCOUNTING_TRIAL_USER_EMAILS.includes(currentUser?.email || "")) && tab === "accounting" && (
-              <AccountingModule
-                canManageAccounts={isSuperAdmin || Boolean(currentUser.permissions?.manageChartOfAccounts)}
-                canPostEntries={isSuperAdmin || Boolean(currentUser.permissions?.postJournalEntries)}
-                canDeleteEntries={isSuperAdmin || Boolean(currentUser.permissions?.deleteJournalEntries)}
-                canManageBankAccounts={isSuperAdmin || Boolean(currentUser.permissions?.manageBankAccounts)}
-                canRecordBankTransactions={isSuperAdmin || Boolean(currentUser.permissions?.recordBankTransactions)}
-                canDeleteBankTransactions={isSuperAdmin || Boolean(currentUser.permissions?.deleteBankTransactions)}
-                canManageSalesInvoices={isSuperAdmin || Boolean(currentUser.permissions?.manageSalesInvoices)}
-                canApproveSalesInvoices={isSuperAdmin || Boolean(currentUser.permissions?.approveSalesInvoices)}
-                canRecordSalesPayments={isSuperAdmin || Boolean(currentUser.permissions?.recordSalesPayments)}
-                canDeleteSalesInvoices={isSuperAdmin || Boolean(currentUser.permissions?.deleteSalesInvoices)}
-                canManageVendors={isSuperAdmin || Boolean(currentUser.permissions?.manageVendors)}
-                canDeleteVendors={isSuperAdmin || Boolean(currentUser.permissions?.deleteVendors)}
-                canManagePurchaseInvoices={isSuperAdmin || Boolean(currentUser.permissions?.managePurchaseInvoices)}
-                canApprovePurchaseInvoices={isSuperAdmin || Boolean(currentUser.permissions?.approvePurchaseInvoices)}
-                canRecordPurchasePayments={isSuperAdmin || Boolean(currentUser.permissions?.recordPurchasePayments)}
-                canDeletePurchaseInvoices={isSuperAdmin || Boolean(currentUser.permissions?.deletePurchaseInvoices)}
-                canManageFixedAssets={isSuperAdmin || Boolean(currentUser.permissions?.manageFixedAssets)}
-                canRunDepreciation={isSuperAdmin || Boolean(currentUser.permissions?.runDepreciation)}
-                canDeleteFixedAssets={isSuperAdmin || Boolean(currentUser.permissions?.deleteFixedAssets)}
-                canManagePayrollEmployees={isSuperAdmin || Boolean(currentUser.permissions?.managePayrollEmployees)}
-                canDeletePayrollEmployees={isSuperAdmin || Boolean(currentUser.permissions?.deletePayrollEmployees)}
-                canRunPayroll={isSuperAdmin || Boolean(currentUser.permissions?.runPayroll)}
-                canRecordPayrollPayments={isSuperAdmin || Boolean(currentUser.permissions?.recordPayrollPayments)}
-                currentUserName={currentUser.name}
-                letterheadHeaderImg={letterhead.headerImg}
-                letterheadFooterImg={letterhead.footerImg}
-              />
-            )}
-          </>
-        )}
+                {/* ================= النظام المالي والأتعاب والضريبة ================= */}
+                {tab === "invoices" && (
+                  <InvoicesView
+                    canViewFinancials={canViewFinancials}
+                    currentUser={currentUser}
+                    invoiceSubTab={invoiceSubTab}
+                    setInvoiceSubTab={setInvoiceSubTab}
+                    payments={payments}
+                    setPayments={setPayments}
+                    feeAgreements={feeAgreements}
+                    clients={clients}
+                    openModalWithCheck={openModalWithCheck}
+                    requestDelete={requestDelete}
+                    logAuditAction={logAuditAction}
+                    getPaidForAgreement={getPaidForAgreement}
+                    getRemainingForAgreement={getRemainingForAgreement}
+                    isAgreementFullyPaid={isAgreementFullyPaid}
+                    setForm={setForm}
+                    checkPerm={checkPerm}
+                    officeAgreements={officeAgreements}
+                    setDeleteAgrConfirm={setDeleteAgrConfirm}
+                    setShowInvoiceImportModal={setShowInvoiceImportModal}
+                    invoices={invoices}
+                    setInvoices={setInvoices}
+                    clientName={clientName}
+                    setInvoiceStatus={setInvoiceStatus}
+                    openNotificationComposer={openNotificationComposer}
+                    setReport={setReport}
+                    timeLogs={timeLogs}
+                    cases={cases}
+                    convertTimeToInvoice={convertTimeToInvoice}
+                    trustTransactions={trustTransactions}
+                    caseNo={caseNo}
+                    caseExpenses={caseExpenses}
+                  />
+                )}
 
+                {tab === "office_agreement" && (
+                  <OfficeAgreementView
+                    setShowAgreementAiUploadModal={setShowAgreementAiUploadModal}
+                    agrForm={agrForm}
+                    setAgr={setAgr}
+                    clients={clients}
+                    addAgrInst={addAgrInst}
+                    setAgrInst={setAgrInst}
+                    removeAgrInst={removeAgrInst}
+                    agrTotal={agrTotal}
+                    saveOfficeAgreement={saveOfficeAgreement}
+                    officeAgreements={officeAgreements}
+                    setAgrPreviewId={setAgrPreviewId}
+                    checkPerm={checkPerm}
+                    setDeleteAgrConfirm={setDeleteAgrConfirm}
+                  />
+                )}
+
+                {/* ================= المستندات ومولد المذكرات ================= */}
+                {tab === "docs" && (
+                  <DocsView
+                    docSubTab={docSubTab}
+                    setDocSubTab={setDocSubTab}
+                    canManageLetterhead={canManageLetterhead}
+                    canUseSignatureStamp={canUseSignatureStamp}
+                    letterhead={letterhead}
+                    logAuditAction={logAuditAction}
+                    currentUser={currentUser}
+                    selectedTemplateId={selectedTemplateId}
+                    setSelectedTemplateId={setSelectedTemplateId}
+                    cases={cases}
+                    selectedGenCaseId={selectedGenCaseId}
+                    setSelectedGenCaseId={setSelectedGenCaseId}
+                    clients={clients}
+                    clientName={clientName}
+                    docs={docs}
+                    openModalWithCheck={openModalWithCheck}
+                    requestDelete={requestDelete}
+                    setDocs={setDocs}
+                  />
+                )}
+
+                {/* ================= الهوية الرسمية والأختام (قسم محمي) ================= */}
+                {tab === "official_identity" && (
+                  <OfficialIdentityView
+                    canManageLetterhead={canManageLetterhead}
+                    letterhead={letterhead}
+                    updateLetterhead={updateLetterhead}
+                    deriveHeaderFooterFromFullPage={deriveHeaderFooterFromFullPage}
+                    logAuditAction={logAuditAction}
+                    currentUser={currentUser}
+                    auditLogs={auditLogs}
+                  />
+                )}
+
+                {/* ================= الوكالات ================= */}
+                {tab === "poa" && (
+                  <PoaView
+                    poas={poas}
+                    setPoas={setPoas}
+                    clientName={clientName}
+                    setShowPoaAiUploadModal={setShowPoaAiUploadModal}
+                    openModalWithCheck={openModalWithCheck}
+                    openNotificationComposer={openNotificationComposer}
+                    requestDelete={requestDelete}
+                    logAuditAction={logAuditAction}
+                  />
+                )}
+
+                {/* ================= الزملاء المتعاونون وإنابات الحضور ================= */}
+                {tab === "colleagues" && (
+                  <ColleaguesView
+                    colleagues={colleagues}
+                    colleagueDelegations={colleagueDelegations}
+                    colleagueSubTab={colleagueSubTab}
+                    setColleagueSubTab={setColleagueSubTab}
+                    cases={cases}
+                    openColleagueModal={openColleagueModal}
+                    openIssueDelegationModal={openIssueDelegationModal}
+                    deleteColleagueHandler={deleteColleagueHandler}
+                    deleteDelegationHandler={deleteDelegationHandler}
+                    setDelegationPreviewId={setDelegationPreviewId}
+                  />
+                )}
+
+                {/* ================= اعرف عميلك KYC وعناية AML ================= */}
+                {tab === "kyc" && (
+                  <KycView
+                    kycSubTab={kycSubTab}
+                    setKycSubTab={setKycSubTab}
+                    kycWatchlist={kycWatchlist}
+                    setKycWatchlist={setKycWatchlist}
+                    strReports={strReports}
+                    requestDelete={requestDelete}
+                    uaeTerroristList={uaeTerroristList}
+                    logAuditAction={logAuditAction}
+                    saveStorage={saveStorage}
+                    setShowKycWatchlistUploadModal={setShowKycWatchlistUploadModal}
+                    kycTypeOptions={kycTypeOptions}
+                    kycTypeFilter={kycTypeFilter}
+                    setKycTypeFilter={setKycTypeFilter}
+                    kycWatchlistSearch={kycWatchlistSearch}
+                    setKycWatchlistSearch={setKycWatchlistSearch}
+                    filteredKycWatchlist={filteredKycWatchlist}
+                    openModalWithCheck={openModalWithCheck}
+                    clientName={clientName}
+                    kyc={kyc}
+                    kycDue={kycDue}
+                    setForm={setForm}
+                    setModal={setModal}
+                    openNotificationComposer={openNotificationComposer}
+                    setReport={setReport}
+                    setKyc={setKyc}
+                  />
+                )}
+
+                {/* ================= سجل التدقيق والأنشطة (Audit Log) ================= */}
+                {tab === "audit_log" && (
+                  <AuditLogView
+                    filteredAuditLogs={filteredAuditLogs}
+                    canViewAuditLog={canViewAuditLog}
+                    auditLogs={auditLogs}
+                    auditSearchTerm={auditSearchTerm}
+                    setAuditSearchTerm={setAuditSearchTerm}
+                    auditActionFilter={auditActionFilter}
+                    setAuditActionFilter={setAuditActionFilter}
+                    auditModuleFilter={auditModuleFilter}
+                    setAuditModuleFilter={setAuditModuleFilter}
+                    auditModuleOptions={auditModuleOptions}
+                  />
+                )}
+
+                {/* ================= المبادئ والأحكام القضائية ================= */}
+                {tab === "precedents" && (
+                  <PrecedentsView
+                    setShowAddPrecedentModal={setShowAddPrecedentModal}
+                    precedentSearch={precedentSearch}
+                    setPrecedentSearch={setPrecedentSearch}
+                    precedentCourtFilter={precedentCourtFilter}
+                    setPrecedentCourtFilter={setPrecedentCourtFilter}
+                    precedentCategoryFilter={precedentCategoryFilter}
+                    setPrecedentCategoryFilter={setPrecedentCategoryFilter}
+                    precedentYearFilter={precedentYearFilter}
+                    setPrecedentYearFilter={setPrecedentYearFilter}
+                    filteredPrecedents={filteredPrecedents}
+                    setSelectedPrecedent={setSelectedPrecedent}
+                    userPerms={userPerms}
+                    deletePrecedent={deletePrecedent}
+                  />
+                )}
+
+                {/* ================= السياسات الداخلية للمكتب ================= */}
+                {tab === "policies" && (
+                  <PoliciesView
+                    isSuperAdmin={isSuperAdmin}
+                    openAddPolicy={openAddPolicy}
+                    policySearch={policySearch}
+                    setPolicySearch={setPolicySearch}
+                    policyCategoryFilter={policyCategoryFilter}
+                    setPolicyCategoryFilter={setPolicyCategoryFilter}
+                    filteredPolicies={filteredPolicies}
+                    policies={policies}
+                    selectedPolicy={selectedPolicy}
+                    setSelectedPolicy={setSelectedPolicy}
+                    openEditPolicy={openEditPolicy}
+                    handleDeletePolicy={handleDeletePolicy}
+                  />
+                )}
+
+                {/* ================= المستخدمون والصلاحيات ================= */}
+                {tab === "users" && (
+                  <UsersView
+                    setShowBackupModal={setShowBackupModal}
+                    checkPerm={checkPerm}
+                    setEditingUser={setEditingUser}
+                    setForm={setForm}
+                    setModal={setModal}
+                    isAiAssistantEnabled={isAiAssistantEnabled}
+                    setIsAiAssistantEnabled={setIsAiAssistantEnabled}
+                    isAdmin={isAdmin}
+                    pendingUsers={pendingUsers}
+                    approveUser={approveUser}
+                    rejectUser={rejectUser}
+                    currentUser={currentUser}
+                    currentUserId={currentUserId}
+                    users={users}
+                    setCurrentUserId={setCurrentUserId}
+                    logAuditAction={logAuditAction}
+                    isSuperAdmin={isSuperAdmin}
+                    handleDeleteUser={handleDeleteUser}
+                    toggleUserPermission={toggleUserPermission}
+                  />
+                )}
+
+                {/* ================= دليل المحاكم والجهات القضائية ================= */}
+                {tab === "courts_directory" && (
+                  <CourtsDirectoryView
+                    courtContacts={courtContacts}
+                    setCourtContacts={setCourtContacts}
+                    courtSearchQuery={courtSearchQuery}
+                    setCourtSearchQuery={setCourtSearchQuery}
+                    courtEmirateFilter={courtEmirateFilter}
+                    setCourtEmirateFilter={setCourtEmirateFilter}
+                    courtCategoryFilter={courtCategoryFilter}
+                    setCourtCategoryFilter={setCourtCategoryFilter}
+                    courtBranchFilter={courtBranchFilter}
+                    setCourtBranchFilter={setCourtBranchFilter}
+                    courtContactsFilterCache={courtContactsFilterCache}
+                    courtFiltersExpanded={courtFiltersExpanded}
+                    setCourtFiltersExpanded={setCourtFiltersExpanded}
+                    courtExcelImportStatus={courtExcelImportStatus}
+                    setCourtExcelImportStatus={setCourtExcelImportStatus}
+                    downloadCourtContactsTemplate={downloadCourtContactsTemplate}
+                    handleCourtExcelUpload={handleCourtExcelUpload}
+                    requestDelete={requestDelete}
+                    logAuditAction={logAuditAction}
+                    setReport={setReport}
+                    setEditingCourtContact={setEditingCourtContact}
+                    setForm={setForm}
+                    setModal={setModal}
+                    sendWhatsAppMsg={sendWhatsAppMsg}
+                    saveStorage={saveStorage}
+                    seedCourtContacts={seedCourtContacts}
+                  />
+                )}
+
+                {/* ================= الموظفون والكادر (HR) ================= */}
+                {tab === "employees" && (
+                  <EmployeesView
+                    setForm={setForm}
+                    setModal={setModal}
+                    isSuperAdmin={isSuperAdmin}
+                    employees={employees}
+                    leaveRequests={leaveRequests}
+                    employeeExpenses={employeeExpenses}
+                    hrSubTab={hrSubTab}
+                    setHrSubTab={setHrSubTab}
+                    disciplinaryActions={disciplinaryActions}
+                    employeeSearchQuery={employeeSearchQuery}
+                    setEmployeeSearchQuery={setEmployeeSearchQuery}
+                    deleteEmployee={deleteEmployee}
+                    updateLeaveStatus={updateLeaveStatus}
+                    updateExpenseStatus={updateExpenseStatus}
+                    deleteDisciplinaryAction={deleteDisciplinaryAction}
+                    cases={cases}
+                  />
+                )}
+
+                {/* ================= حجز استشارة مرئية والتعيين ================= */}
+                {tab === "booking_consultation" && (
+                  <AdminConsultationsView
+                    bookings={consultationBookings}
+                    employees={users.map((u) => ({
+                      id: u.id,
+                      name: u.name,
+                      jobTitle: u.jobTitle || u.roleTitle || "محامي ومستشار",
+                    }))}
+                    onAssignLawyer={(bookingId, lawyerId, lawyerName) => {
+                      setConsultationBookings((prev) =>
+                        prev.map((b) =>
+                          b.id === bookingId
+                            ? {
+                                ...b,
+                                status: "assigned",
+                                assignedLawyerId: lawyerId,
+                                assignedLawyerName: lawyerName,
+                              }
+                            : b,
+                        ),
+                      );
+                      logAuditAction(
+                        "UPDATE",
+                        "استشارات مرئية",
+                        `تعيين محامٍ للطلب #${bookingId}`,
+                        `تم تحويل الاستشارة ورابط Google Meet إلى المحامي: ${lawyerName}`,
+                      );
+                    }}
+                    onUpdateStatus={(bookingId, status) => {
+                      setConsultationBookings((prev) =>
+                        prev.map((b) => (b.id === bookingId ? { ...b, status } : b)),
+                      );
+                    }}
+                    settings={consultationSettings}
+                    onUpdateSettings={(newSettings) => {
+                      setConsultationSettings(newSettings);
+                      logAuditAction(
+                        "UPDATE",
+                        "استشارات مرئية",
+                        "تحديث إعدادات الأسعار والمواعيد",
+                        `تم تعديل أسعار المواعيد أونلاين (30د: ${newSettings.price30}درهم، 60د: ${newSettings.price60}درهم)`,
+                      );
+                    }}
+                    onOpenPublicPage={() => setCurrentRoute("public_consultation")}
+                  />
+                )}
+
+                {(ACCOUNTING_MODULE_ENABLED ||
+                  ACCOUNTING_TRIAL_USER_EMAILS.includes(currentUser?.email || "")) &&
+                  tab === "accounting" && (
+                    <AccountingModule
+                      canManageAccounts={
+                        isSuperAdmin || Boolean(currentUser.permissions?.manageChartOfAccounts)
+                      }
+                      canPostEntries={
+                        isSuperAdmin || Boolean(currentUser.permissions?.postJournalEntries)
+                      }
+                      canDeleteEntries={
+                        isSuperAdmin || Boolean(currentUser.permissions?.deleteJournalEntries)
+                      }
+                      canManageBankAccounts={
+                        isSuperAdmin || Boolean(currentUser.permissions?.manageBankAccounts)
+                      }
+                      canRecordBankTransactions={
+                        isSuperAdmin || Boolean(currentUser.permissions?.recordBankTransactions)
+                      }
+                      canDeleteBankTransactions={
+                        isSuperAdmin || Boolean(currentUser.permissions?.deleteBankTransactions)
+                      }
+                      canManageSalesInvoices={
+                        isSuperAdmin || Boolean(currentUser.permissions?.manageSalesInvoices)
+                      }
+                      canApproveSalesInvoices={
+                        isSuperAdmin || Boolean(currentUser.permissions?.approveSalesInvoices)
+                      }
+                      canRecordSalesPayments={
+                        isSuperAdmin || Boolean(currentUser.permissions?.recordSalesPayments)
+                      }
+                      canDeleteSalesInvoices={
+                        isSuperAdmin || Boolean(currentUser.permissions?.deleteSalesInvoices)
+                      }
+                      canManageVendors={
+                        isSuperAdmin || Boolean(currentUser.permissions?.manageVendors)
+                      }
+                      canDeleteVendors={
+                        isSuperAdmin || Boolean(currentUser.permissions?.deleteVendors)
+                      }
+                      canManagePurchaseInvoices={
+                        isSuperAdmin || Boolean(currentUser.permissions?.managePurchaseInvoices)
+                      }
+                      canApprovePurchaseInvoices={
+                        isSuperAdmin || Boolean(currentUser.permissions?.approvePurchaseInvoices)
+                      }
+                      canRecordPurchasePayments={
+                        isSuperAdmin || Boolean(currentUser.permissions?.recordPurchasePayments)
+                      }
+                      canDeletePurchaseInvoices={
+                        isSuperAdmin || Boolean(currentUser.permissions?.deletePurchaseInvoices)
+                      }
+                      canManageFixedAssets={
+                        isSuperAdmin || Boolean(currentUser.permissions?.manageFixedAssets)
+                      }
+                      canRunDepreciation={
+                        isSuperAdmin || Boolean(currentUser.permissions?.runDepreciation)
+                      }
+                      canDeleteFixedAssets={
+                        isSuperAdmin || Boolean(currentUser.permissions?.deleteFixedAssets)
+                      }
+                      canManagePayrollEmployees={
+                        isSuperAdmin || Boolean(currentUser.permissions?.managePayrollEmployees)
+                      }
+                      canDeletePayrollEmployees={
+                        isSuperAdmin || Boolean(currentUser.permissions?.deletePayrollEmployees)
+                      }
+                      canRunPayroll={isSuperAdmin || Boolean(currentUser.permissions?.runPayroll)}
+                      canRecordPayrollPayments={
+                        isSuperAdmin || Boolean(currentUser.permissions?.recordPayrollPayments)
+                      }
+                      currentUserName={currentUser.name}
+                      letterheadHeaderImg={letterhead.headerImg}
+                      letterheadFooterImg={letterhead.footerImg}
+                    />
+                  )}
+              </>
+            )}
           </div>
         </main>
       </div>
 
       {/* ================= النوافذ المنبثقة ================= */}
       {modal === "case" && (
-        <Modal title={editingCase ? `تعديل بيانات القضية رقم ${editingCase.number}` : "قيد قضية جديدة"} onClose={() => { setModal(null); setEditingCase(null); }}>
+        <Modal
+          title={editingCase ? `تعديل بيانات القضية رقم ${editingCase.number}` : "قيد قضية جديدة"}
+          onClose={() => {
+            setModal(null);
+            setEditingCase(null);
+          }}
+        >
           <div className="space-y-4 text-sm">
             <Field label="رقم القضية لدى المحكمة">
-              <input value={form.number || ""} onChange={f("number")} placeholder="مثال: 1245/2026 تجاري كلي" className={inputCls} />
+              <input
+                value={form.number || ""}
+                onChange={f("number")}
+                placeholder="مثال: 1245/2026 تجاري كلي"
+                className={inputCls}
+              />
             </Field>
             <Field label="الموكل">
               <select value={form.clientId || ""} onChange={f("clientId")} className={inputCls}>
                 <option value="">اختر الموكل…</option>
-                {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="صفة الموكل في القضية (تُستخدم في مستندات الإنابة وغيرها)">
-              <input value={form.clientCapacity || ""} onChange={f("clientCapacity")} placeholder="مثال: مدعي / مدعى عليه / مستأنف / طالب التنفيذ" className={inputCls} />
+              <input
+                value={form.clientCapacity || ""}
+                onChange={f("clientCapacity")}
+                placeholder="مثال: مدعي / مدعى عليه / مستأنف / طالب التنفيذ"
+                className={inputCls}
+              />
             </Field>
 
             {/* قائمة الخصوم — تدعم إضافة أكثر من خصم واحد لنفس القضية */}
             <Field label="الخصوم (يمكن إضافة أكثر من خصم)">
               <div className="space-y-2">
-                {(form.opponents && form.opponents.length > 0 ? form.opponents : [""]).map((opp: string, idx: number) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <input
-                      value={opp}
-                      onChange={(e) => {
-                        const list = [...(form.opponents && form.opponents.length > 0 ? form.opponents : [""])];
-                        list[idx] = e.target.value;
-                        setForm((prev: any) => ({ ...prev, opponents: list }));
-                      }}
-                      placeholder="اسم المدعى عليه أو الخصم"
-                      className={inputCls}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const list = [...(form.opponents && form.opponents.length > 0 ? form.opponents : [""])];
-                        list.splice(idx, 1);
-                        setForm((prev: any) => ({ ...prev, opponents: list.length > 0 ? list : [""] }));
-                      }}
-                      className="shrink-0 p-2 rounded-lg text-red-500 hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
-                      disabled={(form.opponents || [""]).length <= 1}
-                      title="حذف هذا الخصم"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                ))}
+                {(form.opponents && form.opponents.length > 0 ? form.opponents : [""]).map(
+                  (opp: string, idx: number) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <input
+                        value={opp}
+                        onChange={(e) => {
+                          const list = [
+                            ...(form.opponents && form.opponents.length > 0
+                              ? form.opponents
+                              : [""]),
+                          ];
+                          list[idx] = e.target.value;
+                          setForm((prev: any) => ({ ...prev, opponents: list }));
+                        }}
+                        placeholder="اسم المدعى عليه أو الخصم"
+                        className={inputCls}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const list = [
+                            ...(form.opponents && form.opponents.length > 0
+                              ? form.opponents
+                              : [""]),
+                          ];
+                          list.splice(idx, 1);
+                          setForm((prev: any) => ({
+                            ...prev,
+                            opponents: list.length > 0 ? list : [""],
+                          }));
+                        }}
+                        className="shrink-0 p-2 rounded-lg text-red-500 hover:bg-red-50 disabled:opacity-30 disabled:cursor-not-allowed"
+                        disabled={(form.opponents || [""]).length <= 1}
+                        title="حذف هذا الخصم"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ),
+                )}
                 <button
                   type="button"
                   onClick={() => {
-                    const list = [...(form.opponents && form.opponents.length > 0 ? form.opponents : [""])];
+                    const list = [
+                      ...(form.opponents && form.opponents.length > 0 ? form.opponents : [""]),
+                    ];
                     list.push("");
                     setForm((prev: any) => ({ ...prev, opponents: list }));
                   }}
@@ -7110,60 +8869,115 @@ const activeFiltersCount = useMemo(() => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="مرحلة الدعوى (درجة التقاضي)">
-                <select value={form.stage || "الابتدائية"} onChange={f("stage")} className={inputCls}>
-                  {CASE_STAGES.map((st) => <option key={st} value={st}>{st}</option>)}
+                <select
+                  value={form.stage || "الابتدائية"}
+                  onChange={f("stage")}
+                  className={inputCls}
+                >
+                  {CASE_STAGES.map((st) => (
+                    <option key={st} value={st}>
+                      {st}
+                    </option>
+                  ))}
                 </select>
               </Field>
               <Field label="حالة القضية">
-                <select value={form.status || "متداولة"} onChange={f("status")} className={inputCls}>
-                  {CASE_STATUS.map((s) => <option key={s} value={s}>{s}</option>)}
+                <select
+                  value={form.status || "متداولة"}
+                  onChange={f("status")}
+                  className={inputCls}
+                >
+                  {CASE_STATUS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
                 </select>
               </Field>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Field label="نوع الدعوى">
-                <select value={form.type || CASE_TYPES[0]} onChange={f("type")} className={inputCls}>
-                  {CASE_TYPES.map((t) => <option key={t}>{t}</option>)}
+                <select
+                  value={form.type || CASE_TYPES[0]}
+                  onChange={f("type")}
+                  className={inputCls}
+                >
+                  {CASE_TYPES.map((t) => (
+                    <option key={t}>{t}</option>
+                  ))}
                 </select>
               </Field>
               <Field label="الإمارة">
                 <select value={form.emirate || ""} onChange={f("emirate")} className={inputCls}>
                   <option value="">اختر الإمارة...</option>
-                  {["أبوظبي", "دبي", "الشارقة", "عجمان", "أم القيوين", "رأس الخيمة", "الفجيرة"].map((e) => (
-                    <option key={e} value={e}>{e}</option>
-                  ))}
+                  {["أبوظبي", "دبي", "الشارقة", "عجمان", "أم القيوين", "رأس الخيمة", "الفجيرة"].map(
+                    (e) => (
+                      <option key={e} value={e}>
+                        {e}
+                      </option>
+                    ),
+                  )}
                 </select>
               </Field>
               <Field label="المحكمة المختصة">
                 <select value={form.court || COURTS[0]} onChange={f("court")} className={inputCls}>
-                  {COURTS.map((c) => <option key={c}>{c}</option>)}
+                  {COURTS.map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
                 </select>
               </Field>
             </div>
             <Field label="الدائرة القضائية / القاضي المشرف">
-              <input value={form.judge || ""} onChange={f("judge")} placeholder="مثال: دائرة الجنايات الأولى - القاضي محمد" className={inputCls} />
+              <input
+                value={form.judge || ""}
+                onChange={f("judge")}
+                placeholder="مثال: دائرة الجنايات الأولى - القاضي محمد"
+                className={inputCls}
+              />
             </Field>
             <Field label="موضوع الدعوى والطلبات">
-              <textarea value={form.subject || ""} onChange={f("subject")} rows={2} placeholder="ملخص وقائع الدعوى..." className={inputCls} />
+              <textarea
+                value={form.subject || ""}
+                onChange={f("subject")}
+                rows={2}
+                placeholder="ملخص وقائع الدعوى..."
+                className={inputCls}
+              />
             </Field>
             <Field label="تاريخ القيد (اختياري)">
-              <input type="date" value={form.openDate || ""} onChange={f("openDate")} className={inputCls} />
+              <input
+                type="date"
+                value={form.openDate || ""}
+                onChange={f("openDate")}
+                className={inputCls}
+              />
             </Field>
             {!editingCase && (
               <Field label="قالب المهام التلقائية (اختياري)">
                 <select onChange={f("taskTemplate")} className={inputCls}>
                   <option value="">لا يوجد (عدم إضافة مهام تلقائية)</option>
                   {TASK_TEMPLATES.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
                   ))}
                 </select>
               </Field>
             )}
             <Field label="الأتعاب المتفق عليها (د.إ)">
-              <input type="number" value={form.fee ?? ""} onChange={f("fee")} placeholder="0.00" className={inputCls} />
+              <input
+                type="number"
+                value={form.fee ?? ""}
+                onChange={f("fee")}
+                placeholder="0.00"
+                className={inputCls}
+              />
             </Field>
 
-            <button onClick={saveCase} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">
+            <button
+              onClick={saveCase}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
               {editingCase ? "حفظ التعديلات" : "حفظ وحفظ القضية"}
             </button>
           </div>
@@ -7174,7 +8988,11 @@ const activeFiltersCount = useMemo(() => {
         <Modal title="إضافة موكل / جهة اتصال جديدة" onClose={() => setModal(null)}>
           <div className="space-y-4 text-sm">
             <Field label="الاسم الكامل / اسم الشركة / الجهة">
-              <input onChange={f("name")} placeholder="الاسم الكامل أو اسم الشركة أو الجهة" className={inputCls} />
+              <input
+                onChange={f("name")}
+                placeholder="الاسم الكامل أو اسم الشركة أو الجهة"
+                className={inputCls}
+              />
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="الصفة / التصنيف">
@@ -7186,7 +9004,11 @@ const activeFiltersCount = useMemo(() => {
                 </select>
               </Field>
               <Field label="الهوية / الرخصة / الرقم الضريبي">
-                <input onChange={f("idNo")} placeholder="الهوية الإماراتية أو الرخصة التجارية" className={inputCls} />
+                <input
+                  onChange={f("idNo")}
+                  placeholder="الهوية الإماراتية أو الرخصة التجارية"
+                  className={inputCls}
+                />
               </Field>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -7213,7 +9035,10 @@ const activeFiltersCount = useMemo(() => {
             <Field label="العنوان / تفاصيل إضافية">
               <input onChange={f("address")} placeholder="العنوان التفصيلي" className={inputCls} />
             </Field>
-            <button onClick={saveClient} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">
+            <button
+              onClick={saveClient}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
               حفظ وتأكيد الإضافة
             </button>
           </div>
@@ -7226,7 +9051,11 @@ const activeFiltersCount = useMemo(() => {
             <Field label="القضية المرتبطة">
               <select onChange={f("caseId")} className={inputCls}>
                 <option value="">اختر القضية…</option>
-                {cases.map((c) => <option key={c.id} value={c.id}>{c.number} - {clientName(c.clientId)}</option>)}
+                {cases.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.number} - {clientName(c.clientId)}
+                  </option>
+                ))}
               </select>
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -7240,17 +9069,33 @@ const activeFiltersCount = useMemo(() => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="نوع الجلسة">
                 <select onChange={f("type")} className={inputCls}>
-                  {HEARING_TYPES.map((h) => <option key={h}>{h}</option>)}
+                  {HEARING_TYPES.map((h) => (
+                    <option key={h}>{h}</option>
+                  ))}
                 </select>
               </Field>
               <Field label="قاعة المحكمة">
-                <input onChange={f("room")} placeholder="مثال: قاعة 4 - الطابق 2" className={inputCls} />
+                <input
+                  onChange={f("room")}
+                  placeholder="مثال: قاعة 4 - الطابق 2"
+                  className={inputCls}
+                />
               </Field>
             </div>
             <Field label="ملاحظات وتكليفات الجلسة">
-              <textarea onChange={f("notes")} rows={2} placeholder="المطلوب في الجلسة (إيداع مذكرة / حضور الموكل)..." className={inputCls} />
+              <textarea
+                onChange={f("notes")}
+                rows={2}
+                placeholder="المطلوب في الجلسة (إيداع مذكرة / حضور الموكل)..."
+                className={inputCls}
+              />
             </Field>
-            <button onClick={saveHearing} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">تأكيد جدولة الجلسة</button>
+            <button
+              onClick={saveHearing}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
+              تأكيد جدولة الجلسة
+            </button>
           </div>
         </Modal>
       )}
@@ -7259,18 +9104,30 @@ const activeFiltersCount = useMemo(() => {
         <Modal title="إضافة مهمة جديدة" onClose={() => setModal(null)}>
           <div className="space-y-4 text-sm">
             <Field label="عنوان المهمة">
-              <input onChange={f("title")} placeholder="مثال: إعداد مذكرة جوابية..." className={inputCls} />
+              <input
+                onChange={f("title")}
+                placeholder="مثال: إعداد مذكرة جوابية..."
+                className={inputCls}
+              />
             </Field>
             <Field label="القضية (اختياري)">
               <select onChange={f("caseId")} className={inputCls}>
                 <option value="">غير مرتبطة بقضية محددة</option>
-                {cases.map((c) => <option key={c.id} value={c.id}>{c.number}</option>)}
+                {cases.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.number}
+                  </option>
+                ))}
               </select>
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="المكلف بالمهمة">
                 <select onChange={f("assignee")} className={inputCls}>
-                  {users.map((u) => <option key={u.id} value={u.name}>{u.name} ({u.roleTitle})</option>)}
+                  {users.map((u) => (
+                    <option key={u.id} value={u.name}>
+                      {u.name} ({u.roleTitle})
+                    </option>
+                  ))}
                 </select>
               </Field>
               <Field label="الأولوية">
@@ -7282,9 +9139,19 @@ const activeFiltersCount = useMemo(() => {
               </Field>
             </div>
             <Field label="تاريخ الاستحقاق">
-              <input type="date" onChange={f("due")} defaultValue={todayISO()} className={inputCls} />
+              <input
+                type="date"
+                onChange={f("due")}
+                defaultValue={todayISO()}
+                className={inputCls}
+              />
             </Field>
-            <button onClick={saveTask} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">حفظ المهمة</button>
+            <button
+              onClick={saveTask}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
+              حفظ المهمة
+            </button>
           </div>
         </Modal>
       )}
@@ -7295,28 +9162,58 @@ const activeFiltersCount = useMemo(() => {
             <Field label="الموكل">
               <select onChange={f("clientId")} className={inputCls}>
                 <option value="">اختر الموكل…</option>
-                {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="القضية (اختياري)">
               <select onChange={f("caseId")} className={inputCls}>
                 <option value="">فاتورة استشارية عامة</option>
-                {cases.map((c) => <option key={c.id} value={c.id}>{c.number}</option>)}
+                {cases.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.number}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="المبلغ الخاضع للضريبة (د.إ)">
-              <input type="number" onChange={f("amount")} placeholder="مثال: 10000" className={inputCls} />
+              <input
+                type="number"
+                onChange={f("amount")}
+                placeholder="مثال: 10000"
+                className={inputCls}
+              />
             </Field>
             <p className="text-xs text-slate-500 bg-amber-50 p-2 rounded border border-amber-200">
-              سيتم إضافة ضريبة القيمة المضافة 5% تلقائيًا وفق قوانين الهيئة الاتحادية للضرائب بمبلغ <b>{fmtAED((+form.amount || 0) * VAT_RATE)}</b> ليصل الإجمالي إلى <b>{fmtAED((+form.amount || 0) * 1.05)}</b>
+              سيتم إضافة ضريبة القيمة المضافة 5% تلقائيًا وفق قوانين الهيئة الاتحادية للضرائب بمبلغ{" "}
+              <b>{fmtAED((+form.amount || 0) * VAT_RATE)}</b> ليصل الإجمالي إلى{" "}
+              <b>{fmtAED((+form.amount || 0) * 1.05)}</b>
             </p>
             <Field label="تاريخ الاستحقاق">
-              <input type="date" onChange={f("due")} defaultValue={addDays(30)} className={inputCls} />
+              <input
+                type="date"
+                onChange={f("due")}
+                defaultValue={addDays(30)}
+                className={inputCls}
+              />
             </Field>
             <Field label="بيان الفاتورة والخدمات القانونية">
-              <textarea onChange={f("desc")} rows={2} placeholder="دفعة أتعاب محاماة والاستشارات القانونية..." className={inputCls} />
+              <textarea
+                onChange={f("desc")}
+                rows={2}
+                placeholder="دفعة أتعاب محاماة والاستشارات القانونية..."
+                className={inputCls}
+              />
             </Field>
-            <button onClick={saveInvoice} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">إصدار الفاتورة الضريبية</button>
+            <button
+              onClick={saveInvoice}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
+              إصدار الفاتورة الضريبية
+            </button>
           </div>
         </Modal>
       )}
@@ -7334,7 +9231,7 @@ const activeFiltersCount = useMemo(() => {
                   setForm((prev) => ({
                     ...prev,
                     clientId: cId,
-                    feeAgreementId: "unallocated"
+                    feeAgreementId: "unallocated",
                   }));
                 }}
                 className={inputCls}
@@ -7353,7 +9250,7 @@ const activeFiltersCount = useMemo(() => {
               (() => {
                 const selectedClientId = +form.clientId;
                 const activeAgreements = feeAgreements.filter(
-                  (a) => a.clientId === selectedClientId && a.status === "نشطة"
+                  (a) => a.clientId === selectedClientId && a.status === "نشطة",
                 );
                 const unallocatedBal = getClientUnallocatedBalance(selectedClientId);
 
@@ -7384,7 +9281,9 @@ const activeFiltersCount = useMemo(() => {
                           name="feeAgreementRadio"
                           value="unallocated"
                           checked={!form.feeAgreementId || form.feeAgreementId === "unallocated"}
-                          onChange={() => setForm((prev) => ({ ...prev, feeAgreementId: "unallocated" }))}
+                          onChange={() =>
+                            setForm((prev) => ({ ...prev, feeAgreementId: "unallocated" }))
+                          }
                           className="mt-1 h-4 w-4 accent-amber-600"
                         />
                         <div className="flex-1">
@@ -7395,7 +9294,8 @@ const activeFiltersCount = useMemo(() => {
                             <Badge className="bg-amber-100 text-amber-800">رصيد معلّق</Badge>
                           </div>
                           <p className="text-xs text-slate-500 mt-0.5">
-                            إذا لم تكن الاتفاقية معروفة، تنحفظ هذه الدفعة كـ "رصيد معلّق" لحين تسويتها لاحقاً.
+                            إذا لم تكن الاتفاقية معروفة، تنحفظ هذه الدفعة كـ "رصيد معلّق" لحين
+                            تسويتها لاحقاً.
                           </p>
                         </div>
                       </label>
@@ -7409,7 +9309,9 @@ const activeFiltersCount = useMemo(() => {
                           {activeAgreements.map((agr) => {
                             const remaining = getRemainingForAgreement(agr);
                             const fullyPaid = isAgreementFullyPaid(agr);
-                            const isSelected = form.feeAgreementId === String(agr.id) || form.feeAgreementId === agr.id;
+                            const isSelected =
+                              form.feeAgreementId === String(agr.id) ||
+                              form.feeAgreementId === agr.id;
 
                             return (
                               <label
@@ -7418,8 +9320,8 @@ const activeFiltersCount = useMemo(() => {
                                   fullyPaid
                                     ? "bg-slate-100/70 border-slate-200 opacity-60 cursor-not-allowed"
                                     : isSelected
-                                    ? "bg-amber-50/90 border-amber-500 ring-2 ring-amber-400/30 cursor-pointer"
-                                    : "bg-white border-slate-200 cursor-pointer hover:border-amber-300"
+                                      ? "bg-amber-50/90 border-amber-500 ring-2 ring-amber-400/30 cursor-pointer"
+                                      : "bg-white border-slate-200 cursor-pointer hover:border-amber-300"
                                 }`}
                               >
                                 <div className="flex items-start gap-3">
@@ -7429,7 +9331,9 @@ const activeFiltersCount = useMemo(() => {
                                     value={agr.id}
                                     disabled={fullyPaid}
                                     checked={isSelected}
-                                    onChange={() => setForm((prev) => ({ ...prev, feeAgreementId: agr.id }))}
+                                    onChange={() =>
+                                      setForm((prev) => ({ ...prev, feeAgreementId: agr.id }))
+                                    }
                                     className="mt-1 h-4 w-4 accent-amber-600"
                                   />
                                   <div>
@@ -7439,7 +9343,8 @@ const activeFiltersCount = useMemo(() => {
                                       </span>
                                     </div>
                                     <p className="text-xs text-slate-500 mt-0.5">
-                                      تاريخ العقد: {fmtDate(agr.date)} • إجمالي العقد: {fmtAED(agr.totalAmount)}
+                                      تاريخ العقد: {fmtDate(agr.date)} • إجمالي العقد:{" "}
+                                      {fmtAED(agr.totalAmount)}
                                     </p>
                                   </div>
                                 </div>
@@ -7451,8 +9356,12 @@ const activeFiltersCount = useMemo(() => {
                                     </span>
                                   ) : (
                                     <div className="bg-amber-100/90 px-3 py-1.5 rounded-xl text-left border border-amber-200">
-                                      <span className="text-[10px] text-amber-900 block font-semibold">المتبقي على الاتفاقية:</span>
-                                      <span className="text-xs font-bold text-amber-900 font-mono">{fmtAED(remaining)}</span>
+                                      <span className="text-[10px] text-amber-900 block font-semibold">
+                                        المتبقي على الاتفاقية:
+                                      </span>
+                                      <span className="text-xs font-bold text-amber-900 font-mono">
+                                        {fmtAED(remaining)}
+                                      </span>
                                     </div>
                                   )}
                                 </div>
@@ -7462,7 +9371,8 @@ const activeFiltersCount = useMemo(() => {
                         </div>
                       ) : (
                         <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-xs text-amber-900">
-                          ℹ️ لا توجد اتفاقيات أتعاب نشطة حالياً لهذا الموكل. سيتم تسجيل الدفعة كـ "دفعة غير مخصصة".
+                          ℹ️ لا توجد اتفاقيات أتعاب نشطة حالياً لهذا الموكل. سيتم تسجيل الدفعة كـ
+                          "دفعة غير مخصصة".
                         </div>
                       )}
                     </div>
@@ -7545,22 +9455,37 @@ const activeFiltersCount = useMemo(() => {
         <Modal title="رفع مستند جديد" onClose={() => setModal(null)}>
           <div className="space-y-4 text-sm">
             <Field label="اسم المستند">
-              <input onChange={f("name")} placeholder="مثال: صحيفة الدعوى 2026.pdf" className={inputCls} />
+              <input
+                onChange={f("name")}
+                placeholder="مثال: صحيفة الدعوى 2026.pdf"
+                className={inputCls}
+              />
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="نوع المستند">
                 <select onChange={f("type")} className={inputCls}>
-                  {DOC_TYPES.map((t) => <option key={t}>{t}</option>)}
+                  {DOC_TYPES.map((t) => (
+                    <option key={t}>{t}</option>
+                  ))}
                 </select>
               </Field>
               <Field label="القضية المرتبطة">
                 <select onChange={f("caseId")} className={inputCls}>
                   <option value="">مستند غير مرتبط بقضية</option>
-                  {cases.map((c) => <option key={c.id} value={c.id}>{c.number}</option>)}
+                  {cases.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.number}
+                    </option>
+                  ))}
                 </select>
               </Field>
             </div>
-            <button onClick={saveDoc} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">حفظ المستند الأرشيفي</button>
+            <button
+              onClick={saveDoc}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
+              حفظ المستند الأرشيفي
+            </button>
           </div>
         </Modal>
       )}
@@ -7571,11 +9496,19 @@ const activeFiltersCount = useMemo(() => {
             <Field label="الموكل">
               <select onChange={f("clientId")} className={inputCls}>
                 <option value="">اختر الموكل…</option>
-                {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="رقم الوكالة الموثقة">
-              <input onChange={f("number")} placeholder="مثال: وكالة 2026/1/4502" className={inputCls} />
+              <input
+                onChange={f("number")}
+                placeholder="مثال: وكالة 2026/1/4502"
+                className={inputCls}
+              />
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="الجهة المصدرة">
@@ -7586,48 +9519,109 @@ const activeFiltersCount = useMemo(() => {
               </Field>
             </div>
             <Field label="نطاق الوكالة والتخويل">
-              <textarea onChange={f("scope")} rows={2} placeholder="وكالة قضائية عامة والترافع والصلح والإقرار..." className={inputCls} />
+              <textarea
+                onChange={f("scope")}
+                rows={2}
+                placeholder="وكالة قضائية عامة والترافع والصلح والإقرار..."
+                className={inputCls}
+              />
             </Field>
-            <button onClick={savePoa} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">حفظ الوكالة</button>
+            <button
+              onClick={savePoa}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
+              حفظ الوكالة
+            </button>
           </div>
         </Modal>
       )}
 
       {modal === "colleague" && (
-        <Modal title={editingColleagueId ? "تعديل بيانات الزميل" : "إضافة زميل متعاون"} onClose={() => { setModal(null); setEditingColleagueId(null); }}>
+        <Modal
+          title={editingColleagueId ? "تعديل بيانات الزميل" : "إضافة زميل متعاون"}
+          onClose={() => {
+            setModal(null);
+            setEditingColleagueId(null);
+          }}
+        >
           <div className="space-y-4 text-sm">
             <Field label="الاسم الكامل">
-              <input onChange={f("name")} defaultValue={form.name || ""} placeholder="اسم المحامي الزميل" className={inputCls} />
+              <input
+                onChange={f("name")}
+                defaultValue={form.name || ""}
+                placeholder="اسم المحامي الزميل"
+                className={inputCls}
+              />
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="رقم الهاتف">
-                <input onChange={f("phone")} defaultValue={form.phone || ""} placeholder="050-XXXXXXX" className={inputCls} />
+                <input
+                  onChange={f("phone")}
+                  defaultValue={form.phone || ""}
+                  placeholder="050-XXXXXXX"
+                  className={inputCls}
+                />
               </Field>
               <Field label="البريد الإلكتروني (اختياري)">
-                <input onChange={f("email")} defaultValue={form.email || ""} placeholder="lawyer@example.com" className={inputCls} />
+                <input
+                  onChange={f("email")}
+                  defaultValue={form.email || ""}
+                  placeholder="lawyer@example.com"
+                  className={inputCls}
+                />
               </Field>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="التخصص">
-                <input onChange={f("specialization")} defaultValue={form.specialization || ""} placeholder="مثال: جزائي، عمالي، عقاري..." className={inputCls} />
+                <input
+                  onChange={f("specialization")}
+                  defaultValue={form.specialization || ""}
+                  placeholder="مثال: جزائي، عمالي، عقاري..."
+                  className={inputCls}
+                />
               </Field>
               <Field label="الإمارة / المحكمة التي يغطيها">
-                <input onChange={f("coverageArea")} defaultValue={form.coverageArea || ""} placeholder="مثال: محاكم دبي" className={inputCls} />
+                <input
+                  onChange={f("coverageArea")}
+                  defaultValue={form.coverageArea || ""}
+                  placeholder="مثال: محاكم دبي"
+                  className={inputCls}
+                />
               </Field>
             </div>
             <Field label="رقم قيد المحامي (نقابة المحامين)">
-              <input onChange={f("licenseNumber")} defaultValue={form.licenseNumber || ""} placeholder="مثال: 2210" className={inputCls} />
+              <input
+                onChange={f("licenseNumber")}
+                defaultValue={form.licenseNumber || ""}
+                placeholder="مثال: 2210"
+                className={inputCls}
+              />
             </Field>
             <Field label="الحالة">
-              <select onChange={f("status")} defaultValue={form.status || "متاح"} className={inputCls}>
+              <select
+                onChange={f("status")}
+                defaultValue={form.status || "متاح"}
+                className={inputCls}
+              >
                 <option value="متاح">متاح</option>
                 <option value="غير متاح">غير متاح</option>
               </select>
             </Field>
             <Field label="ملاحظات">
-              <textarea onChange={f("notes")} defaultValue={form.notes || ""} rows={2} placeholder="ملاحظات حول الموثوقية والتجارب السابقة..." className={inputCls} />
+              <textarea
+                onChange={f("notes")}
+                defaultValue={form.notes || ""}
+                rows={2}
+                placeholder="ملاحظات حول الموثوقية والتجارب السابقة..."
+                className={inputCls}
+              />
             </Field>
-            <button onClick={saveColleague} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">حفظ بيانات الزميل</button>
+            <button
+              onClick={saveColleague}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
+              حفظ بيانات الزميل
+            </button>
           </div>
         </Modal>
       )}
@@ -7640,55 +9634,117 @@ const activeFiltersCount = useMemo(() => {
                 onChange={(e) => {
                   const cid = e.target.value;
                   const sel = colleagues.find((cc) => String(cc.id) === cid);
-                  setForm((prev: any) => ({ ...prev, colleagueId: cid, colleagueLicenseNumber: sel?.licenseNumber || "" }));
+                  setForm((prev: any) => ({
+                    ...prev,
+                    colleagueId: cid,
+                    colleagueLicenseNumber: sel?.licenseNumber || "",
+                  }));
                 }}
                 defaultValue={form.colleagueId || ""}
                 className={inputCls}
               >
                 <option value="">اختر الزميل…</option>
-                {colleagues.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {colleagues.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="القضية (اختياري) — تُستخدم لسحب اسم الموكل وصفته والخصم تلقائياً">
               <select onChange={f("caseId")} defaultValue={form.caseId || ""} className={inputCls}>
                 <option value="">بدون ربط بقضية مسجلة…</option>
-                {cases.map((c) => <option key={c.id} value={c.id}>{c.number} — {c.subject}</option>)}
+                {cases.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.number} — {c.subject}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="وصف القضية/الجلسة (إن لم تُربط بقضية مسجلة)">
-              <input onChange={f("caseTitleSnapshot")} defaultValue={form.caseTitleSnapshot || ""} placeholder="مثال: جلسة محكمة الشارقة الابتدائية - دائرة مدنية" className={inputCls} />
+              <input
+                onChange={f("caseTitleSnapshot")}
+                defaultValue={form.caseTitleSnapshot || ""}
+                placeholder="مثال: جلسة محكمة الشارقة الابتدائية - دائرة مدنية"
+                className={inputCls}
+              />
             </Field>
             <Field label="تاريخ الجلسة المناب لها الزميل">
-              <input type="date" onChange={f("sessionDate")} defaultValue={form.sessionDate || ""} className={inputCls} />
+              <input
+                type="date"
+                onChange={f("sessionDate")}
+                defaultValue={form.sessionDate || ""}
+                className={inputCls}
+              />
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="رقم قيد المحامي المُنيب (يُسحب تلقائياً، قابل للتعديل)">
-                <input onChange={f("issuerLicenseNumber")} defaultValue={form.issuerLicenseNumber || ""} placeholder="مثال: 1754" className={inputCls} />
+                <input
+                  onChange={f("issuerLicenseNumber")}
+                  defaultValue={form.issuerLicenseNumber || ""}
+                  placeholder="مثال: 1754"
+                  className={inputCls}
+                />
               </Field>
               <Field label="رقم قيد الزميل المُناب (يُسحب تلقائياً، قابل للتعديل)">
-                <input key={form.colleagueId || "none"} onChange={f("colleagueLicenseNumber")} defaultValue={form.colleagueLicenseNumber || ""} placeholder="مثال: 2210" className={inputCls} />
+                <input
+                  key={form.colleagueId || "none"}
+                  onChange={f("colleagueLicenseNumber")}
+                  defaultValue={form.colleagueLicenseNumber || ""}
+                  placeholder="مثال: 2210"
+                  className={inputCls}
+                />
               </Field>
             </div>
             <Field label="الغرض من الإنابة">
-              <textarea onChange={f("purpose")} defaultValue={form.purpose || ""} rows={3} placeholder="حضور الجلسة المحددة نيابة عن المكتب وتقديم المذكرات والمرافعة..." className={inputCls} />
+              <textarea
+                onChange={f("purpose")}
+                defaultValue={form.purpose || ""}
+                rows={3}
+                placeholder="حضور الجلسة المحددة نيابة عن المكتب وتقديم المذكرات والمرافعة..."
+                className={inputCls}
+              />
             </Field>
-            <button onClick={issueDelegation} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">إصدار الإنابة</button>
+            <button
+              onClick={issueDelegation}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
+              إصدار الإنابة
+            </button>
           </div>
         </Modal>
       )}
 
       {modal === "user" && (
-        <Modal title={editingUser ? `تعديل بيانات: ${editingUser.name}` : "إضافة مستخدم جديد بالفريق"} onClose={() => setModal(null)}>
+        <Modal
+          title={editingUser ? `تعديل بيانات: ${editingUser.name}` : "إضافة مستخدم جديد بالفريق"}
+          onClose={() => setModal(null)}
+        >
           <div className="space-y-4 text-sm">
             <Field label="الاسم الكامل">
-              <input onChange={f("name")} defaultValue={form.name || ""} placeholder="اسم الموظف أو المحامي" className={inputCls} />
+              <input
+                onChange={f("name")}
+                defaultValue={form.name || ""}
+                placeholder="اسم الموظف أو المحامي"
+                className={inputCls}
+              />
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="البريد الإلكتروني">
-                <input onChange={f("email")} defaultValue={form.email || ""} placeholder="user@law.ae" className={inputCls} />
+                <input
+                  onChange={f("email")}
+                  defaultValue={form.email || ""}
+                  placeholder="user@law.ae"
+                  className={inputCls}
+                />
               </Field>
               <Field label="رقم الهاتف">
-                <input onChange={f("phone")} defaultValue={form.phone || ""} placeholder="050-XXXXXXX" className={inputCls} />
+                <input
+                  onChange={f("phone")}
+                  defaultValue={form.phone || ""}
+                  placeholder="050-XXXXXXX"
+                  className={inputCls}
+                />
               </Field>
             </div>
             <Field label="الدور / القالب المسبق">
@@ -7701,7 +9757,7 @@ const activeFiltersCount = useMemo(() => {
                     ...prev,
                     roleKey: rKey,
                     roleTitle: preset ? preset.title : prev.roleTitle,
-                    permissions: preset ? { ...preset.permissions } : prev.permissions
+                    permissions: preset ? { ...preset.permissions } : prev.permissions,
                   }));
                 }}
                 className={inputCls}
@@ -7714,13 +9770,29 @@ const activeFiltersCount = useMemo(() => {
               </select>
             </Field>
             <Field label="المسمى الوظيفي">
-              <input onChange={f("roleTitle")} defaultValue={form.roleTitle || ""} placeholder="مثال: محامي استئناف ومدني" className={inputCls} />
+              <input
+                onChange={f("roleTitle")}
+                defaultValue={form.roleTitle || ""}
+                placeholder="مثال: محامي استئناف ومدني"
+                className={inputCls}
+              />
             </Field>
             <Field label="رقم قيد المحامي (نقابة المحامين) — يُستخدم في مستندات الإنابة">
-              <input onChange={f("licenseNumber")} defaultValue={form.licenseNumber || ""} placeholder="مثال: 1754" className={inputCls} />
+              <input
+                onChange={f("licenseNumber")}
+                defaultValue={form.licenseNumber || ""}
+                placeholder="مثال: 1754"
+                className={inputCls}
+              />
             </Field>
             <Field label="كلمة المرور المسجلة (مشفّرة وآمنة)">
-              <input type="password" readOnly disabled value="••••••••" className={`${inputCls} bg-stone-100 text-slate-500 cursor-not-allowed`} />
+              <input
+                type="password"
+                readOnly
+                disabled
+                value="••••••••"
+                className={`${inputCls} bg-stone-100 text-slate-500 cursor-not-allowed`}
+              />
             </Field>
 
             {/* تخصيص صلاحيات الوصول للأقسام والتبويبات الـ 18 */}
@@ -7731,15 +9803,36 @@ const activeFiltersCount = useMemo(() => {
                   صلاحيات الأقسام والتبويبات الـ {PERMISSION_MODULES.length} (System Modules):
                 </p>
                 <span className="text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-md border border-amber-200 font-mono">
-                  {Object.keys(form.permissions || ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions || {}).filter((k) => PERMISSION_MODULES.some((m) => m.id === k) && Boolean((form.permissions || ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions || {})[k as keyof RolePermissions])).length} / {PERMISSION_MODULES.length}
+                  {
+                    Object.keys(
+                      form.permissions || ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions || {},
+                    ).filter(
+                      (k) =>
+                        PERMISSION_MODULES.some((m) => m.id === k) &&
+                        Boolean(
+                          (form.permissions ||
+                            ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions ||
+                            {})[k as keyof RolePermissions],
+                        ),
+                    ).length
+                  }{" "}
+                  / {PERMISSION_MODULES.length}
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 leading-snug">
-                تطبيق سياسة الحظر الافتراضي: الأقسام المحددة باللون الأخضر فقط هي ما يُصرح للموظف بمشاهدتها والتنقل إليها.
+                تطبيق سياسة الحظر الافتراضي: الأقسام المحددة باللون الأخضر فقط هي ما يُصرح للموظف
+                بمشاهدتها والتنقل إليها.
               </p>
-              
+
               <div className="max-h-64 overflow-y-auto p-2 border border-slate-200 rounded-xl bg-slate-50/50 space-y-3">
-                {(["العمليات القانونية", "التواصل والمهام", "المالية والعقود", "الإدارة والامتثال"] as const).map((cat) => {
+                {(
+                  [
+                    "العمليات القانونية",
+                    "التواصل والمهام",
+                    "المالية والعقود",
+                    "الإدارة والامتثال",
+                  ] as const
+                ).map((cat) => {
                   const catModules = PERMISSION_MODULES.filter((m) => m.category === cat);
                   return (
                     <div key={cat} className="space-y-1.5">
@@ -7749,13 +9842,23 @@ const activeFiltersCount = useMemo(() => {
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {catModules.map((mod) => {
-                          const activePerms = form.permissions || (editingUser ? editingUser.permissions : ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions) || {};
-                          const isEnabled = Boolean(activePerms[mod.id] || (editingUser && hasTabPermission(editingUser, mod.navTabIds[0])));
+                          const activePerms =
+                            form.permissions ||
+                            (editingUser
+                              ? editingUser.permissions
+                              : ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions) ||
+                            {};
+                          const isEnabled = Boolean(
+                            activePerms[mod.id] ||
+                            (editingUser && hasTabPermission(editingUser, mod.navTabIds[0])),
+                          );
                           return (
                             <label
                               key={mod.id}
                               className={`flex items-start gap-2 p-2 rounded-xl border transition cursor-pointer ${
-                                isEnabled ? "bg-emerald-50 border-emerald-300 text-slate-900" : "bg-white border-slate-200 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors"
+                                isEnabled
+                                  ? "bg-emerald-50 border-emerald-300 text-slate-900"
+                                  : "bg-white border-slate-200 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors"
                               }`}
                             >
                               <input
@@ -7764,21 +9867,30 @@ const activeFiltersCount = useMemo(() => {
                                 onChange={(e) => {
                                   const checked = e.target.checked;
                                   setForm((prev) => {
-                                    const basePerms = prev.permissions || (editingUser ? editingUser.permissions : ROLE_PRESETS[prev.roleKey || "lawyer"]?.permissions) || {};
+                                    const basePerms =
+                                      prev.permissions ||
+                                      (editingUser
+                                        ? editingUser.permissions
+                                        : ROLE_PRESETS[prev.roleKey || "lawyer"]?.permissions) ||
+                                      {};
                                     return {
                                       ...prev,
                                       permissions: {
                                         ...basePerms,
-                                        [mod.id]: checked
-                                      }
+                                        [mod.id]: checked,
+                                      },
                                     };
                                   });
                                 }}
                                 className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                               />
                               <div className="text-xs">
-                                <span className="font-bold block leading-tight text-slate-900">{mod.label}</span>
-                                <span className="text-[10px] text-slate-500 block mt-0.5 leading-snug">{mod.desc}</span>
+                                <span className="font-bold block leading-tight text-slate-900">
+                                  {mod.label}
+                                </span>
+                                <span className="text-[10px] text-slate-500 block mt-0.5 leading-snug">
+                                  {mod.desc}
+                                </span>
                               </div>
                             </label>
                           );
@@ -7804,7 +9916,12 @@ const activeFiltersCount = useMemo(() => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 border border-slate-200 rounded-xl bg-white">
                 {DETAILED_ACTION_PERMISSIONS.map((action) => {
-                  const activePerms = form.permissions || (editingUser ? editingUser.permissions : ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions) || {};
+                  const activePerms =
+                    form.permissions ||
+                    (editingUser
+                      ? editingUser.permissions
+                      : ROLE_PRESETS[form.roleKey || "lawyer"]?.permissions) ||
+                    {};
                   const isEnabled = Boolean(activePerms[action.id]);
                   return (
                     <label
@@ -7823,13 +9940,18 @@ const activeFiltersCount = useMemo(() => {
                         onChange={(e) => {
                           const checked = e.target.checked;
                           setForm((prev) => {
-                            const basePerms = prev.permissions || (editingUser ? editingUser.permissions : ROLE_PRESETS[prev.roleKey || "lawyer"]?.permissions) || {};
+                            const basePerms =
+                              prev.permissions ||
+                              (editingUser
+                                ? editingUser.permissions
+                                : ROLE_PRESETS[prev.roleKey || "lawyer"]?.permissions) ||
+                              {};
                             return {
                               ...prev,
                               permissions: {
                                 ...basePerms,
-                                [action.id]: checked
-                              }
+                                [action.id]: checked,
+                              },
                             };
                           });
                         }}
@@ -7839,10 +9961,14 @@ const activeFiltersCount = useMemo(() => {
                         <span className="font-bold block leading-tight text-slate-900 flex items-center gap-1">
                           {action.label}
                           {action.isSensitive && (
-                            <span className="text-[9px] px-1 py-0.2 rounded bg-red-100 text-red-700 font-bold">حساس</span>
+                            <span className="text-[9px] px-1 py-0.2 rounded bg-red-100 text-red-700 font-bold">
+                              حساس
+                            </span>
                           )}
                         </span>
-                        <span className="text-[10px] text-slate-500 block mt-0.5 leading-snug">{action.desc}</span>
+                        <span className="text-[10px] text-slate-500 block mt-0.5 leading-snug">
+                          {action.desc}
+                        </span>
                       </div>
                     </label>
                   );
@@ -7851,13 +9977,17 @@ const activeFiltersCount = useMemo(() => {
             </div>
 
             <div className="space-y-2 border-t border-slate-100 pt-3">
-              <p className="text-xs font-bold text-slate-800">التفويضات الاستثنائية الحصرية (تمنح بواسطة المحامي سعود):</p>
-              
+              <p className="text-xs font-bold text-slate-800">
+                التفويضات الاستثنائية الحصرية (تمنح بواسطة المحامي سعود):
+              </p>
+
               <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700 font-semibold">
                 <input
                   type="checkbox"
                   defaultChecked={editingUser ? editingUser.canTransferContacts : false}
-                  onChange={(e) => setForm((prev) => ({ ...prev, canTransferContacts: e.target.checked }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, canTransferContacts: e.target.checked }))
+                  }
                   className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
                 />
                 تفويض نقل وتصنيف الموكلين بين أفراد وشركات
@@ -7867,7 +9997,9 @@ const activeFiltersCount = useMemo(() => {
                 <input
                   type="checkbox"
                   defaultChecked={editingUser ? editingUser.canViewAgreements : false}
-                  onChange={(e) => setForm((prev) => ({ ...prev, canViewAgreements: e.target.checked }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, canViewAgreements: e.target.checked }))
+                  }
                   className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
                 />
                 تفويض الاطلاع على اتفاقيات وصيغ عقود المكتب
@@ -7877,7 +10009,9 @@ const activeFiltersCount = useMemo(() => {
                 <input
                   type="checkbox"
                   defaultChecked={editingUser ? editingUser.canAccessWhatsapp : false}
-                  onChange={(e) => setForm((prev) => ({ ...prev, canAccessWhatsapp: e.target.checked }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, canAccessWhatsapp: e.target.checked }))
+                  }
                   className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
                 />
                 تفويض استخدام واتساب المكتب المباشر
@@ -7887,7 +10021,9 @@ const activeFiltersCount = useMemo(() => {
                 <input
                   type="checkbox"
                   defaultChecked={editingUser ? editingUser.canViewFinances : false}
-                  onChange={(e) => setForm((prev) => ({ ...prev, canViewFinances: e.target.checked }))}
+                  onChange={(e) =>
+                    setForm((prev) => ({ ...prev, canViewFinances: e.target.checked }))
+                  }
                   className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
                 />
                 تفويض الوصول للنظام المالي والفواتير والضريبة
@@ -7908,8 +10044,13 @@ const activeFiltersCount = useMemo(() => {
                 >
                   <Trash2 size={15} /> حذف الحساب
                 </button>
-              ) : <div />}
-              <button onClick={saveUser} className="rounded-xl bg-slate-900 px-6 py-2.5 text-xs font-bold text-white hover:bg-slate-700">
+              ) : (
+                <div />
+              )}
+              <button
+                onClick={saveUser}
+                className="rounded-xl bg-slate-900 px-6 py-2.5 text-xs font-bold text-white hover:bg-slate-700"
+              >
                 حفظ بيانات المستخدم والصلاحيات
               </button>
             </div>
@@ -7919,41 +10060,79 @@ const activeFiltersCount = useMemo(() => {
 
       {/* ================= نافذة إضافة/تعديل KYC ================= */}
       {(modal === "kyc" || modal === "kyc-edit") && (
-        <Modal title={modal === "kyc-edit" ? "تعديل سجل اعرف عميلك (KYC)" : "إضافة سجل اعرف عميلك جديد"} onClose={() => setModal(null)} wide>
+        <Modal
+          title={modal === "kyc-edit" ? "تعديل سجل اعرف عميلك (KYC)" : "إضافة سجل اعرف عميلك جديد"}
+          onClose={() => setModal(null)}
+          wide
+        >
           <div className="space-y-4 text-sm">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="الموكل المعني">
                 <select onChange={f("clientId")} value={form.clientId || ""} className={inputCls}>
                   <option value="">إختر الموكل…</option>
-                  {clients.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.type})</option>)}
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.type})
+                    </option>
+                  ))}
                 </select>
               </Field>
               <Field label="الجنسية / دولة التأسيس">
-                <input onChange={f("nationality")} defaultValue={form.nationality || "الإمارات"} className={inputCls} />
+                <input
+                  onChange={f("nationality")}
+                  defaultValue={form.nationality || "الإمارات"}
+                  className={inputCls}
+                />
               </Field>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="نوع وثيقة الإثبات">
-                <input onChange={f("idType")} defaultValue={form.idType || "هوية إماراتية"} placeholder="رخصة تجارية / جواز سفر..." className={inputCls} />
+                <input
+                  onChange={f("idType")}
+                  defaultValue={form.idType || "هوية إماراتية"}
+                  placeholder="رخصة تجارية / جواز سفر..."
+                  className={inputCls}
+                />
               </Field>
               <Field label="تاريخ انتهاء الوثيقة">
-                <input type="date" onChange={f("idExpiry")} defaultValue={form.idExpiry || ""} className={inputCls} />
+                <input
+                  type="date"
+                  onChange={f("idExpiry")}
+                  defaultValue={form.idExpiry || ""}
+                  className={inputCls}
+                />
               </Field>
             </div>
 
             <Field label="المستفيد الحقيقي (UBO) والتملك النهائي">
-              <textarea onChange={f("ubo")} defaultValue={form.ubo || ""} rows={2} placeholder="أسماء الأشخاص الطبيعيين المالكين لـ 25% أو أكثر من رأس المال أو حق التصويت..." className={inputCls} />
+              <textarea
+                onChange={f("ubo")}
+                defaultValue={form.ubo || ""}
+                rows={2}
+                placeholder="أسماء الأشخاص الطبيعيين المالكين لـ 25% أو أكثر من رأس المال أو حق التصويت..."
+                className={inputCls}
+              />
             </Field>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="مصدر الأموال والنشاط الرئيسي">
-                <select onChange={f("sourceOfFunds")} defaultValue={form.sourceOfFunds || FUND_SOURCES[0]} className={inputCls}>
-                  {FUND_SOURCES.map((s) => <option key={s}>{s}</option>)}
+                <select
+                  onChange={f("sourceOfFunds")}
+                  defaultValue={form.sourceOfFunds || FUND_SOURCES[0]}
+                  className={inputCls}
+                >
+                  {FUND_SOURCES.map((s) => (
+                    <option key={s}>{s}</option>
+                  ))}
                 </select>
               </Field>
               <Field label="هل الموكل معرّض سياسيًا (PEP)؟">
-                <select onChange={(e) => setForm({ ...form, pep: e.target.value === "نعم" })} value={form.pep ? "نعم" : "لا"} className={inputCls}>
+                <select
+                  onChange={(e) => setForm({ ...form, pep: e.target.value === "نعم" })}
+                  value={form.pep ? "نعم" : "لا"}
+                  className={inputCls}
+                >
                   <option value="لا">لا (شخص عادي)</option>
                   <option value="نعم">نعم (يشغل منصباً عاماً أو أقرباؤه)</option>
                 </select>
@@ -7962,19 +10141,33 @@ const activeFiltersCount = useMemo(() => {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Field label="فحص قوائم العقوبات">
-                <select onChange={f("sanctions")} defaultValue={form.sanctions || "سليم"} className={inputCls}>
-                  {SANCTIONS_STATES.map((s) => <option key={s}>{s}</option>)}
+                <select
+                  onChange={f("sanctions")}
+                  defaultValue={form.sanctions || "سليم"}
+                  className={inputCls}
+                >
+                  {SANCTIONS_STATES.map((s) => (
+                    <option key={s}>{s}</option>
+                  ))}
                 </select>
               </Field>
               <Field label="تقييم درجة المخاطر">
-                <select onChange={f("risk")} defaultValue={form.risk || "منخفض"} className={inputCls}>
+                <select
+                  onChange={f("risk")}
+                  defaultValue={form.risk || "منخفض"}
+                  className={inputCls}
+                >
                   <option>منخفض</option>
                   <option>متوسط</option>
                   <option>مرتفع</option>
                 </select>
               </Field>
               <Field label="حالة ملف KYC">
-                <select onChange={f("status")} defaultValue={form.status || "مكتمل"} className={inputCls}>
+                <select
+                  onChange={f("status")}
+                  defaultValue={form.status || "مكتمل"}
+                  className={inputCls}
+                >
                   <option>مكتمل</option>
                   <option>قيد المراجعة</option>
                   <option>ناقص</option>
@@ -7983,10 +10176,19 @@ const activeFiltersCount = useMemo(() => {
             </div>
 
             <Field label="ملاحظات العناية الواجبة والتحقق">
-              <textarea onChange={f("notes")} defaultValue={form.notes || ""} rows={2} placeholder="أي نتائج فحص أو وثائق إضافية تم الاطلاع عليها..." className={inputCls} />
+              <textarea
+                onChange={f("notes")}
+                defaultValue={form.notes || ""}
+                rows={2}
+                placeholder="أي نتائج فحص أو وثائق إضافية تم الاطلاع عليها..."
+                className={inputCls}
+              />
             </Field>
 
-            <button onClick={saveKyc} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">
+            <button
+              onClick={saveKyc}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
               حفظ بيانات KYC والتحديث
             </button>
           </div>
@@ -8000,31 +10202,69 @@ const activeFiltersCount = useMemo(() => {
             <Field label="القضية">
               <select onChange={f("caseId")} className={inputCls}>
                 <option value="">اختر القضية…</option>
-                {cases.map((c) => <option key={c.id} value={c.id}>{c.number} - {clientName(c.clientId)}</option>)}
+                {cases.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.number} - {clientName(c.clientId)}
+                  </option>
+                ))}
               </select>
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="عدد الساعات">
-                <input type="number" step="0.5" onChange={f("hours")} placeholder="مثال: 2.5" className={inputCls} />
+                <input
+                  type="number"
+                  step="0.5"
+                  onChange={f("hours")}
+                  placeholder="مثال: 2.5"
+                  className={inputCls}
+                />
               </Field>
               <Field label="سعر الساعة (د.إ)">
-                <input type="number" onChange={f("hourlyRate")} defaultValue="750" className={inputCls} />
+                <input
+                  type="number"
+                  onChange={f("hourlyRate")}
+                  defaultValue="750"
+                  className={inputCls}
+                />
               </Field>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="المحامي / المستشار">
-                <select onChange={f("lawyerName")} defaultValue={currentUser.name} className={inputCls}>
-                  {users.map((u) => <option key={u.id} value={u.name}>{u.name}</option>)}
+                <select
+                  onChange={f("lawyerName")}
+                  defaultValue={currentUser.name}
+                  className={inputCls}
+                >
+                  {users.map((u) => (
+                    <option key={u.id} value={u.name}>
+                      {u.name}
+                    </option>
+                  ))}
                 </select>
               </Field>
               <Field label="تاريخ العمل">
-                <input type="date" onChange={f("date")} defaultValue={todayISO()} className={inputCls} />
+                <input
+                  type="date"
+                  onChange={f("date")}
+                  defaultValue={todayISO()}
+                  className={inputCls}
+                />
               </Field>
             </div>
             <Field label="تفاصيل وأنشطة ساعات العمل">
-              <textarea onChange={f("description")} rows={3} placeholder="دراسة الأوراق، إعداد المذكرة، حضور الاجتماع..." className={inputCls} />
+              <textarea
+                onChange={f("description")}
+                rows={3}
+                placeholder="دراسة الأوراق، إعداد المذكرة، حضور الاجتماع..."
+                className={inputCls}
+              />
             </Field>
-            <button onClick={saveTimeLog} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">حفظ ساعات العمل</button>
+            <button
+              onClick={saveTimeLog}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
+              حفظ ساعات العمل
+            </button>
           </div>
         </Modal>
       )}
@@ -8036,7 +10276,11 @@ const activeFiltersCount = useMemo(() => {
             <Field label="القضية">
               <select onChange={f("caseId")} className={inputCls}>
                 <option value="">اختر القضية…</option>
-                {cases.map((c) => <option key={c.id} value={c.id}>{c.number} - {clientName(c.clientId)}</option>)}
+                {cases.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.number} - {clientName(c.clientId)}
+                  </option>
+                ))}
               </select>
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -8050,12 +10294,22 @@ const activeFiltersCount = useMemo(() => {
                 </select>
               </Field>
               <Field label="المبلغ (د.إ)">
-                <input type="number" onChange={f("amount")} placeholder="0.00" className={inputCls} />
+                <input
+                  type="number"
+                  onChange={f("amount")}
+                  placeholder="0.00"
+                  className={inputCls}
+                />
               </Field>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="تاريخ المصروف">
-                <input type="date" onChange={f("date")} defaultValue={todayISO()} className={inputCls} />
+                <input
+                  type="date"
+                  onChange={f("date")}
+                  defaultValue={todayISO()}
+                  className={inputCls}
+                />
               </Field>
               <Field label="قابل للفلترة وإضافته للفاتورة؟">
                 <select onChange={f("billable")} className={inputCls}>
@@ -8065,27 +10319,48 @@ const activeFiltersCount = useMemo(() => {
               </Field>
             </div>
             <Field label="البيان والوصف">
-              <textarea onChange={f("description")} rows={2} placeholder="تفاصيل الإيصال والرقم..." className={inputCls} />
+              <textarea
+                onChange={f("description")}
+                rows={2}
+                placeholder="تفاصيل الإيصال والرقم..."
+                className={inputCls}
+              />
             </Field>
-            <button onClick={saveCaseExpense} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">حفظ المصروف</button>
+            <button
+              onClick={saveCaseExpense}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
+              حفظ المصروف
+            </button>
           </div>
         </Modal>
       )}
 
       {/* ================= نافذة حساب الأمانات ================= */}
       {modal === "trust" && (
-        <Modal title="إضافة معاملة حساب أمانات الموكل (Trust Account)" onClose={() => setModal(null)}>
+        <Modal
+          title="إضافة معاملة حساب أمانات الموكل (Trust Account)"
+          onClose={() => setModal(null)}
+        >
           <div className="space-y-4 text-sm">
             <Field label="الموكل صاحب الأمانة">
               <select onChange={f("clientId")} className={inputCls}>
                 <option value="">اختر الموكل…</option>
-                {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label="القضية المرتبطة (اختياري)">
               <select onChange={f("caseId")} className={inputCls}>
                 <option value="">غير مرتبطة بقضية محددة</option>
-                {cases.map((c) => <option key={c.id} value={c.id}>{c.number}</option>)}
+                {cases.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.number}
+                  </option>
+                ))}
               </select>
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -8096,7 +10371,12 @@ const activeFiltersCount = useMemo(() => {
                 </select>
               </Field>
               <Field label="المبلغ (د.إ)">
-                <input type="number" onChange={f("amount")} placeholder="0.00" className={inputCls} />
+                <input
+                  type="number"
+                  onChange={f("amount")}
+                  placeholder="0.00"
+                  className={inputCls}
+                />
               </Field>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -8104,30 +10384,57 @@ const activeFiltersCount = useMemo(() => {
                 <input onChange={f("refNo")} placeholder="مثال: CHK-9902" className={inputCls} />
               </Field>
               <Field label="تاريخ المعاملة">
-                <input type="date" onChange={f("date")} defaultValue={todayISO()} className={inputCls} />
+                <input
+                  type="date"
+                  onChange={f("date")}
+                  defaultValue={todayISO()}
+                  className={inputCls}
+                />
               </Field>
             </div>
             <Field label="بيان وشرح الأمانة">
-              <textarea onChange={f("notes")} rows={2} placeholder="أمانة رسوم خبرة قضائية في دعوى..." className={inputCls} />
+              <textarea
+                onChange={f("notes")}
+                rows={2}
+                placeholder="أمانة رسوم خبرة قضائية في دعوى..."
+                className={inputCls}
+              />
             </Field>
-            <button onClick={saveTrustTransaction} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">تأكيد معاملة الأمانات</button>
+            <button
+              onClick={saveTrustTransaction}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
+              تأكيد معاملة الأمانات
+            </button>
           </div>
         </Modal>
       )}
 
       {/* ================= نافذة مواعيد الأحكام التلقائية ================= */}
       {modal === "deadline" && (
-        <Modal title="تسجيل حكم قضائي وحساب ميعاد الطعن والتنبيهات التلقائية" onClose={() => setModal(null)}>
+        <Modal
+          title="تسجيل حكم قضائي وحساب ميعاد الطعن والتنبيهات التلقائية"
+          onClose={() => setModal(null)}
+        >
           <div className="space-y-4 text-sm">
             <Field label="القضية">
               <select onChange={f("caseId")} className={inputCls}>
                 <option value="">اختر القضية…</option>
-                {cases.map((c) => <option key={c.id} value={c.id}>{c.number} - {clientName(c.clientId)}</option>)}
+                {cases.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.number} - {clientName(c.clientId)}
+                  </option>
+                ))}
               </select>
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="تاريخ صدور الحكم الرسمية">
-                <input type="date" onChange={f("rulingDate")} defaultValue={todayISO()} className={inputCls} />
+                <input
+                  type="date"
+                  onChange={f("rulingDate")}
+                  defaultValue={todayISO()}
+                  className={inputCls}
+                />
               </Field>
               <Field label="درجة الحكم">
                 <select onChange={f("rulingType")} className={inputCls}>
@@ -8142,10 +10449,10 @@ const activeFiltersCount = useMemo(() => {
                 <select
                   onChange={(e) => {
                     const nature = e.target.value as "مدني" | "جزائي";
-                    setForm(prev => ({
+                    setForm((prev) => ({
                       ...prev,
                       caseNature: nature,
-                      appealDays: nature === "جزائي" ? 15 : 30
+                      appealDays: nature === "جزائي" ? 15 : 30,
                     }));
                   }}
                   defaultValue="مدني"
@@ -8170,21 +10477,25 @@ const activeFiltersCount = useMemo(() => {
                 <select
                   onChange={(e) => {
                     const uId = Number(e.target.value);
-                    const u = users.find(usr => usr.id === uId);
+                    const u = users.find((usr) => usr.id === uId);
                     if (u) {
-                      setForm(prev => ({
+                      setForm((prev) => ({
                         ...prev,
                         assignedLawyerId: u.id,
                         assignedLawyerName: u.name,
                         assignedLawyerEmail: u.email,
-                        assignedLawyerPhone: u.phone
+                        assignedLawyerPhone: u.phone,
                       }));
                     }
                   }}
                   className={inputCls}
                 >
                   <option value="">اختر المحامي المسؤول…</option>
-                  {users.map((u) => <option key={u.id} value={u.id}>{u.name} ({u.roleTitle || u.roleKey})</option>)}
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.roleTitle || u.roleKey})
+                    </option>
+                  ))}
                 </select>
               </Field>
             </div>
@@ -8196,30 +10507,54 @@ const activeFiltersCount = useMemo(() => {
               </select>
             </Field>
             <Field label="منطوق الحكم الصادر وملخص القضية">
-              <textarea onChange={f("rulingSummary")} rows={3} placeholder="منطوق الحكم الرسمي الصادر من جلسة اليوم..." className={inputCls} />
+              <textarea
+                onChange={f("rulingSummary")}
+                rows={3}
+                placeholder="منطوق الحكم الرسمي الصادر من جلسة اليوم..."
+                className={inputCls}
+              />
             </Field>
-            <button onClick={saveDeadline} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">حفظ وحساب الميعاد التلقائي</button>
+            <button
+              onClick={saveDeadline}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
+              حفظ وحساب الميعاد التلقائي
+            </button>
           </div>
         </Modal>
       )}
 
       {/* ================= نافذة سجل التنبيهات المرسلة للطعن ================= */}
       {selectedDeadlineLogs && (
-        <Modal title={`سجل الإشعارات والتنبيهات للطعن (#${selectedDeadlineLogs.id})`} onClose={() => setSelectedDeadlineLogs(null)} wide>
+        <Modal
+          title={`سجل الإشعارات والتنبيهات للطعن (#${selectedDeadlineLogs.id})`}
+          onClose={() => setSelectedDeadlineLogs(null)}
+          wide
+        >
           <div className="space-y-4 text-sm">
             <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-900">
               <p className="font-bold">القضية: {caseNo(selectedDeadlineLogs.caseId)}</p>
-              <p className="mt-0.5">المحامي المسؤول: <b>{selectedDeadlineLogs.assignedLawyerName || "المحامي سعود أحمد الشحي"}</b> ({selectedDeadlineLogs.assignedLawyerEmail || "info@lawyersuood.com"})</p>
-              <p className="mt-0.5">آخر موعد للطعن: <b className="text-red-700">{fmtDate(selectedDeadlineLogs.appealDeadlineDate)}</b></p>
+              <p className="mt-0.5">
+                المحامي المسؤول:{" "}
+                <b>{selectedDeadlineLogs.assignedLawyerName || "المحامي سعود أحمد الشحي"}</b> (
+                {selectedDeadlineLogs.assignedLawyerEmail || "info@lawyersuood.com"})
+              </p>
+              <p className="mt-0.5">
+                آخر موعد للطعن:{" "}
+                <b className="text-red-700">{fmtDate(selectedDeadlineLogs.appealDeadlineDate)}</b>
+              </p>
             </div>
 
             <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5 border-b border-slate-200 pb-2">
-              <History size={15} className="text-amber-600" /> سجّل الإشعارات الاستباقية التلقائية واليدوية:
+              <History size={15} className="text-amber-600" /> سجّل الإشعارات الاستباقية التلقائية
+              واليدوية:
             </h4>
 
-            {(!selectedDeadlineLogs.autoAlertLogs || selectedDeadlineLogs.autoAlertLogs.length === 0) ? (
+            {!selectedDeadlineLogs.autoAlertLogs ||
+            selectedDeadlineLogs.autoAlertLogs.length === 0 ? (
               <div className="text-center py-8 text-slate-500 bg-stone-50 rounded-xl border border-dashed border-slate-200">
-                لا توجد تنبيهات سابقة مُسجّلة لهذا الطعن بعد. يتم الإرسال التلقائي فور اقتراب المهلة لـ 7 أيام و 3 أيام.
+                لا توجد تنبيهات سابقة مُسجّلة لهذا الطعن بعد. يتم الإرسال التلقائي فور اقتراب المهلة
+                لـ 7 أيام و 3 أيام.
               </div>
             ) : (
               <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
@@ -8227,21 +10562,32 @@ const activeFiltersCount = useMemo(() => {
                   <div key={log.id} className="app-card p-3 text-xs space-y-1">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                        {log.type === "3_days" ? "🚨 تنبيه حرج (3 أيام)" : log.type === "7_days" ? "⚠️ تنبيه استباقي (7 أيام)" : "📱 تنبيه يدوي"}
+                        {log.type === "3_days"
+                          ? "🚨 تنبيه حرج (3 أيام)"
+                          : log.type === "7_days"
+                            ? "⚠️ تنبيه استباقي (7 أيام)"
+                            : "📱 تنبيه يدوي"}
                       </span>
                       <span className="text-[11px] font-mono text-slate-500">{log.timestamp}</span>
                     </div>
                     <p className="text-slate-600 font-medium">{log.messageSnippet}</p>
                     <div className="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 pt-1 mt-1">
-                      <span>المستلم: {log.lawyerName} ({log.recipientContact})</span>
-                      <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded">الحالة: {log.status === "sent" ? "تم الإرسال بنجاح ✅" : "قيد التنفيذ"}</span>
+                      <span>
+                        المستلم: {log.lawyerName} ({log.recipientContact})
+                      </span>
+                      <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded">
+                        الحالة: {log.status === "sent" ? "تم الإرسال بنجاح ✅" : "قيد التنفيذ"}
+                      </span>
                     </div>
                   </div>
                 ))}
               </div>
             )}
 
-            <button onClick={() => setSelectedDeadlineLogs(null)} className="w-full rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white hover:bg-slate-700">
+            <button
+              onClick={() => setSelectedDeadlineLogs(null)}
+              className="w-full rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white hover:bg-slate-700"
+            >
               إغلاق النافذة
             </button>
           </div>
@@ -8250,25 +10596,34 @@ const activeFiltersCount = useMemo(() => {
 
       {/* ================= نافذة إعادة تعيين المحامي المسؤول للطعن ================= */}
       {reassignDeadlineModal && (
-        <Modal title="تغيير وإسناد المحامي المسؤول عن متابعة الطعن" onClose={() => setReassignDeadlineModal(null)}>
+        <Modal
+          title="تغيير وإسناد المحامي المسؤول عن متابعة الطعن"
+          onClose={() => setReassignDeadlineModal(null)}
+        >
           <div className="space-y-4 text-sm">
             <p className="text-xs text-slate-600">
-              قم باختيار المحامي المستهدف لإعادة إسناد ملف الطعن بالقضية <b>{caseNo(reassignDeadlineModal.caseId)}</b> وحفظ بيانات التواصل لتلقي تنبيهات الاستئناف تلقائياً.
+              قم باختيار المحامي المستهدف لإعادة إسناد ملف الطعن بالقضية{" "}
+              <b>{caseNo(reassignDeadlineModal.caseId)}</b> وحفظ بيانات التواصل لتلقي تنبيهات
+              الاستئناف تلقائياً.
             </p>
 
             <Field label="المحامي المسؤول الجديد">
               <select
                 onChange={(e) => {
                   const uId = Number(e.target.value);
-                  const selU = users.find(u => u.id === uId);
+                  const selU = users.find((u) => u.id === uId);
                   if (selU) {
-                    setReassignDeadlineModal(prev => prev ? {
-                      ...prev,
-                      assignedLawyerId: selU.id,
-                      assignedLawyerName: selU.name,
-                      assignedLawyerEmail: selU.email,
-                      assignedLawyerPhone: selU.phone
-                    } : null);
+                    setReassignDeadlineModal((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            assignedLawyerId: selU.id,
+                            assignedLawyerName: selU.name,
+                            assignedLawyerEmail: selU.email,
+                            assignedLawyerPhone: selU.phone,
+                          }
+                        : null,
+                    );
                   }
                 }}
                 value={reassignDeadlineModal.assignedLawyerId || ""}
@@ -8286,14 +10641,22 @@ const activeFiltersCount = useMemo(() => {
               <Field label="بريد المحامي لاستلام التنبيهات">
                 <input
                   value={reassignDeadlineModal.assignedLawyerEmail || ""}
-                  onChange={(e) => setReassignDeadlineModal(prev => prev ? { ...prev, assignedLawyerEmail: e.target.value } : null)}
+                  onChange={(e) =>
+                    setReassignDeadlineModal((prev) =>
+                      prev ? { ...prev, assignedLawyerEmail: e.target.value } : null,
+                    )
+                  }
                   className={inputCls}
                 />
               </Field>
               <Field label="هاتف المحامي للإشعارات الفورية">
                 <input
                   value={reassignDeadlineModal.assignedLawyerPhone || ""}
-                  onChange={(e) => setReassignDeadlineModal(prev => prev ? { ...prev, assignedLawyerPhone: e.target.value } : null)}
+                  onChange={(e) =>
+                    setReassignDeadlineModal((prev) =>
+                      prev ? { ...prev, assignedLawyerPhone: e.target.value } : null,
+                    )
+                  }
                   className={inputCls}
                 />
               </Field>
@@ -8302,7 +10665,11 @@ const activeFiltersCount = useMemo(() => {
             <Field label="قناة التنبيه الاستباقي التلقائي المفضلة">
               <select
                 value={reassignDeadlineModal.preferredChannel || "both"}
-                onChange={(e) => setReassignDeadlineModal(prev => prev ? { ...prev, preferredChannel: e.target.value as any } : null)}
+                onChange={(e) =>
+                  setReassignDeadlineModal((prev) =>
+                    prev ? { ...prev, preferredChannel: e.target.value as any } : null,
+                  )
+                }
                 className={inputCls}
               >
                 <option value="both">إيميل + واتساب تلقائي (موصى به)</option>
@@ -8314,7 +10681,11 @@ const activeFiltersCount = useMemo(() => {
             <button
               onClick={() => {
                 if (reassignDeadlineModal) {
-                  setDeadlines(prev => prev.map(x => x.id === reassignDeadlineModal.id ? reassignDeadlineModal : x));
+                  setDeadlines((prev) =>
+                    prev.map((x) =>
+                      x.id === reassignDeadlineModal.id ? reassignDeadlineModal : x,
+                    ),
+                  );
                   setReassignDeadlineModal(null);
                 }
               }}
@@ -8331,17 +10702,27 @@ const activeFiltersCount = useMemo(() => {
         <Modal title="إبلاغ عن معاملات مشبوهة (AML / STR Report)" onClose={() => setModal(null)}>
           <div className="space-y-4 text-sm">
             <div className="bg-red-50 border border-red-200 p-3 rounded-xl text-xs text-red-900 font-semibold">
-              🔒 هذا السجل سري للغاية ومخصص لمسؤول الامتثال فقط وفق متطلبات وحدة المعلومات المالية FIU بالدولة.
+              🔒 هذا السجل سري للغاية ومخصص لمسؤول الامتثال فقط وفق متطلبات وحدة المعلومات المالية
+              FIU بالدولة.
             </div>
             <Field label="الموكل المشتبه به">
               <select onChange={f("clientId")} className={inputCls}>
                 <option value="">اختر الموكل…</option>
-                {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {clients.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
             </Field>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="المبلغ المشتبه به (د.إ)">
-                <input type="number" onChange={f("amountFlagged")} placeholder="0.00" className={inputCls} />
+                <input
+                  type="number"
+                  onChange={f("amountFlagged")}
+                  placeholder="0.00"
+                  className={inputCls}
+                />
               </Field>
               <Field label="حالة البلاغ">
                 <select onChange={f("status")} className={inputCls}>
@@ -8352,19 +10733,34 @@ const activeFiltersCount = useMemo(() => {
               </Field>
             </div>
             <Field label="أسباب الاشتباه ومؤشرات غسل الأموال">
-              <textarea onChange={f("suspicionReason")} rows={3} placeholder="مثال: حوالات نقداً من أطراف مجهولة بدون فواتير سابقة..." className={inputCls} />
+              <textarea
+                onChange={f("suspicionReason")}
+                rows={3}
+                placeholder="مثال: حوالات نقداً من أطراف مجهولة بدون فواتير سابقة..."
+                className={inputCls}
+              />
             </Field>
-            <button onClick={saveStrReport} className="w-full rounded-xl bg-red-700 py-3 font-bold text-white hover:bg-red-800">حفظ وتوثيق بلاغ الاشتباه</button>
+            <button
+              onClick={saveStrReport}
+              className="w-full rounded-xl bg-red-700 py-3 font-bold text-white hover:bg-red-800"
+            >
+              حفظ وتوثيق بلاغ الاشتباه
+            </button>
           </div>
         </Modal>
       )}
 
       {/* ================= نافذة إرسال التنبيهات والرسائل ================= */}
       {notifyModal && (
-        <Modal title={`مركز إرسال التنبيهات — ${notifyModal.type}`} onClose={() => setNotifyModal(null)}>
+        <Modal
+          title={`مركز إرسال التنبيهات — ${notifyModal.type}`}
+          onClose={() => setNotifyModal(null)}
+        >
           <div className="space-y-4 text-sm">
             <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-900 space-y-1">
-              <p className="font-bold flex items-center gap-1.5"><Send size={14} /> تنبيه رسمي مباشر إلى الموكل</p>
+              <p className="font-bold flex items-center gap-1.5">
+                <Send size={14} /> تنبيه رسمي مباشر إلى الموكل
+              </p>
               <p>يتم توثيق الرسالة تلقائياً في سجل التنبيهات بمجرد الضغط على إرسال.</p>
             </div>
 
@@ -8372,14 +10768,18 @@ const activeFiltersCount = useMemo(() => {
               <Field label="اسم المستلم">
                 <input
                   value={notifyModal.recipientName}
-                  onChange={(e) => setNotifyModal({ ...notifyModal, recipientName: e.target.value })}
+                  onChange={(e) =>
+                    setNotifyModal({ ...notifyModal, recipientName: e.target.value })
+                  }
                   className={inputCls}
                 />
               </Field>
               <Field label="قناة الإرسال المفضلة">
                 <select
                   value={notifyModal.channel}
-                  onChange={(e) => setNotifyModal({ ...notifyModal, channel: e.target.value as any })}
+                  onChange={(e) =>
+                    setNotifyModal({ ...notifyModal, channel: e.target.value as any })
+                  }
                   className={inputCls}
                 >
                   <option value="واتساب">📱 عبر الواتساب (WhatsApp)</option>
@@ -8393,7 +10793,9 @@ const activeFiltersCount = useMemo(() => {
               <Field label="رقم الواتساب (+971)">
                 <input
                   value={notifyModal.recipientPhone}
-                  onChange={(e) => setNotifyModal({ ...notifyModal, recipientPhone: e.target.value })}
+                  onChange={(e) =>
+                    setNotifyModal({ ...notifyModal, recipientPhone: e.target.value })
+                  }
                   placeholder="+971 50 123 4567"
                   className={inputCls}
                 />
@@ -8401,7 +10803,9 @@ const activeFiltersCount = useMemo(() => {
               <Field label="البريد الإلكتروني">
                 <input
                   value={notifyModal.recipientEmail}
-                  onChange={(e) => setNotifyModal({ ...notifyModal, recipientEmail: e.target.value })}
+                  onChange={(e) =>
+                    setNotifyModal({ ...notifyModal, recipientEmail: e.target.value })
+                  }
                   placeholder="client@example.com"
                   className={inputCls}
                 />
@@ -8426,7 +10830,10 @@ const activeFiltersCount = useMemo(() => {
             </Field>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <button onClick={() => setNotifyModal(null)} className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors">
+              <button
+                onClick={() => setNotifyModal(null)}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors"
+              >
                 إلغاء
               </button>
               <button
@@ -8442,7 +10849,12 @@ const activeFiltersCount = useMemo(() => {
 
       {/* ================= نافذة إضافة/تعديل جهات المحاكم ================= */}
       {modal === "courtContact" && (
-        <Modal title={editingCourtContact ? "تعديل بيانات تواصل جهة محكمة" : "إضافة جهة / موظف محكمة جديد"} onClose={() => setModal(null)}>
+        <Modal
+          title={
+            editingCourtContact ? "تعديل بيانات تواصل جهة محكمة" : "إضافة جهة / موظف محكمة جديد"
+          }
+          onClose={() => setModal(null)}
+        >
           <div className="space-y-4 text-sm">
             <Field label="اسم المحكمة / الجهة القضائية">
               <input
@@ -8456,9 +10868,13 @@ const activeFiltersCount = useMemo(() => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="الإمارة">
                 <select value={form.emirate || "دبي"} onChange={f("emirate")} className={inputCls}>
-                  {["دبي", "أبوظبي", "الشارقة", "عجمان", "رأس الخيمة", "أم القيوين", "الفجيرة"].map((e) => (
-                    <option key={e} value={e}>{e}</option>
-                  ))}
+                  {["دبي", "أبوظبي", "الشارقة", "عجمان", "رأس الخيمة", "أم القيوين", "الفجيرة"].map(
+                    (e) => (
+                      <option key={e} value={e}>
+                        {e}
+                      </option>
+                    ),
+                  )}
                 </select>
               </Field>
 
@@ -8541,10 +10957,16 @@ const activeFiltersCount = useMemo(() => {
             </Field>
 
             <div className="flex justify-end gap-2 pt-3">
-              <button onClick={() => setModal(null)} className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors">
+              <button
+                onClick={() => setModal(null)}
+                className="rounded-xl px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors"
+              >
                 إلغاء
               </button>
-              <button onClick={saveCourtContact} className="rounded-xl bg-amber-500 px-5 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400">
+              <button
+                onClick={saveCourtContact}
+                className="rounded-xl bg-amber-500 px-5 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400"
+              >
                 حفظ بيانات التواصل
               </button>
             </div>
@@ -8554,12 +10976,21 @@ const activeFiltersCount = useMemo(() => {
 
       {/* ================= نافذة معاينة وتأكيد استيراد أرقام دليل المحاكم من إكسل ================= */}
       {courtExcelModalOpen && (
-        <Modal wide title="معاينة واستيراد أرقام ودليل المحاكم والجهات من ملف إكسل" onClose={() => setCourtExcelModalOpen(false)}>
+        <Modal
+          wide
+          title="معاينة واستيراد أرقام ودليل المحاكم والجهات من ملف إكسل"
+          onClose={() => setCourtExcelModalOpen(false)}
+        >
           <div className="space-y-4 text-sm">
             <div className="bg-emerald-50 p-3.5 rounded-2xl border border-emerald-200 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-emerald-900 text-xs font-bold">
                 <FileSpreadsheet size={18} className="text-emerald-700" />
-                <span>اسم الملف: <b className="font-mono text-emerald-950">{courtExcelFileName || "ملف_إكسل.xlsx"}</b></span>
+                <span>
+                  اسم الملف:{" "}
+                  <b className="font-mono text-emerald-950">
+                    {courtExcelFileName || "ملف_إكسل.xlsx"}
+                  </b>
+                </span>
               </div>
               <span className="bg-emerald-200 text-emerald-900 px-3 py-1 rounded-full text-xs font-extrabold">
                 عدد الجهات المكتشفة: {courtImportPreviewList.length} سجل
@@ -8568,9 +10999,13 @@ const activeFiltersCount = useMemo(() => {
 
             {/* وضعية الاستيراد */}
             <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
-              <label className="block text-xs font-bold text-slate-800">طريقة معالجة البيانات عند الحفظ:</label>
+              <label className="block text-xs font-bold text-slate-800">
+                طريقة معالجة البيانات عند الحفظ:
+              </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                <label className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition ${courtExcelImportMode === "append" ? "bg-amber-50 border-amber-400 font-bold text-amber-900" : "bg-white border-slate-200 text-slate-700"}`}>
+                <label
+                  className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition ${courtExcelImportMode === "append" ? "bg-amber-50 border-amber-400 font-bold text-amber-900" : "bg-white border-slate-200 text-slate-700"}`}
+                >
                   <input
                     type="radio"
                     name="courtImportMode"
@@ -8580,7 +11015,9 @@ const activeFiltersCount = useMemo(() => {
                   />
                   <span>دمج مع الدليل الحالي (إضافة السجلات الجديدة)</span>
                 </label>
-                <label className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition ${courtExcelImportMode === "replace" ? "bg-red-50 border-red-400 font-bold text-red-900" : "bg-white border-slate-200 text-slate-700"}`}>
+                <label
+                  className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition ${courtExcelImportMode === "replace" ? "bg-red-50 border-red-400 font-bold text-red-900" : "bg-white border-slate-200 text-slate-700"}`}
+                >
                   <input
                     type="radio"
                     name="courtImportMode"
@@ -8597,7 +11034,9 @@ const activeFiltersCount = useMemo(() => {
             <div className="space-y-2">
               <h4 className="text-xs font-bold text-slate-800 flex items-center justify-between">
                 <span>جدول معاينة السجلات قبل اعتمادها:</span>
-                <span className="text-slate-500 font-normal">يمكنك حذف أي صف غير مرغوب فيه بالنقر على علامة (X)</span>
+                <span className="text-slate-500 font-normal">
+                  يمكنك حذف أي صف غير مرغوب فيه بالنقر على علامة (X)
+                </span>
               </h4>
               <div className="max-h-72 overflow-y-auto rounded-2xl border border-slate-200 shadow-inner">
                 <table className="w-full text-right text-xs">
@@ -8611,7 +11050,9 @@ const activeFiltersCount = useMemo(() => {
                       <th className="p-2.5">الهاتف والتمديدة</th>
                       <th className="p-2.5">البريد الإلكتروني</th>
                       {/* عمود ثابت (sticky) حتى يبقى زر الحذف ظاهراً دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
-                      <th className="sticky left-0 z-10 p-2.5 text-center bg-slate-100 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">إجراء</th>
+                      <th className="sticky left-0 z-10 p-2.5 text-center bg-slate-100 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
+                        إجراء
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100/80 bg-white">
@@ -8620,17 +11061,22 @@ const activeFiltersCount = useMemo(() => {
                         <td className="p-2.5 font-mono text-slate-400">{idx + 1}</td>
                         <td className="p-2.5 font-bold text-slate-900">{item.courtName}</td>
                         <td className="p-2.5">
-                          <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-semibold">{item.emirate}</span>
+                          <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-semibold">
+                            {item.emirate}
+                          </span>
                         </td>
                         <td className="p-2.5">{item.department}</td>
                         <td className="p-2.5 text-slate-600">{item.titleOrEmployee}</td>
                         <td className="p-2.5 font-mono text-slate-700">
-                          {item.phone} {item.extOrSeal && item.extOrSeal !== "—" ? `(${item.extOrSeal})` : ""}
+                          {item.phone}{" "}
+                          {item.extOrSeal && item.extOrSeal !== "—" ? `(${item.extOrSeal})` : ""}
                         </td>
                         <td className="p-2.5 font-mono text-slate-600 text-[11px]">{item.email}</td>
                         <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 p-2.5 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
                           <button
-                            onClick={() => setCourtImportPreviewList(prev => prev.filter((_, i) => i !== idx))}
+                            onClick={() =>
+                              setCourtImportPreviewList((prev) => prev.filter((_, i) => i !== idx))
+                            }
                             className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
                             title="حذف هذا الصف من المعاينة"
                           >
@@ -8656,7 +11102,8 @@ const activeFiltersCount = useMemo(() => {
                 disabled={courtImportPreviewList.length === 0}
                 className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 shadow-md transition disabled:opacity-50"
               >
-                <CheckCircle2 size={16} /> تأكيد واستيراد ({courtImportPreviewList.length}) جهة إلى الدليل
+                <CheckCircle2 size={16} /> تأكيد واستيراد ({courtImportPreviewList.length}) جهة إلى
+                الدليل
               </button>
             </div>
           </div>
@@ -8665,18 +11112,36 @@ const activeFiltersCount = useMemo(() => {
 
       {/* ================= نوافذ إدارة الموظفين والكادر (HR) ================= */}
       {modal === "employee" && (
-        <Modal title={form.id ? "تعديل بيانات الموظف" : "إضافة موظف / مستشار جديد"} onClose={() => setModal(null)} wide>
+        <Modal
+          title={form.id ? "تعديل بيانات الموظف" : "إضافة موظف / مستشار جديد"}
+          onClose={() => setModal(null)}
+          wide
+        >
           <div className="space-y-4 text-sm">
             <Field label="الاسم الكامل">
-              <input onChange={f("fullName")} defaultValue={form.fullName || ""} placeholder="مثال: د. عبد الله بن حمد آل علي" className={inputCls} />
+              <input
+                onChange={f("fullName")}
+                defaultValue={form.fullName || ""}
+                placeholder="مثال: د. عبد الله بن حمد آل علي"
+                className={inputCls}
+              />
             </Field>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="المسمى الوظيفي">
-                <input onChange={f("jobTitle")} defaultValue={form.jobTitle || ""} placeholder="مثال: مستشار قانوني أول / محامي مدني" className={inputCls} />
+                <input
+                  onChange={f("jobTitle")}
+                  defaultValue={form.jobTitle || ""}
+                  placeholder="مثال: مستشار قانوني أول / محامي مدني"
+                  className={inputCls}
+                />
               </Field>
               <Field label="حالة الموظف">
-                <select onChange={f("status")} defaultValue={form.status || "ACTIVE"} className={inputCls}>
+                <select
+                  onChange={f("status")}
+                  defaultValue={form.status || "ACTIVE"}
+                  className={inputCls}
+                >
                   <option value="ACTIVE">على رأس العمل (Active)</option>
                   <option value="ON_LEAVE">في إجازة (On Leave)</option>
                   <option value="TERMINATED">منهي الخدمة (Terminated)</option>
@@ -8686,31 +11151,67 @@ const activeFiltersCount = useMemo(() => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="البريد الإلكتروني الرسمي">
-                <input type="email" onChange={f("email")} defaultValue={form.email || ""} placeholder="employee@law.ae" className={inputCls} />
+                <input
+                  type="email"
+                  onChange={f("email")}
+                  defaultValue={form.email || ""}
+                  placeholder="employee@law.ae"
+                  className={inputCls}
+                />
               </Field>
               <Field label="رقم الهاتف">
-                <input onChange={f("phone")} defaultValue={form.phone || ""} placeholder="050-XXXXXXX" className={inputCls} />
+                <input
+                  onChange={f("phone")}
+                  defaultValue={form.phone || ""}
+                  placeholder="050-XXXXXXX"
+                  className={inputCls}
+                />
               </Field>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Field label="رقم الهوية الإماراتية">
-                <input onChange={f("emiratesId")} defaultValue={form.emiratesId || ""} placeholder="784-XXXX-XXXXXXX-X" className={inputCls} />
+                <input
+                  onChange={f("emiratesId")}
+                  defaultValue={form.emiratesId || ""}
+                  placeholder="784-XXXX-XXXXXXX-X"
+                  className={inputCls}
+                />
               </Field>
               <Field label="رقم جواز السفر">
-                <input onChange={f("passportNumber")} defaultValue={form.passportNumber || ""} placeholder="A12345678" className={inputCls} />
+                <input
+                  onChange={f("passportNumber")}
+                  defaultValue={form.passportNumber || ""}
+                  placeholder="A12345678"
+                  className={inputCls}
+                />
               </Field>
               <Field label="تاريخ انتهاء الهوية/الإقامة">
-                <input type="date" onChange={f("idExpiryDate")} defaultValue={form.idExpiryDate || ""} className={inputCls} />
+                <input
+                  type="date"
+                  onChange={f("idExpiryDate")}
+                  defaultValue={form.idExpiryDate || ""}
+                  className={inputCls}
+                />
               </Field>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="رقم قيد المحامي (إن وجد)">
-                <input onChange={f("licenseNumber")} defaultValue={form.licenseNumber || ""} placeholder="مثال: ADV-UAE-9982" className={inputCls} />
+                <input
+                  onChange={f("licenseNumber")}
+                  defaultValue={form.licenseNumber || ""}
+                  placeholder="مثال: ADV-UAE-9982"
+                  className={inputCls}
+                />
               </Field>
               <Field label="تاريخ المباشرة / الانضمام">
-                <input type="date" onChange={f("joinDate")} defaultValue={form.joinDate || todayISO()} className={inputCls} />
+                <input
+                  type="date"
+                  onChange={f("joinDate")}
+                  defaultValue={form.joinDate || todayISO()}
+                  className={inputCls}
+                />
               </Field>
             </div>
 
@@ -8718,18 +11219,36 @@ const activeFiltersCount = useMemo(() => {
               <p className="text-xs font-bold text-slate-900">تفاصيل هيكل الراتب والبدلات (د.إ):</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <Field label="الراتب الأساسي">
-                  <input type="number" onChange={f("basicSalary")} defaultValue={form.basicSalary || 0} className={inputCls} />
+                  <input
+                    type="number"
+                    onChange={f("basicSalary")}
+                    defaultValue={form.basicSalary || 0}
+                    className={inputCls}
+                  />
                 </Field>
                 <Field label="بدل السكن">
-                  <input type="number" onChange={f("housingAllowance")} defaultValue={form.housingAllowance || 0} className={inputCls} />
+                  <input
+                    type="number"
+                    onChange={f("housingAllowance")}
+                    defaultValue={form.housingAllowance || 0}
+                    className={inputCls}
+                  />
                 </Field>
                 <Field label="بدل المواصلات">
-                  <input type="number" onChange={f("transportAllowance")} defaultValue={form.transportAllowance || 0} className={inputCls} />
+                  <input
+                    type="number"
+                    onChange={f("transportAllowance")}
+                    defaultValue={form.transportAllowance || 0}
+                    className={inputCls}
+                  />
                 </Field>
               </div>
             </div>
 
-            <button onClick={saveEmployee} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">
+            <button
+              onClick={saveEmployee}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
               حفظ بيانات الموظف
             </button>
           </div>
@@ -8740,16 +11259,26 @@ const activeFiltersCount = useMemo(() => {
         <Modal title="تقديم طلب إجازة كادر" onClose={() => setModal(null)}>
           <div className="space-y-4 text-sm">
             <Field label="الموظف صاحب الطلب">
-              <select onChange={f("employeeId")} defaultValue={form.employeeId || ""} className={inputCls}>
+              <select
+                onChange={f("employeeId")}
+                defaultValue={form.employeeId || ""}
+                className={inputCls}
+              >
                 <option value="">اختر الموظف...</option>
                 {employees.map((e) => (
-                  <option key={e.id} value={e.id}>{e.fullName} ({e.jobTitle})</option>
+                  <option key={e.id} value={e.id}>
+                    {e.fullName} ({e.jobTitle})
+                  </option>
                 ))}
               </select>
             </Field>
 
             <Field label="نوع الإجازة">
-              <select onChange={f("leaveType")} defaultValue={form.leaveType || "ANNUAL"} className={inputCls}>
+              <select
+                onChange={f("leaveType")}
+                defaultValue={form.leaveType || "ANNUAL"}
+                className={inputCls}
+              >
                 <option value="ANNUAL">إجازة سنوية اعتيادية</option>
                 <option value="SICK">إجازة مرضية</option>
                 <option value="EMERGENCY">إجازة طارئة</option>
@@ -8759,18 +11288,36 @@ const activeFiltersCount = useMemo(() => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="تاريخ البداية">
-                <input type="date" onChange={f("startDate")} defaultValue={form.startDate || todayISO()} className={inputCls} />
+                <input
+                  type="date"
+                  onChange={f("startDate")}
+                  defaultValue={form.startDate || todayISO()}
+                  className={inputCls}
+                />
               </Field>
               <Field label="تاريخ النهاية">
-                <input type="date" onChange={f("endDate")} defaultValue={form.endDate || todayISO()} className={inputCls} />
+                <input
+                  type="date"
+                  onChange={f("endDate")}
+                  defaultValue={form.endDate || todayISO()}
+                  className={inputCls}
+                />
               </Field>
             </div>
 
             <Field label="السبب / تفاصيل الإجازة">
-              <textarea onChange={f("reason")} rows={3} placeholder="اكتب سبب طلب الإجازة هنا..." className={inputCls} />
+              <textarea
+                onChange={f("reason")}
+                rows={3}
+                placeholder="اكتب سبب طلب الإجازة هنا..."
+                className={inputCls}
+              />
             </Field>
 
-            <button onClick={saveLeaveRequest} className="w-full rounded-xl bg-amber-500 py-3 font-bold text-slate-950 hover:bg-amber-400 transition">
+            <button
+              onClick={saveLeaveRequest}
+              className="w-full rounded-xl bg-amber-500 py-3 font-bold text-slate-950 hover:bg-amber-400 transition"
+            >
               ارسال طلب الإجازة
             </button>
           </div>
@@ -8781,17 +11328,27 @@ const activeFiltersCount = useMemo(() => {
         <Modal title="تقديم مطالبة مصروفات وتعويض" onClose={() => setModal(null)}>
           <div className="space-y-4 text-sm">
             <Field label="الموظف المتقدم بالمطالبة">
-              <select onChange={f("employeeId")} defaultValue={form.employeeId || ""} className={inputCls}>
+              <select
+                onChange={f("employeeId")}
+                defaultValue={form.employeeId || ""}
+                className={inputCls}
+              >
                 <option value="">اختر الموظف...</option>
                 {employees.map((e) => (
-                  <option key={e.id} value={e.id}>{e.fullName} ({e.jobTitle})</option>
+                  <option key={e.id} value={e.id}>
+                    {e.fullName} ({e.jobTitle})
+                  </option>
                 ))}
               </select>
             </Field>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="بند / نوع المصروف">
-                <select onChange={f("category")} defaultValue={form.category || "COURT_FEES"} className={inputCls}>
+                <select
+                  onChange={f("category")}
+                  defaultValue={form.category || "COURT_FEES"}
+                  className={inputCls}
+                >
                   <option value="COURT_FEES">رسوم محاكم وخدمات قضائية</option>
                   <option value="TRANSPORT">تنقلات ومواصلات قضائية</option>
                   <option value="SUPPLIES">مستلزمات وأدوات مكتبية</option>
@@ -8800,7 +11357,12 @@ const activeFiltersCount = useMemo(() => {
               </Field>
 
               <Field label="المبلغ المطلوب (د.إ)">
-                <input type="number" onChange={f("amount")} placeholder="0.00" className={inputCls} />
+                <input
+                  type="number"
+                  onChange={f("amount")}
+                  placeholder="0.00"
+                  className={inputCls}
+                />
               </Field>
             </div>
 
@@ -8808,16 +11370,25 @@ const activeFiltersCount = useMemo(() => {
               <select onChange={f("caseId")} defaultValue={form.caseId || ""} className={inputCls}>
                 <option value="">مصروف إداري عام للمكتب</option>
                 {cases.map((c) => (
-                  <option key={c.id} value={c.id}>قضية #{c.number} - {c.title}</option>
+                  <option key={c.id} value={c.id}>
+                    قضية #{c.number} - {c.title}
+                  </option>
                 ))}
               </select>
             </Field>
 
             <Field label="رابط أو ملاحظات الفاتورة/الإيصال">
-              <input onChange={f("receiptUrl")} placeholder="رابط المستند أو رقم الإيصال..." className={inputCls} />
+              <input
+                onChange={f("receiptUrl")}
+                placeholder="رابط المستند أو رقم الإيصال..."
+                className={inputCls}
+              />
             </Field>
 
-            <button onClick={saveEmployeeExpense} className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors">
+            <button
+              onClick={saveEmployeeExpense}
+              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+            >
               تقديم مطالبة المصروفات
             </button>
           </div>
@@ -8829,21 +11400,34 @@ const activeFiltersCount = useMemo(() => {
           <div className="space-y-4 text-sm">
             <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl p-2.5 text-[11px] text-red-800">
               <ShieldAlert size={15} className="shrink-0 mt-0.5" />
-              <p>هذا السجل سري ويظهر فقط للحساب الرئيسي ضمن ملف الموظف المعني، ولا يطّلع عليه بقية الكادر.</p>
+              <p>
+                هذا السجل سري ويظهر فقط للحساب الرئيسي ضمن ملف الموظف المعني، ولا يطّلع عليه بقية
+                الكادر.
+              </p>
             </div>
 
             <Field label="الموظف المعني">
-              <select onChange={f("employeeId")} defaultValue={form.employeeId || ""} className={inputCls}>
+              <select
+                onChange={f("employeeId")}
+                defaultValue={form.employeeId || ""}
+                className={inputCls}
+              >
                 <option value="">اختر الموظف...</option>
                 {employees.map((e) => (
-                  <option key={e.id} value={e.id}>{e.fullName} ({e.jobTitle})</option>
+                  <option key={e.id} value={e.id}>
+                    {e.fullName} ({e.jobTitle})
+                  </option>
                 ))}
               </select>
             </Field>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Field label="نوع الإجراء">
-                <select onChange={f("type")} defaultValue={form.type || "تحقيق داخلي"} className={inputCls}>
+                <select
+                  onChange={f("type")}
+                  defaultValue={form.type || "تحقيق داخلي"}
+                  className={inputCls}
+                >
                   <option value="تحقيق داخلي">تحقيق داخلي</option>
                   <option value="إنذار شفهي">إنذار شفهي</option>
                   <option value="إنذار كتابي">إنذار كتابي</option>
@@ -8853,778 +11437,1154 @@ const activeFiltersCount = useMemo(() => {
                 </select>
               </Field>
               <Field label="تاريخ الإجراء">
-                <input type="date" onChange={f("actionDate")} defaultValue={form.actionDate || todayISO()} className={inputCls} />
+                <input
+                  type="date"
+                  onChange={f("actionDate")}
+                  defaultValue={form.actionDate || todayISO()}
+                  className={inputCls}
+                />
               </Field>
             </div>
 
             <Field label="موضوع الإجراء">
-              <input onChange={f("subject")} placeholder="مثال: إنذار كتابي للتأخر المتكرر عن الدوام" className={inputCls} />
+              <input
+                onChange={f("subject")}
+                placeholder="مثال: إنذار كتابي للتأخر المتكرر عن الدوام"
+                className={inputCls}
+              />
             </Field>
 
             <Field label="التفاصيل الكاملة">
-              <textarea onChange={f("details")} rows={5} placeholder="اكتبي تفاصيل التحقيق أو الإنذار أو القرار هنا بالتفصيل..." className={inputCls} />
+              <textarea
+                onChange={f("details")}
+                rows={5}
+                placeholder="اكتبي تفاصيل التحقيق أو الإنذار أو القرار هنا بالتفصيل..."
+                className={inputCls}
+              />
             </Field>
 
             <Field label="رابط أو رقم المستند المرفق (اختياري)">
-              <input onChange={f("attachmentRef")} placeholder="رابط نسخة ضوئية من الإنذار/القرار، أو رقم مرجعي..." className={inputCls} />
+              <input
+                onChange={f("attachmentRef")}
+                placeholder="رابط نسخة ضوئية من الإنذار/القرار، أو رقم مرجعي..."
+                className={inputCls}
+              />
             </Field>
 
-            <button onClick={saveDisciplinaryAction} className="w-full rounded-xl bg-red-700 py-3 font-bold text-white hover:bg-red-800 transition">
+            <button
+              onClick={saveDisciplinaryAction}
+              className="w-full rounded-xl bg-red-700 py-3 font-bold text-white hover:bg-red-800 transition"
+            >
               حفظ الإجراء التأديبي
             </button>
           </div>
         </Modal>
       )}
 
-{agrPreviewId !== null && (() => {
-  const oa = officeAgreements.find((a) => a.id === agrPreviewId);
-  if (!oa) return null;
-  const includesSigStampAgr = canUseSignatureStamp && Boolean(letterhead.signatureImg || letterhead.stampImg);
-  const logAgreementUsage = () => {
-    logAuditAction("UPDATE", "الورق الرسمي", `طباعة اتفاقية أتعاب رقم: ${oa.agreementNumber}`, `استخدم المستخدم "${currentUser.name}" الورق الرسمي${includesSigStampAgr ? " والتوقيع والختم المعتمدين" : ""} لطباعة/تصدير اتفاقية الأتعاب رقم ${oa.agreementNumber}`, oa.id);
-  };
-  const activeClauses = oa.customClauses && oa.customClauses.length > 0 ? oa.customClauses : OFFICE_AGREEMENT_CLAUSES;
-  const startEditAgreementClauses = () => {
-    if (!checkPerm("manageAgreements", "تعديل بنود اتفاقية الأتعاب")) return;
-    setAgreementClausesDraft(activeClauses.map((c) => ({ ...c })));
-    setEditingAgreementClauses(true);
-  };
-  const saveAgreementClauses = () => {
-    const cleaned = agreementClausesDraft.filter((c) => c.ar.trim() || c.en.trim());
-    setOfficeAgreements((prev) => prev.map((x) => (x.id === oa.id ? { ...x, customClauses: cleaned } : x)));
-    logAuditAction("UPDATE", "اتفاقيات الأتعاب", `تعديل بنود اتفاقية رقم: ${oa.agreementNumber}`, `قام المستخدم "${currentUser.name}" بتعديل الشروط والبنود يدوياً لاتفاقية الأتعاب رقم ${oa.agreementNumber}`, oa.id);
-    setEditingAgreementClauses(false);
-  };
-  const cancelEditAgreementClauses = () => setEditingAgreementClauses(false);
-  const resetAgreementClauses = () => {
-    if (!checkPerm("manageAgreements", "استعادة البنود الافتراضية لاتفاقية الأتعاب")) return;
-    setOfficeAgreements((prev) => prev.map((x) => (x.id === oa.id ? { ...x, customClauses: undefined } : x)));
-    logAuditAction("UPDATE", "اتفاقيات الأتعاب", `استعادة البنود الافتراضية لاتفاقية رقم: ${oa.agreementNumber}`, `قام المستخدم "${currentUser.name}" باستعادة الشروط والبنود الافتراضية لاتفاقية الأتعاب رقم ${oa.agreementNumber}`, oa.id);
-  };
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#08130f]/75 p-4 overflow-y-auto">
-      <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl print-area">
-        {/* شريط الأدوات — لا يظهر عند الطباعة */}
-        <div className="no-print flex items-center justify-between border-b border-slate-200 px-6 py-4 sticky top-0 bg-white z-10">
-          <div className="flex items-center gap-2">
-            <FileCheck size={18} className="text-amber-600" />
-            <h3 className="font-bold text-slate-800">معاينة الاتفاقية {oa.agreementNumber} — {oa.clientNameAr}</h3>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-    if (!checkPerm("deleteAgreements", "حذف اتفاقية الأتعاب")) return;
-    setDeleteAgrConfirm(oa);
-  }}
-              className="flex items-center gap-1.5 rounded-xl bg-red-50 text-red-600 border border-red-200 px-3.5 py-2 text-xs font-bold hover:bg-red-100 transition"
-              title="حذف هذه الاتفاقية"
-            >
-              <Trash2 size={15} /> حذف الاتفاقية
-            </button>
-            {!editingAgreementClauses && (
-              <button
-                onClick={startEditAgreementClauses}
-                className="flex items-center gap-1.5 rounded-xl bg-white border border-amber-300 px-3.5 py-2 text-xs font-bold text-amber-700 hover:bg-amber-50 transition"
-                title="تعديل الشروط والبنود يدوياً لهذه الاتفاقية"
-              >
-                <Edit2 size={15} /> تعديل البنود
-              </button>
-            )}
-            {!editingAgreementClauses && oa.customClauses && (
-              <button
-                onClick={resetAgreementClauses}
-                className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 transition"
-                title="استعادة البنود الافتراضية"
-              >
-                <RotateCcw size={15} /> استعادة الافتراضي
-              </button>
-            )}
-            {editingAgreementClauses ? (
-              <>
-                <button onClick={saveAgreementClauses} className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition">
-                  <Save size={15} /> حفظ البنود
-                </button>
-                <button onClick={cancelEditAgreementClauses} className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.08] transition-colors transition">
-                  إلغاء
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => { logAgreementUsage(); window.print(); }}
-                  className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
-                  title="فتح نافذة الطباعة لحفظ الاتفاقية كملف PDF بجودة عالية (اختر 'حفظ كـ PDF' من الوجهة)"
-                >
-                  <Download size={15} /> تحميل PDF
-                </button>
-                <button onClick={() => { logAgreementUsage(); window.print(); }} className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400">
-                  <Printer size={15} /> طباعة (Print)
-                </button>
-              </>
-            )}
-            <button onClick={() => { setAgrPreviewId(null); setEditingAgreementClauses(false); }} className="rounded-full p-1 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors hover:text-slate-700" aria-label="إغلاق">
-              <X size={20} />
-            </button>
-          </div>
-        </div>
-
-        {/* ═══ نص الاتفاقية الكامل — مطابق للنموذج المعتمد ═══ */}
-        <div id="printable-agreement" className="p-8 space-y-5 text-slate-900 leading-relaxed bg-white">
-          {/* الترويسة المعتمدة */}
-          {letterhead.headerImg ? (
-            <div className="text-center pb-2">
-              <img src={letterhead.headerImg} alt="ترويسة المكتب" className="w-full max-h-40 object-contain mx-auto" />
-              <h2 className="text-base font-bold mt-4 underline underline-offset-4 text-slate-900">عقد اتفاقية أتعاب محاماة — Legal Fees Agreement</h2>
-            </div>
-          ) : (
-            <div className="text-center border-b-2 border-slate-900 pb-4">
-              <h1 className="text-lg font-bold">سعود أحمد الشحي للمحاماة والاستشارات القانونية</h1>
-              <p className="text-xs text-slate-600" dir="ltr">Suood Ahmed Al Shehhi Advocates & Legal Consultants</p>
-              <h2 className="text-base font-bold mt-3 underline underline-offset-4">عقد اتفاقية أتعاب محاماة — Legal Fees Agreement</h2>
-            </div>
-          )}
-
-          {/* الديباجة */}
-          <div className="grid grid-cols-2 gap-4 text-xs border border-slate-300 rounded-lg p-4">
-            <p className="leading-loose">
-              أُبرم هذا العقد في <b>{fmtDate(oa.contractDate)}</b> في <b>{oa.contractCity}</b> بين: ١- المدرجة بياناتهم أدناه (ويشار إليهم فيما بعد بـ"الموكل")، ٢- سعود أحمد الشحي للمحاماة والاستشارات القانونية، بحيث يقوم بتزويد الموكل بالخدمات القانونية الواردة بهذا العقد بناءً على طلبهم ووفقاً للبيانات والشروط الواردة أدناه.
-            </p>
-            <p className="leading-loose" dir="ltr">
-              This contract was concluded on <b>{oa.contractDate}</b> in <b>{oa.contractCity}</b> between: 1) the party whose details are listed hereunder, hereafter referred to as "the Client", and 2) Suood Ahmed Al Shehhi Advocates & Legal Consultants, whereas the firm shall provide the Client with the legal service(s) mentioned herein according to the following details and conditions.
-            </p>
-          </div>
-
-          {/* بيانات الموكل */}
-          <div className="border border-slate-300 rounded-lg overflow-hidden text-xs">
-            <div className="bg-slate-900 text-amber-400 font-bold px-4 py-2 flex justify-between">
-              <span>بيانات الموكل</span>
-              <span dir="ltr">Details of the Client</span>
-            </div>
-            <div className="divide-y divide-slate-200">
-              <div className="grid grid-cols-2 gap-4 p-3">
-                <p>الاسم: <b>{oa.clientNameAr}</b>{oa.representativeAr ? <> — ويمثلها: <b>{oa.representativeAr}</b></> : null}</p>
-                <p dir="ltr">Name: <b>{oa.clientNameEn || oa.clientNameAr}</b>{oa.representativeEn ? <>, represented by: <b>{oa.representativeEn}</b></> : null}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4 p-3">
-                <p>هاتف رقم: <b dir="ltr">{oa.phone || "—"}</b></p>
-                <p dir="ltr">Phone number: <b>{oa.phone || "—"}</b></p>
-              </div>
-              <div className="grid grid-cols-2 gap-4 p-3">
-                <p>تفاصيل القضية: <b>{oa.caseDetailsAr}</b></p>
-                <p dir="ltr">Case Details: <b>{oa.caseDetailsEn || oa.caseDetailsAr}</b></p>
-              </div>
-              <div className="grid grid-cols-2 gap-4 p-3 bg-amber-50/60">
-                <p className="font-bold">{oa.paymentTermsAr}</p>
-                <p dir="ltr" className="font-bold">{oa.paymentTermsEn}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* جدول الدفعات */}
-          {oa.installments.length > 1 && (
-            <table className="w-full text-[11px] border-collapse border border-slate-300 text-center">
-              <thead>
-                <tr className="bg-slate-100 font-bold">
-                  <th className="border border-slate-300 p-1.5">الدفعة / Installment</th>
-                  <th className="border border-slate-300 p-1.5">المبلغ / Amount (AED)</th>
-                  <th className="border border-slate-300 p-1.5">تاريخ الاستحقاق / Due Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {oa.installments.map((i, idx) => (
-                  <tr key={idx}>
-                    <td className="border border-slate-300 p-1.5 font-bold">{idx + 1}</td>
-                    <td className="border border-slate-300 p-1.5 font-mono">{i.amount.toLocaleString("en-US")}</td>
-                    <td className="border border-slate-300 p-1.5">{fmtDate(i.dueDate)}{i.paidOnSigning ? " (عند التوقيع)" : ""}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-
-          {/* البنود الثابتة — قابلة للتعديل يدوياً لكل اتفاقية على حدة */}
-          <div className="border border-slate-300 rounded-lg overflow-hidden text-[11px]">
-            <div className="bg-slate-100 font-bold px-4 py-2 grid grid-cols-2">
-              <span>الشروط والبنود</span>
-              <span dir="ltr">Terms & Conditions</span>
-            </div>
-            {editingAgreementClauses ? (
-              <div className="p-3 space-y-3 no-print">
-                {agreementClausesDraft.map((cl, idx) => (
-                  <div key={idx} className="grid grid-cols-2 gap-3 border border-slate-200 rounded-lg p-2 bg-slate-50">
-                    <textarea
-                      value={cl.ar}
-                      onChange={(e) => setAgreementClausesDraft((prev) => prev.map((c, i) => (i === idx ? { ...c, ar: e.target.value } : c)))}
-                      className="w-full rounded-lg border border-slate-300 p-2 text-xs leading-relaxed min-h-[70px]"
-                      placeholder={`البند (${idx + 1}) بالعربي`}
-                    />
-                    <div className="relative">
-                      <textarea
-                        dir="ltr"
-                        value={cl.en}
-                        onChange={(e) => setAgreementClausesDraft((prev) => prev.map((c, i) => (i === idx ? { ...c, en: e.target.value } : c)))}
-                        className="w-full rounded-lg border border-slate-300 p-2 text-xs leading-relaxed min-h-[70px]"
-                        placeholder={`Clause (${idx + 1}) in English`}
-                      />
+      {agrPreviewId !== null &&
+        (() => {
+          const oa = officeAgreements.find((a) => a.id === agrPreviewId);
+          if (!oa) return null;
+          const includesSigStampAgr =
+            canUseSignatureStamp && Boolean(letterhead.signatureImg || letterhead.stampImg);
+          const logAgreementUsage = () => {
+            logAuditAction(
+              "UPDATE",
+              "الورق الرسمي",
+              `طباعة اتفاقية أتعاب رقم: ${oa.agreementNumber}`,
+              `استخدم المستخدم "${currentUser.name}" الورق الرسمي${includesSigStampAgr ? " والتوقيع والختم المعتمدين" : ""} لطباعة/تصدير اتفاقية الأتعاب رقم ${oa.agreementNumber}`,
+              oa.id,
+            );
+          };
+          const activeClauses =
+            oa.customClauses && oa.customClauses.length > 0
+              ? oa.customClauses
+              : OFFICE_AGREEMENT_CLAUSES;
+          const startEditAgreementClauses = () => {
+            if (!checkPerm("manageAgreements", "تعديل بنود اتفاقية الأتعاب")) return;
+            setAgreementClausesDraft(activeClauses.map((c) => ({ ...c })));
+            setEditingAgreementClauses(true);
+          };
+          const saveAgreementClauses = () => {
+            const cleaned = agreementClausesDraft.filter((c) => c.ar.trim() || c.en.trim());
+            setOfficeAgreements((prev) =>
+              prev.map((x) => (x.id === oa.id ? { ...x, customClauses: cleaned } : x)),
+            );
+            logAuditAction(
+              "UPDATE",
+              "اتفاقيات الأتعاب",
+              `تعديل بنود اتفاقية رقم: ${oa.agreementNumber}`,
+              `قام المستخدم "${currentUser.name}" بتعديل الشروط والبنود يدوياً لاتفاقية الأتعاب رقم ${oa.agreementNumber}`,
+              oa.id,
+            );
+            setEditingAgreementClauses(false);
+          };
+          const cancelEditAgreementClauses = () => setEditingAgreementClauses(false);
+          const resetAgreementClauses = () => {
+            if (!checkPerm("manageAgreements", "استعادة البنود الافتراضية لاتفاقية الأتعاب"))
+              return;
+            setOfficeAgreements((prev) =>
+              prev.map((x) => (x.id === oa.id ? { ...x, customClauses: undefined } : x)),
+            );
+            logAuditAction(
+              "UPDATE",
+              "اتفاقيات الأتعاب",
+              `استعادة البنود الافتراضية لاتفاقية رقم: ${oa.agreementNumber}`,
+              `قام المستخدم "${currentUser.name}" باستعادة الشروط والبنود الافتراضية لاتفاقية الأتعاب رقم ${oa.agreementNumber}`,
+              oa.id,
+            );
+          };
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#08130f]/75 p-4 overflow-y-auto">
+              <div className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl print-area">
+                {/* شريط الأدوات — لا يظهر عند الطباعة */}
+                <div className="no-print flex items-center justify-between border-b border-slate-200 px-6 py-4 sticky top-0 bg-white z-10">
+                  <div className="flex items-center gap-2">
+                    <FileCheck size={18} className="text-amber-600" />
+                    <h3 className="font-bold text-slate-800">
+                      معاينة الاتفاقية {oa.agreementNumber} — {oa.clientNameAr}
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        if (!checkPerm("deleteAgreements", "حذف اتفاقية الأتعاب")) return;
+                        setDeleteAgrConfirm(oa);
+                      }}
+                      className="flex items-center gap-1.5 rounded-xl bg-red-50 text-red-600 border border-red-200 px-3.5 py-2 text-xs font-bold hover:bg-red-100 transition"
+                      title="حذف هذه الاتفاقية"
+                    >
+                      <Trash2 size={15} /> حذف الاتفاقية
+                    </button>
+                    {!editingAgreementClauses && (
                       <button
-                        onClick={() => setAgreementClausesDraft((prev) => prev.filter((_, i) => i !== idx))}
-                        className="absolute -top-2 -left-2 rounded-full bg-red-100 text-red-600 p-1 hover:bg-red-200 transition"
-                        title="حذف هذا البند"
-                        type="button"
+                        onClick={startEditAgreementClauses}
+                        className="flex items-center gap-1.5 rounded-xl bg-white border border-amber-300 px-3.5 py-2 text-xs font-bold text-amber-700 hover:bg-amber-50 transition"
+                        title="تعديل الشروط والبنود يدوياً لهذه الاتفاقية"
                       >
-                        <Trash2 size={13} />
+                        <Edit2 size={15} /> تعديل البنود
                       </button>
+                    )}
+                    {!editingAgreementClauses && oa.customClauses && (
+                      <button
+                        onClick={resetAgreementClauses}
+                        className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 transition"
+                        title="استعادة البنود الافتراضية"
+                      >
+                        <RotateCcw size={15} /> استعادة الافتراضي
+                      </button>
+                    )}
+                    {editingAgreementClauses ? (
+                      <>
+                        <button
+                          onClick={saveAgreementClauses}
+                          className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition"
+                        >
+                          <Save size={15} /> حفظ البنود
+                        </button>
+                        <button
+                          onClick={cancelEditAgreementClauses}
+                          className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.08] transition-colors transition"
+                        >
+                          إلغاء
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => {
+                            logAgreementUsage();
+                            window.print();
+                          }}
+                          className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
+                          title="فتح نافذة الطباعة لحفظ الاتفاقية كملف PDF بجودة عالية (اختر 'حفظ كـ PDF' من الوجهة)"
+                        >
+                          <Download size={15} /> تحميل PDF
+                        </button>
+                        <button
+                          onClick={() => {
+                            logAgreementUsage();
+                            window.print();
+                          }}
+                          className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400"
+                        >
+                          <Printer size={15} /> طباعة (Print)
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => {
+                        setAgrPreviewId(null);
+                        setEditingAgreementClauses(false);
+                      }}
+                      className="rounded-full p-1 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors hover:text-slate-700"
+                      aria-label="إغلاق"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* ═══ نص الاتفاقية الكامل — مطابق للنموذج المعتمد ═══ */}
+                <div
+                  id="printable-agreement"
+                  className="p-8 space-y-5 text-slate-900 leading-relaxed bg-white"
+                >
+                  {/* الترويسة المعتمدة */}
+                  {letterhead.headerImg ? (
+                    <div className="text-center pb-2">
+                      <img
+                        src={letterhead.headerImg}
+                        alt="ترويسة المكتب"
+                        className="w-full max-h-40 object-contain mx-auto"
+                      />
+                      <h2 className="text-base font-bold mt-4 underline underline-offset-4 text-slate-900">
+                        عقد اتفاقية أتعاب محاماة — Legal Fees Agreement
+                      </h2>
                     </div>
-                  </div>
-                ))}
-                <button
-                  onClick={() => setAgreementClausesDraft((prev) => [...prev, { ar: "", en: "" }])}
-                  className="flex items-center gap-1.5 rounded-xl bg-white border border-dashed border-slate-300 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition"
-                  type="button"
-                >
-                  <Plus size={14} /> إضافة بند جديد
-                </button>
-              </div>
-            ) : (
-              activeClauses.map((cl, idx) => (
-                <div key={idx} className="grid grid-cols-2 gap-4 p-3 border-t border-slate-200">
-                  <p className="leading-relaxed whitespace-pre-line"><b>({idx + 1})</b> {cl.ar}</p>
-                  <p className="leading-relaxed whitespace-pre-line" dir="ltr"><b>{idx + 1}-</b> {cl.en}</p>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* الإشهاد والتوقيعات */}
-          <div className="grid grid-cols-2 gap-4 text-xs border border-slate-300 rounded-lg p-4">
-            <p>إشهاداً على ذلك فقد وقّع الطرفان على هذا العقد في اليوم والتاريخ المشار إليهما سابقاً.</p>
-            <p dir="ltr">In witness hereof, the parties have signed this contract on the date first mentioned here above.</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-8 text-xs pt-6">
-            <div className="text-center">
-              <p className="font-bold">سعود أحمد الشحي للمحاماة والاستشارات القانونية</p>
-              {includesSigStampAgr ? (
-                <div className="relative inline-block h-16 w-40 mt-4">
-                  {letterhead.stampImg && (
-                    <img src={letterhead.stampImg} alt="ختم" className="absolute top-0 right-2 h-16 w-16 object-contain opacity-90 -rotate-6" />
+                  ) : (
+                    <div className="text-center border-b-2 border-slate-900 pb-4">
+                      <h1 className="text-lg font-bold">
+                        سعود أحمد الشحي للمحاماة والاستشارات القانونية
+                      </h1>
+                      <p className="text-xs text-slate-600" dir="ltr">
+                        Suood Ahmed Al Shehhi Advocates & Legal Consultants
+                      </p>
+                      <h2 className="text-base font-bold mt-3 underline underline-offset-4">
+                        عقد اتفاقية أتعاب محاماة — Legal Fees Agreement
+                      </h2>
+                    </div>
                   )}
-                  {letterhead.signatureImg && (
-                    <img src={letterhead.signatureImg} alt="توقيع" className="absolute bottom-0 left-0 h-10 object-contain" />
-                  )}
-                </div>
-              ) : null}
-              <p className="mt-10 border-t border-slate-400 pt-1 mx-8">التوقيع والختم</p>
-            </div>
-            <div className="text-center">
-              <p className="font-bold">الموكل — Client: {oa.clientNameAr}</p>
-              <p className="mt-10 border-t border-slate-400 pt-1 mx-8">توقيع الموكل / Client Signature</p>
-            </div>
-          </div>
 
-          <div className="text-center text-[11px] font-bold border-t-2 border-slate-900 pt-3">
-            <p>اللغة العربية هي اللغة المعتمدة في هذا العقد</p>
-            <p dir="ltr">Arabic is the approved language in this contract</p>
-          </div>
-
-          {/* تذييل الورقة الرسمية */}
-          {letterhead.footerImg && (
-            <div className="pt-2">
-              <img src={letterhead.footerImg} alt="تذييل المكتب" className="w-full max-h-24 object-contain mx-auto" />
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-})()}
-
-{delegationPreviewId !== null && (() => {
-  const d = colleagueDelegations.find((x) => x.id === delegationPreviewId);
-  if (!d) return null;
-  const colleague = colleagues.find((c) => c.id === d.colleagueId);
-  const linkedCase = d.caseId ? cases.find((c) => c.id === d.caseId) : undefined;
-  const logDelegationUsage = () => {
-    const includesSigStamp = canUseSignatureStamp && Boolean(letterhead.signatureImg || letterhead.stampImg);
-    logAuditAction("UPDATE", "الورق الرسمي", `طباعة إنابة رقم: ${d.refNo}`, `استخدم المستخدم "${currentUser.name}" الورق الرسمي${includesSigStamp ? " والتوقيع والختم المعتمدين" : ""} لطباعة/تصدير الإنابة رقم ${d.refNo} الخاصة بالزميل ${colleague?.name || "—"}`, d.id);
-  };
-  const startEditDelegationWording = () => {
-    if (!checkPerm("manageColleagues", "تعديل صياغة الإنابة")) return;
-    setDelegationDraftHtml(d.customBodyHtml || delegationBodyRef.current?.innerHTML || "");
-    setEditingDelegationWording(true);
-  };
-  const saveDelegationWording = () => {
-    setColleagueDelegations((prev) => prev.map((x) => (x.id === d.id ? { ...x, customBodyHtml: delegationDraftHtml } : x)));
-    logAuditAction("UPDATE", "الزملاء والإنابات", `تعديل صياغة إنابة رقم: ${d.refNo}`, `قام المستخدم "${currentUser.name}" بتعديل صياغة نص الإنابة رقم ${d.refNo} يدوياً`, d.id);
-    setEditingDelegationWording(false);
-  };
-  const cancelEditDelegationWording = () => setEditingDelegationWording(false);
-  const resetDelegationWording = () => {
-    if (!checkPerm("manageColleagues", "استعادة الصياغة الافتراضية للإنابة")) return;
-    setColleagueDelegations((prev) => prev.map((x) => (x.id === d.id ? { ...x, customBodyHtml: undefined } : x)));
-    logAuditAction("UPDATE", "الزملاء والإنابات", `استعادة الصياغة الافتراضية لإنابة رقم: ${d.refNo}`, `قام المستخدم "${currentUser.name}" باستعادة الصياغة التلقائية الافتراضية لنص الإنابة رقم ${d.refNo}`, d.id);
-  };
-  // طباعة/تصدير الإنابة عبر نفس أسلوب الطباعة الأصلي المعتمد في قسم "المذكرات"
-  // (مستند HTML مستقل بصور ترويسة/تذييل بحجمها الكامل داخل إطار iframe مخفي)
-  // بدل window.print() على الصفحة الحية — يحل هذا مشكلتي تصغير الورق الرسمي
-  // وإضافة المتصفح التلقائية لعنوان الصفحة ورابط الموقع أعلى/أسفل كل ورقة.
-  const handleDelegationPrint = () => {
-    logDelegationUsage();
-    const includesSigStamp = canUseSignatureStamp && Boolean(letterhead.signatureImg || letterhead.stampImg);
-    const html = buildDelegationPrintHtml({
-      refNo: d.refNo,
-      dateLabel: fmtDate(d.issuedAt.slice(0, 10)),
-      courtName: linkedCase?.court || "المحكمة المختصة",
-      caseNumber: linkedCase?.number || d.caseTitleSnapshot || "—",
-      clientName: linkedCase ? clientName(linkedCase.clientId) : "—",
-      clientCapacity: linkedCase?.clientCapacity || "—",
-      opponents: linkedCase ? (caseOpponentsLabel(linkedCase) || "—") : "—",
-      issuedByName: d.issuedByName,
-      issuerLicenseNumber: d.issuerLicenseNumber || "—",
-      colleagueName: colleague?.name || "—",
-      colleagueLicenseNumber: d.colleagueLicenseNumber || "—",
-      sessionDateLabel: d.sessionDate ? fmtDate(d.sessionDate) : undefined,
-      caseTitleSnapshot: !linkedCase && d.caseTitleSnapshot ? d.caseTitleSnapshot : undefined,
-      purpose: d.purpose,
-      customBodyHtml: d.customBodyHtml,
-      headerImg: letterhead.headerImg,
-      footerImg: letterhead.footerImg,
-      signatureImg: letterhead.signatureImg,
-      stampImg: letterhead.stampImg,
-      showSignatureStamp: includesSigStamp,
-    });
-    printHtmlDocumentInHiddenIframe(html);
-  };
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#08130f]/75 p-4 overflow-y-auto">
-      <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl print-area">
-        <div className="no-print flex items-center justify-between border-b border-slate-200 px-6 py-4 sticky top-0 bg-white z-10">
-          <div className="flex items-center gap-2">
-            <FileSignature size={18} className="text-amber-600" />
-            <h3 className="font-bold text-slate-800">معاينة الإنابة {d.refNo}</h3>
-          </div>
-          <div className="flex items-center gap-2">
-            {editingDelegationWording ? (
-              <>
-                <button
-                  onClick={saveDelegationWording}
-                  className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition"
-                >
-                  <Save size={15} /> حفظ الصياغة
-                </button>
-                <button onClick={cancelEditDelegationWording} className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.08] transition-colors transition">
-                  إلغاء
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={startEditDelegationWording}
-                  className="flex items-center gap-1.5 rounded-xl bg-white border border-amber-300 px-3.5 py-2 text-xs font-bold text-amber-700 hover:bg-amber-50 transition"
-                  title="تعديل صياغة نص الإنابة يدوياً"
-                >
-                  <Edit2 size={15} /> تعديل الصياغة
-                </button>
-                {d.customBodyHtml && (
-                  <button
-                    onClick={resetDelegationWording}
-                    className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 transition"
-                    title="استعادة الصياغة التلقائية الافتراضية"
-                  >
-                    <RotateCcw size={15} /> استعادة الافتراضي
-                  </button>
-                )}
-                <button
-                  onClick={handleDelegationPrint}
-                  className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
-                  title="فتح نافذة الطباعة لحفظ الإنابة كملف PDF بجودة عالية (اختر 'حفظ كـ PDF' من الوجهة)"
-                >
-                  <Download size={15} /> تحميل PDF
-                </button>
-                <button onClick={handleDelegationPrint} className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400">
-                  <Printer size={15} /> طباعة
-                </button>
-              </>
-            )}
-            <button onClick={() => { setDelegationPreviewId(null); setEditingDelegationWording(false); }} className="rounded-full p-1 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors hover:text-slate-700" aria-label="إغلاق"><X size={20} /></button>
-          </div>
-        </div>
-
-        <div id="printable-delegation" className="p-8 space-y-5 text-slate-900 leading-relaxed bg-white">
-          {letterhead.headerImg && (
-            <div className="mb-4 -mx-8 -mt-8">
-              <img src={letterhead.headerImg} alt="ترويسة المكتب" className="w-full block" />
-            </div>
-          )}
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <span className="text-[10px] text-slate-300 font-mono text-right">الرقم المرجعي: {d.refNo}</span>
-            <span className="text-xs text-slate-600">التاريخ: {fmtDate(d.issuedAt.slice(0, 10))}</span>
-          </div>
-          <div className="text-sm space-y-1">
-            <p>لدى {linkedCase?.court || "المحكمة المختصة"} الموقرة ,,,</p>
-            <p>في القضية رقم :- <b>{linkedCase?.number || d.caseTitleSnapshot || "—"}</b></p>
-          </div>
-          <div ref={delegationBodyRef} className="space-y-5">
-            {editingDelegationWording ? (
-              <div className="delegation-quill-editor">
-                <ReactQuill theme="snow" value={delegationDraftHtml} onChange={setDelegationDraftHtml} />
-              </div>
-            ) : d.customBodyHtml ? (
-              <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(d.customBodyHtml) }} />
-            ) : (
-              <>
-                <h2 className="text-xl font-bold text-center tracking-[0.3em]">إنـابـة</h2>
-                <div className="text-sm space-y-2.5">
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                    <span>الموكل :- <b>{linkedCase ? clientName(linkedCase.clientId) : "—"}</b></span>
-                    <span>الصفة :- <b>{linkedCase?.clientCapacity || "—"}</b></span>
+                  {/* الديباجة */}
+                  <div className="grid grid-cols-2 gap-4 text-xs border border-slate-300 rounded-lg p-4">
+                    <p className="leading-loose">
+                      أُبرم هذا العقد في <b>{fmtDate(oa.contractDate)}</b> في{" "}
+                      <b>{oa.contractCity}</b> بين: ١- المدرجة بياناتهم أدناه (ويشار إليهم فيما بعد
+                      بـ"الموكل")، ٢- سعود أحمد الشحي للمحاماة والاستشارات القانونية، بحيث يقوم
+                      بتزويد الموكل بالخدمات القانونية الواردة بهذا العقد بناءً على طلبهم ووفقاً
+                      للبيانات والشروط الواردة أدناه.
+                    </p>
+                    <p className="leading-loose" dir="ltr">
+                      This contract was concluded on <b>{oa.contractDate}</b> in{" "}
+                      <b>{oa.contractCity}</b> between: 1) the party whose details are listed
+                      hereunder, hereafter referred to as "the Client", and 2) Suood Ahmed Al Shehhi
+                      Advocates & Legal Consultants, whereas the firm shall provide the Client with
+                      the legal service(s) mentioned herein according to the following details and
+                      conditions.
+                    </p>
                   </div>
-                  <p>ضـــد :- <b>{linkedCase ? (caseOpponentsLabel(linkedCase) || "—") : "—"}</b></p>
-                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pt-2 border-t border-dashed border-slate-300">
-                    <span>أنـــا المحامي :- <b>{d.issuedByName}</b></span>
-                    <span>قيد رقم :- <b>{d.issuerLicenseNumber || "—"}</b></span>
-                  </div>
-                  <p className="leading-loose">
-                    بموجب هذه الإنابة، وبصفتي وكيلاً عن الموكل المذكور أعلاه أنيب زميلي الأستاذ المحامي :- <b>{colleague?.name || "—"}</b>
-                    {"  "}قيد رقم :- <b>{d.colleagueLicenseNumber || "—"}</b>
-                  </p>
-                  <p className="leading-loose">
-                    للحضور والترافع والقيام بجميع الإجراءات اللازمة نيابة عني في القضية المذكورة أعلاه
-                    {d.sessionDate ? <> وذلك بجلسة يوم <b>{fmtDate(d.sessionDate)}</b></> : ""}
-                    {!linkedCase && d.caseTitleSnapshot ? ` (${d.caseTitleSnapshot})` : ""}.
-                  </p>
-                </div>
-                <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 text-sm">
-                  <p className="font-bold mb-1">الغرض من الإنابة:</p>
-                  <p className="whitespace-pre-line">{d.purpose}</p>
-                </div>
-              </>
-            )}
-          </div>
-          <p className="text-sm">وتفضلوا بقبول وافر الاحترام والتقدير.</p>
-          <div className="pt-8 text-sm">
-            <p className="font-bold">المحامي الموكل</p>
-            <p className="mt-1">الاسم :- {d.issuedByName}</p>
-            {canUseSignatureStamp && (letterhead.signatureImg || letterhead.stampImg) ? (
-              <div className="relative inline-block h-20 w-44 mt-2 mb-1">
-                {letterhead.stampImg && (
-                  <img src={letterhead.stampImg} alt="ختم" className="absolute top-0 right-4 h-20 w-20 object-contain opacity-90 -rotate-6" />
-                )}
-                {letterhead.signatureImg && (
-                  <img src={letterhead.signatureImg} alt="توقيع" className="absolute bottom-1 left-0 h-11 object-contain" />
-                )}
-              </div>
-            ) : null}
-            <p className="border-t border-slate-400 pt-1 mt-8 inline-block">التوقيع والختم</p>
-          </div>
-          {letterhead.footerImg && (
-            <div className="pt-6 -mx-8 -mb-8">
-              <img src={letterhead.footerImg} alt="تذييل المكتب" className="w-full block" />
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-})()}
 
-      {/* ================= نافذة التقرير القابل للطباعة ================= */}
-      {report && (() => {
-        const isRollReport = typeof report === "object" && report.type === "roll";
-        const isKycSingle = typeof report === "object" && report.kycId;
-        const kycRec = isKycSingle ? kyc.find((k) => k.id === report.kycId) : null;
-        const clientObj = kycRec ? clients.find((c) => c.id === kycRec.clientId) : null;
-
-        const rollDate = isRollReport ? report.date : "";
-        const rollCourt = isRollReport ? report.court : "الكل";
-
-        const rollList = hearings.filter((h) => {
-          const matchDate = !rollDate || h.date === rollDate;
-          const cs = cases.find((c) => c.id === h.caseId);
-          const matchCourt = rollCourt === "الكل" || (cs && cs.court === rollCourt);
-          return matchDate && matchCourt;
-        }).sort((a, b) => a.date.localeCompare(b.date));
-
-        const currentTabObj = NAV.find((n) => n.id === tab);
-
-        return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#08130f]/75 p-4 no-print overflow-y-auto">
-            <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl print-area">
-              {/* شريط الإجراءات العلوي للتقرير (لا يظهر عند الطباعة) */}
-              <div className="no-print flex items-center justify-between border-b border-slate-200 px-6 py-4 sticky top-0 bg-white z-10">
-                <div className="flex items-center gap-2">
-                  <Printer size={18} className="text-amber-600" />
-                  <h3 className="font-bold text-slate-800">
-                    {isRollReport
-                      ? `رول الجلسات القضائية — ${rollDate ? fmtDate(rollDate) : "جميع الجلسات"}`
-                      : isKycSingle
-                      ? `نموذج التحقق والعناية الواجبة (KYC) — ${clientObj?.name || ""}`
-                      : `تقرير قسم: ${currentTabObj?.label || ""}`}
-                  </h3>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => window.print()} className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400">
-                    <Printer size={15} /> طباعة الآن (PDF)
-                  </button>
-                  <button onClick={() => setReport(null)} className="rounded-full p-1 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors hover:text-slate-700" aria-label="إغلاق">
-                    <X size={20} />
-                  </button>
-                </div>
-              </div>
-
-              {/* محتوى التقرير الذي سيتم طباعته رسمياً */}
-              <div className="p-8 space-y-6 text-slate-900 leading-relaxed font-sans">
-                {/* ترويسة المكتب الرسمية مع الشعار الأصلي */}
-                <div className="flex items-center justify-between border-b-2 border-[#0c4a47] pb-4">
-                  <Logo variant="horizontal" mode="light" size="lg" />
-                  <div className="text-left text-xs text-slate-600 space-y-0.5">
-                    <p className="font-bold text-[#0c4a47]">تاريخ التقرير: {fmtDate(todayISO())}</p>
-                    <p className="text-[11px] text-slate-600">المستخدم المستخرج: {currentUser.name}</p>
-                    <p className="text-[11px] text-[#b89b6a] font-bold">{currentUser.roleTitle}</p>
-                    <p className="text-[10px] text-slate-400">الإمارات العربية المتحدة • UAE</p>
-                  </div>
-                </div>
-
-                {/* محتوى تقرير رول الجلسات القابل للطباعة */}
-                {isRollReport ? (
-                  <div className="space-y-6">
-                    <div className="bg-slate-900 text-white p-4 rounded-xl flex items-center justify-between">
-                      <div>
-                        <h2 className="text-lg font-bold text-amber-400">كشف ورول الجلسات القضائية اليومي</h2>
-                        <p className="text-xs text-slate-300 mt-0.5">جدول حضور المحامين وتتبع قاعات ومواعيد الجلسات</p>
+                  {/* بيانات الموكل */}
+                  <div className="border border-slate-300 rounded-lg overflow-hidden text-xs">
+                    <div className="bg-slate-900 text-amber-400 font-bold px-4 py-2 flex justify-between">
+                      <span>بيانات الموكل</span>
+                      <span dir="ltr">Details of the Client</span>
+                    </div>
+                    <div className="divide-y divide-slate-200">
+                      <div className="grid grid-cols-2 gap-4 p-3">
+                        <p>
+                          الاسم: <b>{oa.clientNameAr}</b>
+                          {oa.representativeAr ? (
+                            <>
+                              {" "}
+                              — ويمثلها: <b>{oa.representativeAr}</b>
+                            </>
+                          ) : null}
+                        </p>
+                        <p dir="ltr">
+                          Name: <b>{oa.clientNameEn || oa.clientNameAr}</b>
+                          {oa.representativeEn ? (
+                            <>
+                              , represented by: <b>{oa.representativeEn}</b>
+                            </>
+                          ) : null}
+                        </p>
                       </div>
-                      <div className="text-left text-xs font-mono">
-                        <p>التاريخ: <b>{rollDate ? fmtDate(rollDate) : "جميع التواريخ"}</b></p>
-                        <p>المحكمة: <b>{rollCourt}</b></p>
-                        <p>عدد الجلسات: <b>{rollList.length}</b></p>
+                      <div className="grid grid-cols-2 gap-4 p-3">
+                        <p>
+                          هاتف رقم: <b dir="ltr">{oa.phone || "—"}</b>
+                        </p>
+                        <p dir="ltr">
+                          Phone number: <b>{oa.phone || "—"}</b>
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 p-3">
+                        <p>
+                          تفاصيل القضية: <b>{oa.caseDetailsAr}</b>
+                        </p>
+                        <p dir="ltr">
+                          Case Details: <b>{oa.caseDetailsEn || oa.caseDetailsAr}</b>
+                        </p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 p-3 bg-amber-50/60">
+                        <p className="font-bold">{oa.paymentTermsAr}</p>
+                        <p dir="ltr" className="font-bold">
+                          {oa.paymentTermsEn}
+                        </p>
                       </div>
                     </div>
+                  </div>
 
-                    <table className="w-full text-right border-collapse border border-slate-300 text-xs">
+                  {/* جدول الدفعات */}
+                  {oa.installments.length > 1 && (
+                    <table className="w-full text-[11px] border-collapse border border-slate-300 text-center">
                       <thead>
-                        <tr className="bg-slate-100 text-slate-900 border-b border-slate-300 font-bold">
-                          <th className="p-2.5 border border-slate-300 text-center">م</th>
-                          <th className="p-2.5 border border-slate-300">رقم القضية والدائرة</th>
-                          <th className="p-2.5 border border-slate-300">اسم الموكل</th>
-                          <th className="p-2.5 border border-slate-300">المحكمة / القاعة</th>
-                          <th className="p-2.5 border border-slate-300 text-center">التاريخ والوقت</th>
-                          <th className="p-2.5 border border-slate-300">نوع الجلسة والمطلوب</th>
-                          <th className="p-2.5 border border-slate-300 text-center">الحالة</th>
+                        <tr className="bg-slate-100 font-bold">
+                          <th className="border border-slate-300 p-1.5">الدفعة / Installment</th>
+                          <th className="border border-slate-300 p-1.5">المبلغ / Amount (AED)</th>
+                          <th className="border border-slate-300 p-1.5">
+                            تاريخ الاستحقاق / Due Date
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
-                        {rollList.length === 0 ? (
-                          <tr>
-                            <td colSpan={7} className="p-6 text-center text-slate-500">
-                              لا توجد جلسات مجدولة لهذا التاريخ أو المحكمة في النظام.
+                        {oa.installments.map((i, idx) => (
+                          <tr key={idx}>
+                            <td className="border border-slate-300 p-1.5 font-bold">{idx + 1}</td>
+                            <td className="border border-slate-300 p-1.5 font-mono">
+                              {i.amount.toLocaleString("en-US")}
+                            </td>
+                            <td className="border border-slate-300 p-1.5">
+                              {fmtDate(i.dueDate)}
+                              {i.paidOnSigning ? " (عند التوقيع)" : ""}
                             </td>
                           </tr>
-                        ) : (
-                          rollList.map((h, idx) => {
-                            const cs = cases.find((c) => c.id === h.caseId);
-                            return (
-                              <tr key={h.id} className="border-b border-slate-200 hover:bg-slate-50">
-                                <td className="p-2.5 border border-slate-300 text-center font-bold font-mono">{idx + 1}</td>
-                                <td className="p-2.5 border border-slate-300">
-                                  <p className="font-bold text-slate-900">{cs ? cs.number : "—"}</p>
-                                  <p className="text-[11px] text-slate-500">{cs ? cs.subject : ""}</p>
-                                </td>
-                                <td className="p-2.5 border border-slate-300 font-medium">
-                                  {cs ? clientName(cs.clientId) : "—"}
-                                </td>
-                                <td className="p-2.5 border border-slate-300">
-                                  <p className="font-semibold">{cs ? cs.court : "—"}</p>
-                                  <p className="text-[11px] text-slate-500">{h.room}</p>
-                                </td>
-                                <td className="p-2.5 border border-slate-300 text-center font-mono">
-                                  <p className="font-bold">{fmtDate(h.date)}</p>
-                                  <p className="text-slate-500">{h.time}</p>
-                                </td>
-                                <td className="p-2.5 border border-slate-300">
-                                  <p className="font-bold text-slate-900">{h.type}</p>
-                                  {h.notes && <p className="text-[11px] text-slate-600 mt-0.5 bg-stone-50 p-1 rounded border border-stone-200">المطلوب: {h.notes}</p>}
-                                </td>
-                                <td className="p-2.5 border border-slate-300 text-center">
-                                  {h.done ? <span className="font-bold text-emerald-700">منتهية</span> : <span className="font-bold text-amber-700">قائمة</span>}
-                                </td>
-                              </tr>
-                            );
-                          })
-                        )}
+                        ))}
                       </tbody>
                     </table>
+                  )}
 
-                    <div className="pt-8 border-t border-slate-300 grid grid-cols-2 text-xs text-center">
-                      <div>
-                        <p className="font-bold">توقيع المحامي الحاضر / المسؤول:</p>
-                        <p className="mt-8">..................................................</p>
+                  {/* البنود الثابتة — قابلة للتعديل يدوياً لكل اتفاقية على حدة */}
+                  <div className="border border-slate-300 rounded-lg overflow-hidden text-[11px]">
+                    <div className="bg-slate-100 font-bold px-4 py-2 grid grid-cols-2">
+                      <span>الشروط والبنود</span>
+                      <span dir="ltr">Terms & Conditions</span>
+                    </div>
+                    {editingAgreementClauses ? (
+                      <div className="p-3 space-y-3 no-print">
+                        {agreementClausesDraft.map((cl, idx) => (
+                          <div
+                            key={idx}
+                            className="grid grid-cols-2 gap-3 border border-slate-200 rounded-lg p-2 bg-slate-50"
+                          >
+                            <textarea
+                              value={cl.ar}
+                              onChange={(e) =>
+                                setAgreementClausesDraft((prev) =>
+                                  prev.map((c, i) =>
+                                    i === idx ? { ...c, ar: e.target.value } : c,
+                                  ),
+                                )
+                              }
+                              className="w-full rounded-lg border border-slate-300 p-2 text-xs leading-relaxed min-h-[70px]"
+                              placeholder={`البند (${idx + 1}) بالعربي`}
+                            />
+                            <div className="relative">
+                              <textarea
+                                dir="ltr"
+                                value={cl.en}
+                                onChange={(e) =>
+                                  setAgreementClausesDraft((prev) =>
+                                    prev.map((c, i) =>
+                                      i === idx ? { ...c, en: e.target.value } : c,
+                                    ),
+                                  )
+                                }
+                                className="w-full rounded-lg border border-slate-300 p-2 text-xs leading-relaxed min-h-[70px]"
+                                placeholder={`Clause (${idx + 1}) in English`}
+                              />
+                              <button
+                                onClick={() =>
+                                  setAgreementClausesDraft((prev) =>
+                                    prev.filter((_, i) => i !== idx),
+                                  )
+                                }
+                                className="absolute -top-2 -left-2 rounded-full bg-red-100 text-red-600 p-1 hover:bg-red-200 transition"
+                                title="حذف هذا البند"
+                                type="button"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() =>
+                            setAgreementClausesDraft((prev) => [...prev, { ar: "", en: "" }])
+                          }
+                          className="flex items-center gap-1.5 rounded-xl bg-white border border-dashed border-slate-300 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition"
+                          type="button"
+                        >
+                          <Plus size={14} /> إضافة بند جديد
+                        </button>
                       </div>
-                      <div>
-                        <p className="font-bold">اعتماد كشف الجلسات:</p>
-                        <p className="mt-8">مكتب سعود أحمد الشحي للمحاماة</p>
-                      </div>
+                    ) : (
+                      activeClauses.map((cl, idx) => (
+                        <div
+                          key={idx}
+                          className="grid grid-cols-2 gap-4 p-3 border-t border-slate-200"
+                        >
+                          <p className="leading-relaxed whitespace-pre-line">
+                            <b>({idx + 1})</b> {cl.ar}
+                          </p>
+                          <p className="leading-relaxed whitespace-pre-line" dir="ltr">
+                            <b>{idx + 1}-</b> {cl.en}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* الإشهاد والتوقيعات */}
+                  <div className="grid grid-cols-2 gap-4 text-xs border border-slate-300 rounded-lg p-4">
+                    <p>
+                      إشهاداً على ذلك فقد وقّع الطرفان على هذا العقد في اليوم والتاريخ المشار إليهما
+                      سابقاً.
+                    </p>
+                    <p dir="ltr">
+                      In witness hereof, the parties have signed this contract on the date first
+                      mentioned here above.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-8 text-xs pt-6">
+                    <div className="text-center">
+                      <p className="font-bold">سعود أحمد الشحي للمحاماة والاستشارات القانونية</p>
+                      {includesSigStampAgr ? (
+                        <div className="relative inline-block h-16 w-40 mt-4">
+                          {letterhead.stampImg && (
+                            <img
+                              src={letterhead.stampImg}
+                              alt="ختم"
+                              className="absolute top-0 right-2 h-16 w-16 object-contain opacity-90 -rotate-6"
+                            />
+                          )}
+                          {letterhead.signatureImg && (
+                            <img
+                              src={letterhead.signatureImg}
+                              alt="توقيع"
+                              className="absolute bottom-0 left-0 h-10 object-contain"
+                            />
+                          )}
+                        </div>
+                      ) : null}
+                      <p className="mt-10 border-t border-slate-400 pt-1 mx-8">التوقيع والختم</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-bold">الموكل — Client: {oa.clientNameAr}</p>
+                      <p className="mt-10 border-t border-slate-400 pt-1 mx-8">
+                        توقيع الموكل / Client Signature
+                      </p>
                     </div>
                   </div>
-                ) : isKycSingle && kycRec && clientObj ? (
-                  <div className="space-y-6">
-                    <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
-                      <h2 className="text-lg font-bold text-amber-900">استمارة اعرف عميلك وفحص مكافحة غسل الأموال (KYC / AML)</h2>
-                      <p className="text-xs text-amber-800">وفقًا لأحكام القانون الاتحادي رقم (20) لسنة 2018 بشأن مواجهة جرائم غسل الأموال</p>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-4 text-xs">
-                      <div className="border border-slate-200 p-3 rounded-xl space-y-1">
-                        <p className="text-slate-500">اسم الموكل / الشركة:</p>
-                        <p className="font-bold text-sm text-slate-900">{clientObj.name}</p>
-                        <p className="text-slate-600">نوع الشخصية: {clientObj.type} | الإمارة: {clientObj.emirate}</p>
-                        <p className="text-slate-600">رقم الهاتف: {clientObj.phone} | البريد: {clientObj.email}</p>
-                      </div>
-                      <div className="border border-slate-200 p-3 rounded-xl space-y-1">
-                        <p className="text-slate-500">الجنسية / الدولة:</p>
-                        <p className="font-bold text-sm text-slate-900">{kycRec.nationality}</p>
-                        <p className="text-slate-600">نوع الوثيقة: {kycRec.idType}</p>
-                        <p className="text-slate-600">تاريخ انتهاء الوثيقة: {fmtDate(kycRec.idExpiry)}</p>
-                      </div>
-                    </div>
-
-                    <div className="border border-slate-200 p-4 rounded-xl space-y-2 text-xs">
-                      <h3 className="font-bold text-slate-900 border-b pb-1">نتائج العناية الواجبة والتحقق من المخاطر</h3>
-                      <div className="grid grid-cols-3 gap-2">
-                        <p><b>المستفيد الحقيقي (UBO):</b> {kycRec.ubo}</p>
-                        <p><b>مصدر الأموال:</b> {kycRec.sourceOfFunds}</p>
-                        <p><b>معرّض سياسيًا (PEP):</b> {kycRec.pep ? "نعم (يلزم عناية مشددة)" : "لا"}</p>
-                        <p><b>فحص قوائم العقوبات:</b> <span className="font-bold">{kycRec.sanctions}</span></p>
-                        <p><b>تصنيف المخاطر:</b> <span className="font-bold">{kycRec.risk}</span></p>
-                        <p><b>حالة الملف:</b> <span className="font-bold">{kycRec.status}</span></p>
-                      </div>
-                      <p className="pt-2"><b>تاريخ المراجعة الأخيرة:</b> {fmtDate(kycRec.lastReview)} | <b>المراجعة القادمة:</b> {fmtDate(nextReviewDate(kycRec.lastReview, kycRec.risk))}</p>
-                      {kycRec.notes && <p className="bg-stone-50 p-2 rounded border text-slate-700 mt-2"><b>ملاحظات الفحص:</b> {kycRec.notes}</p>}
-                    </div>
-
-                    <div className="pt-8 border-t border-slate-200 grid grid-cols-2 text-xs text-center">
-                      <div>
-                        <p className="font-bold">توقيع مسؤول الامتثال / المحامي:</p>
-                        <p className="mt-8">..................................................</p>
-                      </div>
-                      <div>
-                        <p className="font-bold">خاتم المكتب:</p>
-                        <div className="mt-4 mx-auto w-24 h-24 border-2 border-dashed border-slate-300 rounded-full flex items-center justify-center text-[10px] text-slate-400">مكتب المحاماة</div>
-                      </div>
-                    </div>
+                  <div className="text-center text-[11px] font-bold border-t-2 border-slate-900 pt-3">
+                    <p>اللغة العربية هي اللغة المعتمدة في هذا العقد</p>
+                    <p dir="ltr">Arabic is the approved language in this contract</p>
                   </div>
-                ) : (
-                  /* محتوى تقرير القسم العام */
-                  <div className="space-y-4 text-xs">
-                    <div className="flex items-center justify-between bg-stone-100 p-3 rounded-xl">
-                      <h2 className="font-bold text-sm text-slate-900">تقرير المخرجات التفصيلية — {currentTabObj?.label}</h2>
-                      <span className="text-slate-500">إجمالي السجلات: {
-                        tab === "cases" ? cases.length :
-                        tab === "clients" ? clients.length :
-                        tab === "hearings" ? hearings.length :
-                        tab === "tasks" ? tasks.length :
-                        tab === "invoices" ? invoices.length :
-                        tab === "kyc" ? kyc.length :
-                        tab === "poa" ? poas.length : 0
-                      }</span>
+
+                  {/* تذييل الورقة الرسمية */}
+                  {letterhead.footerImg && (
+                    <div className="pt-2">
+                      <img
+                        src={letterhead.footerImg}
+                        alt="تذييل المكتب"
+                        className="w-full max-h-24 object-contain mx-auto"
+                      />
                     </div>
-
-                    {tab === "cases" && (
-                      <table className="w-full text-right border-collapse border border-slate-200">
-                        <thead>
-                          <tr className="bg-slate-100 border-b">
-                            <th className="p-2 border">رقم القضية</th>
-                            <th className="p-2 border">الموكل</th>
-                            <th className="p-2 border">المحكمة</th>
-                            <th className="p-2 border">الحالة</th>
-                            {canViewFinancials && <th className="p-2 border">الأتعاب</th>}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {cases.map((c) => (
-                            <tr key={c.id} className="border-b">
-                              <td className="p-2 border font-bold">{c.number}</td>
-                              <td className="p-2 border">{clientName(c.clientId)}</td>
-                              <td className="p-2 border">{c.court}</td>
-                              <td className="p-2 border">{c.status}</td>
-                              {canViewFinancials && <td className="p-2 border">{fmtAED(c.fee)}</td>}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
-
-                    {tab === "kyc" && (
-                      <table className="w-full text-right border-collapse border border-slate-200">
-                        <thead>
-                          <tr className="bg-slate-100 border-b">
-                            <th className="p-2 border">الموكل</th>
-                            <th className="p-2 border">الجنسية</th>
-                            <th className="p-2 border">المستفيد UBO</th>
-                            <th className="p-2 border">المخاطر</th>
-                            <th className="p-2 border">العقوبات</th>
-                            <th className="p-2 border">المراجعة القادمة</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {kyc.map((k) => (
-                            <tr key={k.id} className="border-b">
-                              <td className="p-2 border font-bold">{clientName(k.clientId)}</td>
-                              <td className="p-2 border">{k.nationality}</td>
-                              <td className="p-2 border">{k.ubo}</td>
-                              <td className="p-2 border">{k.risk}</td>
-                              <td className="p-2 border">{k.sanctions}</td>
-                              <td className="p-2 border">{fmtDate(nextReviewDate(k.lastReview, k.risk))}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
-
-                    {(tab === "courts_directory" || (typeof report === "object" && report?.type === "court-directory")) && (
-                      <table className="w-full text-right border-collapse border border-slate-200">
-                        <thead>
-                          <tr className="bg-slate-100 border-b">
-                            <th className="p-2 border">المحكمة / الجهة</th>
-                            <th className="p-2 border">الإمارة</th>
-                            <th className="p-2 border">القسم / الدائرة</th>
-                            <th className="p-2 border">المسؤول / الصفة</th>
-                            <th className="p-2 border">الهاتف المباشر</th>
-                            <th className="p-2 border">الخاتم / التمديدة</th>
-                            <th className="p-2 border">البريد الإلكتروني</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {courtContacts.map((c) => (
-                            <tr key={c.id} className="border-b">
-                              <td className="p-2 border font-bold text-slate-900">{c.courtName}</td>
-                              <td className="p-2 border font-bold text-amber-800">{c.emirate}</td>
-                              <td className="p-2 border">{c.department}</td>
-                              <td className="p-2 border">{c.titleOrEmployee}</td>
-                              <td className="p-2 border font-mono" dir="ltr">{c.phone}</td>
-                              <td className="p-2 border font-bold text-amber-900">{c.extOrSeal}</td>
-                              <td className="p-2 border font-mono text-xs" dir="ltr">{c.email}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    )}
-
-                    {tab !== "cases" && tab !== "kyc" && tab !== "courts_directory" && (typeof report !== "object" || report?.type !== "court-directory") && (
-                      <p className="text-slate-500 text-center py-6">جدول ملخص البيانات جاهز للطباعة المباشرة من النظام.</p>
-                    )}
-
-                    <div className="pt-6 text-[11px] text-slate-400 text-center border-t">
-                      تم استخراج هذا التقرير تلقائيًا بواسطة نظام سعود أحمد الشحي للمحاماة — كافة الحقوق محفوظة © 2026
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
-      
+      {delegationPreviewId !== null &&
+        (() => {
+          const d = colleagueDelegations.find((x) => x.id === delegationPreviewId);
+          if (!d) return null;
+          const colleague = colleagues.find((c) => c.id === d.colleagueId);
+          const linkedCase = d.caseId ? cases.find((c) => c.id === d.caseId) : undefined;
+          const logDelegationUsage = () => {
+            const includesSigStamp =
+              canUseSignatureStamp && Boolean(letterhead.signatureImg || letterhead.stampImg);
+            logAuditAction(
+              "UPDATE",
+              "الورق الرسمي",
+              `طباعة إنابة رقم: ${d.refNo}`,
+              `استخدم المستخدم "${currentUser.name}" الورق الرسمي${includesSigStamp ? " والتوقيع والختم المعتمدين" : ""} لطباعة/تصدير الإنابة رقم ${d.refNo} الخاصة بالزميل ${colleague?.name || "—"}`,
+              d.id,
+            );
+          };
+          const startEditDelegationWording = () => {
+            if (!checkPerm("manageColleagues", "تعديل صياغة الإنابة")) return;
+            setDelegationDraftHtml(d.customBodyHtml || delegationBodyRef.current?.innerHTML || "");
+            setEditingDelegationWording(true);
+          };
+          const saveDelegationWording = () => {
+            setColleagueDelegations((prev) =>
+              prev.map((x) => (x.id === d.id ? { ...x, customBodyHtml: delegationDraftHtml } : x)),
+            );
+            logAuditAction(
+              "UPDATE",
+              "الزملاء والإنابات",
+              `تعديل صياغة إنابة رقم: ${d.refNo}`,
+              `قام المستخدم "${currentUser.name}" بتعديل صياغة نص الإنابة رقم ${d.refNo} يدوياً`,
+              d.id,
+            );
+            setEditingDelegationWording(false);
+          };
+          const cancelEditDelegationWording = () => setEditingDelegationWording(false);
+          const resetDelegationWording = () => {
+            if (!checkPerm("manageColleagues", "استعادة الصياغة الافتراضية للإنابة")) return;
+            setColleagueDelegations((prev) =>
+              prev.map((x) => (x.id === d.id ? { ...x, customBodyHtml: undefined } : x)),
+            );
+            logAuditAction(
+              "UPDATE",
+              "الزملاء والإنابات",
+              `استعادة الصياغة الافتراضية لإنابة رقم: ${d.refNo}`,
+              `قام المستخدم "${currentUser.name}" باستعادة الصياغة التلقائية الافتراضية لنص الإنابة رقم ${d.refNo}`,
+              d.id,
+            );
+          };
+          // طباعة/تصدير الإنابة عبر نفس أسلوب الطباعة الأصلي المعتمد في قسم "المذكرات"
+          // (مستند HTML مستقل بصور ترويسة/تذييل بحجمها الكامل داخل إطار iframe مخفي)
+          // بدل window.print() على الصفحة الحية — يحل هذا مشكلتي تصغير الورق الرسمي
+          // وإضافة المتصفح التلقائية لعنوان الصفحة ورابط الموقع أعلى/أسفل كل ورقة.
+          const handleDelegationPrint = () => {
+            logDelegationUsage();
+            const includesSigStamp =
+              canUseSignatureStamp && Boolean(letterhead.signatureImg || letterhead.stampImg);
+            const html = buildDelegationPrintHtml({
+              refNo: d.refNo,
+              dateLabel: fmtDate(d.issuedAt.slice(0, 10)),
+              courtName: linkedCase?.court || "المحكمة المختصة",
+              caseNumber: linkedCase?.number || d.caseTitleSnapshot || "—",
+              clientName: linkedCase ? clientName(linkedCase.clientId) : "—",
+              clientCapacity: linkedCase?.clientCapacity || "—",
+              opponents: linkedCase ? caseOpponentsLabel(linkedCase) || "—" : "—",
+              issuedByName: d.issuedByName,
+              issuerLicenseNumber: d.issuerLicenseNumber || "—",
+              colleagueName: colleague?.name || "—",
+              colleagueLicenseNumber: d.colleagueLicenseNumber || "—",
+              sessionDateLabel: d.sessionDate ? fmtDate(d.sessionDate) : undefined,
+              caseTitleSnapshot:
+                !linkedCase && d.caseTitleSnapshot ? d.caseTitleSnapshot : undefined,
+              purpose: d.purpose,
+              customBodyHtml: d.customBodyHtml,
+              headerImg: letterhead.headerImg,
+              footerImg: letterhead.footerImg,
+              signatureImg: letterhead.signatureImg,
+              stampImg: letterhead.stampImg,
+              showSignatureStamp: includesSigStamp,
+            });
+            printHtmlDocumentInHiddenIframe(html);
+          };
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#08130f]/75 p-4 overflow-y-auto">
+              <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl print-area">
+                <div className="no-print flex items-center justify-between border-b border-slate-200 px-6 py-4 sticky top-0 bg-white z-10">
+                  <div className="flex items-center gap-2">
+                    <FileSignature size={18} className="text-amber-600" />
+                    <h3 className="font-bold text-slate-800">معاينة الإنابة {d.refNo}</h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {editingDelegationWording ? (
+                      <>
+                        <button
+                          onClick={saveDelegationWording}
+                          className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition"
+                        >
+                          <Save size={15} /> حفظ الصياغة
+                        </button>
+                        <button
+                          onClick={cancelEditDelegationWording}
+                          className="flex items-center gap-1.5 rounded-xl bg-slate-100 px-3.5 py-2 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.08] transition-colors transition"
+                        >
+                          إلغاء
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={startEditDelegationWording}
+                          className="flex items-center gap-1.5 rounded-xl bg-white border border-amber-300 px-3.5 py-2 text-xs font-bold text-amber-700 hover:bg-amber-50 transition"
+                          title="تعديل صياغة نص الإنابة يدوياً"
+                        >
+                          <Edit2 size={15} /> تعديل الصياغة
+                        </button>
+                        {d.customBodyHtml && (
+                          <button
+                            onClick={resetDelegationWording}
+                            className="flex items-center gap-1.5 rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-500 hover:bg-slate-50 transition"
+                            title="استعادة الصياغة التلقائية الافتراضية"
+                          >
+                            <RotateCcw size={15} /> استعادة الافتراضي
+                          </button>
+                        )}
+                        <button
+                          onClick={handleDelegationPrint}
+                          className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-amber-400 hover:bg-slate-800 transition"
+                          title="فتح نافذة الطباعة لحفظ الإنابة كملف PDF بجودة عالية (اختر 'حفظ كـ PDF' من الوجهة)"
+                        >
+                          <Download size={15} /> تحميل PDF
+                        </button>
+                        <button
+                          onClick={handleDelegationPrint}
+                          className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400"
+                        >
+                          <Printer size={15} /> طباعة
+                        </button>
+                      </>
+                    )}
+                    <button
+                      onClick={() => {
+                        setDelegationPreviewId(null);
+                        setEditingDelegationWording(false);
+                      }}
+                      className="rounded-full p-1 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors hover:text-slate-700"
+                      aria-label="إغلاق"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                </div>
+
+                <div
+                  id="printable-delegation"
+                  className="p-8 space-y-5 text-slate-900 leading-relaxed bg-white"
+                >
+                  {letterhead.headerImg && (
+                    <div className="mb-4 -mx-8 -mt-8">
+                      <img
+                        src={letterhead.headerImg}
+                        alt="ترويسة المكتب"
+                        className="w-full block"
+                      />
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                    <span className="text-[10px] text-slate-300 font-mono text-right">
+                      الرقم المرجعي: {d.refNo}
+                    </span>
+                    <span className="text-xs text-slate-600">
+                      التاريخ: {fmtDate(d.issuedAt.slice(0, 10))}
+                    </span>
+                  </div>
+                  <div className="text-sm space-y-1">
+                    <p>لدى {linkedCase?.court || "المحكمة المختصة"} الموقرة ,,,</p>
+                    <p>
+                      في القضية رقم :- <b>{linkedCase?.number || d.caseTitleSnapshot || "—"}</b>
+                    </p>
+                  </div>
+                  <div ref={delegationBodyRef} className="space-y-5">
+                    {editingDelegationWording ? (
+                      <div className="delegation-quill-editor">
+                        <ReactQuill
+                          theme="snow"
+                          value={delegationDraftHtml}
+                          onChange={setDelegationDraftHtml}
+                        />
+                      </div>
+                    ) : d.customBodyHtml ? (
+                      <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(d.customBodyHtml) }} />
+                    ) : (
+                      <>
+                        <h2 className="text-xl font-bold text-center tracking-[0.3em]">إنـابـة</h2>
+                        <div className="text-sm space-y-2.5">
+                          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                            <span>
+                              الموكل :- <b>{linkedCase ? clientName(linkedCase.clientId) : "—"}</b>
+                            </span>
+                            <span>
+                              الصفة :- <b>{linkedCase?.clientCapacity || "—"}</b>
+                            </span>
+                          </div>
+                          <p>
+                            ضـــد :-{" "}
+                            <b>{linkedCase ? caseOpponentsLabel(linkedCase) || "—" : "—"}</b>
+                          </p>
+                          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pt-2 border-t border-dashed border-slate-300">
+                            <span>
+                              أنـــا المحامي :- <b>{d.issuedByName}</b>
+                            </span>
+                            <span>
+                              قيد رقم :- <b>{d.issuerLicenseNumber || "—"}</b>
+                            </span>
+                          </div>
+                          <p className="leading-loose">
+                            بموجب هذه الإنابة، وبصفتي وكيلاً عن الموكل المذكور أعلاه أنيب زميلي
+                            الأستاذ المحامي :- <b>{colleague?.name || "—"}</b>
+                            {"  "}قيد رقم :- <b>{d.colleagueLicenseNumber || "—"}</b>
+                          </p>
+                          <p className="leading-loose">
+                            للحضور والترافع والقيام بجميع الإجراءات اللازمة نيابة عني في القضية
+                            المذكورة أعلاه
+                            {d.sessionDate ? (
+                              <>
+                                {" "}
+                                وذلك بجلسة يوم <b>{fmtDate(d.sessionDate)}</b>
+                              </>
+                            ) : (
+                              ""
+                            )}
+                            {!linkedCase && d.caseTitleSnapshot ? ` (${d.caseTitleSnapshot})` : ""}.
+                          </p>
+                        </div>
+                        <div className="bg-stone-50 border border-stone-200 rounded-xl p-3 text-sm">
+                          <p className="font-bold mb-1">الغرض من الإنابة:</p>
+                          <p className="whitespace-pre-line">{d.purpose}</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-sm">وتفضلوا بقبول وافر الاحترام والتقدير.</p>
+                  <div className="pt-8 text-sm">
+                    <p className="font-bold">المحامي الموكل</p>
+                    <p className="mt-1">الاسم :- {d.issuedByName}</p>
+                    {canUseSignatureStamp && (letterhead.signatureImg || letterhead.stampImg) ? (
+                      <div className="relative inline-block h-20 w-44 mt-2 mb-1">
+                        {letterhead.stampImg && (
+                          <img
+                            src={letterhead.stampImg}
+                            alt="ختم"
+                            className="absolute top-0 right-4 h-20 w-20 object-contain opacity-90 -rotate-6"
+                          />
+                        )}
+                        {letterhead.signatureImg && (
+                          <img
+                            src={letterhead.signatureImg}
+                            alt="توقيع"
+                            className="absolute bottom-1 left-0 h-11 object-contain"
+                          />
+                        )}
+                      </div>
+                    ) : null}
+                    <p className="border-t border-slate-400 pt-1 mt-8 inline-block">
+                      التوقيع والختم
+                    </p>
+                  </div>
+                  {letterhead.footerImg && (
+                    <div className="pt-6 -mx-8 -mb-8">
+                      <img src={letterhead.footerImg} alt="تذييل المكتب" className="w-full block" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+      {/* ================= نافذة التقرير القابل للطباعة ================= */}
+      {report &&
+        (() => {
+          const isRollReport = typeof report === "object" && report.type === "roll";
+          const isKycSingle = typeof report === "object" && report.kycId;
+          const kycRec = isKycSingle ? kyc.find((k) => k.id === report.kycId) : null;
+          const clientObj = kycRec ? clients.find((c) => c.id === kycRec.clientId) : null;
+
+          const rollDate = isRollReport ? report.date : "";
+          const rollCourt = isRollReport ? report.court : "الكل";
+
+          const rollList = hearings
+            .filter((h) => {
+              const matchDate = !rollDate || h.date === rollDate;
+              const cs = cases.find((c) => c.id === h.caseId);
+              const matchCourt = rollCourt === "الكل" || (cs && cs.court === rollCourt);
+              return matchDate && matchCourt;
+            })
+            .sort((a, b) => a.date.localeCompare(b.date));
+
+          const currentTabObj = NAV.find((n) => n.id === tab);
+
+          return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#08130f]/75 p-4 no-print overflow-y-auto">
+              <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl print-area">
+                {/* شريط الإجراءات العلوي للتقرير (لا يظهر عند الطباعة) */}
+                <div className="no-print flex items-center justify-between border-b border-slate-200 px-6 py-4 sticky top-0 bg-white z-10">
+                  <div className="flex items-center gap-2">
+                    <Printer size={18} className="text-amber-600" />
+                    <h3 className="font-bold text-slate-800">
+                      {isRollReport
+                        ? `رول الجلسات القضائية — ${rollDate ? fmtDate(rollDate) : "جميع الجلسات"}`
+                        : isKycSingle
+                          ? `نموذج التحقق والعناية الواجبة (KYC) — ${clientObj?.name || ""}`
+                          : `تقرير قسم: ${currentTabObj?.label || ""}`}
+                    </h3>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => window.print()}
+                      className="flex items-center gap-1.5 rounded-xl bg-amber-500 px-4 py-2 text-xs font-bold text-slate-900 hover:bg-amber-400"
+                    >
+                      <Printer size={15} /> طباعة الآن (PDF)
+                    </button>
+                    <button
+                      onClick={() => setReport(null)}
+                      className="rounded-full p-1 text-slate-400 hover:bg-[#0D382B]/[0.06] transition-colors hover:text-slate-700"
+                      aria-label="إغلاق"
+                    >
+                      <X size={20} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* محتوى التقرير الذي سيتم طباعته رسمياً */}
+                <div className="p-8 space-y-6 text-slate-900 leading-relaxed font-sans">
+                  {/* ترويسة المكتب الرسمية مع الشعار الأصلي */}
+                  <div className="flex items-center justify-between border-b-2 border-[#0c4a47] pb-4">
+                    <Logo variant="horizontal" mode="light" size="lg" />
+                    <div className="text-left text-xs text-slate-600 space-y-0.5">
+                      <p className="font-bold text-[#0c4a47]">
+                        تاريخ التقرير: {fmtDate(todayISO())}
+                      </p>
+                      <p className="text-[11px] text-slate-600">
+                        المستخدم المستخرج: {currentUser.name}
+                      </p>
+                      <p className="text-[11px] text-[#b89b6a] font-bold">
+                        {currentUser.roleTitle}
+                      </p>
+                      <p className="text-[10px] text-slate-400">الإمارات العربية المتحدة • UAE</p>
+                    </div>
+                  </div>
+
+                  {/* محتوى تقرير رول الجلسات القابل للطباعة */}
+                  {isRollReport ? (
+                    <div className="space-y-6">
+                      <div className="bg-slate-900 text-white p-4 rounded-xl flex items-center justify-between">
+                        <div>
+                          <h2 className="text-lg font-bold text-amber-400">
+                            كشف ورول الجلسات القضائية اليومي
+                          </h2>
+                          <p className="text-xs text-slate-300 mt-0.5">
+                            جدول حضور المحامين وتتبع قاعات ومواعيد الجلسات
+                          </p>
+                        </div>
+                        <div className="text-left text-xs font-mono">
+                          <p>
+                            التاريخ: <b>{rollDate ? fmtDate(rollDate) : "جميع التواريخ"}</b>
+                          </p>
+                          <p>
+                            المحكمة: <b>{rollCourt}</b>
+                          </p>
+                          <p>
+                            عدد الجلسات: <b>{rollList.length}</b>
+                          </p>
+                        </div>
+                      </div>
+
+                      <table className="w-full text-right border-collapse border border-slate-300 text-xs">
+                        <thead>
+                          <tr className="bg-slate-100 text-slate-900 border-b border-slate-300 font-bold">
+                            <th className="p-2.5 border border-slate-300 text-center">م</th>
+                            <th className="p-2.5 border border-slate-300">رقم القضية والدائرة</th>
+                            <th className="p-2.5 border border-slate-300">اسم الموكل</th>
+                            <th className="p-2.5 border border-slate-300">المحكمة / القاعة</th>
+                            <th className="p-2.5 border border-slate-300 text-center">
+                              التاريخ والوقت
+                            </th>
+                            <th className="p-2.5 border border-slate-300">نوع الجلسة والمطلوب</th>
+                            <th className="p-2.5 border border-slate-300 text-center">الحالة</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rollList.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="p-6 text-center text-slate-500">
+                                لا توجد جلسات مجدولة لهذا التاريخ أو المحكمة في النظام.
+                              </td>
+                            </tr>
+                          ) : (
+                            rollList.map((h, idx) => {
+                              const cs = cases.find((c) => c.id === h.caseId);
+                              return (
+                                <tr
+                                  key={h.id}
+                                  className="border-b border-slate-200 hover:bg-slate-50"
+                                >
+                                  <td className="p-2.5 border border-slate-300 text-center font-bold font-mono">
+                                    {idx + 1}
+                                  </td>
+                                  <td className="p-2.5 border border-slate-300">
+                                    <p className="font-bold text-slate-900">
+                                      {cs ? cs.number : "—"}
+                                    </p>
+                                    <p className="text-[11px] text-slate-500">
+                                      {cs ? cs.subject : ""}
+                                    </p>
+                                  </td>
+                                  <td className="p-2.5 border border-slate-300 font-medium">
+                                    {cs ? clientName(cs.clientId) : "—"}
+                                  </td>
+                                  <td className="p-2.5 border border-slate-300">
+                                    <p className="font-semibold">{cs ? cs.court : "—"}</p>
+                                    <p className="text-[11px] text-slate-500">{h.room}</p>
+                                  </td>
+                                  <td className="p-2.5 border border-slate-300 text-center font-mono">
+                                    <p className="font-bold">{fmtDate(h.date)}</p>
+                                    <p className="text-slate-500">{h.time}</p>
+                                  </td>
+                                  <td className="p-2.5 border border-slate-300">
+                                    <p className="font-bold text-slate-900">{h.type}</p>
+                                    {h.notes && (
+                                      <p className="text-[11px] text-slate-600 mt-0.5 bg-stone-50 p-1 rounded border border-stone-200">
+                                        المطلوب: {h.notes}
+                                      </p>
+                                    )}
+                                  </td>
+                                  <td className="p-2.5 border border-slate-300 text-center">
+                                    {h.done ? (
+                                      <span className="font-bold text-emerald-700">منتهية</span>
+                                    ) : (
+                                      <span className="font-bold text-amber-700">قائمة</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                      </table>
+
+                      <div className="pt-8 border-t border-slate-300 grid grid-cols-2 text-xs text-center">
+                        <div>
+                          <p className="font-bold">توقيع المحامي الحاضر / المسؤول:</p>
+                          <p className="mt-8">..................................................</p>
+                        </div>
+                        <div>
+                          <p className="font-bold">اعتماد كشف الجلسات:</p>
+                          <p className="mt-8">مكتب سعود أحمد الشحي للمحاماة</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : isKycSingle && kycRec && clientObj ? (
+                    <div className="space-y-6">
+                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
+                        <h2 className="text-lg font-bold text-amber-900">
+                          استمارة اعرف عميلك وفحص مكافحة غسل الأموال (KYC / AML)
+                        </h2>
+                        <p className="text-xs text-amber-800">
+                          وفقًا لأحكام القانون الاتحادي رقم (20) لسنة 2018 بشأن مواجهة جرائم غسل
+                          الأموال
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4 text-xs">
+                        <div className="border border-slate-200 p-3 rounded-xl space-y-1">
+                          <p className="text-slate-500">اسم الموكل / الشركة:</p>
+                          <p className="font-bold text-sm text-slate-900">{clientObj.name}</p>
+                          <p className="text-slate-600">
+                            نوع الشخصية: {clientObj.type} | الإمارة: {clientObj.emirate}
+                          </p>
+                          <p className="text-slate-600">
+                            رقم الهاتف: {clientObj.phone} | البريد: {clientObj.email}
+                          </p>
+                        </div>
+                        <div className="border border-slate-200 p-3 rounded-xl space-y-1">
+                          <p className="text-slate-500">الجنسية / الدولة:</p>
+                          <p className="font-bold text-sm text-slate-900">{kycRec.nationality}</p>
+                          <p className="text-slate-600">نوع الوثيقة: {kycRec.idType}</p>
+                          <p className="text-slate-600">
+                            تاريخ انتهاء الوثيقة: {fmtDate(kycRec.idExpiry)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="border border-slate-200 p-4 rounded-xl space-y-2 text-xs">
+                        <h3 className="font-bold text-slate-900 border-b pb-1">
+                          نتائج العناية الواجبة والتحقق من المخاطر
+                        </h3>
+                        <div className="grid grid-cols-3 gap-2">
+                          <p>
+                            <b>المستفيد الحقيقي (UBO):</b> {kycRec.ubo}
+                          </p>
+                          <p>
+                            <b>مصدر الأموال:</b> {kycRec.sourceOfFunds}
+                          </p>
+                          <p>
+                            <b>معرّض سياسيًا (PEP):</b>{" "}
+                            {kycRec.pep ? "نعم (يلزم عناية مشددة)" : "لا"}
+                          </p>
+                          <p>
+                            <b>فحص قوائم العقوبات:</b>{" "}
+                            <span className="font-bold">{kycRec.sanctions}</span>
+                          </p>
+                          <p>
+                            <b>تصنيف المخاطر:</b> <span className="font-bold">{kycRec.risk}</span>
+                          </p>
+                          <p>
+                            <b>حالة الملف:</b> <span className="font-bold">{kycRec.status}</span>
+                          </p>
+                        </div>
+                        <p className="pt-2">
+                          <b>تاريخ المراجعة الأخيرة:</b> {fmtDate(kycRec.lastReview)} |{" "}
+                          <b>المراجعة القادمة:</b>{" "}
+                          {fmtDate(nextReviewDate(kycRec.lastReview, kycRec.risk))}
+                        </p>
+                        {kycRec.notes && (
+                          <p className="bg-stone-50 p-2 rounded border text-slate-700 mt-2">
+                            <b>ملاحظات الفحص:</b> {kycRec.notes}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="pt-8 border-t border-slate-200 grid grid-cols-2 text-xs text-center">
+                        <div>
+                          <p className="font-bold">توقيع مسؤول الامتثال / المحامي:</p>
+                          <p className="mt-8">..................................................</p>
+                        </div>
+                        <div>
+                          <p className="font-bold">خاتم المكتب:</p>
+                          <div className="mt-4 mx-auto w-24 h-24 border-2 border-dashed border-slate-300 rounded-full flex items-center justify-center text-[10px] text-slate-400">
+                            مكتب المحاماة
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* محتوى تقرير القسم العام */
+                    <div className="space-y-4 text-xs">
+                      <div className="flex items-center justify-between bg-stone-100 p-3 rounded-xl">
+                        <h2 className="font-bold text-sm text-slate-900">
+                          تقرير المخرجات التفصيلية — {currentTabObj?.label}
+                        </h2>
+                        <span className="text-slate-500">
+                          إجمالي السجلات:{" "}
+                          {tab === "cases"
+                            ? cases.length
+                            : tab === "clients"
+                              ? clients.length
+                              : tab === "hearings"
+                                ? hearings.length
+                                : tab === "tasks"
+                                  ? tasks.length
+                                  : tab === "invoices"
+                                    ? invoices.length
+                                    : tab === "kyc"
+                                      ? kyc.length
+                                      : tab === "poa"
+                                        ? poas.length
+                                        : 0}
+                        </span>
+                      </div>
+
+                      {tab === "cases" && (
+                        <table className="w-full text-right border-collapse border border-slate-200">
+                          <thead>
+                            <tr className="bg-slate-100 border-b">
+                              <th className="p-2 border">رقم القضية</th>
+                              <th className="p-2 border">الموكل</th>
+                              <th className="p-2 border">المحكمة</th>
+                              <th className="p-2 border">الحالة</th>
+                              {canViewFinancials && <th className="p-2 border">الأتعاب</th>}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {cases.map((c) => (
+                              <tr key={c.id} className="border-b">
+                                <td className="p-2 border font-bold">{c.number}</td>
+                                <td className="p-2 border">{clientName(c.clientId)}</td>
+                                <td className="p-2 border">{c.court}</td>
+                                <td className="p-2 border">{c.status}</td>
+                                {canViewFinancials && (
+                                  <td className="p-2 border">{fmtAED(c.fee)}</td>
+                                )}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+
+                      {tab === "kyc" && (
+                        <table className="w-full text-right border-collapse border border-slate-200">
+                          <thead>
+                            <tr className="bg-slate-100 border-b">
+                              <th className="p-2 border">الموكل</th>
+                              <th className="p-2 border">الجنسية</th>
+                              <th className="p-2 border">المستفيد UBO</th>
+                              <th className="p-2 border">المخاطر</th>
+                              <th className="p-2 border">العقوبات</th>
+                              <th className="p-2 border">المراجعة القادمة</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {kyc.map((k) => (
+                              <tr key={k.id} className="border-b">
+                                <td className="p-2 border font-bold">{clientName(k.clientId)}</td>
+                                <td className="p-2 border">{k.nationality}</td>
+                                <td className="p-2 border">{k.ubo}</td>
+                                <td className="p-2 border">{k.risk}</td>
+                                <td className="p-2 border">{k.sanctions}</td>
+                                <td className="p-2 border">
+                                  {fmtDate(nextReviewDate(k.lastReview, k.risk))}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+
+                      {(tab === "courts_directory" ||
+                        (typeof report === "object" && report?.type === "court-directory")) && (
+                        <table className="w-full text-right border-collapse border border-slate-200">
+                          <thead>
+                            <tr className="bg-slate-100 border-b">
+                              <th className="p-2 border">المحكمة / الجهة</th>
+                              <th className="p-2 border">الإمارة</th>
+                              <th className="p-2 border">القسم / الدائرة</th>
+                              <th className="p-2 border">المسؤول / الصفة</th>
+                              <th className="p-2 border">الهاتف المباشر</th>
+                              <th className="p-2 border">الخاتم / التمديدة</th>
+                              <th className="p-2 border">البريد الإلكتروني</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {courtContacts.map((c) => (
+                              <tr key={c.id} className="border-b">
+                                <td className="p-2 border font-bold text-slate-900">
+                                  {c.courtName}
+                                </td>
+                                <td className="p-2 border font-bold text-amber-800">{c.emirate}</td>
+                                <td className="p-2 border">{c.department}</td>
+                                <td className="p-2 border">{c.titleOrEmployee}</td>
+                                <td className="p-2 border font-mono" dir="ltr">
+                                  {c.phone}
+                                </td>
+                                <td className="p-2 border font-bold text-amber-900">
+                                  {c.extOrSeal}
+                                </td>
+                                <td className="p-2 border font-mono text-xs" dir="ltr">
+                                  {c.email}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+
+                      {tab !== "cases" &&
+                        tab !== "kyc" &&
+                        tab !== "courts_directory" &&
+                        (typeof report !== "object" || report?.type !== "court-directory") && (
+                          <p className="text-slate-500 text-center py-6">
+                            جدول ملخص البيانات جاهز للطباعة المباشرة من النظام.
+                          </p>
+                        )}
+
+                      <div className="pt-6 text-[11px] text-slate-400 text-center border-t">
+                        تم استخراج هذا التقرير تلقائيًا بواسطة نظام سعود أحمد الشحي للمحاماة — كافة
+                        الحقوق محفوظة © 2026
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
       {/* ═══ نافذة تأكيد الحذف الموحدة لجميع الأقسام مع الصلاحيات ═══ */}
       {deleteModalState && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#08130f]/80 p-4 backdrop-blur-sm no-print animate-in fade-in duration-200">
@@ -9644,9 +12604,7 @@ const activeFiltersCount = useMemo(() => {
             </div>
 
             <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
-              <p className="text-sm font-bold text-slate-900">
-                {deleteModalState.title}
-              </p>
+              <p className="text-sm font-bold text-slate-900">{deleteModalState.title}</p>
               {deleteModalState.details && (
                 <p className="text-xs text-slate-600 whitespace-pre-line leading-relaxed">
                   {deleteModalState.details}
@@ -9688,53 +12646,66 @@ const activeFiltersCount = useMemo(() => {
       )}
 
       {/* ═══ نافذة تأكيد حذف الاتفاقية ═══ */}
-      {deleteAgrConfirm && (() => {
-        const cid = deleteAgrConfirm.clientId;
-        const hasOtherOfficeAgr = officeAgreements.some((a) => a.id !== deleteAgrConfirm.id && a.clientId === cid);
-        const hasOtherFeeAgr = feeAgreements.some((fa) => fa.id !== deleteAgrConfirm.feeAgreementId && fa.clientId === cid);
-        const hasCases = cases.some((c) => c.clientId === cid);
-        const hasInvoices = invoices.some((inv) => inv.clientId === cid);
-        const hasPoas = poas.some((p) => p.clientId === cid);
-        const willDeleteClient = cid && !(hasOtherOfficeAgr || hasOtherFeeAgr || hasCases || hasInvoices || hasPoas);
+      {deleteAgrConfirm &&
+        (() => {
+          const cid = deleteAgrConfirm.clientId;
+          const hasOtherOfficeAgr = officeAgreements.some(
+            (a) => a.id !== deleteAgrConfirm.id && a.clientId === cid,
+          );
+          const hasOtherFeeAgr = feeAgreements.some(
+            (fa) => fa.id !== deleteAgrConfirm.feeAgreementId && fa.clientId === cid,
+          );
+          const hasCases = cases.some((c) => c.clientId === cid);
+          const hasInvoices = invoices.some((inv) => inv.clientId === cid);
+          const hasPoas = poas.some((p) => p.clientId === cid);
+          const willDeleteClient =
+            cid && !(hasOtherOfficeAgr || hasOtherFeeAgr || hasCases || hasInvoices || hasPoas);
 
-        return (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#08130f]/65 p-4 backdrop-blur-sm no-print">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4 text-slate-900">
-              <div className="flex items-center gap-3 text-red-600">
-                <div className="rounded-full bg-red-100 p-2.5">
-                  <AlertTriangle size={24} />
+          return (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#08130f]/65 p-4 backdrop-blur-sm no-print">
+              <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4 text-slate-900">
+                <div className="flex items-center gap-3 text-red-600">
+                  <div className="rounded-full bg-red-100 p-2.5">
+                    <AlertTriangle size={24} />
+                  </div>
+                  <h3 className="text-lg font-bold">تأكيد حذف الاتفاقية</h3>
                 </div>
-                <h3 className="text-lg font-bold">تأكيد حذف الاتفاقية</h3>
-              </div>
-              <p className="text-sm text-slate-600 leading-relaxed">
-                هل أنت متأكد من رغبتك في حذف الاتفاقية رقم <span className="font-mono font-bold text-slate-900 bg-stone-100 px-2 py-0.5 rounded border border-slate-200">{deleteAgrConfirm.agreementNumber}</span> الخاصة بالموكل <span className="font-bold text-slate-900">{deleteAgrConfirm.clientNameAr}</span>؟
-              </p>
-              <div className="text-xs text-red-600 font-semibold bg-red-50 p-3 rounded-xl border border-red-100 leading-relaxed space-y-1.5">
-                <p>⚠️ تنبيه: سيتم حذف الاتفاقية نهائياً من الأرشيف وسجل اتفاقيات الأتعاب.</p>
-                {willDeleteClient && (
-                  <p className="text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200 mt-1">
-                    👤 <strong>ملاحظة:</strong> سيتم أيضاً إلغاء/حذف الموكل ({deleteAgrConfirm.clientNameAr}) تلقائياً لعدم وجود أي اتفاقيات أو قضايا أخرى مرتبطة به بالمكتب.
-                  </p>
-                )}
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  onClick={() => setDeleteAgrConfirm(null)}
-                  className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors transition"
-                >
-                  إلغاء
-                </button>
-                <button
-                  onClick={handleExecuteDeleteAgreement}
-                  className="flex items-center gap-1.5 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-red-700 shadow-md transition"
-                >
-                  <Trash2 size={15} /> نعم، احذف الاتفاقية
-                </button>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  هل أنت متأكد من رغبتك في حذف الاتفاقية رقم{" "}
+                  <span className="font-mono font-bold text-slate-900 bg-stone-100 px-2 py-0.5 rounded border border-slate-200">
+                    {deleteAgrConfirm.agreementNumber}
+                  </span>{" "}
+                  الخاصة بالموكل{" "}
+                  <span className="font-bold text-slate-900">{deleteAgrConfirm.clientNameAr}</span>؟
+                </p>
+                <div className="text-xs text-red-600 font-semibold bg-red-50 p-3 rounded-xl border border-red-100 leading-relaxed space-y-1.5">
+                  <p>⚠️ تنبيه: سيتم حذف الاتفاقية نهائياً من الأرشيف وسجل اتفاقيات الأتعاب.</p>
+                  {willDeleteClient && (
+                    <p className="text-amber-800 bg-amber-50 p-2 rounded-lg border border-amber-200 mt-1">
+                      👤 <strong>ملاحظة:</strong> سيتم أيضاً إلغاء/حذف الموكل (
+                      {deleteAgrConfirm.clientNameAr}) تلقائياً لعدم وجود أي اتفاقيات أو قضايا أخرى
+                      مرتبطة به بالمكتب.
+                    </p>
+                  )}
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    onClick={() => setDeleteAgrConfirm(null)}
+                    className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors transition"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    onClick={handleExecuteDeleteAgreement}
+                    className="flex items-center gap-1.5 rounded-xl bg-red-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-red-700 shadow-md transition"
+                  >
+                    <Trash2 size={15} /> نعم، احذف الاتفاقية
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
       {/* ═══ مودال القبول وتخصيص الصلاحيات للمستخدمين الجدد (Pending Approval Flow) ═══ */}
       {approvingUser && (
@@ -9745,7 +12716,9 @@ const activeFiltersCount = useMemo(() => {
           <div className="space-y-5 text-sm">
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl text-xs text-amber-950 space-y-1">
               <p className="font-bold">طلب اعتماد جديد</p>
-              <p className="opacity-90">البريد: {approvingUser.email} | الهاتف: {approvingUser.phone}</p>
+              <p className="opacity-90">
+                البريد: {approvingUser.email} | الهاتف: {approvingUser.phone}
+              </p>
             </div>
 
             <Field label="المسمى الوظيفي والدور المحدد">
@@ -9771,7 +12744,9 @@ const activeFiltersCount = useMemo(() => {
             </Field>
 
             <div className="space-y-3 border-t border-slate-100 pt-3">
-              <p className="text-xs font-bold text-slate-800">التفويضات الاستثنائية الخاص (المحامي سعود):</p>
+              <p className="text-xs font-bold text-slate-800">
+                التفويضات الاستثنائية الخاص (المحامي سعود):
+              </p>
 
               <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700">
                 <input
@@ -9829,7 +12804,9 @@ const activeFiltersCount = useMemo(() => {
         <Modal title="إضافة مبدأ قضائي جديد" onClose={() => setShowAddPrecedentModal(false)} wide>
           <form onSubmit={handlePrecedentSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">عنوان المبدأ القضائي / القاعدة:</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                عنوان المبدأ القضائي / القاعدة:
+              </label>
               <input
                 type="text"
                 required
@@ -9842,10 +12819,14 @@ const activeFiltersCount = useMemo(() => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">المحكمة المصدرة:</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  المحكمة المصدرة:
+                </label>
                 <select
                   value={precedentForm.court_name}
-                  onChange={(e) => setPrecedentForm({ ...precedentForm, court_name: e.target.value })}
+                  onChange={(e) =>
+                    setPrecedentForm({ ...precedentForm, court_name: e.target.value })
+                  }
                   className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-amber-500 focus:outline-none bg-white"
                 >
                   <option value="المحكمة الاتحادية العليا">المحكمة الاتحادية العليا</option>
@@ -9857,14 +12838,21 @@ const activeFiltersCount = useMemo(() => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">سنة الحكم / الصدور:</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  سنة الحكم / الصدور:
+                </label>
                 <input
                   type="number"
                   required
                   min={1971}
                   max={2030}
                   value={precedentForm.ruling_year}
-                  onChange={(e) => setPrecedentForm({ ...precedentForm, ruling_year: parseInt(e.target.value) || new Date().getFullYear() })}
+                  onChange={(e) =>
+                    setPrecedentForm({
+                      ...precedentForm,
+                      ruling_year: parseInt(e.target.value) || new Date().getFullYear(),
+                    })
+                  }
                   className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-amber-500 focus:outline-none font-mono"
                 />
               </div>
@@ -9889,37 +12877,49 @@ const activeFiltersCount = useMemo(() => {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">اسم الدائرة القضائية:</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  اسم الدائرة القضائية:
+                </label>
                 <input
                   type="text"
                   placeholder="مثال: الدائرة التجارية والمدنية"
                   value={precedentForm.circuit_name}
-                  onChange={(e) => setPrecedentForm({ ...precedentForm, circuit_name: e.target.value })}
+                  onChange={(e) =>
+                    setPrecedentForm({ ...precedentForm, circuit_name: e.target.value })
+                  }
                   className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-amber-500 focus:outline-none"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">رقم الطعن / الدعوى:</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  رقم الطعن / الدعوى:
+                </label>
                 <input
                   type="text"
                   required
                   placeholder="مثال: طعن 120 لسنة 2024 تجاري"
                   value={precedentForm.appeal_number}
-                  onChange={(e) => setPrecedentForm({ ...precedentForm, appeal_number: e.target.value })}
+                  onChange={(e) =>
+                    setPrecedentForm({ ...precedentForm, appeal_number: e.target.value })
+                  }
                   className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-amber-500 focus:outline-none font-mono"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">نص المبدأ / القاعدة القانونية:</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                نص المبدأ / القاعدة القانونية:
+              </label>
               <textarea
                 rows={4}
                 required
                 placeholder="اكتب نص المبدأ القانوني أو ملخص القاعدة الصادرة من الحكم القضائي..."
                 value={precedentForm.summary_text}
-                onChange={(e) => setPrecedentForm({ ...precedentForm, summary_text: e.target.value })}
+                onChange={(e) =>
+                  setPrecedentForm({ ...precedentForm, summary_text: e.target.value })
+                }
                 className="w-full rounded-xl border border-slate-200 p-3 text-sm focus:border-amber-500 focus:outline-none leading-relaxed"
               />
             </div>
@@ -9939,7 +12939,8 @@ const activeFiltersCount = useMemo(() => {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1">
-                  <FileSpreadsheet size={14} className="text-blue-600" /> تحميل ملف Word (.doc, .docx):
+                  <FileSpreadsheet size={14} className="text-blue-600" /> تحميل ملف Word (.doc,
+                  .docx):
                 </label>
                 <input
                   type="file"
@@ -9993,9 +12994,15 @@ const activeFiltersCount = useMemo(() => {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono text-slate-600 bg-stone-50 p-3 rounded-xl border border-slate-200">
-              <div><strong className="text-slate-800 font-sans">رقم الطعن/الدعوى:</strong> {selectedPrecedent.appeal_number}</div>
+              <div>
+                <strong className="text-slate-800 font-sans">رقم الطعن/الدعوى:</strong>{" "}
+                {selectedPrecedent.appeal_number}
+              </div>
               {selectedPrecedent.circuit_name && (
-                <div><strong className="text-slate-800 font-sans">الدائرة:</strong> {selectedPrecedent.circuit_name}</div>
+                <div>
+                  <strong className="text-slate-800 font-sans">الدائرة:</strong>{" "}
+                  {selectedPrecedent.circuit_name}
+                </div>
               )}
             </div>
 
@@ -10009,7 +13016,9 @@ const activeFiltersCount = useMemo(() => {
             <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText(`${selectedPrecedent.title}\nالمحكمة: ${selectedPrecedent.court_name}\nرقم الطعن: ${selectedPrecedent.appeal_number}\nالمبدأ: ${selectedPrecedent.summary_text}`);
+                  navigator.clipboard.writeText(
+                    `${selectedPrecedent.title}\nالمحكمة: ${selectedPrecedent.court_name}\nرقم الطعن: ${selectedPrecedent.appeal_number}\nالمبدأ: ${selectedPrecedent.summary_text}`,
+                  );
                   alert("تم نسخ المبدأ والقاعدة القانونية بنجاح!");
                 }}
                 className="flex items-center gap-1.5 rounded-xl bg-amber-600 px-4 py-2 text-xs font-bold text-white hover:bg-amber-700 transition"
@@ -10048,7 +13057,10 @@ const activeFiltersCount = useMemo(() => {
       {showPolicyModal && (
         <Modal
           title={editingPolicy ? "تعديل السياسة الداخلية" : "إضافة سياسة داخلية جديدة"}
-          onClose={() => { setShowPolicyModal(false); setEditingPolicy(null); }}
+          onClose={() => {
+            setShowPolicyModal(false);
+            setEditingPolicy(null);
+          }}
           wide
         >
           <form onSubmit={handlePolicySubmit} className="space-y-4">
@@ -10073,12 +13085,16 @@ const activeFiltersCount = useMemo(() => {
                   className="w-full rounded-xl border border-slate-200 p-2.5 text-sm focus:border-amber-500 focus:outline-none bg-white"
                 >
                   {POLICY_CATEGORIES.map((c) => (
-                    <option key={c} value={c}>{c}</option>
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">تاريخ السريان:</label>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  تاريخ السريان:
+                </label>
                 <input
                   type="date"
                   value={policyForm.effectiveDate}
@@ -10103,7 +13119,10 @@ const activeFiltersCount = useMemo(() => {
             <div className="flex justify-end gap-2 pt-2">
               <button
                 type="button"
-                onClick={() => { setShowPolicyModal(false); setEditingPolicy(null); }}
+                onClick={() => {
+                  setShowPolicyModal(false);
+                  setEditingPolicy(null);
+                }}
                 className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50"
               >
                 إلغاء
@@ -10121,12 +13140,20 @@ const activeFiltersCount = useMemo(() => {
 
       {/* ═══ مودال تصدير واستعادة نسخة احتياطية لبيانات المكتب (Backup & Restore JSON) ═══ */}
       {showBackupModal && (
-        <Modal title="تصدير واستعادة نسخة احتياطية لبيانات المكتب (JSON)" onClose={() => setShowBackupModal(false)} wide>
+        <Modal
+          title="تصدير واستعادة نسخة احتياطية لبيانات المكتب (JSON)"
+          onClose={() => setShowBackupModal(false)}
+          wide
+        >
           <div className="space-y-6">
             {/* تبويبات التصدير والاستعادة */}
             <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
               <button
-                onClick={() => { setBackupActiveTab("export"); setRestoreError(null); setRestoreSuccessMsg(null); }}
+                onClick={() => {
+                  setBackupActiveTab("export");
+                  setRestoreError(null);
+                  setRestoreSuccessMsg(null);
+                }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition cursor-pointer ${
                   backupActiveTab === "export"
                     ? "bg-[#0a3d3a] text-white shadow-sm"
@@ -10138,7 +13165,11 @@ const activeFiltersCount = useMemo(() => {
               </button>
 
               <button
-                onClick={() => { setBackupActiveTab("restore"); setRestoreError(null); setRestoreSuccessMsg(null); }}
+                onClick={() => {
+                  setBackupActiveTab("restore");
+                  setRestoreError(null);
+                  setRestoreSuccessMsg(null);
+                }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs transition cursor-pointer ${
                   backupActiveTab === "restore"
                     ? "bg-[#0a3d3a] text-white shadow-sm"
@@ -10159,7 +13190,9 @@ const activeFiltersCount = useMemo(() => {
                     <span>تصدير قواعد وسجلات المكتب بالكامل إلى ملف JSON</span>
                   </div>
                   <p>
-                    تتيح لك هذه الميزة تحميل كافة بيانات ومحتويات نظام المكتب (القضايا، الموكلين، الجلسات، المهام، الفواتير، المستندات، الموظفين، والمستندات) في ملف مغلف واحد بصيغة <strong>JSON</strong>.
+                    تتيح لك هذه الميزة تحميل كافة بيانات ومحتويات نظام المكتب (القضايا، الموكلين،
+                    الجلسات، المهام، الفواتير، المستندات، الموظفين، والمستندات) في ملف مغلف واحد
+                    بصيغة <strong>JSON</strong>.
                   </p>
                   <p className="text-teal-800">
                     يمكنك الاحتفاظ بهذا الملف في مكان آمن على حاسوبك لاستعادته في أي وقت عند الحاجة.
@@ -10179,11 +13212,15 @@ const activeFiltersCount = useMemo(() => {
                     </div>
                     <div className="p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_8px_20px_-10px_rgb(15,23,42,0.08)]">
                       <span className="text-slate-500 block text-[11px]">👥 الموكلين:</span>
-                      <span className="font-black text-slate-900 text-sm">{clients.length} موكل</span>
+                      <span className="font-black text-slate-900 text-sm">
+                        {clients.length} موكل
+                      </span>
                     </div>
                     <div className="p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_8px_20px_-10px_rgb(15,23,42,0.08)]">
                       <span className="text-slate-500 block text-[11px]">🗓️ الجلسات:</span>
-                      <span className="font-black text-slate-900 text-sm">{hearings.length} جلسة</span>
+                      <span className="font-black text-slate-900 text-sm">
+                        {hearings.length} جلسة
+                      </span>
                     </div>
                     <div className="p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_8px_20px_-10px_rgb(15,23,42,0.08)]">
                       <span className="text-slate-500 block text-[11px]">📋 المهام:</span>
@@ -10191,7 +13228,9 @@ const activeFiltersCount = useMemo(() => {
                     </div>
                     <div className="p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_8px_20px_-10px_rgb(15,23,42,0.08)]">
                       <span className="text-slate-500 block text-[11px]">🧾 الفواتير:</span>
-                      <span className="font-black text-slate-900 text-sm">{invoices.length} فاتورة</span>
+                      <span className="font-black text-slate-900 text-sm">
+                        {invoices.length} فاتورة
+                      </span>
                     </div>
                     <div className="p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_8px_20px_-10px_rgb(15,23,42,0.08)]">
                       <span className="text-slate-500 block text-[11px]">📂 المستندات:</span>
@@ -10199,11 +13238,15 @@ const activeFiltersCount = useMemo(() => {
                     </div>
                     <div className="p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_8px_20px_-10px_rgb(15,23,42,0.08)]">
                       <span className="text-slate-500 block text-[11px]">👔 الموظفين:</span>
-                      <span className="font-black text-slate-900 text-sm">{employees.length} موظف</span>
+                      <span className="font-black text-slate-900 text-sm">
+                        {employees.length} موظف
+                      </span>
                     </div>
                     <div className="p-2.5 rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_8px_20px_-10px_rgb(15,23,42,0.08)]">
                       <span className="text-slate-500 block text-[11px]">🔒 المستخدمين:</span>
-                      <span className="font-black text-slate-900 text-sm">{users.length} مستخدم</span>
+                      <span className="font-black text-slate-900 text-sm">
+                        {users.length} مستخدم
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -10233,7 +13276,8 @@ const activeFiltersCount = useMemo(() => {
                     <span>تنبيه هام قبل استعادة النسخة الاحتياطية</span>
                   </div>
                   <p>
-                    استعادة النسخة الاحتياطية ستستبدل البيانات الحالية ببيانات الملف المرفق وتحدث كافة سجلات القضايا، الموكلين، والمهام.
+                    استعادة النسخة الاحتياطية ستستبدل البيانات الحالية ببيانات الملف المرفق وتحدث
+                    كافة سجلات القضايا، الموكلين، والمهام.
                   </p>
                 </div>
 
@@ -10267,7 +13311,9 @@ const activeFiltersCount = useMemo(() => {
                     <p className="font-bold text-xs text-slate-800">
                       اضغط هنا لاختيار ملف النسخة الاحتياطية (.json) أو اسحبه إلى هنا
                     </p>
-                    <p className="text-[11px] text-slate-400">يقبل ملفات JSON الناتجة من عملية تصدير النظام فقط</p>
+                    <p className="text-[11px] text-slate-400">
+                      يقبل ملفات JSON الناتجة من عملية تصدير النظام فقط
+                    </p>
                   </div>
                 </div>
 
@@ -10287,19 +13333,27 @@ const activeFiltersCount = useMemo(() => {
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                       <div className="p-2 rounded-lg bg-white border border-emerald-200 text-slate-800">
                         <span className="text-slate-500 block text-[10px]">💼 القضايا:</span>
-                        <span className="font-bold text-slate-900">{restorePreview.counts.cases}</span>
+                        <span className="font-bold text-slate-900">
+                          {restorePreview.counts.cases}
+                        </span>
                       </div>
                       <div className="p-2 rounded-lg bg-white border border-emerald-200 text-slate-800">
                         <span className="text-slate-500 block text-[10px]">👥 الموكلين:</span>
-                        <span className="font-bold text-slate-900">{restorePreview.counts.clients}</span>
+                        <span className="font-bold text-slate-900">
+                          {restorePreview.counts.clients}
+                        </span>
                       </div>
                       <div className="p-2 rounded-lg bg-white border border-emerald-200 text-slate-800">
                         <span className="text-slate-500 block text-[10px]">🗓️ الجلسات:</span>
-                        <span className="font-bold text-slate-900">{restorePreview.counts.hearings}</span>
+                        <span className="font-bold text-slate-900">
+                          {restorePreview.counts.hearings}
+                        </span>
                       </div>
                       <div className="p-2 rounded-lg bg-white border border-emerald-200 text-slate-800">
                         <span className="text-slate-500 block text-[10px]">📋 المهام:</span>
-                        <span className="font-bold text-slate-900">{restorePreview.counts.tasks}</span>
+                        <span className="font-bold text-slate-900">
+                          {restorePreview.counts.tasks}
+                        </span>
                       </div>
                     </div>
 
@@ -10317,7 +13371,10 @@ const activeFiltersCount = useMemo(() => {
 
                 <div className="flex items-center justify-end gap-3 pt-2">
                   <button
-                    onClick={() => { setShowBackupModal(false); setRestorePreview(null); }}
+                    onClick={() => {
+                      setShowBackupModal(false);
+                      setRestorePreview(null);
+                    }}
                     className="px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors transition"
                   >
                     إغلاق
@@ -10344,14 +13401,20 @@ const activeFiltersCount = useMemo(() => {
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
               </span>
             </div>
-            <span className="font-black text-xs text-amber-100 hidden sm:inline">المساعد الذكي (AI)</span>
+            <span className="font-black text-xs text-amber-100 hidden sm:inline">
+              المساعد الذكي (AI)
+            </span>
           </button>
         </div>
       )}
 
       {/* ═══ مودال المساعد الذكي القانوني والتنفيذي لجميع الأقسام (Gemini AI Modal) ═══ */}
       {showAiModal && (
-        <Modal title="المساعد الذكي القانوني والتنفيذي (Gemini 3.6 Flash)" onClose={() => setShowAiModal(false)} wide>
+        <Modal
+          title="المساعد الذكي القانوني والتنفيذي (Gemini 3.6 Flash)"
+          onClose={() => setShowAiModal(false)}
+          wide
+        >
           <div className="space-y-5">
             {/* رأس المودال وشعار القسم المحدد */}
             <div className="p-4 rounded-2xl bg-gradient-to-r from-teal-950 via-[#072a28] to-slate-900 border border-amber-500/30 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
@@ -10362,10 +13425,15 @@ const activeFiltersCount = useMemo(() => {
                 <div>
                   <h3 className="font-black text-sm text-amber-200 flex items-center gap-2">
                     <span>ذكاء اصطناعي مساعد لجميع الأقسام</span>
-                    <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded-full font-mono">Gemini 3.6</span>
+                    <span className="text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-2 py-0.5 rounded-full font-mono">
+                      Gemini 3.6
+                    </span>
                   </h3>
                   <p className="text-xs text-teal-200/80 mt-0.5">
-                    القسم المختار حالياً: <strong className="text-white bg-teal-800/80 px-2 py-0.5 rounded-md font-bold">{aiDepartment}</strong>
+                    القسم المختار حالياً:{" "}
+                    <strong className="text-white bg-teal-800/80 px-2 py-0.5 rounded-md font-bold">
+                      {aiDepartment}
+                    </strong>
                   </p>
                 </div>
               </div>
@@ -10400,46 +13468,196 @@ const activeFiltersCount = useMemo(() => {
               <div className="flex flex-wrap gap-2 text-xs">
                 {aiDepartment.includes("القضايا") && (
                   <>
-                    <button onClick={() => { setAiQuery("صياغة مذكرة دفاع متكاملة تتضمن الدفوع الشكلية والموضوعية وطرق الإثبات"); handleAskAiAssistant("صياغة مذكرة دفاع متكاملة تتضمن الدفوع الشكلية والموضوعية وطرق الإثبات", "القضايا والدعاوى", "draft"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">✍️ صياغة مذكرة دفاع</button>
-                    <button onClick={() => { setAiQuery("استخراج واستعراض الثغرات القانونية المقترحة من واقع القضايا الحالية بالنظام"); handleAskAiAssistant("استخراج واستعراض الثغرات القانونية المقترحة من واقع القضايا الحالية بالنظام", "القضايا والدعاوى", "analyze"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">🔍 تحليل الثغرات بالقضية</button>
+                    <button
+                      onClick={() => {
+                        setAiQuery(
+                          "صياغة مذكرة دفاع متكاملة تتضمن الدفوع الشكلية والموضوعية وطرق الإثبات",
+                        );
+                        handleAskAiAssistant(
+                          "صياغة مذكرة دفاع متكاملة تتضمن الدفوع الشكلية والموضوعية وطرق الإثبات",
+                          "القضايا والدعاوى",
+                          "draft",
+                        );
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer"
+                    >
+                      ✍️ صياغة مذكرة دفاع
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAiQuery(
+                          "استخراج واستعراض الثغرات القانونية المقترحة من واقع القضايا الحالية بالنظام",
+                        );
+                        handleAskAiAssistant(
+                          "استخراج واستعراض الثغرات القانونية المقترحة من واقع القضايا الحالية بالنظام",
+                          "القضايا والدعاوى",
+                          "analyze",
+                        );
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer"
+                    >
+                      🔍 تحليل الثغرات بالقضية
+                    </button>
                   </>
                 )}
 
                 {aiDepartment.includes("الموكلين") && (
                   <>
-                    <button onClick={() => { setAiQuery("صياغة خطاب رسمي للموكل بخصوص تحديثات القضية والمستندات المطلوبة"); handleAskAiAssistant("صياغة خطاب رسمي للموكل بخصوص تحديثات القضية والمستندات المطلوبة", "الموكلين وجهات الاتصال", "draft"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">📩 صياغة خطاب رسمي للموكل</button>
-                    <button onClick={() => { setAiQuery("تقديم مقترح خطة تسوية قانونية ودية لحفظ حقوق الموكل والمكتب"); handleAskAiAssistant("تقديم مقترح خطة تسوية قانونية ودية لحفظ حقوق الموكل والمكتب", "الموكلين وجهات الاتصال", "advice"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">🤝 اقتراح خطة تسوية ودية</button>
+                    <button
+                      onClick={() => {
+                        setAiQuery(
+                          "صياغة خطاب رسمي للموكل بخصوص تحديثات القضية والمستندات المطلوبة",
+                        );
+                        handleAskAiAssistant(
+                          "صياغة خطاب رسمي للموكل بخصوص تحديثات القضية والمستندات المطلوبة",
+                          "الموكلين وجهات الاتصال",
+                          "draft",
+                        );
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer"
+                    >
+                      📩 صياغة خطاب رسمي للموكل
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAiQuery("تقديم مقترح خطة تسوية قانونية ودية لحفظ حقوق الموكل والمكتب");
+                        handleAskAiAssistant(
+                          "تقديم مقترح خطة تسوية قانونية ودية لحفظ حقوق الموكل والمكتب",
+                          "الموكلين وجهات الاتصال",
+                          "advice",
+                        );
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer"
+                    >
+                      🤝 اقتراح خطة تسوية ودية
+                    </button>
                   </>
                 )}
 
                 {aiDepartment.includes("الجلسات") && (
                   <>
-                    <button onClick={() => { setAiQuery("صياغة طلب تأجيل الجلسة مع بيان أسباب قاطعة ومقبولة للمحكمة"); handleAskAiAssistant("صياغة طلب تأجيل الجلسة مع بيان أسباب قاطعة ومقبولة للمحكمة", "الجلسات والمواعيد", "draft"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">🗓️ طلب تأجيل جلسة</button>
-                    <button onClick={() => { setAiQuery("إعداد مذكرة تعقيبية على قرار المحكمة والأمر الصادر بالجلسة السابقة"); handleAskAiAssistant("إعداد مذكرة تعقيبية على قرار المحكمة والأمر الصادر بالجلسة السابقة", "الجلسات والمواعيد", "draft"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">⚖️ مذكرة تعقيبية للجلسة</button>
+                    <button
+                      onClick={() => {
+                        setAiQuery("صياغة طلب تأجيل الجلسة مع بيان أسباب قاطعة ومقبولة للمحكمة");
+                        handleAskAiAssistant(
+                          "صياغة طلب تأجيل الجلسة مع بيان أسباب قاطعة ومقبولة للمحكمة",
+                          "الجلسات والمواعيد",
+                          "draft",
+                        );
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer"
+                    >
+                      🗓️ طلب تأجيل جلسة
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAiQuery(
+                          "إعداد مذكرة تعقيبية على قرار المحكمة والأمر الصادر بالجلسة السابقة",
+                        );
+                        handleAskAiAssistant(
+                          "إعداد مذكرة تعقيبية على قرار المحكمة والأمر الصادر بالجلسة السابقة",
+                          "الجلسات والمواعيد",
+                          "draft",
+                        );
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer"
+                    >
+                      ⚖️ مذكرة تعقيبية للجلسة
+                    </button>
                   </>
                 )}
 
                 {aiDepartment.includes("الفواتير") && (
                   <>
-                    <button onClick={() => { setAiQuery("صياغة إشعار قانوني بالمطالبة المالية وتسوية الأتعاب المتبقية قبل اللجوء للمحكمة"); handleAskAiAssistant("صياغة إشعار قانوني بالمطالبة المالية وتسوية الأتعاب المتبقية قبل اللجوء للمحكمة", "الفواتير والمالية", "draft"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">💰 إنذار بمطالبة أتعاب</button>
-                    <button onClick={() => { setAiQuery("ما هي إجراءات وشروط استصدار أمر أداء مالي وفق قانون الإجراءات المدنية بـ الإمارات؟"); handleAskAiAssistant("ما هي إجراءات وشروط استصدار أمر أداء مالي وفق قانون الإجراءات المدنية بـ الإمارات؟", "الفواتير والمالية", "advice"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">📜 إجراءات أمر الأداء المالي</button>
+                    <button
+                      onClick={() => {
+                        setAiQuery(
+                          "صياغة إشعار قانوني بالمطالبة المالية وتسوية الأتعاب المتبقية قبل اللجوء للمحكمة",
+                        );
+                        handleAskAiAssistant(
+                          "صياغة إشعار قانوني بالمطالبة المالية وتسوية الأتعاب المتبقية قبل اللجوء للمحكمة",
+                          "الفواتير والمالية",
+                          "draft",
+                        );
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer"
+                    >
+                      💰 إنذار بمطالبة أتعاب
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAiQuery(
+                          "ما هي إجراءات وشروط استصدار أمر أداء مالي وفق قانون الإجراءات المدنية بـ الإمارات؟",
+                        );
+                        handleAskAiAssistant(
+                          "ما هي إجراءات وشروط استصدار أمر أداء مالي وفق قانون الإجراءات المدنية بـ الإمارات؟",
+                          "الفواتير والمالية",
+                          "advice",
+                        );
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer"
+                    >
+                      📜 إجراءات أمر الأداء المالي
+                    </button>
                   </>
                 )}
 
                 {aiDepartment.includes("العقود") && (
                   <>
-                    <button onClick={() => { setAiQuery("صياغة عقد تقديم خدمات قانونية وأتعاب محاماة وفق التشريعات الإماراتية"); handleAskAiAssistant("صياغة عقد تقديم خدمات قانونية وأتعاب محاماة وفق التشريعات الإماراتية", "العقود والاتفاقيات", "draft"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">📝 صياغة عقد خدمات قانونية</button>
-                    <button onClick={() => { setAiQuery("فحص الشروط والمخاطر المتوقعة في عقود الشراكة أو الإيجار أو العمل"); handleAskAiAssistant("فحص الشروط والمخاطر المتوقعة في عقود الشراكة أو الإيجار أو العمل", "العقود والاتفاقيات", "analyze"); }} className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer">🔍 تحليل وتقييم مخاطر العقد</button>
+                    <button
+                      onClick={() => {
+                        setAiQuery(
+                          "صياغة عقد تقديم خدمات قانونية وأتعاب محاماة وفق التشريعات الإماراتية",
+                        );
+                        handleAskAiAssistant(
+                          "صياغة عقد تقديم خدمات قانونية وأتعاب محاماة وفق التشريعات الإماراتية",
+                          "العقود والاتفاقيات",
+                          "draft",
+                        );
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer"
+                    >
+                      📝 صياغة عقد خدمات قانونية
+                    </button>
+                    <button
+                      onClick={() => {
+                        setAiQuery(
+                          "فحص الشروط والمخاطر المتوقعة في عقود الشراكة أو الإيجار أو العمل",
+                        );
+                        handleAskAiAssistant(
+                          "فحص الشروط والمخاطر المتوقعة في عقود الشراكة أو الإيجار أو العمل",
+                          "العقود والاتفاقيات",
+                          "analyze",
+                        );
+                      }}
+                      className="px-3 py-1.5 rounded-xl bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-900 font-semibold transition cursor-pointer"
+                    >
+                      🔍 تحليل وتقييم مخاطر العقد
+                    </button>
                   </>
                 )}
 
-                <button onClick={() => { setAiQuery("استشارة قانونية في نصوص تشريعات ودوانين دولة الإمارات الاتحادية"); handleAskAiAssistant("استشارة قانونية في نصوص تشريعات ودوانين دولة الإمارات الاتحادية", aiDepartment, "advice"); }} className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-semibold transition cursor-pointer">🇦🇪 استشارة قانونية إماراتية عامة</button>
+                <button
+                  onClick={() => {
+                    setAiQuery("استشارة قانونية في نصوص تشريعات ودوانين دولة الإمارات الاتحادية");
+                    handleAskAiAssistant(
+                      "استشارة قانونية في نصوص تشريعات ودوانين دولة الإمارات الاتحادية",
+                      aiDepartment,
+                      "advice",
+                    );
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 font-semibold transition cursor-pointer"
+                >
+                  🇦🇪 استشارة قانونية إماراتية عامة
+                </button>
               </div>
             </div>
 
             {/* مربع كتابة السؤال / الطلب */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-800 block">اكتب سؤالك أو اكتب الصيغة المطلوبة للمساعد الذكي:</label>
+              <label className="text-xs font-bold text-slate-800 block">
+                اكتب سؤالك أو اكتب الصيغة المطلوبة للمساعد الذكي:
+              </label>
               <div className="relative">
                 <textarea
                   value={aiQuery}
@@ -10507,13 +13725,28 @@ const activeFiltersCount = useMemo(() => {
 
       {/* ═══ مودال رفع ملف Excel القضايا السابقة ═══ */}
       {showCasesExcelModal && (
-        <Modal title="رفع ملف Excel واستيراد القضايا السابقة آلياً" onClose={() => { setShowCasesExcelModal(false); setExcelCasesParsed([]); }}>
+        <Modal
+          title="رفع ملف Excel واستيراد القضايا السابقة آلياً"
+          onClose={() => {
+            setShowCasesExcelModal(false);
+            setExcelCasesParsed([]);
+          }}
+        >
           <div className="space-y-4">
             <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs leading-relaxed space-y-1">
               <p className="font-bold">💡 التعليمات وآلية الربط:</p>
-              <p>• يمكنك إرفاق جدول Excel يحتوي على القضايا السابقة. وسيتم ربط القضية بالموكل تلقائياً إذا كان الاسم مسجلاً بالنظام، أو إنشاء ملف موكل جديد آلياً.</p>
-              <p>• الأعمدة المقبولة في ملف Excel: [رقم القضية، اسم الموكل، اسم الخصم، نوع القضية، المحكمة، موضوع القضية، تاريخ القيد، الأتعاب].</p>
-              <p>• عمود "اسم الخصم" يدعم أكثر من خصم لنفس القضية — افصل بين الأسماء بفاصلة "،" أو بكلمة "و" (مثال: أحمد محمد و شركة الأفق للاستثمار).</p>
+              <p>
+                • يمكنك إرفاق جدول Excel يحتوي على القضايا السابقة. وسيتم ربط القضية بالموكل
+                تلقائياً إذا كان الاسم مسجلاً بالنظام، أو إنشاء ملف موكل جديد آلياً.
+              </p>
+              <p>
+                • الأعمدة المقبولة في ملف Excel: [رقم القضية، اسم الموكل، اسم الخصم، نوع القضية،
+                المحكمة، موضوع القضية، تاريخ القيد، الأتعاب].
+              </p>
+              <p>
+                • عمود "اسم الخصم" يدعم أكثر من خصم لنفس القضية — افصل بين الأسماء بفاصلة "،" أو
+                بكلمة "و" (مثال: أحمد محمد و شركة الأفق للاستثمار).
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
@@ -10525,19 +13758,27 @@ const activeFiltersCount = useMemo(() => {
               </button>
               <label className="flex items-center gap-2 px-4 py-2 bg-emerald-700 text-white rounded-xl text-xs font-bold hover:bg-emerald-800 transition cursor-pointer shadow-sm">
                 <UploadCloud size={16} /> اختيار ملف Excel وإدراجه
-                <input type="file" accept=".xlsx, .xls, .csv" onChange={handleParseCasesExcel} className="hidden" />
+                <input
+                  type="file"
+                  accept=".xlsx, .xls, .csv"
+                  onChange={handleParseCasesExcel}
+                  className="hidden"
+                />
               </label>
             </div>
 
             {casesExcelLoading && (
               <div className="p-6 text-center text-xs text-amber-800 bg-amber-50 rounded-xl font-bold flex items-center justify-center gap-2">
-                <RefreshCw size={16} className="animate-spin text-amber-600" /> جارٍ تحليل وقراءة صفوف جدول Excel...
+                <RefreshCw size={16} className="animate-spin text-amber-600" /> جارٍ تحليل وقراءة
+                صفوف جدول Excel...
               </div>
             )}
 
             {excelCasesParsed.length > 0 && (
               <div className="space-y-3">
-                <p className="text-xs font-bold text-slate-800">معاينة البيانات المستخرجة ({excelCasesParsed.length} قضية):</p>
+                <p className="text-xs font-bold text-slate-800">
+                  معاينة البيانات المستخرجة ({excelCasesParsed.length} قضية):
+                </p>
                 <div className="max-h-60 overflow-y-auto overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl">
                   <table className="w-full min-w-[550px] text-xs">
                     <thead className="bg-stone-50 text-right text-slate-600">
@@ -10560,9 +13801,13 @@ const activeFiltersCount = useMemo(() => {
                           <td className="p-2.5">{item.type}</td>
                           <td className="p-2.5">
                             {item.isNewClient ? (
-                              <span className="text-[10px] bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded">سيتم إنشاؤه موكل جديد</span>
+                              <span className="text-[10px] bg-sky-100 text-sky-800 font-bold px-2 py-0.5 rounded">
+                                سيتم إنشاؤه موكل جديد
+                              </span>
                             ) : (
-                              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">مطابق لموكل مسجل</span>
+                              <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded">
+                                مطابق لموكل مسجل
+                              </span>
                             )}
                           </td>
                         </tr>
@@ -10585,63 +13830,139 @@ const activeFiltersCount = useMemo(() => {
 
       {/* ═══ مودال ارفاق وكالة PDF وسحب بياناتها بالذكاء الاصطناعي ═══ */}
       {showPoaAiUploadModal && (
-        <Modal title="إرفاق وكالة قانونية PDF واستخراج بياناتها بالذكاء الاصطناعي" onClose={() => { setShowPoaAiUploadModal(false); setPoaAiExtracted(null); }}>
+        <Modal
+          title="إرفاق وكالة قانونية PDF واستخراج بياناتها بالذكاء الاصطناعي"
+          onClose={() => {
+            setShowPoaAiUploadModal(false);
+            setPoaAiExtracted(null);
+          }}
+        >
           <div className="space-y-4">
             <div className="p-3.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-900 text-xs leading-relaxed">
-              <p className="font-bold flex items-center gap-1.5"><Sparkles size={15} className="text-amber-600" /> معالجة التوكيلات بالذكاء الاصطناعي Gemini AI:</p>
-              <p>قم بإرفاق ملف الوكالة بصيغة PDF أو صورة. سيقوم المساعد الذكي باستخراج اسم الموكل، رقم الوكالة، جهة الإصدار، تاريخ الانتهاء، ونطاق الصلاحيات تلقائياً.</p>
+              <p className="font-bold flex items-center gap-1.5">
+                <Sparkles size={15} className="text-amber-600" /> معالجة التوكيلات بالذكاء الاصطناعي
+                Gemini AI:
+              </p>
+              <p>
+                قم بإرفاق ملف الوكالة بصيغة PDF أو صورة. سيقوم المساعد الذكي باستخراج اسم الموكل،
+                رقم الوكالة، جهة الإصدار، تاريخ الانتهاء، ونطاق الصلاحيات تلقائياً.
+              </p>
             </div>
 
             <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-teal-300 hover:border-teal-500 bg-stone-50 hover:bg-stone-100 rounded-2xl transition cursor-pointer text-center">
               <UploadCloud size={32} className="text-teal-700 mb-2" />
-              <span className="text-xs font-bold text-slate-800">اضغط هنا لإرفاق ملف الوكالة (PDF / PNG)</span>
+              <span className="text-xs font-bold text-slate-800">
+                اضغط هنا لإرفاق ملف الوكالة (PDF / PNG)
+              </span>
               <span className="text-[11px] text-slate-400 mt-0.5">أقصى حجم مدعوم: 25 ميجابايت</span>
-              <input type="file" accept=".pdf, image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleProcessDocAiExtract("poa", f); }} className="hidden" />
+              <input
+                type="file"
+                accept=".pdf, image/*"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleProcessDocAiExtract("poa", f);
+                }}
+                className="hidden"
+              />
             </label>
 
             {poaAiLoading && (
               <div className="p-6 text-center text-xs text-teal-900 bg-teal-50 rounded-xl font-bold flex items-center justify-center gap-2">
-                <RefreshCw size={18} className="animate-spin text-teal-700" /> جارٍ قراءة وتحليل نص الوكالة بالذكاء الاصطناعي...
+                <RefreshCw size={18} className="animate-spin text-teal-700" /> جارٍ قراءة وتحليل نص
+                الوكالة بالذكاء الاصطناعي...
               </div>
             )}
 
             {poaAiExtracted && (
               <div className="space-y-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_6px_16px_-8px_rgb(15,23,42,0.08)]">
                 <h4 className="font-bold text-xs text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                  <CheckCircle2 size={16} className="text-emerald-600" /> البيانات المستخرجة تلقائياً:
+                  <CheckCircle2 size={16} className="text-emerald-600" /> البيانات المستخرجة
+                  تلقائياً:
                 </h4>
 
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <Field label="اسم الموكل المستخرج">
-                    <input value={poaAiExtracted.clientName || ""} onChange={(e) => setPoaAiExtracted({ ...poaAiExtracted, clientName: e.target.value })} className={inputCls} />
+                    <input
+                      value={poaAiExtracted.clientName || ""}
+                      onChange={(e) =>
+                        setPoaAiExtracted({ ...poaAiExtracted, clientName: e.target.value })
+                      }
+                      className={inputCls}
+                    />
                   </Field>
                   <Field label="ربط بملف الموكل">
-                    <select value={selectedPoaClientId} onChange={(e) => setSelectedPoaClientId(e.target.value === "new" ? "new" : Number(e.target.value))} className={inputCls}>
+                    <select
+                      value={selectedPoaClientId}
+                      onChange={(e) =>
+                        setSelectedPoaClientId(
+                          e.target.value === "new" ? "new" : Number(e.target.value),
+                        )
+                      }
+                      className={inputCls}
+                    >
                       <option value="new">إضافة كـ (موكل جديد تلقائياً)</option>
                       {clients.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
                       ))}
                     </select>
                   </Field>
                   <Field label="رقم الوكالة">
-                    <input value={poaAiExtracted.poaNumber || ""} onChange={(e) => setPoaAiExtracted({ ...poaAiExtracted, poaNumber: e.target.value })} className={inputCls} />
+                    <input
+                      value={poaAiExtracted.poaNumber || ""}
+                      onChange={(e) =>
+                        setPoaAiExtracted({ ...poaAiExtracted, poaNumber: e.target.value })
+                      }
+                      className={inputCls}
+                    />
                   </Field>
                   <Field label="جهة الإصدار">
-                    <input value={poaAiExtracted.issuer || ""} onChange={(e) => setPoaAiExtracted({ ...poaAiExtracted, issuer: e.target.value })} className={inputCls} />
+                    <input
+                      value={poaAiExtracted.issuer || ""}
+                      onChange={(e) =>
+                        setPoaAiExtracted({ ...poaAiExtracted, issuer: e.target.value })
+                      }
+                      className={inputCls}
+                    />
                   </Field>
                   <Field label="تاريخ الإصدار">
-                    <input type="date" value={poaAiExtracted.issueDate || todayISO()} onChange={(e) => setPoaAiExtracted({ ...poaAiExtracted, issueDate: e.target.value })} className={inputCls} />
+                    <input
+                      type="date"
+                      value={poaAiExtracted.issueDate || todayISO()}
+                      onChange={(e) =>
+                        setPoaAiExtracted({ ...poaAiExtracted, issueDate: e.target.value })
+                      }
+                      className={inputCls}
+                    />
                   </Field>
                   <Field label="تاريخ الانتهاء">
-                    <input type="date" value={poaAiExtracted.expiryDate || addDays(730)} onChange={(e) => setPoaAiExtracted({ ...poaAiExtracted, expiryDate: e.target.value })} className={inputCls} />
+                    <input
+                      type="date"
+                      value={poaAiExtracted.expiryDate || addDays(730)}
+                      onChange={(e) =>
+                        setPoaAiExtracted({ ...poaAiExtracted, expiryDate: e.target.value })
+                      }
+                      className={inputCls}
+                    />
                   </Field>
                 </div>
 
                 <Field label="صلاحيات الوكالة المستخرجة">
-                  <textarea rows={2} value={poaAiExtracted.scope || ""} onChange={(e) => setPoaAiExtracted({ ...poaAiExtracted, scope: e.target.value })} className={inputCls} />
+                  <textarea
+                    rows={2}
+                    value={poaAiExtracted.scope || ""}
+                    onChange={(e) =>
+                      setPoaAiExtracted({ ...poaAiExtracted, scope: e.target.value })
+                    }
+                    className={inputCls}
+                  />
                 </Field>
 
-                <button onClick={handleSaveExtractedPoa} className="w-full py-3 bg-slate-900 text-amber-400 font-bold rounded-xl text-xs hover:bg-slate-800 transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                <button
+                  onClick={handleSaveExtractedPoa}
+                  className="w-full py-3 bg-slate-900 text-amber-400 font-bold rounded-xl text-xs hover:bg-slate-800 transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
                   <Check size={16} /> اعتماد البيانات وإدراج الوكالة بالنظام
                 </button>
               </div>
@@ -10652,60 +13973,143 @@ const activeFiltersCount = useMemo(() => {
 
       {/* ═══ مودال ارفاق اتفاقية قديمة PDF وسحب بياناتها بالذكاء الاصطناعي ═══ */}
       {showAgreementAiUploadModal && (
-        <Modal title="إرفاق اتفاقية أتعاب قديمة PDF واستخراج بياناتها بالذكاء الاصطناعي" onClose={() => { setShowAgreementAiUploadModal(false); setAgreementAiExtracted(null); }}>
+        <Modal
+          title="إرفاق اتفاقية أتعاب قديمة PDF واستخراج بياناتها بالذكاء الاصطناعي"
+          onClose={() => {
+            setShowAgreementAiUploadModal(false);
+            setAgreementAiExtracted(null);
+          }}
+        >
           <div className="space-y-4">
             <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs leading-relaxed">
-              <p className="font-bold flex items-center gap-1.5"><Sparkles size={15} className="text-amber-600" /> تحليل وقراءة الاتفاقيات القديمة:</p>
-              <p>قم بتمشيط أو إرفاق الاتفاقية بصيغة PDF. سيتم استخراج اسم الموكل، رقم الاتفاقية، إجمالي الأتعاب، وتفاصيل الأقساط وإضافتها آلياً لقاعدة البيانات.</p>
+              <p className="font-bold flex items-center gap-1.5">
+                <Sparkles size={15} className="text-amber-600" /> تحليل وقراءة الاتفاقيات القديمة:
+              </p>
+              <p>
+                قم بتمشيط أو إرفاق الاتفاقية بصيغة PDF. سيتم استخراج اسم الموكل، رقم الاتفاقية،
+                إجمالي الأتعاب، وتفاصيل الأقساط وإضافتها آلياً لقاعدة البيانات.
+              </p>
             </div>
 
             <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-amber-300 hover:border-amber-500 bg-stone-50 hover:bg-stone-100 rounded-2xl transition cursor-pointer text-center">
               <UploadCloud size={32} className="text-amber-700 mb-2" />
-              <span className="text-xs font-bold text-slate-800">اضغط هنا لإرفاق ملف الاتفاقية (PDF / PNG)</span>
+              <span className="text-xs font-bold text-slate-800">
+                اضغط هنا لإرفاق ملف الاتفاقية (PDF / PNG)
+              </span>
               <span className="text-[11px] text-slate-400 mt-0.5">أقصى حجم مدعوم: 25 ميجابايت</span>
-              <input type="file" accept=".pdf, image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleProcessDocAiExtract("agreement", f); }} className="hidden" />
+              <input
+                type="file"
+                accept=".pdf, image/*"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleProcessDocAiExtract("agreement", f);
+                }}
+                className="hidden"
+              />
             </label>
 
             {agreementAiLoading && (
               <div className="p-6 text-center text-xs text-amber-900 bg-amber-50 rounded-xl font-bold flex items-center justify-center gap-2">
-                <RefreshCw size={18} className="animate-spin text-amber-600" /> جارٍ استخراج بنود ومبالغ العقد بالذكاء الاصطناعي...
+                <RefreshCw size={18} className="animate-spin text-amber-600" /> جارٍ استخراج بنود
+                ومبالغ العقد بالذكاء الاصطناعي...
               </div>
             )}
 
             {agreementAiExtracted && (
               <div className="space-y-3 bg-white p-4 rounded-2xl border border-slate-200/80 shadow-[0_1px_2px_rgb(15,23,42,0.04),0_6px_16px_-8px_rgb(15,23,42,0.08)]">
                 <h4 className="font-bold text-xs text-slate-900 border-b border-slate-100 pb-2 flex items-center gap-1.5">
-                  <CheckCircle2 size={16} className="text-emerald-600" /> تفاصيل الاتفاقية المستخرجة:
+                  <CheckCircle2 size={16} className="text-emerald-600" /> تفاصيل الاتفاقية
+                  المستخرجة:
                 </h4>
 
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <Field label="اسم الموكل">
-                    <input value={agreementAiExtracted.clientName || ""} onChange={(e) => setAgreementAiExtracted({ ...agreementAiExtracted, clientName: e.target.value })} className={inputCls} />
+                    <input
+                      value={agreementAiExtracted.clientName || ""}
+                      onChange={(e) =>
+                        setAgreementAiExtracted({
+                          ...agreementAiExtracted,
+                          clientName: e.target.value,
+                        })
+                      }
+                      className={inputCls}
+                    />
                   </Field>
                   <Field label="ربط الموكل بالنظام">
-                    <select value={selectedAgrClientId} onChange={(e) => setSelectedAgrClientId(e.target.value === "new" ? "new" : Number(e.target.value))} className={inputCls}>
+                    <select
+                      value={selectedAgrClientId}
+                      onChange={(e) =>
+                        setSelectedAgrClientId(
+                          e.target.value === "new" ? "new" : Number(e.target.value),
+                        )
+                      }
+                      className={inputCls}
+                    >
                       <option value="new">إضافة كـ (موكل جديد تلقائياً)</option>
                       {clients.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
                       ))}
                     </select>
                   </Field>
                   <Field label="رقم الاتفاقية">
-                    <input value={agreementAiExtracted.agreementNumber || ""} onChange={(e) => setAgreementAiExtracted({ ...agreementAiExtracted, agreementNumber: e.target.value })} className={inputCls} />
+                    <input
+                      value={agreementAiExtracted.agreementNumber || ""}
+                      onChange={(e) =>
+                        setAgreementAiExtracted({
+                          ...agreementAiExtracted,
+                          agreementNumber: e.target.value,
+                        })
+                      }
+                      className={inputCls}
+                    />
                   </Field>
                   <Field label="إجمالي الأتعاب (درهم)">
-                    <input type="number" value={agreementAiExtracted.totalAmount || 0} onChange={(e) => setAgreementAiExtracted({ ...agreementAiExtracted, totalAmount: Number(e.target.value) })} className={inputCls} />
+                    <input
+                      type="number"
+                      value={agreementAiExtracted.totalAmount || 0}
+                      onChange={(e) =>
+                        setAgreementAiExtracted({
+                          ...agreementAiExtracted,
+                          totalAmount: Number(e.target.value),
+                        })
+                      }
+                      className={inputCls}
+                    />
                   </Field>
                   <Field label="تاريخ العقد">
-                    <input type="date" value={agreementAiExtracted.date || todayISO()} onChange={(e) => setAgreementAiExtracted({ ...agreementAiExtracted, date: e.target.value })} className={inputCls} />
+                    <input
+                      type="date"
+                      value={agreementAiExtracted.date || todayISO()}
+                      onChange={(e) =>
+                        setAgreementAiExtracted({ ...agreementAiExtracted, date: e.target.value })
+                      }
+                      className={inputCls}
+                    />
                   </Field>
                 </div>
 
                 <Field label="ملاحظات وشروط الأقساط المستخرجة">
-                  <textarea rows={2} value={agreementAiExtracted.installmentsNotes || agreementAiExtracted.notes || ""} onChange={(e) => setAgreementAiExtracted({ ...agreementAiExtracted, installmentsNotes: e.target.value })} className={inputCls} />
+                  <textarea
+                    rows={2}
+                    value={
+                      agreementAiExtracted.installmentsNotes || agreementAiExtracted.notes || ""
+                    }
+                    onChange={(e) =>
+                      setAgreementAiExtracted({
+                        ...agreementAiExtracted,
+                        installmentsNotes: e.target.value,
+                      })
+                    }
+                    className={inputCls}
+                  />
                 </Field>
 
-                <button onClick={handleSaveExtractedAgreement} className="w-full py-3 bg-slate-900 text-amber-400 font-bold rounded-xl text-xs hover:bg-slate-800 transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                <button
+                  onClick={handleSaveExtractedAgreement}
+                  className="w-full py-3 bg-slate-900 text-amber-400 font-bold rounded-xl text-xs hover:bg-slate-800 transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
                   <Check size={16} /> اعتماد الاتفاقية وإدراجها بجدول الأتعاب
                 </button>
               </div>
@@ -10716,7 +14120,14 @@ const activeFiltersCount = useMemo(() => {
 
       {/* ═══ مودال ارفاق واستيراد الفواتير (Excel / PDF AI) ═══ */}
       {showInvoiceImportModal && (
-        <Modal title="استيراد وإدراج الفواتير آلياً (Excel / PDF)" onClose={() => { setShowInvoiceImportModal(false); setExcelInvoicesParsed([]); setInvoiceAiExtracted(null); }}>
+        <Modal
+          title="استيراد وإدراج الفواتير آلياً (Excel / PDF)"
+          onClose={() => {
+            setShowInvoiceImportModal(false);
+            setExcelInvoicesParsed([]);
+            setInvoiceAiExtracted(null);
+          }}
+        >
           <div className="space-y-4">
             <div className="flex border-b border-slate-200">
               <button
@@ -10737,13 +14148,22 @@ const activeFiltersCount = useMemo(() => {
               <div className="space-y-3">
                 <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-amber-300 hover:border-amber-500 bg-stone-50 rounded-2xl cursor-pointer text-center">
                   <FileSpreadsheet size={32} className="text-amber-700 mb-2" />
-                  <span className="text-xs font-bold text-slate-800">اختيار ملف Excel يحتوي على الفواتير</span>
-                  <input type="file" accept=".xlsx, .xls, .csv" onChange={handleParseInvoicesExcel} className="hidden" />
+                  <span className="text-xs font-bold text-slate-800">
+                    اختيار ملف Excel يحتوي على الفواتير
+                  </span>
+                  <input
+                    type="file"
+                    accept=".xlsx, .xls, .csv"
+                    onChange={handleParseInvoicesExcel}
+                    className="hidden"
+                  />
                 </label>
 
                 {excelInvoicesParsed.length > 0 && (
                   <div className="space-y-3">
-                    <p className="text-xs font-bold text-slate-800">الفواتير المستخرجة ({excelInvoicesParsed.length}):</p>
+                    <p className="text-xs font-bold text-slate-800">
+                      الفواتير المستخرجة ({excelInvoicesParsed.length}):
+                    </p>
                     <div className="max-h-52 overflow-y-auto overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl">
                       <table className="w-full min-w-[450px] text-xs">
                         <thead className="bg-stone-50 text-right">
@@ -10766,7 +14186,10 @@ const activeFiltersCount = useMemo(() => {
                         </tbody>
                       </table>
                     </div>
-                    <button onClick={handleConfirmImportInvoices} className="w-full py-3 bg-slate-900 text-amber-400 font-bold rounded-xl text-xs hover:bg-slate-800 transition cursor-pointer">
+                    <button
+                      onClick={handleConfirmImportInvoices}
+                      className="w-full py-3 bg-slate-900 text-amber-400 font-bold rounded-xl text-xs hover:bg-slate-800 transition cursor-pointer"
+                    >
                       تأكيد استيراد كافة الفواتير
                     </button>
                   </div>
@@ -10776,28 +14199,70 @@ const activeFiltersCount = useMemo(() => {
               <div className="space-y-3">
                 <label className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-teal-300 hover:border-teal-500 bg-stone-50 rounded-2xl cursor-pointer text-center">
                   <UploadCloud size={32} className="text-teal-700 mb-2" />
-                  <span className="text-xs font-bold text-slate-800">إرفاق الفاتورة المطبوعة (PDF / PNG)</span>
-                  <input type="file" accept=".pdf, image/*" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleProcessDocAiExtract("invoice", f); }} className="hidden" />
+                  <span className="text-xs font-bold text-slate-800">
+                    إرفاق الفاتورة المطبوعة (PDF / PNG)
+                  </span>
+                  <input
+                    type="file"
+                    accept=".pdf, image/*"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleProcessDocAiExtract("invoice", f);
+                    }}
+                    className="hidden"
+                  />
                 </label>
 
                 {invoiceAiLoading && (
                   <div className="p-4 text-center text-xs text-amber-800 bg-amber-50 rounded-xl font-bold flex items-center justify-center gap-2">
-                    <RefreshCw size={16} className="animate-spin text-amber-600" /> جارٍ استخراج أرصدة المبالغ والضريبة...
+                    <RefreshCw size={16} className="animate-spin text-amber-600" /> جارٍ استخراج
+                    أرصدة المبالغ والضريبة...
                   </div>
                 )}
 
                 {invoiceAiExtracted && (
                   <div className="space-y-3 bg-stone-50 p-3.5 rounded-xl border border-stone-200 text-xs">
                     <Field label="الموكل">
-                      <input value={invoiceAiExtracted.clientName || ""} onChange={(e) => setInvoiceAiExtracted({ ...invoiceAiExtracted, clientName: e.target.value })} className={inputCls} />
+                      <input
+                        value={invoiceAiExtracted.clientName || ""}
+                        onChange={(e) =>
+                          setInvoiceAiExtracted({
+                            ...invoiceAiExtracted,
+                            clientName: e.target.value,
+                          })
+                        }
+                        className={inputCls}
+                      />
                     </Field>
                     <Field label="رقم الفاتورة">
-                      <input value={invoiceAiExtracted.invoiceNumber || ""} onChange={(e) => setInvoiceAiExtracted({ ...invoiceAiExtracted, invoiceNumber: e.target.value })} className={inputCls} />
+                      <input
+                        value={invoiceAiExtracted.invoiceNumber || ""}
+                        onChange={(e) =>
+                          setInvoiceAiExtracted({
+                            ...invoiceAiExtracted,
+                            invoiceNumber: e.target.value,
+                          })
+                        }
+                        className={inputCls}
+                      />
                     </Field>
                     <Field label="المبلغ">
-                      <input type="number" value={invoiceAiExtracted.amount || 0} onChange={(e) => setInvoiceAiExtracted({ ...invoiceAiExtracted, amount: Number(e.target.value) })} className={inputCls} />
+                      <input
+                        type="number"
+                        value={invoiceAiExtracted.amount || 0}
+                        onChange={(e) =>
+                          setInvoiceAiExtracted({
+                            ...invoiceAiExtracted,
+                            amount: Number(e.target.value),
+                          })
+                        }
+                        className={inputCls}
+                      />
                     </Field>
-                    <button onClick={handleConfirmImportInvoices} className="w-full py-3 bg-slate-900 text-amber-400 font-bold rounded-xl text-xs hover:bg-slate-800 transition cursor-pointer">
+                    <button
+                      onClick={handleConfirmImportInvoices}
+                      className="w-full py-3 bg-slate-900 text-amber-400 font-bold rounded-xl text-xs hover:bg-slate-800 transition cursor-pointer"
+                    >
                       حفظ الفاتورة المستخرجة
                     </button>
                   </div>
@@ -10810,26 +14275,48 @@ const activeFiltersCount = useMemo(() => {
 
       {/* ═══ مودال رفع ملف Excel الأشخاص المحظورين والمنكشفين ═══ */}
       {showKycWatchlistUploadModal && (
-        <Modal title="رفع ملف Excel قوائم المحظورين والمنكشفين (Sanctions / PEP)" onClose={() => { setShowKycWatchlistUploadModal(false); setKycWatchlistParsed([]); }}>
+        <Modal
+          title="رفع ملف Excel قوائم المحظورين والمنكشفين (Sanctions / PEP)"
+          onClose={() => {
+            setShowKycWatchlistUploadModal(false);
+            setKycWatchlistParsed([]);
+          }}
+        >
           <div className="space-y-4">
             <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs leading-relaxed space-y-1">
-              <p className="font-bold flex items-center gap-1.5"><ShieldAlert size={16} className="text-red-600" /> تنبيه مكافحة غسل الأموال وحظر التعامل:</p>
-              <p>رفع وتحديث قاعدة بيانات قوائم الحظر. سيقوم النظام فوراً بفحص كافة الموكلين المسجلين في مكتب المحاماة وتنبيهك فوراً برفض التعامل معهم.</p>
+              <p className="font-bold flex items-center gap-1.5">
+                <ShieldAlert size={16} className="text-red-600" /> تنبيه مكافحة غسل الأموال وحظر
+                التعامل:
+              </p>
+              <p>
+                رفع وتحديث قاعدة بيانات قوائم الحظر. سيقوم النظام فوراً بفحص كافة الموكلين المسجلين
+                في مكتب المحاماة وتنبيهك فوراً برفض التعامل معهم.
+              </p>
             </div>
 
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
-              <button onClick={downloadKycWatchlistTemplate} className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-[#0D382B]/[0.08] transition-colors text-slate-800 text-xs font-bold transition cursor-pointer">
+              <button
+                onClick={downloadKycWatchlistTemplate}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-[#0D382B]/[0.08] transition-colors text-slate-800 text-xs font-bold transition cursor-pointer"
+              >
                 <Download size={15} /> تنزيل قالب قوائم الحظر
               </button>
               <label className="flex items-center gap-2 px-4 py-2 bg-red-700 text-white rounded-xl text-xs font-bold hover:bg-red-800 transition cursor-pointer shadow-sm">
                 <UploadCloud size={16} /> اختيار ملف Excel لقائمة الحظر
-                <input type="file" accept=".xlsx, .xls, .csv" onChange={handleParseKycWatchlistExcel} className="hidden" />
+                <input
+                  type="file"
+                  accept=".xlsx, .xls, .csv"
+                  onChange={handleParseKycWatchlistExcel}
+                  className="hidden"
+                />
               </label>
             </div>
 
             {kycWatchlistParsed.length > 0 && (
               <div className="space-y-3">
-                <p className="text-xs font-bold text-slate-800">الأشخاص والجهات المكتشفة ({kycWatchlistParsed.length}):</p>
+                <p className="text-xs font-bold text-slate-800">
+                  الأشخاص والجهات المكتشفة ({kycWatchlistParsed.length}):
+                </p>
                 <div className="max-h-56 overflow-y-auto overflow-x-auto custom-scrollbar border border-slate-200 rounded-xl">
                   <table className="w-full min-w-[450px] text-xs">
                     <thead className="bg-stone-50 text-right">
@@ -10843,7 +14330,9 @@ const activeFiltersCount = useMemo(() => {
                       {kycWatchlistParsed.map((item, i) => (
                         <tr key={i}>
                           <td className="p-2 font-bold">{item.fullName}</td>
-                          <td className="p-2"><Badge className="bg-red-100 text-red-800">{item.type}</Badge></td>
+                          <td className="p-2">
+                            <Badge className="bg-red-100 text-red-800">{item.type}</Badge>
+                          </td>
                           <td className="p-2 text-slate-500">{item.reason}</td>
                         </tr>
                       ))}
@@ -10851,7 +14340,10 @@ const activeFiltersCount = useMemo(() => {
                   </table>
                 </div>
 
-                <button onClick={handleConfirmImportKycWatchlist} className="w-full py-3 bg-red-800 text-white font-bold rounded-xl text-xs hover:bg-red-900 transition shadow-md flex items-center justify-center gap-2 cursor-pointer">
+                <button
+                  onClick={handleConfirmImportKycWatchlist}
+                  className="w-full py-3 bg-red-800 text-white font-bold rounded-xl text-xs hover:bg-red-900 transition shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
                   <ShieldCheck size={16} /> اعتماد القائمة وتفعيل التدقيق التلقائي الفوري
                 </button>
               </div>
@@ -10868,7 +14360,9 @@ const activeFiltersCount = useMemo(() => {
             // لا يُسمح بإغلاق هذا التنبيه (لا بزر X ولا بالضغط خارج النافذة) دون كتابة سبب — نفس شرط زر التأكيد بالأسفل
             const reason = kycSanctionAckReason.trim();
             if (!reason) {
-              alert("يجب كتابة سبب المتابعة أو القرار المتخذ قبل إغلاق هذا التنبيه — هذا سجل امتثال إلزامي.");
+              alert(
+                "يجب كتابة سبب المتابعة أو القرار المتخذ قبل إغلاق هذا التنبيه — هذا سجل امتثال إلزامي.",
+              );
               return;
             }
             logAuditAction(
@@ -10876,7 +14370,7 @@ const activeFiltersCount = useMemo(() => {
               "الامتثال KYC",
               `إقرار بمتابعة تطابق عقوبات: ${kycSanctionAlert.clientName}`,
               `تم إقفال تنبيه تطابق العقوبات للاسم "${kycSanctionAlert.clientName}" بالسبب/القرار التالي: ${reason}`,
-              0
+              0,
             );
             setKycSanctionAckReason("");
             setKycSanctionAlert(null);
@@ -10886,18 +14380,29 @@ const activeFiltersCount = useMemo(() => {
             <div className="p-4 rounded-2xl bg-red-50 border-2 border-red-300 text-red-900 space-y-2">
               <div className="flex items-center gap-2">
                 <ShieldAlert size={24} className="text-red-600 animate-bounce" />
-                <h3 className="font-bold text-base">تم اكتشاف تطابق مع قائمة الأشخاص والجهات المحظورة (AML / Sanctions)</h3>
+                <h3 className="font-bold text-base">
+                  تم اكتشاف تطابق مع قائمة الأشخاص والجهات المحظورة (AML / Sanctions)
+                </h3>
               </div>
               <p className="text-xs leading-relaxed">
-                الاسم المدخل: <b className="text-red-950 font-black">{kycSanctionAlert.clientName}</b> يتطابق مع الاسم المدرج بالنظام تحت تصنيف:
+                الاسم المدخل:{" "}
+                <b className="text-red-950 font-black">{kycSanctionAlert.clientName}</b> يتطابق مع
+                الاسم المدرج بالنظام تحت تصنيف:
               </p>
               <div className="bg-white p-3 rounded-xl border border-red-200 text-xs space-y-1 text-slate-800">
-                <p><b>تصنيف المنع:</b> {kycSanctionAlert.watchlistItem.type}</p>
-                <p><b>سبب المنع والحظر:</b> {kycSanctionAlert.watchlistItem.reason}</p>
-                <p><b>رقم الهوية / الجواز:</b> {kycSanctionAlert.watchlistItem.idNo || "غير محدد"}</p>
+                <p>
+                  <b>تصنيف المنع:</b> {kycSanctionAlert.watchlistItem.type}
+                </p>
+                <p>
+                  <b>سبب المنع والحظر:</b> {kycSanctionAlert.watchlistItem.reason}
+                </p>
+                <p>
+                  <b>رقم الهوية / الجواز:</b> {kycSanctionAlert.watchlistItem.idNo || "غير محدد"}
+                </p>
               </div>
               <p className="text-xs text-red-700 font-bold">
-                ⚠️ ينصح بوقف كافة الإجراءات والرفع الفوري لوحدة المعلومات المالية (FIU) وسجل بلاغات الاشتباه AML / STR.
+                ⚠️ ينصح بوقف كافة الإجراءات والرفع الفوري لوحدة المعلومات المالية (FIU) وسجل بلاغات
+                الاشتباه AML / STR.
               </p>
             </div>
 
@@ -10917,7 +14422,9 @@ const activeFiltersCount = useMemo(() => {
               onClick={() => {
                 const reason = kycSanctionAckReason.trim();
                 if (!reason) {
-                  alert("يجب كتابة سبب المتابعة أو القرار المتخذ قبل إغلاق هذا التنبيه — هذا سجل امتثال إلزامي.");
+                  alert(
+                    "يجب كتابة سبب المتابعة أو القرار المتخذ قبل إغلاق هذا التنبيه — هذا سجل امتثال إلزامي.",
+                  );
                   return;
                 }
                 logAuditAction(
@@ -10925,7 +14432,7 @@ const activeFiltersCount = useMemo(() => {
                   "الامتثال KYC",
                   `إقرار بمتابعة تطابق عقوبات: ${kycSanctionAlert.clientName}`,
                   `تم إقفال تنبيه تطابق العقوبات للاسم "${kycSanctionAlert.clientName}" بالسبب/القرار التالي: ${reason}`,
-                  0
+                  0,
                 );
                 setKycSanctionAckReason("");
                 setKycSanctionAlert(null);

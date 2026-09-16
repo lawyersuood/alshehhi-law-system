@@ -9,7 +9,7 @@ import { loadStorage, saveStorage } from "../domain/storageAndMessaging";
 
 export function usePrecedents() {
   const [precedents, setPrecedents] = useState<LegalPrecedent[]>(() =>
-    loadStorage("firm_legal_precedents", seedLegalPrecedents)
+    loadStorage("firm_legal_precedents", seedLegalPrecedents),
   );
   const [precedentSearch, setPrecedentSearch] = useState<string>("");
   const [precedentCourtFilter, setPrecedentCourtFilter] = useState<string>("الكل");
@@ -23,12 +23,19 @@ export function usePrecedents() {
   }, [precedents]);
 
   return {
-    precedents, setPrecedents,
-    precedentSearch, setPrecedentSearch,
-    precedentCourtFilter, setPrecedentCourtFilter,
-    precedentCategoryFilter, setPrecedentCategoryFilter,
-    precedentYearFilter, setPrecedentYearFilter,
-    showAddPrecedentModal, setShowAddPrecedentModal,
-    selectedPrecedent, setSelectedPrecedent,
+    precedents,
+    setPrecedents,
+    precedentSearch,
+    setPrecedentSearch,
+    precedentCourtFilter,
+    setPrecedentCourtFilter,
+    precedentCategoryFilter,
+    setPrecedentCategoryFilter,
+    precedentYearFilter,
+    setPrecedentYearFilter,
+    showAddPrecedentModal,
+    setShowAddPrecedentModal,
+    selectedPrecedent,
+    setSelectedPrecedent,
   };
 }

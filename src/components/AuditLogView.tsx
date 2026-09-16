@@ -42,7 +42,8 @@ export default function AuditLogView({
                 سجل التدقيق وتتبع الأنشطة (Audit Log)
               </h2>
               <p className="text-xs text-slate-500 mt-1">
-                توثيق رقمي فوري لجميع عمليات الحذف، التعديل الحساس، وتغييرات الصلاحيات لضمان الرقابة والحوكمة
+                توثيق رقمي فوري لجميع عمليات الحذف، التعديل الحساس، وتغييرات الصلاحيات لضمان الرقابة
+                والحوكمة
               </p>
             </div>
           </div>
@@ -59,7 +60,8 @@ export default function AuditLogView({
           <ShieldAlert size={48} className="mx-auto text-red-500 mb-3" />
           <h3 className="text-lg font-bold text-slate-900">وصول محظور</h3>
           <p className="text-sm text-slate-600 max-w-md mx-auto mt-1">
-            عذراً، استعراض سجل التدقيق والأنشطة مقتصر فقط على مدير النظام والمصرح لهم بإدارة الحوكمة والصلاحيات.
+            عذراً، استعراض سجل التدقيق والأنشطة مقتصر فقط على مدير النظام والمصرح لهم بإدارة الحوكمة
+            والصلاحيات.
           </p>
         </div>
       ) : (
@@ -69,21 +71,36 @@ export default function AuditLogView({
             <div className="app-card p-5">
               <p className="text-xs font-medium text-slate-500">إجمالي الأنشطة الموثقة</p>
               <p className="mt-2 text-2xl font-black text-slate-900">{auditLogs.length}</p>
-              <p className="mt-1 text-[11px] text-slate-400">سجل غير قابل للتعديل مع التوقيت ومعرف ID</p>
+              <p className="mt-1 text-[11px] text-slate-400">
+                سجل غير قابل للتعديل مع التوقيت ومعرف ID
+              </p>
             </div>
             <div className="rounded-2xl border border-rose-200 bg-rose-50/60 p-5 shadow-sm">
               <p className="text-xs font-bold text-rose-800 flex items-center gap-1.5">
-                <ShieldAlert size={14} className="text-rose-600 animate-pulse" /> محاولات الحذف غير المصرح بها
+                <ShieldAlert size={14} className="text-rose-600 animate-pulse" /> محاولات الحذف غير
+                المصرح بها
               </p>
               <p className="mt-2 text-2xl font-black text-rose-700">
-                {auditLogs.filter((a) => a.actionType === "UNAUTHORIZED_DELETE" || a.status === "محاولة غير مصرح بها - مرفوض").length}
+                {
+                  auditLogs.filter(
+                    (a) =>
+                      a.actionType === "UNAUTHORIZED_DELETE" ||
+                      a.status === "محاولة غير مصرح بها - مرفوض",
+                  ).length
+                }
               </p>
-              <p className="mt-1 text-[11px] text-rose-600 font-medium">تم إحباطها وتوثيق معرف المستخدم آلياً</p>
+              <p className="mt-1 text-[11px] text-rose-600 font-medium">
+                تم إحباطها وتوثيق معرف المستخدم آلياً
+              </p>
             </div>
             <div className="rounded-2xl border border-amber-200 bg-amber-50/50 p-5 shadow-sm">
               <p className="text-xs font-bold text-amber-900">عمليات الحذف المؤكدة</p>
               <p className="mt-2 text-2xl font-black text-amber-800">
-                {auditLogs.filter((a) => a.actionType === "DELETE" && a.status !== "محاولة غير مصرح بها - مرفوض").length}
+                {
+                  auditLogs.filter(
+                    (a) => a.actionType === "DELETE" && a.status !== "محاولة غير مصرح بها - مرفوض",
+                  ).length
+                }
               </p>
               <p className="mt-1 text-[11px] text-amber-700">حذف بعد الصلاحية والتأكيد المسبق</p>
             </div>
@@ -101,7 +118,10 @@ export default function AuditLogView({
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-1 items-center gap-2 min-w-[280px]">
                 <div className="relative flex-1">
-                  <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                  <Search
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    size={16}
+                  />
                   <input
                     type="text"
                     value={auditSearchTerm}
@@ -137,20 +157,25 @@ export default function AuditLogView({
                 >
                   <option value="الكل">جميع الأقسام</option>
                   {auditModuleOptions.map((m) => (
-                    <option key={m} value={m}>{m}</option>
+                    <option key={m} value={m}>
+                      {m}
+                    </option>
                   ))}
                 </select>
 
                 <button
                   onClick={() => {
-                    const headers = "ID,Timestamp,Formatted_Timestamp,User_ID,User_Name,Email,Role,Action_Type,Status,Module,Target_ID,Target_Title,Details,IP\n";
+                    const headers =
+                      "ID,Timestamp,Formatted_Timestamp,User_ID,User_Name,Email,Role,Action_Type,Status,Module,Target_ID,Target_Title,Details,IP\n";
                     const rows = filteredAuditLogs
                       .map(
                         (l) =>
-                          `"${l.id}","${l.timestamp}","${l.formattedTimestamp || ""}","${l.userId || ""}","${l.userName}","${l.userEmail}","${l.userRole}","${l.actionType}","${l.status || "مكتمل"}","${l.targetModule}","${l.targetId || ""}","${l.targetTitle.replace(/"/g, '""')}","${l.details.replace(/"/g, '""')}","${l.ipAddress || ""}"`
+                          `"${l.id}","${l.timestamp}","${l.formattedTimestamp || ""}","${l.userId || ""}","${l.userName}","${l.userEmail}","${l.userRole}","${l.actionType}","${l.status || "مكتمل"}","${l.targetModule}","${l.targetId || ""}","${l.targetTitle.replace(/"/g, '""')}","${l.details.replace(/"/g, '""')}","${l.ipAddress || ""}"`,
                       )
                       .join("\n");
-                    const blob = new Blob(["﻿" + headers + rows], { type: "text/csv;charset=utf-8;" });
+                    const blob = new Blob(["﻿" + headers + rows], {
+                      type: "text/csv;charset=utf-8;",
+                    });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
                     a.href = url;
@@ -183,40 +208,64 @@ export default function AuditLogView({
                 </thead>
                 <tbody className="divide-y divide-slate-100/80 text-slate-700">
                   {filteredAuditLogs.map((log) => {
-                    const isUnauthorized = log.actionType === "UNAUTHORIZED_DELETE" || log.actionType === "UNAUTHORIZED_ACCESS" || log.status === "محاولة غير مصرح بها - مرفوض";
+                    const isUnauthorized =
+                      log.actionType === "UNAUTHORIZED_DELETE" ||
+                      log.actionType === "UNAUTHORIZED_ACCESS" ||
+                      log.status === "محاولة غير مصرح بها - مرفوض";
 
-                    const actionBadge = ({
-                      UNAUTHORIZED_DELETE: "bg-rose-100 text-rose-800 border-rose-300 font-black ring-1 ring-rose-200",
-                      UNAUTHORIZED_ACCESS: "bg-orange-100 text-orange-800 border-orange-300 font-black",
-                      DELETE: "bg-red-100 text-red-700 border-red-200 font-bold",
-                      PERMISSION_CHANGE: "bg-purple-100 text-purple-700 border-purple-200 font-bold",
-                      STATUS_CHANGE: "bg-blue-100 text-blue-700 border-blue-200 font-bold",
-                      UPDATE: "bg-amber-100 text-amber-800 border-amber-200 font-bold",
-                      CREATE: "bg-emerald-100 text-emerald-700 border-emerald-200 font-bold"
-                    } as Record<string, string>)[log.actionType] || "bg-slate-100 text-slate-700";
+                    const actionBadge =
+                      (
+                        {
+                          UNAUTHORIZED_DELETE:
+                            "bg-rose-100 text-rose-800 border-rose-300 font-black ring-1 ring-rose-200",
+                          UNAUTHORIZED_ACCESS:
+                            "bg-orange-100 text-orange-800 border-orange-300 font-black",
+                          DELETE: "bg-red-100 text-red-700 border-red-200 font-bold",
+                          PERMISSION_CHANGE:
+                            "bg-purple-100 text-purple-700 border-purple-200 font-bold",
+                          STATUS_CHANGE: "bg-blue-100 text-blue-700 border-blue-200 font-bold",
+                          UPDATE: "bg-amber-100 text-amber-800 border-amber-200 font-bold",
+                          CREATE: "bg-emerald-100 text-emerald-700 border-emerald-200 font-bold",
+                        } as Record<string, string>
+                      )[log.actionType] || "bg-slate-100 text-slate-700";
 
-                    const actionLabel = ({
-                      UNAUTHORIZED_DELETE: "🚫 محاولة حذف غير مصرح بها",
-                      UNAUTHORIZED_ACCESS: "⚠️ محاولة وصول غير مصرح بها",
-                      DELETE: "🗑️ حذف (DELETE)",
-                      PERMISSION_CHANGE: "🔐 تغيير صلاحيات",
-                      STATUS_CHANGE: "🔄 تغيير حالة",
-                      UPDATE: "✏️ تعديل (UPDATE)",
-                      CREATE: "➕ إنشاء (CREATE)"
-                    } as Record<string, string>)[log.actionType] || log.actionType;
+                    const actionLabel =
+                      (
+                        {
+                          UNAUTHORIZED_DELETE: "🚫 محاولة حذف غير مصرح بها",
+                          UNAUTHORIZED_ACCESS: "⚠️ محاولة وصول غير مصرح بها",
+                          DELETE: "🗑️ حذف (DELETE)",
+                          PERMISSION_CHANGE: "🔐 تغيير صلاحيات",
+                          STATUS_CHANGE: "🔄 تغيير حالة",
+                          UPDATE: "✏️ تعديل (UPDATE)",
+                          CREATE: "➕ إنشاء (CREATE)",
+                        } as Record<string, string>
+                      )[log.actionType] || log.actionType;
 
-                    const displayTimestamp = log.formattedTimestamp || (() => {
-                      const d = new Date(log.timestamp);
-                      return isNaN(d.getTime())
-                        ? log.timestamp
-                        : `${d.toLocaleDateString("ar-AE", { year: "numeric", month: "2-digit", day: "2-digit" })} ${d.toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })}`;
-                    })();
+                    const displayTimestamp =
+                      log.formattedTimestamp ||
+                      (() => {
+                        const d = new Date(log.timestamp);
+                        return isNaN(d.getTime())
+                          ? log.timestamp
+                          : `${d.toLocaleDateString("ar-AE", { year: "numeric", month: "2-digit", day: "2-digit" })} ${d.toLocaleTimeString("ar-AE", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true })}`;
+                      })();
 
                     return (
-                      <tr key={log.id} className={`transition ${isUnauthorized ? "bg-rose-50/50 hover:bg-rose-100/60" : "hover:bg-slate-50/80"}`}>
+                      <tr
+                        key={log.id}
+                        className={`transition ${isUnauthorized ? "bg-rose-50/50 hover:bg-rose-100/60" : "hover:bg-slate-50/80"}`}
+                      >
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="font-mono text-[11px] font-bold text-slate-800">{displayTimestamp}</div>
-                          <div className="font-mono text-[9px] text-slate-400 font-normal mt-0.5" title="ISO Timestamp">{log.timestamp}</div>
+                          <div className="font-mono text-[11px] font-bold text-slate-800">
+                            {displayTimestamp}
+                          </div>
+                          <div
+                            className="font-mono text-[9px] text-slate-400 font-normal mt-0.5"
+                            title="ISO Timestamp"
+                          >
+                            {log.timestamp}
+                          </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           <div className="flex items-center gap-1.5">
@@ -230,14 +279,17 @@ export default function AuditLogView({
                           </div>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
-                          <span className={`inline-block px-2.5 py-1 rounded-lg text-[10px] border ${actionBadge}`}>
+                          <span
+                            className={`inline-block px-2.5 py-1 rounded-lg text-[10px] border ${actionBadge}`}
+                          >
                             {actionLabel}
                           </span>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap">
                           {isUnauthorized ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black bg-rose-600 text-white shadow-2xs">
-                              <ShieldAlert size={12} /> {log.status || "محاولة غير مصرح بها - مرفوض"}
+                              <ShieldAlert size={12} />{" "}
+                              {log.status || "محاولة غير مصرح بها - مرفوض"}
                             </span>
                           ) : log.actionType === "DELETE" ? (
                             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
@@ -257,11 +309,15 @@ export default function AuditLogView({
                         <td className="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">
                           <div>{log.targetTitle}</div>
                           {log.targetId && log.targetId !== "—" && (
-                            <span className="text-[10px] font-mono text-slate-400">Ref: {log.targetId}</span>
+                            <span className="text-[10px] font-mono text-slate-400">
+                              Ref: {log.targetId}
+                            </span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-slate-700 leading-relaxed text-xs">
-                          <div className={`p-2 rounded-lg border text-[11px] ${isUnauthorized ? "bg-rose-100/60 border-rose-200 text-rose-950 font-medium" : "bg-stone-50 border-stone-200/80 text-slate-700"}`}>
+                          <div
+                            className={`p-2 rounded-lg border text-[11px] ${isUnauthorized ? "bg-rose-100/60 border-rose-200 text-rose-950 font-medium" : "bg-stone-50 border-stone-200/80 text-slate-700"}`}
+                          >
                             {log.details}
                           </div>
                         </td>
@@ -278,7 +334,9 @@ export default function AuditLogView({
               {filteredAuditLogs.length === 0 && (
                 <div className="py-12 text-center text-slate-400">
                   <History size={36} className="mx-auto mb-2 text-slate-300" />
-                  <p className="text-sm font-semibold">لا توجد أنشطة مسجلة تفي بمعايير البحث الحالية</p>
+                  <p className="text-sm font-semibold">
+                    لا توجد أنشطة مسجلة تفي بمعايير البحث الحالية
+                  </p>
                 </div>
               )}
             </div>

@@ -5,7 +5,15 @@
 // إلا بعد تفعيل ACCOUNTING_MODULE_ENABLED في App.tsx.
 // ============================================================
 
-export const UAE_EMIRATES = ["أبوظبي", "دبي", "الشارقة", "عجمان", "أم القيوين", "رأس الخيمة", "الفجيرة"];
+export const UAE_EMIRATES = [
+  "أبوظبي",
+  "دبي",
+  "الشارقة",
+  "عجمان",
+  "أم القيوين",
+  "رأس الخيمة",
+  "الفجيرة",
+];
 
 export const AR_ACCOUNT_CODE = "112"; // العملاء
 export const VAT_OUTPUT_ACCOUNT_CODE = "218"; // ضريبة القيمة المضافة — مخرجات
@@ -61,7 +69,9 @@ export function lineNetAmount(line: Pick<InvoiceLineItem, "quantity" | "unitPric
   return (Number(line.quantity) || 0) * (Number(line.unitPrice) || 0);
 }
 
-export function lineVatAmount(line: Pick<InvoiceLineItem, "quantity" | "unitPrice" | "vatRate">): number {
+export function lineVatAmount(
+  line: Pick<InvoiceLineItem, "quantity" | "unitPrice" | "vatRate">,
+): number {
   return (lineNetAmount(line) * (Number(line.vatRate) || 0)) / 100;
 }
 
@@ -85,6 +95,9 @@ export function amountPaid(invoiceId: string, payments: SalesPayment[]): number 
   return payments.filter((p) => p.invoiceId === invoiceId).reduce((sum, p) => sum + p.amount, 0);
 }
 
-export function amountDue(invoice: Pick<SalesInvoice, "lines" | "id">, payments: SalesPayment[]): number {
+export function amountDue(
+  invoice: Pick<SalesInvoice, "lines" | "id">,
+  payments: SalesPayment[],
+): number {
   return invoiceTotals(invoice).grandTotal - amountPaid(invoice.id, payments);
 }
