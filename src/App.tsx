@@ -10,6 +10,9 @@ import "react-quill-new/dist/quill.snow.css";
 import Logo from "./components/Logo";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import DocModal from "./components/modals/DocModal";
+import PoaModal from "./components/modals/PoaModal";
+import HearingModal from "./components/modals/HearingModal";
+import TaskModal from "./components/modals/TaskModal";
 import DashboardView from "./components/DashboardView";
 import CasesListView from "./components/CasesListView";
 import CaseDetailView from "./components/CaseDetailView";
@@ -9053,114 +9056,23 @@ export default function App() {
       )}
 
       {modal === "hearing" && (
-        <Modal title="جدولة جلسة جديدة" onClose={() => setModal(null)}>
-          <div className="space-y-4 text-sm">
-            <Field label="القضية المرتبطة">
-              <select onChange={f("caseId")} className={inputCls}>
-                <option value="">اختر القضية…</option>
-                {cases.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.number} - {clientName(c.clientId)}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="تاريخ الجلسة">
-                <input type="date" onChange={f("date")} className={inputCls} />
-              </Field>
-              <Field label="الوقت">
-                <input type="time" onChange={f("time")} defaultValue="09:00" className={inputCls} />
-              </Field>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="نوع الجلسة">
-                <select onChange={f("type")} className={inputCls}>
-                  {HEARING_TYPES.map((h) => (
-                    <option key={h}>{h}</option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="قاعة المحكمة">
-                <input
-                  onChange={f("room")}
-                  placeholder="مثال: قاعة 4 - الطابق 2"
-                  className={inputCls}
-                />
-              </Field>
-            </div>
-            <Field label="ملاحظات وتكليفات الجلسة">
-              <textarea
-                onChange={f("notes")}
-                rows={2}
-                placeholder="المطلوب في الجلسة (إيداع مذكرة / حضور الموكل)..."
-                className={inputCls}
-              />
-            </Field>
-            <button
-              onClick={saveHearing}
-              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
-            >
-              تأكيد جدولة الجلسة
-            </button>
-          </div>
-        </Modal>
+        <HearingModal
+          cases={cases}
+          clientName={clientName}
+          onFieldChange={f}
+          onSave={saveHearing}
+          onClose={() => setModal(null)}
+        />
       )}
 
       {modal === "task" && (
-        <Modal title="إضافة مهمة جديدة" onClose={() => setModal(null)}>
-          <div className="space-y-4 text-sm">
-            <Field label="عنوان المهمة">
-              <input
-                onChange={f("title")}
-                placeholder="مثال: إعداد مذكرة جوابية..."
-                className={inputCls}
-              />
-            </Field>
-            <Field label="القضية (اختياري)">
-              <select onChange={f("caseId")} className={inputCls}>
-                <option value="">غير مرتبطة بقضية محددة</option>
-                {cases.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.number}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="المكلف بالمهمة">
-                <select onChange={f("assignee")} className={inputCls}>
-                  {users.map((u) => (
-                    <option key={u.id} value={u.name}>
-                      {u.name} ({u.roleTitle})
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="الأولوية">
-                <select onChange={f("priority")} className={inputCls}>
-                  <option>متوسطة</option>
-                  <option>عالية</option>
-                  <option>منخفضة</option>
-                </select>
-              </Field>
-            </div>
-            <Field label="تاريخ الاستحقاق">
-              <input
-                type="date"
-                onChange={f("due")}
-                defaultValue={todayISO()}
-                className={inputCls}
-              />
-            </Field>
-            <button
-              onClick={saveTask}
-              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
-            >
-              حفظ المهمة
-            </button>
-          </div>
-        </Modal>
+        <TaskModal
+          cases={cases}
+          users={users}
+          onFieldChange={f}
+          onSave={saveTask}
+          onClose={() => setModal(null)}
+        />
       )}
 
       {modal === "invoice" && (
@@ -9463,49 +9375,12 @@ export default function App() {
       )}
 
       {modal === "poa" && (
-        <Modal title="إضافة توكيل كاتب عدل" onClose={() => setModal(null)}>
-          <div className="space-y-4 text-sm">
-            <Field label="الموكل">
-              <select onChange={f("clientId")} className={inputCls}>
-                <option value="">اختر الموكل…</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="رقم الوكالة الموثقة">
-              <input
-                onChange={f("number")}
-                placeholder="مثال: وكالة 2026/1/4502"
-                className={inputCls}
-              />
-            </Field>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="الجهة المصدرة">
-                <input onChange={f("issuer")} placeholder="كاتب العدل - دبي" className={inputCls} />
-              </Field>
-              <Field label="تاريخ الانتهاء">
-                <input type="date" onChange={f("expiry")} className={inputCls} />
-              </Field>
-            </div>
-            <Field label="نطاق الوكالة والتخويل">
-              <textarea
-                onChange={f("scope")}
-                rows={2}
-                placeholder="وكالة قضائية عامة والترافع والصلح والإقرار..."
-                className={inputCls}
-              />
-            </Field>
-            <button
-              onClick={savePoa}
-              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
-            >
-              حفظ الوكالة
-            </button>
-          </div>
-        </Modal>
+        <PoaModal
+          clients={clients}
+          onFieldChange={f}
+          onSave={savePoa}
+          onClose={() => setModal(null)}
+        />
       )}
 
       {modal === "colleague" && (
