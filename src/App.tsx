@@ -17,6 +17,10 @@ import ClientModal from "./components/modals/ClientModal";
 import ColleagueModal from "./components/modals/ColleagueModal";
 import TimeLogModal from "./components/modals/TimeLogModal";
 import CaseExpenseModal from "./components/modals/CaseExpenseModal";
+import InvoiceModal from "./components/modals/InvoiceModal";
+import TrustTransactionModal from "./components/modals/TrustTransactionModal";
+import IssueDelegationModal from "./components/modals/IssueDelegationModal";
+import LeaveRequestModal from "./components/modals/LeaveRequestModal";
 import DashboardView from "./components/DashboardView";
 import CasesListView from "./components/CasesListView";
 import CaseDetailView from "./components/CaseDetailView";
@@ -9023,65 +9027,14 @@ export default function App() {
       )}
 
       {modal === "invoice" && (
-        <Modal title="إصدار فاتورة ضريبية جديدة (VAT 5%)" onClose={() => setModal(null)}>
-          <div className="space-y-4 text-sm">
-            <Field label="الموكل">
-              <select onChange={f("clientId")} className={inputCls}>
-                <option value="">اختر الموكل…</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="القضية (اختياري)">
-              <select onChange={f("caseId")} className={inputCls}>
-                <option value="">فاتورة استشارية عامة</option>
-                {cases.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.number}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="المبلغ الخاضع للضريبة (د.إ)">
-              <input
-                type="number"
-                onChange={f("amount")}
-                placeholder="مثال: 10000"
-                className={inputCls}
-              />
-            </Field>
-            <p className="text-xs text-slate-500 bg-amber-50 p-2 rounded border border-amber-200">
-              سيتم إضافة ضريبة القيمة المضافة 5% تلقائيًا وفق قوانين الهيئة الاتحادية للضرائب بمبلغ{" "}
-              <b>{fmtAED((+form.amount || 0) * VAT_RATE)}</b> ليصل الإجمالي إلى{" "}
-              <b>{fmtAED((+form.amount || 0) * 1.05)}</b>
-            </p>
-            <Field label="تاريخ الاستحقاق">
-              <input
-                type="date"
-                onChange={f("due")}
-                defaultValue={addDays(30)}
-                className={inputCls}
-              />
-            </Field>
-            <Field label="بيان الفاتورة والخدمات القانونية">
-              <textarea
-                onChange={f("desc")}
-                rows={2}
-                placeholder="دفعة أتعاب محاماة والاستشارات القانونية..."
-                className={inputCls}
-              />
-            </Field>
-            <button
-              onClick={saveInvoice}
-              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
-            >
-              إصدار الفاتورة الضريبية
-            </button>
-          </div>
-        </Modal>
+        <InvoiceModal
+          clients={clients}
+          cases={cases}
+          amount={form.amount}
+          onFieldChange={f}
+          onSave={saveInvoice}
+          onClose={() => setModal(null)}
+        />
       )}
 
       {/* ================= نافذة تسجيل الدفعات وسندات القبض ================= */}
@@ -9344,92 +9297,15 @@ export default function App() {
       )}
 
       {modal === "issueDelegation" && (
-        <Modal title="إصدار إنابة حضور" onClose={() => setModal(null)}>
-          <div className="space-y-4 text-sm">
-            <Field label="الزميل المُنَاب">
-              <select
-                onChange={(e) => {
-                  const cid = e.target.value;
-                  const sel = colleagues.find((cc) => String(cc.id) === cid);
-                  setForm((prev: any) => ({
-                    ...prev,
-                    colleagueId: cid,
-                    colleagueLicenseNumber: sel?.licenseNumber || "",
-                  }));
-                }}
-                defaultValue={form.colleagueId || ""}
-                className={inputCls}
-              >
-                <option value="">اختر الزميل…</option>
-                {colleagues.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="القضية (اختياري) — تُستخدم لسحب اسم الموكل وصفته والخصم تلقائياً">
-              <select onChange={f("caseId")} defaultValue={form.caseId || ""} className={inputCls}>
-                <option value="">بدون ربط بقضية مسجلة…</option>
-                {cases.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.number} — {c.subject}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="وصف القضية/الجلسة (إن لم تُربط بقضية مسجلة)">
-              <input
-                onChange={f("caseTitleSnapshot")}
-                defaultValue={form.caseTitleSnapshot || ""}
-                placeholder="مثال: جلسة محكمة الشارقة الابتدائية - دائرة مدنية"
-                className={inputCls}
-              />
-            </Field>
-            <Field label="تاريخ الجلسة المناب لها الزميل">
-              <input
-                type="date"
-                onChange={f("sessionDate")}
-                defaultValue={form.sessionDate || ""}
-                className={inputCls}
-              />
-            </Field>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="رقم قيد المحامي المُنيب (يُسحب تلقائياً، قابل للتعديل)">
-                <input
-                  onChange={f("issuerLicenseNumber")}
-                  defaultValue={form.issuerLicenseNumber || ""}
-                  placeholder="مثال: 1754"
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="رقم قيد الزميل المُناب (يُسحب تلقائياً، قابل للتعديل)">
-                <input
-                  key={form.colleagueId || "none"}
-                  onChange={f("colleagueLicenseNumber")}
-                  defaultValue={form.colleagueLicenseNumber || ""}
-                  placeholder="مثال: 2210"
-                  className={inputCls}
-                />
-              </Field>
-            </div>
-            <Field label="الغرض من الإنابة">
-              <textarea
-                onChange={f("purpose")}
-                defaultValue={form.purpose || ""}
-                rows={3}
-                placeholder="حضور الجلسة المحددة نيابة عن المكتب وتقديم المذكرات والمرافعة..."
-                className={inputCls}
-              />
-            </Field>
-            <button
-              onClick={issueDelegation}
-              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
-            >
-              إصدار الإنابة
-            </button>
-          </div>
-        </Modal>
+        <IssueDelegationModal
+          colleagues={colleagues}
+          cases={cases}
+          form={form}
+          setForm={setForm}
+          onFieldChange={f}
+          onSave={issueDelegation}
+          onClose={() => setModal(null)}
+        />
       )}
 
       {modal === "user" && (
@@ -9938,76 +9814,13 @@ export default function App() {
 
       {/* ================= نافذة حساب الأمانات ================= */}
       {modal === "trust" && (
-        <Modal
-          title="إضافة معاملة حساب أمانات الموكل (Trust Account)"
+        <TrustTransactionModal
+          clients={clients}
+          cases={cases}
+          onFieldChange={f}
+          onSave={saveTrustTransaction}
           onClose={() => setModal(null)}
-        >
-          <div className="space-y-4 text-sm">
-            <Field label="الموكل صاحب الأمانة">
-              <select onChange={f("clientId")} className={inputCls}>
-                <option value="">اختر الموكل…</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="القضية المرتبطة (اختياري)">
-              <select onChange={f("caseId")} className={inputCls}>
-                <option value="">غير مرتبطة بقضية محددة</option>
-                {cases.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.number}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="نوع المعاملة">
-                <select onChange={f("type")} className={inputCls}>
-                  <option value="إيداع أمانة">إيداع أمانة (+)</option>
-                  <option value="صرف أمانة">صرف أمانة (-)</option>
-                </select>
-              </Field>
-              <Field label="المبلغ (د.إ)">
-                <input
-                  type="number"
-                  onChange={f("amount")}
-                  placeholder="0.00"
-                  className={inputCls}
-                />
-              </Field>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="رقم السند / الشيك">
-                <input onChange={f("refNo")} placeholder="مثال: CHK-9902" className={inputCls} />
-              </Field>
-              <Field label="تاريخ المعاملة">
-                <input
-                  type="date"
-                  onChange={f("date")}
-                  defaultValue={todayISO()}
-                  className={inputCls}
-                />
-              </Field>
-            </div>
-            <Field label="بيان وشرح الأمانة">
-              <textarea
-                onChange={f("notes")}
-                rows={2}
-                placeholder="أمانة رسوم خبرة قضائية في دعوى..."
-                className={inputCls}
-              />
-            </Field>
-            <button
-              onClick={saveTrustTransaction}
-              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
-            >
-              تأكيد معاملة الأمانات
-            </button>
-          </div>
-        </Modal>
+        />
       )}
 
       {/* ================= نافذة مواعيد الأحكام التلقائية ================= */}
@@ -10856,72 +10669,13 @@ export default function App() {
       )}
 
       {modal === "leave-request" && (
-        <Modal title="تقديم طلب إجازة كادر" onClose={() => setModal(null)}>
-          <div className="space-y-4 text-sm">
-            <Field label="الموظف صاحب الطلب">
-              <select
-                onChange={f("employeeId")}
-                defaultValue={form.employeeId || ""}
-                className={inputCls}
-              >
-                <option value="">اختر الموظف...</option>
-                {employees.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.fullName} ({e.jobTitle})
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <Field label="نوع الإجازة">
-              <select
-                onChange={f("leaveType")}
-                defaultValue={form.leaveType || "ANNUAL"}
-                className={inputCls}
-              >
-                <option value="ANNUAL">إجازة سنوية اعتيادية</option>
-                <option value="SICK">إجازة مرضية</option>
-                <option value="EMERGENCY">إجازة طارئة</option>
-                <option value="UNPAID">إجازة بدون أجر</option>
-              </select>
-            </Field>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="تاريخ البداية">
-                <input
-                  type="date"
-                  onChange={f("startDate")}
-                  defaultValue={form.startDate || todayISO()}
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="تاريخ النهاية">
-                <input
-                  type="date"
-                  onChange={f("endDate")}
-                  defaultValue={form.endDate || todayISO()}
-                  className={inputCls}
-                />
-              </Field>
-            </div>
-
-            <Field label="السبب / تفاصيل الإجازة">
-              <textarea
-                onChange={f("reason")}
-                rows={3}
-                placeholder="اكتب سبب طلب الإجازة هنا..."
-                className={inputCls}
-              />
-            </Field>
-
-            <button
-              onClick={saveLeaveRequest}
-              className="w-full rounded-xl bg-amber-500 py-3 font-bold text-slate-950 hover:bg-amber-400 transition"
-            >
-              ارسال طلب الإجازة
-            </button>
-          </div>
-        </Modal>
+        <LeaveRequestModal
+          employees={employees}
+          form={form}
+          onFieldChange={f}
+          onSave={saveLeaveRequest}
+          onClose={() => setModal(null)}
+        />
       )}
 
       {modal === "employee-expense" && (
