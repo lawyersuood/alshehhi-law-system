@@ -21,6 +21,10 @@ import InvoiceModal from "./components/modals/InvoiceModal";
 import TrustTransactionModal from "./components/modals/TrustTransactionModal";
 import IssueDelegationModal from "./components/modals/IssueDelegationModal";
 import LeaveRequestModal from "./components/modals/LeaveRequestModal";
+import EmployeeExpenseModal from "./components/modals/EmployeeExpenseModal";
+import StrReportModal from "./components/modals/StrReportModal";
+import EmployeeModal from "./components/modals/EmployeeModal";
+import KycModal from "./components/modals/KycModal";
 import DashboardView from "./components/DashboardView";
 import CasesListView from "./components/CasesListView";
 import CaseDetailView from "./components/CaseDetailView";
@@ -9653,139 +9657,15 @@ export default function App() {
 
       {/* ================= نافذة إضافة/تعديل KYC ================= */}
       {(modal === "kyc" || modal === "kyc-edit") && (
-        <Modal
-          title={modal === "kyc-edit" ? "تعديل سجل اعرف عميلك (KYC)" : "إضافة سجل اعرف عميلك جديد"}
+        <KycModal
+          modal={modal}
+          clients={clients}
+          form={form}
+          setForm={setForm}
+          onFieldChange={f}
+          onSave={saveKyc}
           onClose={() => setModal(null)}
-          wide
-        >
-          <div className="space-y-4 text-sm">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="الموكل المعني">
-                <select onChange={f("clientId")} value={form.clientId || ""} className={inputCls}>
-                  <option value="">إختر الموكل…</option>
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} ({c.type})
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="الجنسية / دولة التأسيس">
-                <input
-                  onChange={f("nationality")}
-                  defaultValue={form.nationality || "الإمارات"}
-                  className={inputCls}
-                />
-              </Field>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="نوع وثيقة الإثبات">
-                <input
-                  onChange={f("idType")}
-                  defaultValue={form.idType || "هوية إماراتية"}
-                  placeholder="رخصة تجارية / جواز سفر..."
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="تاريخ انتهاء الوثيقة">
-                <input
-                  type="date"
-                  onChange={f("idExpiry")}
-                  defaultValue={form.idExpiry || ""}
-                  className={inputCls}
-                />
-              </Field>
-            </div>
-
-            <Field label="المستفيد الحقيقي (UBO) والتملك النهائي">
-              <textarea
-                onChange={f("ubo")}
-                defaultValue={form.ubo || ""}
-                rows={2}
-                placeholder="أسماء الأشخاص الطبيعيين المالكين لـ 25% أو أكثر من رأس المال أو حق التصويت..."
-                className={inputCls}
-              />
-            </Field>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="مصدر الأموال والنشاط الرئيسي">
-                <select
-                  onChange={f("sourceOfFunds")}
-                  defaultValue={form.sourceOfFunds || FUND_SOURCES[0]}
-                  className={inputCls}
-                >
-                  {FUND_SOURCES.map((s) => (
-                    <option key={s}>{s}</option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="هل الموكل معرّض سياسيًا (PEP)؟">
-                <select
-                  onChange={(e) => setForm({ ...form, pep: e.target.value === "نعم" })}
-                  value={form.pep ? "نعم" : "لا"}
-                  className={inputCls}
-                >
-                  <option value="لا">لا (شخص عادي)</option>
-                  <option value="نعم">نعم (يشغل منصباً عاماً أو أقرباؤه)</option>
-                </select>
-              </Field>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <Field label="فحص قوائم العقوبات">
-                <select
-                  onChange={f("sanctions")}
-                  defaultValue={form.sanctions || "سليم"}
-                  className={inputCls}
-                >
-                  {SANCTIONS_STATES.map((s) => (
-                    <option key={s}>{s}</option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="تقييم درجة المخاطر">
-                <select
-                  onChange={f("risk")}
-                  defaultValue={form.risk || "منخفض"}
-                  className={inputCls}
-                >
-                  <option>منخفض</option>
-                  <option>متوسط</option>
-                  <option>مرتفع</option>
-                </select>
-              </Field>
-              <Field label="حالة ملف KYC">
-                <select
-                  onChange={f("status")}
-                  defaultValue={form.status || "مكتمل"}
-                  className={inputCls}
-                >
-                  <option>مكتمل</option>
-                  <option>قيد المراجعة</option>
-                  <option>ناقص</option>
-                </select>
-              </Field>
-            </div>
-
-            <Field label="ملاحظات العناية الواجبة والتحقق">
-              <textarea
-                onChange={f("notes")}
-                defaultValue={form.notes || ""}
-                rows={2}
-                placeholder="أي نتائج فحص أو وثائق إضافية تم الاطلاع عليها..."
-                className={inputCls}
-              />
-            </Field>
-
-            <button
-              onClick={saveKyc}
-              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
-            >
-              حفظ بيانات KYC والتحديث
-            </button>
-          </div>
-        </Modal>
+        />
       )}
 
       {/* ================= نافذة تسجيل ساعات العمل ================= */}
@@ -10112,55 +9992,12 @@ export default function App() {
 
       {/* ================= نافذة بلاغ الاشتباه STR ================= */}
       {modal === "str" && (
-        <Modal title="إبلاغ عن معاملات مشبوهة (AML / STR Report)" onClose={() => setModal(null)}>
-          <div className="space-y-4 text-sm">
-            <div className="bg-red-50 border border-red-200 p-3 rounded-xl text-xs text-red-900 font-semibold">
-              🔒 هذا السجل سري للغاية ومخصص لمسؤول الامتثال فقط وفق متطلبات وحدة المعلومات المالية
-              FIU بالدولة.
-            </div>
-            <Field label="الموكل المشتبه به">
-              <select onChange={f("clientId")} className={inputCls}>
-                <option value="">اختر الموكل…</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="المبلغ المشتبه به (د.إ)">
-                <input
-                  type="number"
-                  onChange={f("amountFlagged")}
-                  placeholder="0.00"
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="حالة البلاغ">
-                <select onChange={f("status")} className={inputCls}>
-                  <option>تحقيق داخلي</option>
-                  <option>مرفوع للـ FIU</option>
-                  <option>حفظ الملف</option>
-                </select>
-              </Field>
-            </div>
-            <Field label="أسباب الاشتباه ومؤشرات غسل الأموال">
-              <textarea
-                onChange={f("suspicionReason")}
-                rows={3}
-                placeholder="مثال: حوالات نقداً من أطراف مجهولة بدون فواتير سابقة..."
-                className={inputCls}
-              />
-            </Field>
-            <button
-              onClick={saveStrReport}
-              className="w-full rounded-xl bg-red-700 py-3 font-bold text-white hover:bg-red-800"
-            >
-              حفظ وتوثيق بلاغ الاشتباه
-            </button>
-          </div>
-        </Modal>
+        <StrReportModal
+          clients={clients}
+          onFieldChange={f}
+          onSave={saveStrReport}
+          onClose={() => setModal(null)}
+        />
       )}
 
       {/* ================= نافذة إرسال التنبيهات والرسائل ================= */}
@@ -10525,147 +10362,12 @@ export default function App() {
 
       {/* ================= نوافذ إدارة الموظفين والكادر (HR) ================= */}
       {modal === "employee" && (
-        <Modal
-          title={form.id ? "تعديل بيانات الموظف" : "إضافة موظف / مستشار جديد"}
+        <EmployeeModal
+          form={form}
+          onFieldChange={f}
+          onSave={saveEmployee}
           onClose={() => setModal(null)}
-          wide
-        >
-          <div className="space-y-4 text-sm">
-            <Field label="الاسم الكامل">
-              <input
-                onChange={f("fullName")}
-                defaultValue={form.fullName || ""}
-                placeholder="مثال: د. عبد الله بن حمد آل علي"
-                className={inputCls}
-              />
-            </Field>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="المسمى الوظيفي">
-                <input
-                  onChange={f("jobTitle")}
-                  defaultValue={form.jobTitle || ""}
-                  placeholder="مثال: مستشار قانوني أول / محامي مدني"
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="حالة الموظف">
-                <select
-                  onChange={f("status")}
-                  defaultValue={form.status || "ACTIVE"}
-                  className={inputCls}
-                >
-                  <option value="ACTIVE">على رأس العمل (Active)</option>
-                  <option value="ON_LEAVE">في إجازة (On Leave)</option>
-                  <option value="TERMINATED">منهي الخدمة (Terminated)</option>
-                </select>
-              </Field>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="البريد الإلكتروني الرسمي">
-                <input
-                  type="email"
-                  onChange={f("email")}
-                  defaultValue={form.email || ""}
-                  placeholder="employee@law.ae"
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="رقم الهاتف">
-                <input
-                  onChange={f("phone")}
-                  defaultValue={form.phone || ""}
-                  placeholder="050-XXXXXXX"
-                  className={inputCls}
-                />
-              </Field>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <Field label="رقم الهوية الإماراتية">
-                <input
-                  onChange={f("emiratesId")}
-                  defaultValue={form.emiratesId || ""}
-                  placeholder="784-XXXX-XXXXXXX-X"
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="رقم جواز السفر">
-                <input
-                  onChange={f("passportNumber")}
-                  defaultValue={form.passportNumber || ""}
-                  placeholder="A12345678"
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="تاريخ انتهاء الهوية/الإقامة">
-                <input
-                  type="date"
-                  onChange={f("idExpiryDate")}
-                  defaultValue={form.idExpiryDate || ""}
-                  className={inputCls}
-                />
-              </Field>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="رقم قيد المحامي (إن وجد)">
-                <input
-                  onChange={f("licenseNumber")}
-                  defaultValue={form.licenseNumber || ""}
-                  placeholder="مثال: ADV-UAE-9982"
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="تاريخ المباشرة / الانضمام">
-                <input
-                  type="date"
-                  onChange={f("joinDate")}
-                  defaultValue={form.joinDate || todayISO()}
-                  className={inputCls}
-                />
-              </Field>
-            </div>
-
-            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-              <p className="text-xs font-bold text-slate-900">تفاصيل هيكل الراتب والبدلات (د.إ):</p>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <Field label="الراتب الأساسي">
-                  <input
-                    type="number"
-                    onChange={f("basicSalary")}
-                    defaultValue={form.basicSalary || 0}
-                    className={inputCls}
-                  />
-                </Field>
-                <Field label="بدل السكن">
-                  <input
-                    type="number"
-                    onChange={f("housingAllowance")}
-                    defaultValue={form.housingAllowance || 0}
-                    className={inputCls}
-                  />
-                </Field>
-                <Field label="بدل المواصلات">
-                  <input
-                    type="number"
-                    onChange={f("transportAllowance")}
-                    defaultValue={form.transportAllowance || 0}
-                    className={inputCls}
-                  />
-                </Field>
-              </div>
-            </div>
-
-            <button
-              onClick={saveEmployee}
-              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
-            >
-              حفظ بيانات الموظف
-            </button>
-          </div>
-        </Modal>
+        />
       )}
 
       {modal === "leave-request" && (
@@ -10679,74 +10381,14 @@ export default function App() {
       )}
 
       {modal === "employee-expense" && (
-        <Modal title="تقديم مطالبة مصروفات وتعويض" onClose={() => setModal(null)}>
-          <div className="space-y-4 text-sm">
-            <Field label="الموظف المتقدم بالمطالبة">
-              <select
-                onChange={f("employeeId")}
-                defaultValue={form.employeeId || ""}
-                className={inputCls}
-              >
-                <option value="">اختر الموظف...</option>
-                {employees.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.fullName} ({e.jobTitle})
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="بند / نوع المصروف">
-                <select
-                  onChange={f("category")}
-                  defaultValue={form.category || "COURT_FEES"}
-                  className={inputCls}
-                >
-                  <option value="COURT_FEES">رسوم محاكم وخدمات قضائية</option>
-                  <option value="TRANSPORT">تنقلات ومواصلات قضائية</option>
-                  <option value="SUPPLIES">مستلزمات وأدوات مكتبية</option>
-                  <option value="OTHER">مصروفات أخرى</option>
-                </select>
-              </Field>
-
-              <Field label="المبلغ المطلوب (د.إ)">
-                <input
-                  type="number"
-                  onChange={f("amount")}
-                  placeholder="0.00"
-                  className={inputCls}
-                />
-              </Field>
-            </div>
-
-            <Field label="القضية المرتبطة (اختياري)">
-              <select onChange={f("caseId")} defaultValue={form.caseId || ""} className={inputCls}>
-                <option value="">مصروف إداري عام للمكتب</option>
-                {cases.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    قضية #{c.number} - {c.subject}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <Field label="رابط أو ملاحظات الفاتورة/الإيصال">
-              <input
-                onChange={f("receiptUrl")}
-                placeholder="رابط المستند أو رقم الإيصال..."
-                className={inputCls}
-              />
-            </Field>
-
-            <button
-              onClick={saveEmployeeExpense}
-              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
-            >
-              تقديم مطالبة المصروفات
-            </button>
-          </div>
-        </Modal>
+        <EmployeeExpenseModal
+          employees={employees}
+          cases={cases}
+          form={form}
+          onFieldChange={f}
+          onSave={saveEmployeeExpense}
+          onClose={() => setModal(null)}
+        />
       )}
 
       {modal === "employee-disciplinary" && isSuperAdmin && (
