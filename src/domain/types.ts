@@ -186,6 +186,11 @@ export interface CaseItem {
   emirate?: string;
   /** صفة الموكل في القضية (مدعي / مدعى عليه / مستأنف ...) — تُستخدم في توليد مستندات الإنابة وغيرها */
   clientCapacity?: string;
+  /** أرشفة يدوية (غير آلية) — لا تحذف أي بيانات، فقط تُخفي القضية من العرض الافتراضي.
+   * تُضبط فقط بإجراء يدوي صريح من المستخدم عبر زر "أرشفة" ويمكن التراجع عنها بزر "إلغاء الأرشفة" في أي وقت. */
+  archived?: boolean;
+  /** تاريخ ووقت الأرشفة (ISO) — يُضبط عند الأرشفة ويُعاد إلى null عند إلغاء الأرشفة. لا علاقة له بأي حذف. */
+  archivedAt?: string | null;
 }
 
 export interface Hearing {
@@ -301,6 +306,11 @@ export interface KycItem {
   status: string;
   lastReview: string;
   notes: string;
+  /** أرشفة يدوية (غير آلية) لملفات KYC الخاصة بعلاقات عملاء منتهية — لا تحذف أي بيانات.
+   * تُضبط فقط بإجراء يدوي صريح من المستخدم ويمكن التراجع عنها في أي وقت. */
+  archived?: boolean;
+  /** تاريخ ووقت الأرشفة (ISO) — يُضبط عند الأرشفة ويُعاد إلى null عند إلغاء الأرشفة. */
+  archivedAt?: string | null;
 }
 
 export interface KycWatchlistItem {

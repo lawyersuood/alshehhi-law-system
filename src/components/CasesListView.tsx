@@ -21,6 +21,8 @@ import {
   Scale,
   Edit2,
   Trash2,
+  Archive,
+  ArchiveRestore,
 } from "lucide-react";
 import { Badge } from "./AuthScreens";
 import { CaseItem, Client, RolePermissions } from "../domain/types";
@@ -173,6 +175,45 @@ export default function CasesListView({
   logAuditAction,
   setCases,
 }: CasesListViewProps) {
+  // عرض القضايا النشطة (غير المؤرشفة) افتراضياً، مع إمكانية التبديل لعرض الأرشيف.
+  // الأرشفة إجراء يدوي بحت لا يحذف أي بيانات — انظر ARCHIVE_FEATURE.md
+  const [showArchivedTab, setShowArchivedTab] = React.useState(false);
+  const activeCasesList = React.useMemo(
+    () => filteredCases.filter((c) => !c.archived),
+    [filteredCases],
+  );
+  const archivedCasesList = React.useMemo(
+    () => filteredCases.filter((c) => c.archived),
+    [filteredCases],
+  );
+  const visibleCases = showArchivedTab ? archivedCasesList : activeCasesList;
+
+  const archiveCase = (c: CaseItem) => {
+    logAuditAction(
+      "STATUS_CHANGE",
+      "إدارة القضايا",
+      `قضية: ${c.number}`,
+      `أرشفة القضية رقم ${c.number} (إجراء يدوي غير مدمّر — لا حذف لأي بيانات)`,
+      c.id,
+    );
+    setCases((prev) =>
+      prev.map((x) => (x.id === c.id ? { ...x, archived: true, archivedAt: new Date().toISOString() } : x)),
+    );
+  };
+
+  const unarchiveCase = (c: CaseItem) => {
+    logAuditAction(
+      "STATUS_CHANGE",
+      "إدارة القضايا",
+      `قضية: ${c.number}`,
+      `إلغاء أرشفة القضية رقم ${c.number}`,
+      c.id,
+    );
+    setCases((prev) =>
+      prev.map((x) => (x.id === c.id ? { ...x, archived: false, archivedAt: null } : x)),
+    );
+  };
+
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1089,6 +1130,31 @@ export default function CasesListView({
         </div>
       </div>
 
+      {/* تبويب النشطة / الأرشيف — الأرشفة يدوية وقابلة للتراجع دائماً، ولا تحذف أي سجل */}
+      <div className="flex items-center gap-2 border-b border-slate-200">
+        <button
+          onClick={() => setShowArchivedTab(false)}
+          className={`px-4 py-2 text-sm font-bold border-b-2 -mb-px transition ${
+            !showArchivedTab
+              ? "border-[#0D382B] text-[#0D382B]"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+        >
+          القضايا النشطة ({activeCasesList.length})
+        </button>
+        <button
+          onClick={() => setShowArchivedTab(true)}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold border-b-2 -mb-px transition ${
+            showArchivedTab
+              ? "border-amber-600 text-amber-800"
+              : "border-transparent text-slate-500 hover:text-slate-800"
+          }`}
+          title="القضايا المؤرشفة يدوياً — لا تزال موجودة بالكامل ويمكن إلغاء أرشفتها في أي وقت"
+        >
+          <Archive size={14} /> الأرشيف ({archivedCasesList.length})
+        </button>
+      </div>
+
       {/* جدول القضايا مع شريط العداد عند الطلب ودليل الألوان */}
       <div className="overflow-x-auto custom-scrollbar app-card">
         {/* شريط العداد الإحصائي ودليل الألوان العلوي للجدول */}
@@ -1160,7 +1226,7 @@ export default function CasesListView({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100/80">
-            {filteredCases.map((c) => (
+            {visibleCases.map((c) => (
               <tr key={c.id} className="transition hover:bg-[#0D382B]/[0.025] group">
                 <td
                   className="px-4 py-3 font-semibold text-slate-900 cursor-pointer"
@@ -1255,6 +1321,23 @@ export default function CasesListView({
                     >
                       <Edit2 size={15} />
                     </button>
+                    {c.archived ? (
+                      <button
+                        onClick={() => unarchiveCase(c)}
+                        className="text-slate-400 hover:text-emerald-700 p-1 transition"
+                        title="إلغاء الأرشفة — إعادة القضية للعرض النشط (السجل لم يُحذف قط)"
+                      >
+                        <ArchiveRestore size={15} />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => archiveCase(c)}
+                        className="text-slate-400 hover:text-amber-700 p-1 transition"
+                        title="أرشفة القضية — إخفاء من العرض الافتراضي فقط، لا حذف ويمكن التراجع دائماً"
+                      >
+                        <Archive size={15} />
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         requestDelete({
@@ -1286,10 +1369,12 @@ export default function CasesListView({
             ))}
           </tbody>
         </table>
-        {filteredCases.length === 0 && (
+        {visibleCases.length === 0 && (
           <div className="py-12 text-center text-sm text-slate-500 space-y-2">
             <p className="font-semibold text-slate-600">
-              لا توجد قضايا مطابقة لخيارات الفلترة المحددة
+              {showArchivedTab
+                ? "لا توجد قضايا مؤرشفة حالياً"
+                : "لا توجد قضايا مطابقة لخيارات الفلترة المحددة"}
             </p>
             <p className="text-xs text-slate-400">جرب تعديل خيارات الفلترة أو تفريغ معايير البحث</p>
             {activeFiltersCount > 0 && (

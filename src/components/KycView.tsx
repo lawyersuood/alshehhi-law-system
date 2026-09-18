@@ -11,6 +11,8 @@ import {
   Send,
   Edit2,
   Printer,
+  Archive,
+  ArchiveRestore,
 } from "lucide-react";
 import { Badge, EmptyState } from "./AuthScreens";
 import { KycItem, KycWatchlistItem, StrReport, RolePermissions } from "../domain/types";
@@ -80,6 +82,37 @@ export default function KycView({
   setReport,
   setKyc,
 }: KycViewProps) {
+  // الأرشفة هنا إجراء يدوي بحت (لا حذف) لملفات KYC الخاصة بعلاقات عملاء منتهية.
+  // انظر ARCHIVE_FEATURE.md — السجل يبقى موجوداً بالكامل ويمكن إلغاء أرشفته في أي وقت.
+  const [showArchivedKyc, setShowArchivedKyc] = React.useState(false);
+  const activeKyc = React.useMemo(() => kyc.filter((k) => !k.archived), [kyc]);
+  const archivedKyc = React.useMemo(() => kyc.filter((k) => k.archived), [kyc]);
+  const visibleKyc = showArchivedKyc ? archivedKyc : activeKyc;
+
+  const archiveKyc = (k: KycItem) => {
+    logAuditAction(
+      "STATUS_CHANGE",
+      "KYC والامتثال",
+      `ملف KYC: ${clientName(k.clientId)}`,
+      `أرشفة ملف KYC للموكل ${clientName(k.clientId)} (إجراء يدوي غير مدمّر — لا حذف لأي بيانات)`,
+      k.id,
+    );
+    setKyc((prev) =>
+      prev.map((x) => (x.id === k.id ? { ...x, archived: true, archivedAt: new Date().toISOString() } : x)),
+    );
+  };
+
+  const unarchiveKyc = (k: KycItem) => {
+    logAuditAction(
+      "STATUS_CHANGE",
+      "KYC والامتثال",
+      `ملف KYC: ${clientName(k.clientId)}`,
+      `إلغاء أرشفة ملف KYC للموكل ${clientName(k.clientId)}`,
+      k.id,
+    );
+    setKyc((prev) => prev.map((x) => (x.id === k.id ? { ...x, archived: false, archivedAt: null } : x)));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex border-b border-slate-200 overflow-x-auto">
@@ -375,9 +408,37 @@ export default function KycView({
             </div>
           </div>
 
+          {/* تبويب النشطة / الأرشيف لسجلات KYC — الأرشفة يدوية وقابلة للتراجع دائماً، ولا تحذف أي سجل */}
+          <div className="flex items-center gap-2 border-b border-slate-200">
+            <button
+              onClick={() => setShowArchivedKyc(false)}
+              className={`px-4 py-2 text-sm font-bold border-b-2 -mb-px transition ${
+                !showArchivedKyc
+                  ? "border-[#0D382B] text-[#0D382B]"
+                  : "border-transparent text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              سجلات نشطة ({activeKyc.length})
+            </button>
+            <button
+              onClick={() => setShowArchivedKyc(true)}
+              className={`flex items-center gap-1.5 px-4 py-2 text-sm font-bold border-b-2 -mb-px transition ${
+                showArchivedKyc
+                  ? "border-amber-600 text-amber-800"
+                  : "border-transparent text-slate-500 hover:text-slate-800"
+              }`}
+              title="سجلات KYC المؤرشفة يدوياً (لعلاقات عملاء منتهية مثلاً) — لا تزال موجودة بالكامل"
+            >
+              <Archive size={14} /> الأرشيف ({archivedKyc.length})
+            </button>
+          </div>
+
           {/* جدول سجلات KYC */}
-          {kyc.length === 0 ? (
-            <EmptyState icon={UserCheck} text="لا توجد سجلات KYC مضافة حتى الآن" />
+          {visibleKyc.length === 0 ? (
+            <EmptyState
+              icon={UserCheck}
+              text={showArchivedKyc ? "لا توجد سجلات KYC مؤرشفة حالياً" : "لا توجد سجلات KYC مضافة حتى الآن"}
+            />
           ) : (
             <div className="app-card overflow-hidden">
               <div className="overflow-x-auto custom-scrollbar">
@@ -404,7 +465,7 @@ export default function KycView({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100/80">
-                    {kyc.map((k) => {
+                    {visibleKyc.map((k) => {
                       const nextRev = nextReviewDate(k.lastReview, k.risk);
                       const daysToRev = daysUntil(nextRev);
                       return (
@@ -495,6 +556,23 @@ export default function KycView({
                               >
                                 <Printer size={15} />
                               </button>
+                              {k.archived ? (
+                                <button
+                                  onClick={() => unarchiveKyc(k)}
+                                  className="p-1.5 text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors rounded-lg"
+                                  title="إلغاء الأرشفة — إعادة السجل للعرض النشط (لم يُحذف قط)"
+                                >
+                                  <ArchiveRestore size={15} />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => archiveKyc(k)}
+                                  className="p-1.5 text-slate-500 hover:text-amber-700 hover:bg-amber-50 transition-colors rounded-lg"
+                                  title="أرشفة ملف KYC — إخفاء من العرض الافتراضي فقط، لا حذف ويمكن التراجع دائماً"
+                                >
+                                  <Archive size={15} />
+                                </button>
+                              )}
                               <button
                                 onClick={() => {
                                   requestDelete({
