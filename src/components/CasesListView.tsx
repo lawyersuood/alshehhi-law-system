@@ -25,7 +25,7 @@ import {
   ArchiveRestore,
 } from "lucide-react";
 import { Badge } from "./AuthScreens";
-import { CaseItem, Client, RolePermissions, TrustTransaction } from "../domain/types";
+import { CaseItem, Client, RolePermissions } from "../domain/types";
 import { CASE_STAGES, CASE_STATUS, CASE_TYPES } from "../domain/constants";
 import {
   statusColor,
@@ -123,7 +123,6 @@ export interface CasesListViewProps {
     },
   ) => void;
   setCases: React.Dispatch<React.SetStateAction<CaseItem[]>>;
-  trustTransactions: TrustTransaction[];
 }
 
 export default function CasesListView({
@@ -175,7 +174,6 @@ export default function CasesListView({
   requestDelete,
   logAuditAction,
   setCases,
-  trustTransactions,
 }: CasesListViewProps) {
   // عرض القضايا النشطة (غير المؤرشفة) افتراضياً، مع إمكانية التبديل لعرض الأرشيف.
   // الأرشفة إجراء يدوي بحت لا يحذف أي بيانات — انظر ARCHIVE_FEATURE.md
@@ -190,45 +188,16 @@ export default function CasesListView({
   );
   const visibleCases = showArchivedTab ? archivedCasesList : activeCasesList;
 
-  // رصيد أمانة القضية = مجموع الإيداعات ناقص كل أنواع الصرف/الاسترداد المرتبطة بهذه القضية تحديداً
-  const caseTrustBalance = React.useCallback(
-    (caseId: number) => {
-      return trustTransactions
-        .filter((t) => t.caseId === caseId)
-        .reduce((acc, t) => acc + (t.type === "إيداع أمانة" ? t.amount : -t.amount), 0);
-    },
-    [trustTransactions],
-  );
-
   const archiveCase = (c: CaseItem) => {
-    const trustBalance = caseTrustBalance(c.id);
-    if (Math.abs(trustBalance) > 0.001) {
-      const proceedDespiteTrustBalance = window.confirm(
-        `⚠️ تنبيه: هذه القضية لديها رصيد أمانة غير مُسوّى بقيمة ${trustBalance.toLocaleString(
-          "ar-AE",
-        )} د.إ — يُرجى تسوية الرصيد قبل الأرشفة. هل تريد المتابعة بالأرشفة على أي حال؟`,
-      );
-      if (!proceedDespiteTrustBalance) return;
-      logAuditAction(
-        "STATUS_CHANGE",
-        "إدارة القضايا",
-        `قضية: ${c.number}`,
-        `تمت أرشفة القضية رقم ${c.number} رغم وجود رصيد أمانة غير مُسوّى بقيمة ${trustBalance} د.إ`,
-        c.id,
-      );
-    } else {
-      logAuditAction(
-        "STATUS_CHANGE",
-        "إدارة القضايا",
-        `قضية: ${c.number}`,
-        `أرشفة القضية رقم ${c.number} (إجراء يدوي غير مدمّر — لا حذف لأي بيانات)`,
-        c.id,
-      );
-    }
+    logAuditAction(
+      "STATUS_CHANGE",
+      "إدارة القضايا",
+      `قضية: ${c.number}`,
+      `أرشفة القضية رقم ${c.number} (إجراء يدوي غير مدمّر — لا حذف لأي بيانات)`,
+      c.id,
+    );
     setCases((prev) =>
-      prev.map((x) =>
-        x.id === c.id ? { ...x, archived: true, archivedAt: new Date().toISOString() } : x,
-      ),
+      prev.map((x) => (x.id === c.id ? { ...x, archived: true, archivedAt: new Date().toISOString() } : x)),
     );
   };
 

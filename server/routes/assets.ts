@@ -80,44 +80,39 @@ assetsRouter.post("/fixed-assets", async (req: AuthedRequest, res) => {
   }
 });
 
-assetsRouter.post(
-  "/fixed-assets/:id/dispose",
-  requireServerRole("admin", "accountant"),
-  async (req, res) => {
-    try {
-      const pool = getPool();
-      await pool.query(
-        `UPDATE fixed_assets SET status = 'disposed', disposed_at = NOW() WHERE id = ?`,
-        [req.params.id],
-      );
-      res.json({ success: true });
-    } catch (err: any) {
-      res.status(500).json({ error: err?.message || "فشل استبعاد الأصل." });
-    }
-  },
-);
+assetsRouter.post("/fixed-assets/:id/dispose", async (req, res) => {
+  try {
+    const pool = getPool();
+    await pool.query(
+      `UPDATE fixed_assets SET status = 'disposed', disposed_at = NOW() WHERE id = ?`,
+      [req.params.id],
+    );
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || "فشل استبعاد الأصل." });
+  }
+});
 
 assetsRouter.delete(
   "/fixed-assets/:id",
   requireServerRole("admin", "accountant"),
   async (req, res) => {
-    try {
-      const pool = getPool();
-      const [runs]: any = await pool.query(
-        `SELECT COUNT(*) AS cnt FROM depreciation_runs WHERE asset_id = ?`,
-        [req.params.id],
-      );
-      if (runs[0]?.cnt > 0) {
-        res.status(409).json({ error: "لا يمكن حذف أصل له قيود إهلاك منفّذة مسبقاً." });
-        return;
-      }
-      await pool.query(`DELETE FROM fixed_assets WHERE id = ?`, [req.params.id]);
-      res.json({ success: true });
-    } catch (err: any) {
-      res.status(500).json({ error: err?.message || "فشل حذف الأصل." });
+  try {
+    const pool = getPool();
+    const [runs]: any = await pool.query(
+      `SELECT COUNT(*) AS cnt FROM depreciation_runs WHERE asset_id = ?`,
+      [req.params.id],
+    );
+    if (runs[0]?.cnt > 0) {
+      res.status(409).json({ error: "لا يمكن حذف أصل له قيود إهلاك منفّذة مسبقاً." });
+      return;
     }
-  },
-);
+    await pool.query(`DELETE FROM fixed_assets WHERE id = ?`, [req.params.id]);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || "فشل حذف الأصل." });
+  }
+});
 
 assetsRouter.get("/depreciation-runs", async (_req, res) => {
   try {

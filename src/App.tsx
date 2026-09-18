@@ -3527,6 +3527,45 @@ export default function App() {
     }
   };
 
+  // (Phase-4) يضمن وجود صف لهذا المستخدم في جدول public.profiles (جدول الأدوار المركزي الجديد)
+  // عند أول دخول له بعد نشر هذا التحديث. لا نمنح دوراً افتراضياً بناءً على أي شيء محلي — الصف
+  // الجديد يُنشأ دائماً بأدنى صلاحية ممكنة ("no_access" / بانتظار المراجعة)، وسياسة قاعدة البيانات
+  // (الـ Trigger في supabase_roles_migration.sql) تفرض هذا فعلياً بصرف النظر عمّا نرسله هنا، كطبقة
+  // حماية مضاعفة. يجب على مدير المكتب الدخول لشاشة "المستخدمون" وإسناد الدور الصحيح يدوياً —
+  // لا توجد وسيلة آلية آمنة لتخمين الدور المقصود لحساب موجود مسبقاً محلياً فقط.
+  const bootstrapAppUserProfileIfMissing = async (authUserId: string, email: string) => {
+    try {
+      const { data: existing, error: selectErr } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", authUserId)
+        .maybeSingle();
+      if (selectErr) {
+        console.warn("Phase-4 profiles bootstrap: تعذّر التحقق من الصف الحالي:", selectErr.message);
+        return;
+      }
+      if (existing) return; // الصف موجود مسبقاً — لا شيء يُفعل
+      const { error: insertErr } = await supabase.from("profiles").insert({
+        id: authUserId,
+        email: email.toLowerCase(),
+        role: "no_access",
+        role_title: "بدون صلاحيات خاصة (بانتظار مراجعة المدير)",
+        status: "pending",
+        permissions: {},
+      });
+      if (insertErr) {
+        console.warn("Phase-4 profiles bootstrap: تعذّر إنشاء صف افتراضي آمن:", insertErr.message);
+      } else {
+        console.warn(
+          `Phase-4: تم إنشاء حساب دور جديد بأدنى صلاحية للمستخدم ${email} — يجب على المدير ` +
+            `إسناد الدور الصحيح له يدوياً من شاشة "المستخدمون".`,
+        );
+      }
+    } catch (e) {
+      console.warn("Phase-4 profiles bootstrap exception:", e);
+    }
+  };
+
   const fetchSupabaseProfiles = async () => {
     try {
       const { data, error } = await supabase.from("profiles").select("*");
@@ -3981,6 +4020,7 @@ export default function App() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user?.email) {
         const email = session.user.email.toLowerCase();
+        if (session.user.id) void bootstrapAppUserProfileIfMissing(session.user.id, email);
         const found = users.find((u) => u.email.toLowerCase() === email);
         if (found) {
           setCurrentUserId(found.id);
@@ -4003,6 +4043,7 @@ export default function App() {
     } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user?.email) {
         const email = session.user.email.toLowerCase();
+        if (session.user.id) void bootstrapAppUserProfileIfMissing(session.user.id, email);
         const found = users.find((u) => u.email.toLowerCase() === email);
         if (found) {
           setCurrentUserId(found.id);
@@ -5283,9 +5324,7 @@ export default function App() {
       cases.forEach((c) => {
         if (
           (c.opponents || []).some(
-            (o) =>
-              normalizeArabicNameForMatch(o) ===
-              normalizeArabicNameForMatch(newClientNameForConflict),
+            (o) => o.trim().toLowerCase() === newClientNameForConflict.trim().toLowerCase(),
           )
         ) {
           conflictReasons.push(
@@ -5295,7 +5334,7 @@ export default function App() {
       });
       opponents.forEach((opp) => {
         const oppAsClient = clients.find(
-          (cl) => normalizeArabicNameForMatch(cl.name) === normalizeArabicNameForMatch(opp),
+          (cl) => cl.name.trim().toLowerCase() === opp.trim().toLowerCase(),
         );
         if (oppAsClient) {
           conflictReasons.push(`الخصم "${opp}" مسجل كموكل حالي للمكتب (${oppAsClient.name})`);
@@ -8204,7 +8243,6 @@ export default function App() {
                     requestDelete={requestDelete}
                     logAuditAction={logAuditAction}
                     setCases={setCases}
-                    trustTransactions={trustTransactions}
                   />
                 )}
 

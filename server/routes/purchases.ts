@@ -76,17 +76,16 @@ purchasesRouter.delete(
   "/vendors/:id",
   requireServerRole("admin", "accountant"),
   async (req, res) => {
-    try {
-      const pool = getPool();
-      await pool.query(`DELETE FROM vendors WHERE id = ?`, [req.params.id]);
-      res.json({ success: true });
-    } catch (err: any) {
-      res
-        .status(500)
-        .json({ error: err?.message || "فشل حذف المورد (تأكد من عدم وجود فواتير مرتبطة به)." });
-    }
-  },
-);
+  try {
+    const pool = getPool();
+    await pool.query(`DELETE FROM vendors WHERE id = ?`, [req.params.id]);
+    res.json({ success: true });
+  } catch (err: any) {
+    res
+      .status(500)
+      .json({ error: err?.message || "فشل حذف المورد (تأكد من عدم وجود فواتير مرتبطة به)." });
+  }
+});
 
 // ---------------- فواتير المشتريات ----------------
 
@@ -184,79 +183,71 @@ purchasesRouter.post("/purchase-invoices", async (req: AuthedRequest, res) => {
   }
 });
 
-purchasesRouter.post(
-  "/purchase-invoices/:id/approve",
-  requireServerRole("admin", "accountant"),
-  async (req: AuthedRequest, res) => {
-    const { entryNumber, date, description, lines } = req.body || {};
-    if (!entryNumber || !date || !description || !Array.isArray(lines) || lines.length < 2) {
-      res.status(400).json({ error: "بيانات قيد الاعتماد غير مكتملة." });
-      return;
-    }
-    const pool = getPool();
-    const conn = await pool.getConnection();
-    try {
-      await conn.beginTransaction();
-      const entryId = randomUUID();
-      await conn.query(
-        `INSERT INTO journal_entries (id, entry_number, date, description, reference, status, created_at, created_by, posted_at, posted_by)
+purchasesRouter.post("/purchase-invoices/:id/approve", async (req: AuthedRequest, res) => {
+  const { entryNumber, date, description, lines } = req.body || {};
+  if (!entryNumber || !date || !description || !Array.isArray(lines) || lines.length < 2) {
+    res.status(400).json({ error: "بيانات قيد الاعتماد غير مكتملة." });
+    return;
+  }
+  const pool = getPool();
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const entryId = randomUUID();
+    await conn.query(
+      `INSERT INTO journal_entries (id, entry_number, date, description, reference, status, created_at, created_by, posted_at, posted_by)
        VALUES (?, ?, ?, ?, ?, 'posted', NOW(), ?, NOW(), ?)`,
+      [
+        entryId,
+        entryNumber,
+        date,
+        description,
+        req.params.id,
+        req.authUser?.email || null,
+        req.authUser?.email || null,
+      ],
+    );
+    let order = 0;
+    for (const l of lines) {
+      await conn.query(
+        `INSERT INTO journal_lines (id, journal_entry_id, account_id, debit, credit, description, line_order) VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
+          randomUUID(),
           entryId,
-          entryNumber,
-          date,
-          description,
-          req.params.id,
-          req.authUser?.email || null,
-          req.authUser?.email || null,
+          l.accountId,
+          Number(l.debit) || 0,
+          Number(l.credit) || 0,
+          l.description || null,
+          order++,
         ],
       );
-      let order = 0;
-      for (const l of lines) {
-        await conn.query(
-          `INSERT INTO journal_lines (id, journal_entry_id, account_id, debit, credit, description, line_order) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [
-            randomUUID(),
-            entryId,
-            l.accountId,
-            Number(l.debit) || 0,
-            Number(l.credit) || 0,
-            l.description || null,
-            order++,
-          ],
-        );
-      }
-      await conn.query(
-        `UPDATE purchase_invoices SET status = 'approved', journal_entry_id = ?, approved_at = NOW(), approved_by = ? WHERE id = ?`,
-        [entryId, req.authUser?.email || null, req.params.id],
-      );
-      await conn.commit();
-      res.json({ journalEntryId: entryId });
-    } catch (err: any) {
-      await conn.rollback();
-      res.status(500).json({ error: err?.message || "فشل اعتماد الفاتورة." });
-    } finally {
-      conn.release();
     }
-  },
-);
+    await conn.query(
+      `UPDATE purchase_invoices SET status = 'approved', journal_entry_id = ?, approved_at = NOW(), approved_by = ? WHERE id = ?`,
+      [entryId, req.authUser?.email || null, req.params.id],
+    );
+    await conn.commit();
+    res.json({ journalEntryId: entryId });
+  } catch (err: any) {
+    await conn.rollback();
+    res.status(500).json({ error: err?.message || "فشل اعتماد الفاتورة." });
+  } finally {
+    conn.release();
+  }
+});
 
-purchasesRouter.post(
-  "/purchase-invoices/:id/cancel",
-  requireServerRole("admin", "accountant"),
-  async (req, res) => {
-    try {
-      const pool = getPool();
-      await pool.query(
-        `UPDATE purchase_invoices SET status = 'cancelled', cancelled_at = NOW() WHERE id = ?`,
-        [req.params.id],
-      );
-      res.json({ success: true });
-    } catch (err: any) {
-      res.status(500).json({ error: err?.message || "فشل إلغاء الفاتورة." });
-    }
-  },
-);
+purchasesRouter.post("/purchase-invoices/:id/cancel", async (req, res) => {
+  try {
+    const pool = getPool();
+    await pool.query(
+      `UPDATE purchase_invoices SET status = 'cancelled', cancelled_at = NOW() WHERE id = ?`,
+      [req.params.id],
+    );
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || "فشل إلغاء الفاتورة." });
+  }
+});
 
 purchasesRouter.post("/purchase-payments", async (req: AuthedRequest, res) => {
   const { billId, date, amount, payingAccountId, reference, entryNumber, apAccountId } =
