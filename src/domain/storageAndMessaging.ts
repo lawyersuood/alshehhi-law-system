@@ -118,6 +118,28 @@ export function saveStorage<T>(key: string, value: T): void {
   }
 }
 
+// (تصحيح Phase-1: توحيد ترقيم الفواتير)
+// كان توليد رقم الفاتورة الرئيسية (Invoice.number بصيغة INV-YYYY-XXX) يتم في 3 أماكن مختلفة داخل
+// App.tsx بأسس عد مختلفة (60+، 65+، 100+) اعتماداً على nextId(invoices) — وهذا يعني احتمال تكرار
+// نفس الرقم لفاتورتين مختلفتين (تعارض/عدم تسلسل). المصدر الوحيد الآن لتوليد رقم الفاتورة الرئيسية
+// هو الدالة التالية: تعتمد على أكبر رقم فاتورة موجود فعلياً +1، بصرف النظر عن كيف أُنشئت الفواتير
+// السابقة، فتضمن عدم تكرار الرقم مهما كان عدد نقاط الإنشاء التي تستدعيها.
+export function nextMainInvoiceNumber(
+  existing: Array<{ number?: string }>,
+  year: number = new Date().getFullYear(),
+): string {
+  const prefix = `INV-${year}-`;
+  let max = 0;
+  for (const inv of existing) {
+    const num = inv.number;
+    if (!num || !num.startsWith("INV-")) continue;
+    const parts = num.split("-");
+    const n = parseInt(parts[parts.length - 1], 10);
+    if (!isNaN(n) && n > max) max = n;
+  }
+  return `${prefix}${String(max + 1).padStart(3, "0")}`;
+}
+
 // ================= مزامنة قاعدة بيانات Supabase (للبيانات الحساسة: قضايا/موكلين/ماليات) =================
 // كل صف مخزّن كـ {id, data} حيث data تحتوي كامل الكائن كـ JSON — لتفادي مشاكل توافق الأعمدة
 // مع تطور شكل البيانات بمرور الوقت.
@@ -145,14 +167,20 @@ export async function fetchSupabaseTable<T>(
 export async function pushSupabaseTable<T extends { id: number | string }>(
   table: string,
   rows: T[],
+  explicitDeleteIds?: Array<number | string>,
 ): Promise<void> {
   try {
-    // كنا سابقاً نحذف الجدول بالكامل ثم نعيد إدخال القائمة الحالية ("مرآة كاملة")، وهذا كان يعرّض
-    // البيانات لخطرين حقيقيين: (1) لحظة يكون فيها الجدول فارغاً تماماً أثناء الحذف والإدراج، قد يقرأها
-    // جهاز آخر متصل بنفس القاعدة في تلك اللحظة، و(2) في حال فشل الإدراج بعد نجاح الحذف كانت البيانات
-    // تُفقد نهائياً من القاعدة دون رجعة. الأسلوب الجديد أكثر أماناً: نحفظ (upsert) القائمة الحالية أولاً،
-    // ثم نحذف فقط الصفوف التي لم تعد موجودة محلياً — فلا يمر الجدول أبداً بلحظة فراغ، ولا نفقد بيانات
-    // حتى لو فشلت إحدى الخطوتين (فشل الحفظ يوقف العملية قبل أي حذف).
+    // (تصحيح Phase-1: مشكلة التسابق عند التزامن المتعدد)
+    // كنا سابقاً — حتى بعد التخلص من "المرآة الكاملة" بالحذف الشامل — نحذف من Supabase أي صف موجود في
+    // القاعدة وغير موجود بالقائمة المحلية الحالية (diff مقابل كل صفوف القاعدة). هذا كان لا يزال خطراً:
+    // لو أضاف مستخدم آخر (على جهاز مختلف) صفاً جديداً، ثم قام هذا الجهاز برفع نسخته المحلية القديمة
+    // (التي لا تحتوي على الصف الجديد بعد)، كان الصف الجديد يُعتبر "غير موجود محلياً" فيُحذف من القاعدة
+    // فوراً رغم أنه لم يُحذف فعلياً من قبل أي مستخدم — فقدان بيانات حقيقي.
+    // الحل: لا نعود نحذف بالاعتماد على "غير موجود بالقائمة المحلية". بدلاً من ذلك، الحذف يتم فقط
+    // لمعرّفات (IDs) تم تمريرها صراحةً في explicitDeleteIds — أي التي طلب المستخدم الحالي حذفها فعلاً
+    // (انظر useSyncedTable: يتتبع "pendingDeletes" كفرق بين القيمة السابقة والحالية محلياً فقط،
+    // لا كفرق مقابل كامل محتوى القاعدة). الرفع (upsert) يبقى كما هو: يحفظ فقط الصفوف الموجودة محلياً
+    // دون التأثير على صفوف أضافها/عدّلها مستخدمون آخرون بعد آخر مزامنة لهذا الجهاز.
     const CHUNK_SIZE = 500;
     if (rows && rows.length > 0) {
       for (let i = 0; i < rows.length; i += CHUNK_SIZE) {
@@ -165,17 +193,12 @@ export async function pushSupabaseTable<T extends { id: number | string }>(
       }
     }
 
-    const { data: existingRows, error: fetchIdsErr } = await supabase.from(table).select("id");
-    if (fetchIdsErr) {
-      console.warn(`Supabase fetch-ids error (${table}):`, fetchIdsErr);
-      return;
-    }
-    const localIds = new Set(rows.map((r) => r.id));
-    const idsToDelete = (existingRows || []).map((r) => r.id).filter((id) => !localIds.has(id));
-    for (let i = 0; i < idsToDelete.length; i += CHUNK_SIZE) {
-      const idsChunk = idsToDelete.slice(i, i + CHUNK_SIZE);
-      const { error: delErr } = await supabase.from(table).delete().in("id", idsChunk);
-      if (delErr) console.warn(`Supabase delete error (${table}):`, delErr);
+    if (explicitDeleteIds && explicitDeleteIds.length > 0) {
+      for (let i = 0; i < explicitDeleteIds.length; i += CHUNK_SIZE) {
+        const idsChunk = explicitDeleteIds.slice(i, i + CHUNK_SIZE);
+        const { error: delErr } = await supabase.from(table).delete().in("id", idsChunk);
+        if (delErr) console.warn(`Supabase delete error (${table}):`, delErr);
+      }
     }
   } catch (e) {
     console.warn(`Supabase push exception (${table}):`, e);

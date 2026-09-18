@@ -13,6 +13,7 @@ import type { CaseItem, Client } from "../../domain/types";
 export interface CaseModalProps {
   editingCase: CaseItem | null;
   clients: Client[];
+  cases?: CaseItem[];
   form: Record<string, any>;
   setForm: (updater: (prev: Record<string, any>) => Record<string, any>) => void;
   onFieldChange: (
@@ -30,6 +31,7 @@ const EMIRATES = ["أبوظبي", "دبي", "الشارقة", "عجمان", "أ�
 export default function CaseModal({
   editingCase,
   clients,
+  cases = [],
   form,
   setForm,
   onFieldChange,
@@ -38,12 +40,83 @@ export default function CaseModal({
 }: CaseModalProps) {
   const opponents: string[] = form.opponents && form.opponents.length > 0 ? form.opponents : [""];
 
+  // (Phase-1) فحص أولي لتعارض المصالح: مطابقة نصية بسيطة (تجاهل حالة الأحرف والمسافات الزائدة)
+  // لأسماء الخصوم المُدخلة مقابل أسماء الموكلين الحاليين وأسماء الخصوم في القضايا الأخرى.
+  // هذا فحص إرشادي غير حاسم (non-blocking) يُنبّه المحامي فقط، ولا يمنع الحفظ.
+  const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+  const conflictMatches: string[] = [];
+  const seen = new Set<string>();
+  for (const rawOpp of opponents) {
+    const opp = normalize(rawOpp);
+    if (opp.length < 3) continue;
+    for (const c of clients) {
+      const name = normalize(c.name || "");
+      if (name && (name.includes(opp) || opp.includes(name))) {
+        const label = `الموكل "${c.name}" يطابق اسم الخصم المُدخل "${rawOpp}"`;
+        if (!seen.has(label)) {
+          seen.add(label);
+          conflictMatches.push(label);
+        }
+      }
+    }
+    for (const cs of cases) {
+      if (editingCase && cs.id === editingCase.id) continue;
+      const csOpponents: string[] = (cs as any).opponents || [];
+      for (const o of csOpponents) {
+        const name = normalize(o || "");
+        if (name && (name.includes(opp) || opp.includes(name))) {
+          const label = `الخصم "${o}" مطابق في القضية رقم ${cs.number || cs.id} (يُحتمل تعارض مصالح)`;
+          if (!seen.has(label)) {
+            seen.add(label);
+            conflictMatches.push(label);
+          }
+        }
+      }
+    }
+  }
+  // كذلك: هل اسم الموكل الجديد نفسه يطابق خصماً موجوداً في قضية أخرى؟
+  const selectedClientName = normalize(
+    clients.find((c) => String(c.id) === String(form.clientId))?.name || "",
+  );
+  if (selectedClientName.length >= 3) {
+    for (const cs of cases) {
+      if (editingCase && cs.id === editingCase.id) continue;
+      const csOpponents: string[] = (cs as any).opponents || [];
+      for (const o of csOpponents) {
+        const name = normalize(o || "");
+        if (name && (name.includes(selectedClientName) || selectedClientName.includes(name))) {
+          const label = `الموكل المختار يطابق اسم الخصم "${o}" في القضية رقم ${cs.number || cs.id}`;
+          if (!seen.has(label)) {
+            seen.add(label);
+            conflictMatches.push(label);
+          }
+        }
+      }
+    }
+  }
+
   return (
     <Modal
       title={editingCase ? `تعديل بيانات القضية رقم ${editingCase.number}` : "قيد قضية جديدة"}
       onClose={onClose}
     >
       <div className="space-y-4 text-sm">
+        {conflictMatches.length > 0 && (
+          <div className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-800 space-y-1">
+            <p className="font-bold">
+              ⚠️ قد يوجد تعارض محتمل في المصالح — الاسم يطابق موكلاً أو خصماً في قضية أخرى:
+            </p>
+            <ul className="list-disc pr-4 space-y-0.5">
+              {conflictMatches.map((m, i) => (
+                <li key={i}>{m}</li>
+              ))}
+            </ul>
+            <p className="text-[11px] text-red-700">
+              هذا تنبيه إرشادي مبني على مطابقة نصية بسيطة ولا يمنع الحفظ — يُرجى مراجعته يدوياً قبل
+              قبول التوكيل.
+            </p>
+          </div>
+        )}
         <Field label="رقم القضية لدى المحكمة">
           <input
             value={form.number || ""}

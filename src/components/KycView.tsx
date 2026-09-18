@@ -332,6 +332,11 @@ export default function KycView({
                 سجل التحقق من هويات الموكلين، المستفيد الحقيقي (UBO)، وفحص قوائم العقوبات وفق
                 التشريعات الإماراتية
               </p>
+              <p className="mt-1 text-[11px] font-semibold text-amber-700">
+                ⚠️ بيانات PEP وفحص العقوبات في هذا السجل هي إقرار ذاتي غير محقق (Self-Declared /
+                Unverified) — ليست نتيجة فحص آلي مقابل قائمة عقوبات رسمية، ويجب التحقق منها يدوياً من
+                قبل مسؤول الامتثال قبل الاعتماد عليها.
+              </p>
             </div>
             <button
               onClick={() => {
@@ -383,7 +388,12 @@ export default function KycView({
                       <th className="px-4 py-3 font-semibold">الجنسية والوثيقة</th>
                       <th className="px-4 py-3 font-semibold">المستفيد الحقيقي (UBO)</th>
                       <th className="px-4 py-3 font-semibold">مصدر الأموال</th>
-                      <th className="px-4 py-3 font-semibold text-center">PEP / العقوبات</th>
+                      <th
+                        className="px-4 py-3 font-semibold text-center"
+                        title="إقرار ذاتي غير محقق — ليس فحصاً آلياً رسمياً"
+                      >
+                        PEP / العقوبات (إقرار ذاتي غير محقق)
+                      </th>
                       <th className="px-4 py-3 font-semibold text-center">درجة المخاطر</th>
                       <th className="px-4 py-3 font-semibold text-center">الحالة</th>
                       <th className="px-4 py-3 font-semibold text-center">المراجعة القادمة</th>
@@ -417,20 +427,28 @@ export default function KycView({
                           <td className="px-4 py-3 text-xs text-slate-600">{k.sourceOfFunds}</td>
                           <td className="px-4 py-3 text-center text-xs space-y-1">
                             {k.pep ? (
-                              <Badge className="bg-purple-100 text-purple-700">PEP معرّض</Badge>
+                              <span title="إقرار ذاتي غير محقق">
+                                <Badge className="bg-purple-100 text-purple-700">
+                                  PEP معرّض (إقرار ذاتي غير محقق)
+                                </Badge>
+                              </span>
                             ) : (
-                              <span className="text-slate-400">عادي</span>
+                              <span className="text-slate-400" title="إقرار ذاتي غير محقق">
+                                عادي (إقرار ذاتي)
+                              </span>
                             )}
                             <div>
-                              <Badge
-                                className={
-                                  k.sanctions === "سليم"
-                                    ? "bg-emerald-100 text-emerald-700"
-                                    : "bg-red-100 text-red-700"
-                                }
-                              >
-                                {k.sanctions}
-                              </Badge>
+                              <span title="إقرار ذاتي غير محقق — يتطلب تحققاً يدوياً من مسؤول الامتثال">
+                                <Badge
+                                  className={
+                                    k.sanctions === "سليم"
+                                      ? "bg-emerald-100 text-emerald-700"
+                                      : "bg-red-100 text-red-700"
+                                  }
+                                >
+                                  {k.sanctions} (إقرار ذاتي)
+                                </Badge>
+                              </span>
                             </div>
                           </td>
                           <td className="px-4 py-3 text-center">

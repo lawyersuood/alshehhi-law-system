@@ -5,7 +5,7 @@
 import { Router } from "express";
 import { randomUUID } from "crypto";
 import { getPool } from "../db";
-import type { AuthedRequest } from "../auth";
+import { requireServerRole, type AuthedRequest } from "../auth";
 
 export const assetsRouter = Router();
 
@@ -93,7 +93,10 @@ assetsRouter.post("/fixed-assets/:id/dispose", async (req, res) => {
   }
 });
 
-assetsRouter.delete("/fixed-assets/:id", async (req, res) => {
+assetsRouter.delete(
+  "/fixed-assets/:id",
+  requireServerRole("admin", "accountant"),
+  async (req, res) => {
   try {
     const pool = getPool();
     const [runs]: any = await pool.query(

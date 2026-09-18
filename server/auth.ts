@@ -24,7 +24,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_rBfdJsk33ImjcyHHhjnu7w_VaBaDi22";
 const supabaseServer = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 export interface AuthedRequest extends Request {
-  authUser?: { id: string; email?: string | null };
+  authUser?: { id: string; email?: string | null; role?: string };
 }
 
 export async function requireSupabaseAuth(req: AuthedRequest, res: Response, next: NextFunction) {
@@ -43,9 +43,36 @@ export async function requireSupabaseAuth(req: AuthedRequest, res: Response, nex
       return;
     }
 
-    req.authUser = { id: data.user.id, email: data.user.email };
+    req.authUser = {
+      id: data.user.id,
+      email: data.user.email,
+      // (Phase-1) نقرأ الدور من app_metadata فقط — وهو حقل لا يستطيع المستخدم أو المتصفح
+      // تعديله بنفسه (يتطلب صلاحية service-role من لوحة تحكم Supabase)، بعكس user_metadata
+      // أو أي ترويسة/حقل يرسله العميل، والذي يمكن لأي مستخدم تزويره بسهولة. هذا يجعل هذا
+      // الحقل مصدراً موثوقاً فعلياً للدور، ولو أنه محدود حالياً لأن حسابات المستخدمين وأدوارهم
+      // (RolePermissions) ما زالت مُدارة محلياً في متصفح كل مستخدم (localStorage) وليس في
+      // جدول مستخدمين مركزي على الخادم — انظر RLS_CHECKLIST.md لملاحظة النطاق الكاملة.
+      role: (data.user.app_metadata as any)?.role as string | undefined,
+    };
     next();
   } catch (err: any) {
     res.status(500).json({ error: "تعذر التحقق من هوية المستخدم." });
   }
+}
+
+// (Phase-1) طبقة تحقق إضافية من الدور على مستوى الخادم للعمليات الأكثر حساسية (حذف، اطلاع على
+// الماليات، الحسابات البنكية/الائتمانية). تُقرأ الأدوار المسموحة من app_metadata.role الموثّق أعلاه
+// فقط — وليس من أي شيء يرسله العميل ضمن الطلب (body/header) — حتى لا يمكن لمستخدم غير مخوّل تجاوز
+// الفحص بمجرد تعديل الطلب من المتصفح.
+export function requireServerRole(...allowedRoles: string[]) {
+  return (req: AuthedRequest, res: Response, next: NextFunction) => {
+    const role = req.authUser?.role;
+    if (!role || !allowedRoles.includes(role)) {
+      res.status(403).json({
+        error: "ليست لديك صلاحية كافية لتنفيذ هذه العملية الحساسة (تحقق من دور الحساب).",
+      });
+      return;
+    }
+    next();
+  };
 }

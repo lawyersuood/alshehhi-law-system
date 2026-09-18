@@ -6,7 +6,7 @@
 import { Router } from "express";
 import { randomUUID } from "crypto";
 import { getPool } from "../db";
-import type { AuthedRequest } from "../auth";
+import { requireServerRole, type AuthedRequest } from "../auth";
 
 export const bankRouter = Router();
 
@@ -94,7 +94,10 @@ bankRouter.put("/bank-accounts/:id", async (req: AuthedRequest, res) => {
 });
 
 // حركة بنكية جديدة (إيداع/سحب) — تُنشئ القيد اليومي المقابل ضمن معاملة واحدة متكاملة
-bankRouter.post("/bank-transactions", async (req: AuthedRequest, res) => {
+bankRouter.post(
+  "/bank-transactions",
+  requireServerRole("admin", "accountant"),
+  async (req: AuthedRequest, res) => {
   const {
     bankAccountId,
     date,

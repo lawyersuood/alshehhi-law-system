@@ -5,7 +5,7 @@
 import { Router } from "express";
 import { randomUUID } from "crypto";
 import { getPool } from "../db";
-import type { AuthedRequest } from "../auth";
+import { requireServerRole, type AuthedRequest } from "../auth";
 
 export const purchasesRouter = Router();
 
@@ -72,7 +72,10 @@ purchasesRouter.put("/vendors/:id", async (req: AuthedRequest, res) => {
   }
 });
 
-purchasesRouter.delete("/vendors/:id", async (req, res) => {
+purchasesRouter.delete(
+  "/vendors/:id",
+  requireServerRole("admin", "accountant"),
+  async (req, res) => {
   try {
     const pool = getPool();
     await pool.query(`DELETE FROM vendors WHERE id = ?`, [req.params.id]);

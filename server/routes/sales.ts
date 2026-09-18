@@ -5,7 +5,7 @@
 import { Router } from "express";
 import { randomUUID } from "crypto";
 import { getPool } from "../db";
-import type { AuthedRequest } from "../auth";
+import { requireServerRole, type AuthedRequest } from "../auth";
 
 export const salesRouter = Router();
 
@@ -40,7 +40,10 @@ async function fetchInvoicesWithLines(pool: any, whereSql = "", params: any[] = 
   return invoices.map((i: any) => ({ ...i, lines: byInvoice.get(i.id) || [] }));
 }
 
-salesRouter.get("/sales-invoices", async (_req, res) => {
+salesRouter.get(
+  "/sales-invoices",
+  requireServerRole("admin", "accountant", "lawyer", "supervisor"),
+  async (_req, res) => {
   try {
     const pool = getPool();
     res.json(await fetchInvoicesWithLines(pool));

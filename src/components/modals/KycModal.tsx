@@ -99,11 +99,12 @@ export default function KycModal({
               ))}
             </select>
           </Field>
-          <Field label="هل الموكل معرّض سياسيًا (PEP)؟">
+          <Field label="هل الموكل معرّض سياسيًا (PEP)؟ (إقرار ذاتي غير محقق)">
             <select
               onChange={(e) => setForm({ ...form, pep: e.target.value === "نعم" })}
               value={form.pep ? "نعم" : "لا"}
               className={inputCls}
+              title="إقرار ذاتي غير محقق: يعتمد على تقدير الموظف وليس مطابقة آلية مع قائمة رسمية للأشخاص المعرّضين سياسياً."
             >
               <option value="لا">لا (شخص عادي)</option>
               <option value="نعم">نعم (يشغل منصباً عاماً أو أقرباؤه)</option>
@@ -111,12 +112,22 @@ export default function KycModal({
           </Field>
         </div>
 
+        <div className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          ⚠️ تنبيه هام: حقلا "معرّض سياسياً (PEP)" و"فحص قوائم العقوبات" أدناه هما{" "}
+          <strong>إقرار ذاتي غير محقق (Self-Declared / Unverified)</strong> — أي أنهما يعتمدان على ما
+          يُدخله الموظف يدوياً، وليسا نتيجة فحص آلي أو مطابقة فعلية مع أي قائمة عقوبات أو قوائم أشخاص
+          سياسيين رسمية. يجب على مسؤول الامتثال (Compliance Officer) التحقق الفعلي من هذه البيانات
+          يدوياً مقابل مصادر رسمية (مثل قوائم العقوبات الصادرة عن الأمم المتحدة/مجلس الوزراء الإماراتي)
+          قبل الاعتماد عليها في أي قرار.
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Field label="فحص قوائم العقوبات">
+          <Field label="فحص قوائم العقوبات (إقرار ذاتي غير محقق)">
             <select
               onChange={onFieldChange("sanctions")}
               defaultValue={form.sanctions || "سليم"}
               className={inputCls}
+              title="إقرار ذاتي غير محقق: ليس فحصاً آلياً مقابل قائمة عقوبات رسمية. يتطلب تحققاً يدوياً من مسؤول الامتثال."
             >
               {SANCTIONS_STATES.map((s) => (
                 <option key={s}>{s}</option>

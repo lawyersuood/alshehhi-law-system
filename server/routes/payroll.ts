@@ -5,7 +5,7 @@
 import { Router } from "express";
 import { randomUUID } from "crypto";
 import { getPool } from "../db";
-import type { AuthedRequest } from "../auth";
+import { requireServerRole, type AuthedRequest } from "../auth";
 
 export const payrollRouter = Router();
 
@@ -134,7 +134,10 @@ payrollRouter.put("/payroll-employees/:id", async (req: AuthedRequest, res) => {
   }
 });
 
-payrollRouter.delete("/payroll-employees/:id", async (req, res) => {
+payrollRouter.delete(
+  "/payroll-employees/:id",
+  requireServerRole("admin", "accountant"),
+  async (req, res) => {
   try {
     const pool = getPool();
     const [slips]: any = await pool.query(
@@ -154,7 +157,10 @@ payrollRouter.delete("/payroll-employees/:id", async (req, res) => {
 
 // ---------------- تشغيلات الرواتب ----------------
 
-payrollRouter.get("/payroll-runs", async (_req, res) => {
+payrollRouter.get(
+  "/payroll-runs",
+  requireServerRole("admin", "accountant"),
+  async (_req, res) => {
   try {
     const pool = getPool();
     const [runs]: any = await pool.query(
@@ -356,7 +362,7 @@ payrollRouter.post("/payroll-runs/:id/pay", async (req: AuthedRequest, res) => {
   }
 });
 
-payrollRouter.get("/payslips", async (req, res) => {
+payrollRouter.get("/payslips", requireServerRole("admin", "accountant"), async (req, res) => {
   try {
     const pool = getPool();
     const payrollRunId = req.query.payrollRunId as string | undefined;

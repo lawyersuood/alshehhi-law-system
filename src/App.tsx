@@ -60,6 +60,7 @@ import {
   flushSaveStorage,
   fetchSupabaseTable,
   pushSupabaseTable,
+  nextMainInvoiceNumber,
 } from "./domain/storageAndMessaging";
 import { usePolicies } from "./hooks/usePolicies";
 import { usePrecedents } from "./hooks/usePrecedents";
@@ -1488,6 +1489,22 @@ export default function App() {
     },
   ];
   const remainingSyncHydratedRef = React.useRef(false);
+  // تتبّع معرّفات كل جدول لاستنتاج الحذف الصريح فقط (نفس أسلوب useSyncedTable — تصحيح Phase-1
+  // لمشكلة تسابق المزامنة: لا نحذف بناءً على "غير موجود بالقائمة المحلية" بل فقط ما اختفى فعلاً
+  // من القيمة المحلية بين تحديث وآخر).
+  const remainingPrevIdsRef = React.useRef<Map<string, Set<string | number>>>(new Map());
+  const pushRemainingTable = React.useCallback(
+    (table: string, rows: Array<{ id: string | number }>) => {
+      const currentIds = new Set(rows.map((r) => r.id));
+      const prevIds = remainingPrevIdsRef.current.get(table);
+      const explicitDeleteIds = prevIds
+        ? Array.from(prevIds).filter((id) => !currentIds.has(id))
+        : [];
+      remainingPrevIdsRef.current.set(table, currentIds);
+      pushSupabaseTable(table, rows, explicitDeleteIds);
+    },
+    [],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -1497,8 +1514,13 @@ export default function App() {
         if (cancelled) return;
         if (remote && remote.length > 0) {
           entry.set(remote);
+          remainingPrevIdsRef.current.set(entry.table, new Set(remote.map((r: any) => r.id)));
         } else if (remote !== null && entry.get().length > 0) {
           pushSupabaseTable(entry.table, entry.get());
+          remainingPrevIdsRef.current.set(
+            entry.table,
+            new Set(entry.get().map((r: any) => r.id)),
+          );
         }
       }
       // إعدادات الاستشارات صف واحد فقط (ليست مصفوفة) — نتعامل معها بشكل منفصل
@@ -1526,26 +1548,26 @@ export default function App() {
 
   useEffect(() => {
     if (remainingSyncHydratedRef.current) {
-      const t = setTimeout(() => pushSupabaseTable("docs", docs), 1500);
+      const t = setTimeout(() => pushRemainingTable("docs", docs), 1500);
       return () => clearTimeout(t);
     }
   }, [docs]);
   useEffect(() => {
     if (remainingSyncHydratedRef.current) {
-      const t = setTimeout(() => pushSupabaseTable("poas", poas), 1500);
+      const t = setTimeout(() => pushRemainingTable("poas", poas), 1500);
       return () => clearTimeout(t);
     }
   }, [poas]);
   useEffect(() => {
     if (remainingSyncHydratedRef.current) {
-      const t = setTimeout(() => pushSupabaseTable("colleagues", colleagues), 1500);
+      const t = setTimeout(() => pushRemainingTable("colleagues", colleagues), 1500);
       return () => clearTimeout(t);
     }
   }, [colleagues]);
   useEffect(() => {
     if (remainingSyncHydratedRef.current) {
       const t = setTimeout(
-        () => pushSupabaseTable("colleague_delegations", colleagueDelegations),
+        () => pushRemainingTable("colleague_delegations", colleagueDelegations),
         1500,
       );
       return () => clearTimeout(t);
@@ -1553,38 +1575,38 @@ export default function App() {
   }, [colleagueDelegations]);
   useEffect(() => {
     if (remainingSyncHydratedRef.current) {
-      const t = setTimeout(() => pushSupabaseTable("office_agreements", officeAgreements), 1500);
+      const t = setTimeout(() => pushRemainingTable("office_agreements", officeAgreements), 1500);
       return () => clearTimeout(t);
     }
   }, [officeAgreements]);
   useEffect(() => {
     if (remainingSyncHydratedRef.current) {
-      const t = setTimeout(() => pushSupabaseTable("hearings", hearings), 1500);
+      const t = setTimeout(() => pushRemainingTable("hearings", hearings), 1500);
       return () => clearTimeout(t);
     }
   }, [hearings]);
   useEffect(() => {
     if (remainingSyncHydratedRef.current) {
-      const t = setTimeout(() => pushSupabaseTable("tasks", tasks), 1500);
+      const t = setTimeout(() => pushRemainingTable("tasks", tasks), 1500);
       return () => clearTimeout(t);
     }
   }, [tasks]);
   useEffect(() => {
     if (remainingSyncHydratedRef.current) {
-      const t = setTimeout(() => pushSupabaseTable("court_contacts", courtContacts), 1500);
+      const t = setTimeout(() => pushRemainingTable("court_contacts", courtContacts), 1500);
       return () => clearTimeout(t);
     }
   }, [courtContacts]);
   useEffect(() => {
     if (remainingSyncHydratedRef.current) {
-      const t = setTimeout(() => pushSupabaseTable("internal_policies", policies), 1500);
+      const t = setTimeout(() => pushRemainingTable("internal_policies", policies), 1500);
       return () => clearTimeout(t);
     }
   }, [policies]);
   useEffect(() => {
     if (remainingSyncHydratedRef.current) {
       const t = setTimeout(
-        () => pushSupabaseTable("disciplinary_actions", disciplinaryActions),
+        () => pushRemainingTable("disciplinary_actions", disciplinaryActions),
         1500,
       );
       return () => clearTimeout(t);
@@ -1592,14 +1614,14 @@ export default function App() {
   }, [disciplinaryActions]);
   useEffect(() => {
     if (remainingSyncHydratedRef.current) {
-      const t = setTimeout(() => pushSupabaseTable("judgment_deadlines", deadlines), 1500);
+      const t = setTimeout(() => pushRemainingTable("judgment_deadlines", deadlines), 1500);
       return () => clearTimeout(t);
     }
   }, [deadlines]);
   useEffect(() => {
     if (remainingSyncHydratedRef.current) {
       const t = setTimeout(
-        () => pushSupabaseTable("consultation_bookings", consultationBookings),
+        () => pushRemainingTable("consultation_bookings", consultationBookings),
         1500,
       );
       return () => clearTimeout(t);
@@ -5461,7 +5483,7 @@ export default function App() {
   const saveInvoice = () => {
     if (!checkPerm("manageInvoices", "إصدار فاتورة")) return;
     if (!form.clientId || !form.amount) return;
-    const newInvNumber = `INV-2026-${String(60 + nextId(invoices)).padStart(3, "0")}`;
+    const newInvNumber = nextMainInvoiceNumber(invoices);
     setInvoices([
       ...invoices,
       {
@@ -6778,7 +6800,7 @@ export default function App() {
     const totalAmount = log.hours * log.hourlyRate;
     const newInv: Invoice = {
       id: nextId(invoices),
-      number: `INV-2026-${String(65 + nextId(invoices)).padStart(3, "0")}`,
+      number: nextMainInvoiceNumber(invoices),
       clientId: cs.clientId,
       caseId: cs.id,
       date: todayISO(),
@@ -7329,7 +7351,7 @@ export default function App() {
             bookingClientId = newClientId;
           }
           const newInvoiceId = invoices.length > 0 ? Math.max(...invoices.map((i) => i.id)) + 1 : 1;
-          const invoiceNumber = `INV-2026-${String(100 + newInvoiceId).padStart(3, "0")}`;
+          const invoiceNumber = nextMainInvoiceNumber(invoices);
 
           const newInvoice: Invoice = {
             id: newInvoiceId,
@@ -8804,6 +8826,7 @@ export default function App() {
         <CaseModal
           editingCase={editingCase}
           clients={clients}
+          cases={cases}
           form={form}
           setForm={setForm}
           onFieldChange={f}

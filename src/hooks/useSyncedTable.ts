@@ -19,6 +19,10 @@ export function useSyncedTable<T extends { id: number | string }>(
 ) {
   const [value, setValue] = useState<T[]>(initFn);
   const hydratedRef = useRef(false);
+  // تتبّع آخر قيمة معروفة محلياً لاستنتاج معرّفات الحذف "الصريح" (Phase-1 fix):
+  // أي id كان موجوداً بالقيمة السابقة واختفى بالقيمة الجديدة يُعتبر حذفاً طلبه هذا المستخدم فعلياً،
+  // بعكس أي id غير موجود بالقيمة الحالية لسبب آخر (مثل عدم اكتمال المزامنة الأولى بعد).
+  const prevIdsRef = useRef<Set<T["id"]> | null>(null);
 
   // المزامنة الأولية من Supabase عند أول تحميل فقط
   useEffect(() => {
@@ -29,8 +33,10 @@ export function useSyncedTable<T extends { id: number | string }>(
       if (remote && remote.length > 0) {
         setValue(remote);
         saveStorage(storageKey, remote);
+        prevIdsRef.current = new Set(remote.map((r) => r.id));
       } else if (remote !== null && value.length > 0) {
         pushSupabaseTable(supabaseTable, value);
+        prevIdsRef.current = new Set(value.map((r) => r.id));
       }
       hydratedRef.current = true;
     })();
@@ -44,7 +50,15 @@ export function useSyncedTable<T extends { id: number | string }>(
   useEffect(() => {
     saveStorage(storageKey, value);
     if (hydratedRef.current) {
-      const t = setTimeout(() => pushSupabaseTable(supabaseTable, value), 1500);
+      const currentIds = new Set(value.map((r) => r.id));
+      const explicitDeleteIds = prevIdsRef.current
+        ? Array.from(prevIdsRef.current).filter((id) => !currentIds.has(id))
+        : [];
+      prevIdsRef.current = currentIds;
+      const t = setTimeout(
+        () => pushSupabaseTable(supabaseTable, value, explicitDeleteIds),
+        1500,
+      );
       return () => clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
