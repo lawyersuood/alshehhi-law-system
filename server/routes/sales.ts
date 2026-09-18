@@ -44,13 +44,14 @@ salesRouter.get(
   "/sales-invoices",
   requireServerRole("admin", "accountant", "lawyer", "supervisor"),
   async (_req, res) => {
-  try {
-    const pool = getPool();
-    res.json(await fetchInvoicesWithLines(pool));
-  } catch (err: any) {
-    res.status(500).json({ error: err?.message || "فشل تحميل فواتير المبيعات." });
-  }
-});
+    try {
+      const pool = getPool();
+      res.json(await fetchInvoicesWithLines(pool));
+    } catch (err: any) {
+      res.status(500).json({ error: err?.message || "فشل تحميل فواتير المبيعات." });
+    }
+  },
+);
 
 // إنشاء فاتورة مبيعات (مسودة). لا تُنشئ قيداً محاسبياً إلا عند الاعتماد.
 salesRouter.post("/sales-invoices", async (req: AuthedRequest, res) => {
@@ -119,131 +120,143 @@ salesRouter.post("/sales-invoices", async (req: AuthedRequest, res) => {
 });
 
 // اعتماد فاتورة: يستقبل بنود القيد المحسوبة مسبقاً من الواجهة الأمامية (المدين: ذمم العملاء، الدائن: الإيراد + الضريبة)
-salesRouter.post("/sales-invoices/:id/approve", async (req: AuthedRequest, res) => {
-  const { entryNumber, date, description, lines } = req.body || {};
-  if (!entryNumber || !date || !description || !Array.isArray(lines) || lines.length < 2) {
-    res.status(400).json({ error: "بيانات قيد الاعتماد غير مكتملة." });
-    return;
-  }
-  const pool = getPool();
-  const conn = await pool.getConnection();
-  try {
-    await conn.beginTransaction();
-    const entryId = randomUUID();
-    await conn.query(
-      `INSERT INTO journal_entries (id, entry_number, date, description, reference, status, created_at, created_by, posted_at, posted_by)
-       VALUES (?, ?, ?, ?, ?, 'posted', NOW(), ?, NOW(), ?)`,
-      [
-        entryId,
-        entryNumber,
-        date,
-        description,
-        req.params.id,
-        req.authUser?.email || null,
-        req.authUser?.email || null,
-      ],
-    );
-    let order = 0;
-    for (const l of lines) {
+salesRouter.post(
+  "/sales-invoices/:id/approve",
+  requireServerRole("admin", "accountant"),
+  async (req: AuthedRequest, res) => {
+    const { entryNumber, date, description, lines } = req.body || {};
+    if (!entryNumber || !date || !description || !Array.isArray(lines) || lines.length < 2) {
+      res.status(400).json({ error: "بيانات قيد الاعتماد غير مكتملة." });
+      return;
+    }
+    const pool = getPool();
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      const entryId = randomUUID();
       await conn.query(
-        `INSERT INTO journal_lines (id, journal_entry_id, account_id, debit, credit, description, line_order) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO journal_entries (id, entry_number, date, description, reference, status, created_at, created_by, posted_at, posted_by)
+       VALUES (?, ?, ?, ?, ?, 'posted', NOW(), ?, NOW(), ?)`,
         [
-          randomUUID(),
           entryId,
-          l.accountId,
-          Number(l.debit) || 0,
-          Number(l.credit) || 0,
-          l.description || null,
-          order++,
+          entryNumber,
+          date,
+          description,
+          req.params.id,
+          req.authUser?.email || null,
+          req.authUser?.email || null,
         ],
       );
+      let order = 0;
+      for (const l of lines) {
+        await conn.query(
+          `INSERT INTO journal_lines (id, journal_entry_id, account_id, debit, credit, description, line_order) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            randomUUID(),
+            entryId,
+            l.accountId,
+            Number(l.debit) || 0,
+            Number(l.credit) || 0,
+            l.description || null,
+            order++,
+          ],
+        );
+      }
+      await conn.query(
+        `UPDATE sales_invoices SET status = 'approved', journal_entry_id = ?, approved_at = NOW(), approved_by = ? WHERE id = ?`,
+        [entryId, req.authUser?.email || null, req.params.id],
+      );
+      await conn.commit();
+      res.json({ journalEntryId: entryId });
+    } catch (err: any) {
+      await conn.rollback();
+      res.status(500).json({ error: err?.message || "فشل اعتماد الفاتورة." });
+    } finally {
+      conn.release();
     }
-    await conn.query(
-      `UPDATE sales_invoices SET status = 'approved', journal_entry_id = ?, approved_at = NOW(), approved_by = ? WHERE id = ?`,
-      [entryId, req.authUser?.email || null, req.params.id],
-    );
-    await conn.commit();
-    res.json({ journalEntryId: entryId });
-  } catch (err: any) {
-    await conn.rollback();
-    res.status(500).json({ error: err?.message || "فشل اعتماد الفاتورة." });
-  } finally {
-    conn.release();
-  }
-});
+  },
+);
 
-salesRouter.post("/sales-invoices/:id/cancel", async (req: AuthedRequest, res) => {
-  try {
-    const pool = getPool();
-    await pool.query(
-      `UPDATE sales_invoices SET status = 'cancelled', cancelled_at = NOW() WHERE id = ?`,
-      [req.params.id],
-    );
-    res.json({ success: true });
-  } catch (err: any) {
-    res.status(500).json({ error: err?.message || "فشل إلغاء الفاتورة." });
-  }
-});
+salesRouter.post(
+  "/sales-invoices/:id/cancel",
+  requireServerRole("admin", "accountant"),
+  async (req: AuthedRequest, res) => {
+    try {
+      const pool = getPool();
+      await pool.query(
+        `UPDATE sales_invoices SET status = 'cancelled', cancelled_at = NOW() WHERE id = ?`,
+        [req.params.id],
+      );
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ error: err?.message || "فشل إلغاء الفاتورة." });
+    }
+  },
+);
 
 // تسجيل دفعة على فاتورة مبيعات — تُنشئ قيداً محاسبياً (مدين: البنك/الصندوق، دائن: ذمم العملاء)
-salesRouter.post("/sales-payments", async (req: AuthedRequest, res) => {
-  const { invoiceId, date, amount, receivingAccountId, reference, entryNumber, arAccountId } =
-    req.body || {};
-  if (!invoiceId || !date || !amount || !receivingAccountId || !entryNumber || !arAccountId) {
-    res.status(400).json({ error: "بيانات الدفعة غير مكتملة." });
-    return;
-  }
-  const pool = getPool();
-  const conn = await pool.getConnection();
-  try {
-    await conn.beginTransaction();
-    const entryId = randomUUID();
-    const description = `تحصيل دفعة على فاتورة مبيعات`;
-    await conn.query(
-      `INSERT INTO journal_entries (id, entry_number, date, description, reference, status, created_at, created_by, posted_at, posted_by)
+salesRouter.post(
+  "/sales-payments",
+  requireServerRole("admin", "accountant"),
+  async (req: AuthedRequest, res) => {
+    const { invoiceId, date, amount, receivingAccountId, reference, entryNumber, arAccountId } =
+      req.body || {};
+    if (!invoiceId || !date || !amount || !receivingAccountId || !entryNumber || !arAccountId) {
+      res.status(400).json({ error: "بيانات الدفعة غير مكتملة." });
+      return;
+    }
+    const pool = getPool();
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+      const entryId = randomUUID();
+      const description = `تحصيل دفعة على فاتورة مبيعات`;
+      await conn.query(
+        `INSERT INTO journal_entries (id, entry_number, date, description, reference, status, created_at, created_by, posted_at, posted_by)
        VALUES (?, ?, ?, ?, ?, 'posted', NOW(), ?, NOW(), ?)`,
-      [
-        entryId,
-        entryNumber,
-        date,
-        description,
-        reference || invoiceId,
-        req.authUser?.email || null,
-        req.authUser?.email || null,
-      ],
-    );
-    await conn.query(
-      `INSERT INTO journal_lines (id, journal_entry_id, account_id, debit, credit, description, line_order) VALUES (?, ?, ?, ?, 0, ?, 0)`,
-      [randomUUID(), entryId, receivingAccountId, Number(amount), description],
-    );
-    await conn.query(
-      `INSERT INTO journal_lines (id, journal_entry_id, account_id, debit, credit, description, line_order) VALUES (?, ?, ?, 0, ?, ?, 1)`,
-      [randomUUID(), entryId, arAccountId, Number(amount), description],
-    );
-    const payId = randomUUID();
-    await conn.query(
-      `INSERT INTO sales_payments (id, invoice_id, date, amount, receiving_account_id, reference, journal_entry_id, created_at, created_by)
+        [
+          entryId,
+          entryNumber,
+          date,
+          description,
+          reference || invoiceId,
+          req.authUser?.email || null,
+          req.authUser?.email || null,
+        ],
+      );
+      await conn.query(
+        `INSERT INTO journal_lines (id, journal_entry_id, account_id, debit, credit, description, line_order) VALUES (?, ?, ?, ?, 0, ?, 0)`,
+        [randomUUID(), entryId, receivingAccountId, Number(amount), description],
+      );
+      await conn.query(
+        `INSERT INTO journal_lines (id, journal_entry_id, account_id, debit, credit, description, line_order) VALUES (?, ?, ?, 0, ?, ?, 1)`,
+        [randomUUID(), entryId, arAccountId, Number(amount), description],
+      );
+      const payId = randomUUID();
+      await conn.query(
+        `INSERT INTO sales_payments (id, invoice_id, date, amount, receiving_account_id, reference, journal_entry_id, created_at, created_by)
        VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?)`,
-      [
-        payId,
-        invoiceId,
-        date,
-        Number(amount),
-        receivingAccountId,
-        reference || null,
-        entryId,
-        req.authUser?.email || null,
-      ],
-    );
-    await conn.commit();
-    res.status(201).json({ id: payId, journalEntryId: entryId });
-  } catch (err: any) {
-    await conn.rollback();
-    res.status(500).json({ error: err?.message || "فشل تسجيل الدفعة." });
-  } finally {
-    conn.release();
-  }
-});
+        [
+          payId,
+          invoiceId,
+          date,
+          Number(amount),
+          receivingAccountId,
+          reference || null,
+          entryId,
+          req.authUser?.email || null,
+        ],
+      );
+      await conn.commit();
+      res.status(201).json({ id: payId, journalEntryId: entryId });
+    } catch (err: any) {
+      await conn.rollback();
+      res.status(500).json({ error: err?.message || "فشل تسجيل الدفعة." });
+    } finally {
+      conn.release();
+    }
+  },
+);
 
 salesRouter.get("/sales-payments", async (req, res) => {
   try {

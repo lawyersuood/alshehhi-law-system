@@ -1519,10 +1519,7 @@ export default function App() {
           remainingPrevIdsRef.current.set(entry.table, new Set(remote.map((r: any) => r.id)));
         } else if (remote !== null && entry.get().length > 0) {
           pushSupabaseTable(entry.table, entry.get());
-          remainingPrevIdsRef.current.set(
-            entry.table,
-            new Set(entry.get().map((r: any) => r.id)),
-          );
+          remainingPrevIdsRef.current.set(entry.table, new Set(entry.get().map((r: any) => r.id)));
         }
       }
       // إعدادات الاستشارات صف واحد فقط (ليست مصفوفة) — نتعامل معها بشكل منفصل
@@ -5286,7 +5283,9 @@ export default function App() {
       cases.forEach((c) => {
         if (
           (c.opponents || []).some(
-            (o) => o.trim().toLowerCase() === newClientNameForConflict.trim().toLowerCase(),
+            (o) =>
+              normalizeArabicNameForMatch(o) ===
+              normalizeArabicNameForMatch(newClientNameForConflict),
           )
         ) {
           conflictReasons.push(
@@ -5296,7 +5295,7 @@ export default function App() {
       });
       opponents.forEach((opp) => {
         const oppAsClient = clients.find(
-          (cl) => cl.name.trim().toLowerCase() === opp.trim().toLowerCase(),
+          (cl) => normalizeArabicNameForMatch(cl.name) === normalizeArabicNameForMatch(opp),
         );
         if (oppAsClient) {
           conflictReasons.push(`الخصم "${opp}" مسجل كموكل حالي للمكتب (${oppAsClient.name})`);
@@ -8205,6 +8204,7 @@ export default function App() {
                     requestDelete={requestDelete}
                     logAuditAction={logAuditAction}
                     setCases={setCases}
+                    trustTransactions={trustTransactions}
                   />
                 )}
 
@@ -8825,655 +8825,666 @@ export default function App() {
 
       {/* ================= النوافذ المنبثقة ================= */}
       <Suspense fallback={null}>
-      {modal === "case" && (
-        <CaseModal
-          editingCase={editingCase}
-          clients={clients}
-          cases={cases}
-          form={form}
-          setForm={setForm}
-          onFieldChange={f}
-          onSave={saveCase}
-          onClose={() => {
-            setModal(null);
-            setEditingCase(null);
-          }}
-        />
-      )}
+        {modal === "case" && (
+          <CaseModal
+            editingCase={editingCase}
+            clients={clients}
+            cases={cases}
+            form={form}
+            setForm={setForm}
+            onFieldChange={f}
+            onSave={saveCase}
+            onClose={() => {
+              setModal(null);
+              setEditingCase(null);
+            }}
+          />
+        )}
 
-      {modal === "client" && (
-        <ClientModal onFieldChange={f} onSave={saveClient} onClose={() => setModal(null)} />
-      )}
+        {modal === "client" && (
+          <ClientModal onFieldChange={f} onSave={saveClient} onClose={() => setModal(null)} />
+        )}
 
-      {modal === "hearing" && (
-        <HearingModal
-          cases={cases}
-          clientName={clientName}
-          onFieldChange={f}
-          onSave={saveHearing}
-          onClose={() => setModal(null)}
-        />
-      )}
+        {modal === "hearing" && (
+          <HearingModal
+            cases={cases}
+            clientName={clientName}
+            onFieldChange={f}
+            onSave={saveHearing}
+            onClose={() => setModal(null)}
+          />
+        )}
 
-      {modal === "task" && (
-        <TaskModal
-          cases={cases}
-          users={users}
-          onFieldChange={f}
-          onSave={saveTask}
-          onClose={() => setModal(null)}
-        />
-      )}
+        {modal === "task" && (
+          <TaskModal
+            cases={cases}
+            users={users}
+            onFieldChange={f}
+            onSave={saveTask}
+            onClose={() => setModal(null)}
+          />
+        )}
 
-      {modal === "invoice" && (
-        <InvoiceModal
-          clients={clients}
-          cases={cases}
-          amount={form.amount}
-          onFieldChange={f}
-          onSave={saveInvoice}
-          onClose={() => setModal(null)}
-        />
-      )}
+        {modal === "invoice" && (
+          <InvoiceModal
+            clients={clients}
+            cases={cases}
+            amount={form.amount}
+            onFieldChange={f}
+            onSave={saveInvoice}
+            onClose={() => setModal(null)}
+          />
+        )}
 
-      {/* ================= نافذة تسجيل الدفعات وسندات القبض ================= */}
-      {modal === "payment" && (
-        <PaymentModal
-          clients={clients}
-          feeAgreements={feeAgreements}
-          form={form}
-          setForm={setForm}
-          clientName={clientName}
-          getClientUnallocatedBalance={getClientUnallocatedBalance}
-          getRemainingForAgreement={getRemainingForAgreement}
-          isAgreementFullyPaid={isAgreementFullyPaid}
-          onFieldChange={f}
-          onSave={savePayment}
-          onClose={() => setModal(null)}
-        />
-      )}
+        {/* ================= نافذة تسجيل الدفعات وسندات القبض ================= */}
+        {modal === "payment" && (
+          <PaymentModal
+            clients={clients}
+            feeAgreements={feeAgreements}
+            form={form}
+            setForm={setForm}
+            clientName={clientName}
+            getClientUnallocatedBalance={getClientUnallocatedBalance}
+            getRemainingForAgreement={getRemainingForAgreement}
+            isAgreementFullyPaid={isAgreementFullyPaid}
+            onFieldChange={f}
+            onSave={savePayment}
+            onClose={() => setModal(null)}
+          />
+        )}
 
-      {modal === "doc" && (
-        <DocModal cases={cases} onFieldChange={f} onSave={saveDoc} onClose={() => setModal(null)} />
-      )}
+        {modal === "doc" && (
+          <DocModal
+            cases={cases}
+            onFieldChange={f}
+            onSave={saveDoc}
+            onClose={() => setModal(null)}
+          />
+        )}
 
-      {modal === "poa" && (
-        <PoaModal
-          clients={clients}
-          onFieldChange={f}
-          onSave={savePoa}
-          onClose={() => setModal(null)}
-        />
-      )}
+        {modal === "poa" && (
+          <PoaModal
+            clients={clients}
+            onFieldChange={f}
+            onSave={savePoa}
+            onClose={() => setModal(null)}
+          />
+        )}
 
-      {modal === "colleague" && (
-        <ColleagueModal
-          editingColleagueId={editingColleagueId}
-          form={form}
-          onFieldChange={f}
-          onSave={saveColleague}
-          onClose={() => {
-            setModal(null);
-            setEditingColleagueId(null);
-          }}
-        />
-      )}
+        {modal === "colleague" && (
+          <ColleagueModal
+            editingColleagueId={editingColleagueId}
+            form={form}
+            onFieldChange={f}
+            onSave={saveColleague}
+            onClose={() => {
+              setModal(null);
+              setEditingColleagueId(null);
+            }}
+          />
+        )}
 
-      {modal === "issueDelegation" && (
-        <IssueDelegationModal
-          colleagues={colleagues}
-          cases={cases}
-          form={form}
-          setForm={setForm}
-          onFieldChange={f}
-          onSave={issueDelegation}
-          onClose={() => setModal(null)}
-        />
-      )}
+        {modal === "issueDelegation" && (
+          <IssueDelegationModal
+            colleagues={colleagues}
+            cases={cases}
+            form={form}
+            setForm={setForm}
+            onFieldChange={f}
+            onSave={issueDelegation}
+            onClose={() => setModal(null)}
+          />
+        )}
 
-      {modal === "user" && (
-        <UserModal
-          editingUser={editingUser}
-          currentUserId={currentUserId}
-          form={form}
-          setForm={setForm}
-          onFieldChange={f}
-          onSave={saveUser}
-          onClose={() => setModal(null)}
-          onDeleteUser={handleDeleteUser}
-          setEditingUser={setEditingUser}
-        />
-      )}
+        {modal === "user" && (
+          <UserModal
+            editingUser={editingUser}
+            currentUserId={currentUserId}
+            form={form}
+            setForm={setForm}
+            onFieldChange={f}
+            onSave={saveUser}
+            onClose={() => setModal(null)}
+            onDeleteUser={handleDeleteUser}
+            setEditingUser={setEditingUser}
+          />
+        )}
 
-      {/* ================= نافذة إضافة/تعديل KYC ================= */}
-      {(modal === "kyc" || modal === "kyc-edit") && (
-        <KycModal
-          modal={modal}
-          clients={clients}
-          form={form}
-          setForm={setForm}
-          onFieldChange={f}
-          onSave={saveKyc}
-          onClose={() => setModal(null)}
-        />
-      )}
+        {/* ================= نافذة إضافة/تعديل KYC ================= */}
+        {(modal === "kyc" || modal === "kyc-edit") && (
+          <KycModal
+            modal={modal}
+            clients={clients}
+            form={form}
+            setForm={setForm}
+            onFieldChange={f}
+            onSave={saveKyc}
+            onClose={() => setModal(null)}
+          />
+        )}
 
-      {/* ================= نافذة تسجيل ساعات العمل ================= */}
-      {modal === "time" && (
-        <TimeLogModal
-          cases={cases}
-          clientName={clientName}
-          users={users}
-          currentUserName={currentUser.name}
-          onFieldChange={f}
-          onSave={saveTimeLog}
-          onClose={() => setModal(null)}
-        />
-      )}
+        {/* ================= نافذة تسجيل ساعات العمل ================= */}
+        {modal === "time" && (
+          <TimeLogModal
+            cases={cases}
+            clientName={clientName}
+            users={users}
+            currentUserName={currentUser.name}
+            onFieldChange={f}
+            onSave={saveTimeLog}
+            onClose={() => setModal(null)}
+          />
+        )}
 
-      {/* ================= نافذة تسجيل مصروف قضية ================= */}
-      {modal === "expense" && (
-        <CaseExpenseModal
-          cases={cases}
-          clientName={clientName}
-          onFieldChange={f}
-          onSave={saveCaseExpense}
-          onClose={() => setModal(null)}
-        />
-      )}
+        {/* ================= نافذة تسجيل مصروف قضية ================= */}
+        {modal === "expense" && (
+          <CaseExpenseModal
+            cases={cases}
+            clientName={clientName}
+            onFieldChange={f}
+            onSave={saveCaseExpense}
+            onClose={() => setModal(null)}
+          />
+        )}
 
-      {/* ================= نافذة حساب الأمانات ================= */}
-      {modal === "trust" && (
-        <TrustTransactionModal
-          clients={clients}
-          cases={cases}
-          onFieldChange={f}
-          onSave={saveTrustTransaction}
-          onClose={() => setModal(null)}
-        />
-      )}
+        {/* ================= نافذة حساب الأمانات ================= */}
+        {modal === "trust" && (
+          <TrustTransactionModal
+            clients={clients}
+            cases={cases}
+            onFieldChange={f}
+            onSave={saveTrustTransaction}
+            onClose={() => setModal(null)}
+          />
+        )}
 
-      {/* ================= نافذة مواعيد الأحكام التلقائية ================= */}
-      {modal === "deadline" && (
-        <DeadlineModal
-          cases={cases}
-          users={users}
-          form={form}
-          setForm={setForm}
-          clientName={clientName}
-          onFieldChange={f}
-          onSave={saveDeadline}
-          onClose={() => setModal(null)}
-        />
-      )}
+        {/* ================= نافذة مواعيد الأحكام التلقائية ================= */}
+        {modal === "deadline" && (
+          <DeadlineModal
+            cases={cases}
+            users={users}
+            form={form}
+            setForm={setForm}
+            clientName={clientName}
+            onFieldChange={f}
+            onSave={saveDeadline}
+            onClose={() => setModal(null)}
+          />
+        )}
 
-      {/* ================= نافذة سجل التنبيهات المرسلة للطعن ================= */}
-      {selectedDeadlineLogs && (
-        <Modal
-          title={`سجل الإشعارات والتنبيهات للطعن (#${selectedDeadlineLogs.id})`}
-          onClose={() => setSelectedDeadlineLogs(null)}
-          wide
-        >
-          <div className="space-y-4 text-sm">
-            <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-900">
-              <p className="font-bold">القضية: {caseNo(selectedDeadlineLogs.caseId)}</p>
-              <p className="mt-0.5">
-                المحامي المسؤول:{" "}
-                <b>{selectedDeadlineLogs.assignedLawyerName || "المحامي سعود أحمد الشحي"}</b> (
-                {selectedDeadlineLogs.assignedLawyerEmail || "info@lawyersuood.com"})
-              </p>
-              <p className="mt-0.5">
-                آخر موعد للطعن:{" "}
-                <b className="text-red-700">{fmtDate(selectedDeadlineLogs.appealDeadlineDate)}</b>
-              </p>
-            </div>
-
-            <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5 border-b border-slate-200 pb-2">
-              <History size={15} className="text-amber-600" /> سجّل الإشعارات الاستباقية التلقائية
-              واليدوية:
-            </h4>
-
-            {!selectedDeadlineLogs.autoAlertLogs ||
-            selectedDeadlineLogs.autoAlertLogs.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 bg-stone-50 rounded-xl border border-dashed border-slate-200">
-                لا توجد تنبيهات سابقة مُسجّلة لهذا الطعن بعد. يتم الإرسال التلقائي فور اقتراب المهلة
-                لـ 7 أيام و 3 أيام.
+        {/* ================= نافذة سجل التنبيهات المرسلة للطعن ================= */}
+        {selectedDeadlineLogs && (
+          <Modal
+            title={`سجل الإشعارات والتنبيهات للطعن (#${selectedDeadlineLogs.id})`}
+            onClose={() => setSelectedDeadlineLogs(null)}
+            wide
+          >
+            <div className="space-y-4 text-sm">
+              <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-900">
+                <p className="font-bold">القضية: {caseNo(selectedDeadlineLogs.caseId)}</p>
+                <p className="mt-0.5">
+                  المحامي المسؤول:{" "}
+                  <b>{selectedDeadlineLogs.assignedLawyerName || "المحامي سعود أحمد الشحي"}</b> (
+                  {selectedDeadlineLogs.assignedLawyerEmail || "info@lawyersuood.com"})
+                </p>
+                <p className="mt-0.5">
+                  آخر موعد للطعن:{" "}
+                  <b className="text-red-700">{fmtDate(selectedDeadlineLogs.appealDeadlineDate)}</b>
+                </p>
               </div>
-            ) : (
-              <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
-                {selectedDeadlineLogs.autoAlertLogs.map((log) => (
-                  <div key={log.id} className="app-card p-3 text-xs space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                        {log.type === "3_days"
-                          ? "🚨 تنبيه حرج (3 أيام)"
-                          : log.type === "7_days"
-                            ? "⚠️ تنبيه استباقي (7 أيام)"
-                            : "📱 تنبيه يدوي"}
-                      </span>
-                      <span className="text-[11px] font-mono text-slate-500">{log.timestamp}</span>
+
+              <h4 className="font-bold text-slate-900 text-xs flex items-center gap-1.5 border-b border-slate-200 pb-2">
+                <History size={15} className="text-amber-600" /> سجّل الإشعارات الاستباقية التلقائية
+                واليدوية:
+              </h4>
+
+              {!selectedDeadlineLogs.autoAlertLogs ||
+              selectedDeadlineLogs.autoAlertLogs.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 bg-stone-50 rounded-xl border border-dashed border-slate-200">
+                  لا توجد تنبيهات سابقة مُسجّلة لهذا الطعن بعد. يتم الإرسال التلقائي فور اقتراب
+                  المهلة لـ 7 أيام و 3 أيام.
+                </div>
+              ) : (
+                <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                  {selectedDeadlineLogs.autoAlertLogs.map((log) => (
+                    <div key={log.id} className="app-card p-3 text-xs space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                          {log.type === "3_days"
+                            ? "🚨 تنبيه حرج (3 أيام)"
+                            : log.type === "7_days"
+                              ? "⚠️ تنبيه استباقي (7 أيام)"
+                              : "📱 تنبيه يدوي"}
+                        </span>
+                        <span className="text-[11px] font-mono text-slate-500">
+                          {log.timestamp}
+                        </span>
+                      </div>
+                      <p className="text-slate-600 font-medium">{log.messageSnippet}</p>
+                      <div className="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 pt-1 mt-1">
+                        <span>
+                          المستلم: {log.lawyerName} ({log.recipientContact})
+                        </span>
+                        <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded">
+                          الحالة: {log.status === "sent" ? "تم الإرسال بنجاح ✅" : "قيد التنفيذ"}
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-slate-600 font-medium">{log.messageSnippet}</p>
-                    <div className="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 pt-1 mt-1">
-                      <span>
-                        المستلم: {log.lawyerName} ({log.recipientContact})
-                      </span>
-                      <span className="text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded">
-                        الحالة: {log.status === "sent" ? "تم الإرسال بنجاح ✅" : "قيد التنفيذ"}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
 
-            <button
-              onClick={() => setSelectedDeadlineLogs(null)}
-              className="w-full rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white hover:bg-slate-700"
-            >
-              إغلاق النافذة
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {/* ================= نافذة إعادة تعيين المحامي المسؤول للطعن ================= */}
-      {reassignDeadlineModal && (
-        <Modal
-          title="تغيير وإسناد المحامي المسؤول عن متابعة الطعن"
-          onClose={() => setReassignDeadlineModal(null)}
-        >
-          <div className="space-y-4 text-sm">
-            <p className="text-xs text-slate-600">
-              قم باختيار المحامي المستهدف لإعادة إسناد ملف الطعن بالقضية{" "}
-              <b>{caseNo(reassignDeadlineModal.caseId)}</b> وحفظ بيانات التواصل لتلقي تنبيهات
-              الاستئناف تلقائياً.
-            </p>
-
-            <Field label="المحامي المسؤول الجديد">
-              <select
-                onChange={(e) => {
-                  const uId = Number(e.target.value);
-                  const selU = users.find((u) => u.id === uId);
-                  if (selU) {
-                    setReassignDeadlineModal((prev) =>
-                      prev
-                        ? {
-                            ...prev,
-                            assignedLawyerId: selU.id,
-                            assignedLawyerName: selU.name,
-                            assignedLawyerEmail: selU.email,
-                            assignedLawyerPhone: selU.phone,
-                          }
-                        : null,
-                    );
-                  }
-                }}
-                value={reassignDeadlineModal.assignedLawyerId || ""}
-                className={inputCls}
+              <button
+                onClick={() => setSelectedDeadlineLogs(null)}
+                className="w-full rounded-xl bg-slate-900 py-2.5 text-xs font-bold text-white hover:bg-slate-700"
               >
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.roleTitle || u.roleKey}) - {u.email}
-                  </option>
-                ))}
-              </select>
-            </Field>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="بريد المحامي لاستلام التنبيهات">
-                <input
-                  value={reassignDeadlineModal.assignedLawyerEmail || ""}
-                  onChange={(e) =>
-                    setReassignDeadlineModal((prev) =>
-                      prev ? { ...prev, assignedLawyerEmail: e.target.value } : null,
-                    )
-                  }
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="هاتف المحامي للإشعارات الفورية">
-                <input
-                  value={reassignDeadlineModal.assignedLawyerPhone || ""}
-                  onChange={(e) =>
-                    setReassignDeadlineModal((prev) =>
-                      prev ? { ...prev, assignedLawyerPhone: e.target.value } : null,
-                    )
-                  }
-                  className={inputCls}
-                />
-              </Field>
+                إغلاق النافذة
+              </button>
             </div>
+          </Modal>
+        )}
 
-            <Field label="قناة التنبيه الاستباقي التلقائي المفضلة">
-              <select
-                value={reassignDeadlineModal.preferredChannel || "both"}
-                onChange={(e) =>
-                  setReassignDeadlineModal((prev) =>
-                    prev ? { ...prev, preferredChannel: e.target.value as any } : null,
-                  )
-                }
-                className={inputCls}
-              >
-                <option value="both">إيميل + واتساب تلقائي (موصى به)</option>
-                <option value="email">البريد الإلكتروني فقط (SMTP)</option>
-                <option value="whatsapp">الواتساب المباشر فقط</option>
-              </select>
-            </Field>
-
-            <button
-              onClick={() => {
-                if (reassignDeadlineModal) {
-                  setDeadlines((prev) =>
-                    prev.map((x) =>
-                      x.id === reassignDeadlineModal.id ? reassignDeadlineModal : x,
-                    ),
-                  );
-                  setReassignDeadlineModal(null);
-                }
-              }}
-              className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
-            >
-              تأكيد وإسناد ملف الطعن
-            </button>
-          </div>
-        </Modal>
-      )}
-
-      {/* ================= نافذة بلاغ الاشتباه STR ================= */}
-      {modal === "str" && (
-        <StrReportModal
-          clients={clients}
-          onFieldChange={f}
-          onSave={saveStrReport}
-          onClose={() => setModal(null)}
-        />
-      )}
-
-      {/* ================= نافذة إرسال التنبيهات والرسائل ================= */}
-      {notifyModal && (
-        <Modal
-          title={`مركز إرسال التنبيهات — ${notifyModal.type}`}
-          onClose={() => setNotifyModal(null)}
-        >
-          <div className="space-y-4 text-sm">
-            <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-900 space-y-1">
-              <p className="font-bold flex items-center gap-1.5">
-                <Send size={14} /> تنبيه رسمي مباشر إلى الموكل
+        {/* ================= نافذة إعادة تعيين المحامي المسؤول للطعن ================= */}
+        {reassignDeadlineModal && (
+          <Modal
+            title="تغيير وإسناد المحامي المسؤول عن متابعة الطعن"
+            onClose={() => setReassignDeadlineModal(null)}
+          >
+            <div className="space-y-4 text-sm">
+              <p className="text-xs text-slate-600">
+                قم باختيار المحامي المستهدف لإعادة إسناد ملف الطعن بالقضية{" "}
+                <b>{caseNo(reassignDeadlineModal.caseId)}</b> وحفظ بيانات التواصل لتلقي تنبيهات
+                الاستئناف تلقائياً.
               </p>
-              <p>يتم توثيق الرسالة تلقائياً في سجل التنبيهات بمجرد الضغط على إرسال.</p>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="اسم المستلم">
-                <input
-                  value={notifyModal.recipientName}
-                  onChange={(e) =>
-                    setNotifyModal({ ...notifyModal, recipientName: e.target.value })
-                  }
-                  className={inputCls}
-                />
-              </Field>
-              <Field label="قناة الإرسال المفضلة">
+              <Field label="المحامي المسؤول الجديد">
                 <select
-                  value={notifyModal.channel}
-                  onChange={(e) =>
-                    setNotifyModal({ ...notifyModal, channel: e.target.value as any })
-                  }
+                  onChange={(e) => {
+                    const uId = Number(e.target.value);
+                    const selU = users.find((u) => u.id === uId);
+                    if (selU) {
+                      setReassignDeadlineModal((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              assignedLawyerId: selU.id,
+                              assignedLawyerName: selU.name,
+                              assignedLawyerEmail: selU.email,
+                              assignedLawyerPhone: selU.phone,
+                            }
+                          : null,
+                      );
+                    }
+                  }}
+                  value={reassignDeadlineModal.assignedLawyerId || ""}
                   className={inputCls}
                 >
-                  <option value="واتساب">📱 عبر الواتساب (WhatsApp)</option>
-                  <option value="إيميل">✉️ عبر البريد (Email)</option>
-                  <option value="كلاهما">⚡ عبر الواتساب والبريد كلاهما</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.roleTitle || u.roleKey}) - {u.email}
+                    </option>
+                  ))}
                 </select>
               </Field>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="رقم الواتساب (+971)">
-                <input
-                  value={notifyModal.recipientPhone}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="بريد المحامي لاستلام التنبيهات">
+                  <input
+                    value={reassignDeadlineModal.assignedLawyerEmail || ""}
+                    onChange={(e) =>
+                      setReassignDeadlineModal((prev) =>
+                        prev ? { ...prev, assignedLawyerEmail: e.target.value } : null,
+                      )
+                    }
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="هاتف المحامي للإشعارات الفورية">
+                  <input
+                    value={reassignDeadlineModal.assignedLawyerPhone || ""}
+                    onChange={(e) =>
+                      setReassignDeadlineModal((prev) =>
+                        prev ? { ...prev, assignedLawyerPhone: e.target.value } : null,
+                      )
+                    }
+                    className={inputCls}
+                  />
+                </Field>
+              </div>
+
+              <Field label="قناة التنبيه الاستباقي التلقائي المفضلة">
+                <select
+                  value={reassignDeadlineModal.preferredChannel || "both"}
                   onChange={(e) =>
-                    setNotifyModal({ ...notifyModal, recipientPhone: e.target.value })
+                    setReassignDeadlineModal((prev) =>
+                      prev ? { ...prev, preferredChannel: e.target.value as any } : null,
+                    )
                   }
-                  placeholder="+971 50 123 4567"
+                  className={inputCls}
+                >
+                  <option value="both">إيميل + واتساب تلقائي (موصى به)</option>
+                  <option value="email">البريد الإلكتروني فقط (SMTP)</option>
+                  <option value="whatsapp">الواتساب المباشر فقط</option>
+                </select>
+              </Field>
+
+              <button
+                onClick={() => {
+                  if (reassignDeadlineModal) {
+                    setDeadlines((prev) =>
+                      prev.map((x) =>
+                        x.id === reassignDeadlineModal.id ? reassignDeadlineModal : x,
+                      ),
+                    );
+                    setReassignDeadlineModal(null);
+                  }
+                }}
+                className="w-full rounded-xl bg-[#0D382B] py-3 font-bold text-white hover:bg-[#124d40] transition-colors"
+              >
+                تأكيد وإسناد ملف الطعن
+              </button>
+            </div>
+          </Modal>
+        )}
+
+        {/* ================= نافذة بلاغ الاشتباه STR ================= */}
+        {modal === "str" && (
+          <StrReportModal
+            clients={clients}
+            onFieldChange={f}
+            onSave={saveStrReport}
+            onClose={() => setModal(null)}
+          />
+        )}
+
+        {/* ================= نافذة إرسال التنبيهات والرسائل ================= */}
+        {notifyModal && (
+          <Modal
+            title={`مركز إرسال التنبيهات — ${notifyModal.type}`}
+            onClose={() => setNotifyModal(null)}
+          >
+            <div className="space-y-4 text-sm">
+              <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 text-xs text-amber-900 space-y-1">
+                <p className="font-bold flex items-center gap-1.5">
+                  <Send size={14} /> تنبيه رسمي مباشر إلى الموكل
+                </p>
+                <p>يتم توثيق الرسالة تلقائياً في سجل التنبيهات بمجرد الضغط على إرسال.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="اسم المستلم">
+                  <input
+                    value={notifyModal.recipientName}
+                    onChange={(e) =>
+                      setNotifyModal({ ...notifyModal, recipientName: e.target.value })
+                    }
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="قناة الإرسال المفضلة">
+                  <select
+                    value={notifyModal.channel}
+                    onChange={(e) =>
+                      setNotifyModal({ ...notifyModal, channel: e.target.value as any })
+                    }
+                    className={inputCls}
+                  >
+                    <option value="واتساب">📱 عبر الواتساب (WhatsApp)</option>
+                    <option value="إيميل">✉️ عبر البريد (Email)</option>
+                    <option value="كلاهما">⚡ عبر الواتساب والبريد كلاهما</option>
+                  </select>
+                </Field>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="رقم الواتساب (+971)">
+                  <input
+                    value={notifyModal.recipientPhone}
+                    onChange={(e) =>
+                      setNotifyModal({ ...notifyModal, recipientPhone: e.target.value })
+                    }
+                    placeholder="+971 50 123 4567"
+                    className={inputCls}
+                  />
+                </Field>
+                <Field label="البريد الإلكتروني">
+                  <input
+                    value={notifyModal.recipientEmail}
+                    onChange={(e) =>
+                      setNotifyModal({ ...notifyModal, recipientEmail: e.target.value })
+                    }
+                    placeholder="client@example.com"
+                    className={inputCls}
+                  />
+                </Field>
+              </div>
+
+              <Field label="عنوان التنبيه / الموضوع">
+                <input
+                  value={notifyModal.subject}
+                  onChange={(e) => setNotifyModal({ ...notifyModal, subject: e.target.value })}
                   className={inputCls}
                 />
               </Field>
-              <Field label="البريد الإلكتروني">
-                <input
-                  value={notifyModal.recipientEmail}
-                  onChange={(e) =>
-                    setNotifyModal({ ...notifyModal, recipientEmail: e.target.value })
-                  }
-                  placeholder="client@example.com"
-                  className={inputCls}
+
+              <Field label="نص الرسالة الرسمية">
+                <textarea
+                  rows={6}
+                  value={notifyModal.message}
+                  onChange={(e) => setNotifyModal({ ...notifyModal, message: e.target.value })}
+                  className="w-full rounded-xl border border-slate-200 bg-stone-50 p-3 text-xs font-mono leading-relaxed text-slate-800 focus:border-amber-500 focus:outline-none"
                 />
               </Field>
-            </div>
 
-            <Field label="عنوان التنبيه / الموضوع">
-              <input
-                value={notifyModal.subject}
-                onChange={(e) => setNotifyModal({ ...notifyModal, subject: e.target.value })}
-                className={inputCls}
-              />
-            </Field>
-
-            <Field label="نص الرسالة الرسمية">
-              <textarea
-                rows={6}
-                value={notifyModal.message}
-                onChange={(e) => setNotifyModal({ ...notifyModal, message: e.target.value })}
-                className="w-full rounded-xl border border-slate-200 bg-stone-50 p-3 text-xs font-mono leading-relaxed text-slate-800 focus:border-amber-500 focus:outline-none"
-              />
-            </Field>
-
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
-              <button
-                onClick={() => setNotifyModal(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors"
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={dispatchNotification}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 text-slate-900 font-bold text-xs hover:bg-amber-400 shadow-sm"
-              >
-                <Send size={15} /> إرسال الإشعار وتوثيقه بالباك أوفيس
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {/* ================= نافذة إضافة/تعديل جهات المحاكم ================= */}
-      {modal === "courtContact" && (
-        <CourtContactModal
-          editingCourtContact={editingCourtContact}
-          form={form}
-          onFieldChange={f}
-          onSave={saveCourtContact}
-          onClose={() => setModal(null)}
-        />
-      )}
-
-      {/* ================= نافذة معاينة وتأكيد استيراد أرقام دليل المحاكم من إكسل ================= */}
-      {courtExcelModalOpen && (
-        <Modal
-          wide
-          title="معاينة واستيراد أرقام ودليل المحاكم والجهات من ملف إكسل"
-          onClose={() => setCourtExcelModalOpen(false)}
-        >
-          <div className="space-y-4 text-sm">
-            <div className="bg-emerald-50 p-3.5 rounded-2xl border border-emerald-200 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-emerald-900 text-xs font-bold">
-                <FileSpreadsheet size={18} className="text-emerald-700" />
-                <span>
-                  اسم الملف:{" "}
-                  <b className="font-mono text-emerald-950">
-                    {courtExcelFileName || "ملف_إكسل.xlsx"}
-                  </b>
-                </span>
-              </div>
-              <span className="bg-emerald-200 text-emerald-900 px-3 py-1 rounded-full text-xs font-extrabold">
-                عدد الجهات المكتشفة: {courtImportPreviewList.length} سجل
-              </span>
-            </div>
-
-            {/* وضعية الاستيراد */}
-            <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
-              <label className="block text-xs font-bold text-slate-800">
-                طريقة معالجة البيانات عند الحفظ:
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                <label
-                  className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition ${courtExcelImportMode === "append" ? "bg-amber-50 border-amber-400 font-bold text-amber-900" : "bg-white border-slate-200 text-slate-700"}`}
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button
+                  onClick={() => setNotifyModal(null)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors"
                 >
-                  <input
-                    type="radio"
-                    name="courtImportMode"
-                    checked={courtExcelImportMode === "append"}
-                    onChange={() => setCourtExcelImportMode("append")}
-                    className="accent-amber-600"
-                  />
-                  <span>دمج مع الدليل الحالي (إضافة السجلات الجديدة)</span>
-                </label>
-                <label
-                  className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition ${courtExcelImportMode === "replace" ? "bg-red-50 border-red-400 font-bold text-red-900" : "bg-white border-slate-200 text-slate-700"}`}
+                  إلغاء
+                </button>
+                <button
+                  onClick={dispatchNotification}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-amber-500 text-slate-900 font-bold text-xs hover:bg-amber-400 shadow-sm"
                 >
-                  <input
-                    type="radio"
-                    name="courtImportMode"
-                    checked={courtExcelImportMode === "replace"}
-                    onChange={() => setCourtExcelImportMode("replace")}
-                    className="accent-red-600"
-                  />
-                  <span>استبدال الدليل الحالي بالكامل (مسح الدليل القديم)</span>
-                </label>
+                  <Send size={15} /> إرسال الإشعار وتوثيقه بالباك أوفيس
+                </button>
               </div>
             </div>
+          </Modal>
+        )}
 
-            {/* جدول المعاينة */}
-            <div className="space-y-2">
-              <h4 className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                <span>جدول معاينة السجلات قبل اعتمادها:</span>
-                <span className="text-slate-500 font-normal">
-                  يمكنك حذف أي صف غير مرغوب فيه بالنقر على علامة (X)
+        {/* ================= نافذة إضافة/تعديل جهات المحاكم ================= */}
+        {modal === "courtContact" && (
+          <CourtContactModal
+            editingCourtContact={editingCourtContact}
+            form={form}
+            onFieldChange={f}
+            onSave={saveCourtContact}
+            onClose={() => setModal(null)}
+          />
+        )}
+
+        {/* ================= نافذة معاينة وتأكيد استيراد أرقام دليل المحاكم من إكسل ================= */}
+        {courtExcelModalOpen && (
+          <Modal
+            wide
+            title="معاينة واستيراد أرقام ودليل المحاكم والجهات من ملف إكسل"
+            onClose={() => setCourtExcelModalOpen(false)}
+          >
+            <div className="space-y-4 text-sm">
+              <div className="bg-emerald-50 p-3.5 rounded-2xl border border-emerald-200 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-emerald-900 text-xs font-bold">
+                  <FileSpreadsheet size={18} className="text-emerald-700" />
+                  <span>
+                    اسم الملف:{" "}
+                    <b className="font-mono text-emerald-950">
+                      {courtExcelFileName || "ملف_إكسل.xlsx"}
+                    </b>
+                  </span>
+                </div>
+                <span className="bg-emerald-200 text-emerald-900 px-3 py-1 rounded-full text-xs font-extrabold">
+                  عدد الجهات المكتشفة: {courtImportPreviewList.length} سجل
                 </span>
-              </h4>
-              <div className="max-h-72 overflow-y-auto rounded-2xl border border-slate-200 shadow-inner">
-                <table className="w-full text-right text-xs">
-                  <thead className="bg-slate-100 text-slate-700 sticky top-0 font-bold border-b border-slate-200">
-                    <tr>
-                      <th className="p-2.5">#</th>
-                      <th className="p-2.5">اسم المحكمة / الجهة</th>
-                      <th className="p-2.5">الإمارة</th>
-                      <th className="p-2.5">القسم / التخصص</th>
-                      <th className="p-2.5">الموظف / المسمى</th>
-                      <th className="p-2.5">الهاتف والتمديدة</th>
-                      <th className="p-2.5">البريد الإلكتروني</th>
-                      {/* عمود ثابت (sticky) حتى يبقى زر الحذف ظاهراً دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
-                      <th className="sticky left-0 z-10 p-2.5 text-center bg-slate-100 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
-                        إجراء
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100/80 bg-white">
-                    {courtImportPreviewList.map((item, idx) => (
-                      <tr key={idx} className="hover:bg-slate-50 text-slate-800 group">
-                        <td className="p-2.5 font-mono text-slate-400">{idx + 1}</td>
-                        <td className="p-2.5 font-bold text-slate-900">{item.courtName}</td>
-                        <td className="p-2.5">
-                          <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-semibold">
-                            {item.emirate}
-                          </span>
-                        </td>
-                        <td className="p-2.5">{item.department}</td>
-                        <td className="p-2.5 text-slate-600">{item.titleOrEmployee}</td>
-                        <td className="p-2.5 font-mono text-slate-700">
-                          {item.phone}{" "}
-                          {item.extOrSeal && item.extOrSeal !== "—" ? `(${item.extOrSeal})` : ""}
-                        </td>
-                        <td className="p-2.5 font-mono text-slate-600 text-[11px]">{item.email}</td>
-                        <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 p-2.5 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
-                          <button
-                            onClick={() =>
-                              setCourtImportPreviewList((prev) => prev.filter((_, i) => i !== idx))
-                            }
-                            className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
-                            title="حذف هذا الصف من المعاينة"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </td>
+              </div>
+
+              {/* وضعية الاستيراد */}
+              <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2">
+                <label className="block text-xs font-bold text-slate-800">
+                  طريقة معالجة البيانات عند الحفظ:
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <label
+                    className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition ${courtExcelImportMode === "append" ? "bg-amber-50 border-amber-400 font-bold text-amber-900" : "bg-white border-slate-200 text-slate-700"}`}
+                  >
+                    <input
+                      type="radio"
+                      name="courtImportMode"
+                      checked={courtExcelImportMode === "append"}
+                      onChange={() => setCourtExcelImportMode("append")}
+                      className="accent-amber-600"
+                    />
+                    <span>دمج مع الدليل الحالي (إضافة السجلات الجديدة)</span>
+                  </label>
+                  <label
+                    className={`flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer transition ${courtExcelImportMode === "replace" ? "bg-red-50 border-red-400 font-bold text-red-900" : "bg-white border-slate-200 text-slate-700"}`}
+                  >
+                    <input
+                      type="radio"
+                      name="courtImportMode"
+                      checked={courtExcelImportMode === "replace"}
+                      onChange={() => setCourtExcelImportMode("replace")}
+                      className="accent-red-600"
+                    />
+                    <span>استبدال الدليل الحالي بالكامل (مسح الدليل القديم)</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* جدول المعاينة */}
+              <div className="space-y-2">
+                <h4 className="text-xs font-bold text-slate-800 flex items-center justify-between">
+                  <span>جدول معاينة السجلات قبل اعتمادها:</span>
+                  <span className="text-slate-500 font-normal">
+                    يمكنك حذف أي صف غير مرغوب فيه بالنقر على علامة (X)
+                  </span>
+                </h4>
+                <div className="max-h-72 overflow-y-auto rounded-2xl border border-slate-200 shadow-inner">
+                  <table className="w-full text-right text-xs">
+                    <thead className="bg-slate-100 text-slate-700 sticky top-0 font-bold border-b border-slate-200">
+                      <tr>
+                        <th className="p-2.5">#</th>
+                        <th className="p-2.5">اسم المحكمة / الجهة</th>
+                        <th className="p-2.5">الإمارة</th>
+                        <th className="p-2.5">القسم / التخصص</th>
+                        <th className="p-2.5">الموظف / المسمى</th>
+                        <th className="p-2.5">الهاتف والتمديدة</th>
+                        <th className="p-2.5">البريد الإلكتروني</th>
+                        {/* عمود ثابت (sticky) حتى يبقى زر الحذف ظاهراً دائماً دون الحاجة للتمرير الأفقي عند اتساع الجدول */}
+                        <th className="sticky left-0 z-10 p-2.5 text-center bg-slate-100 shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
+                          إجراء
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100/80 bg-white">
+                      {courtImportPreviewList.map((item, idx) => (
+                        <tr key={idx} className="hover:bg-slate-50 text-slate-800 group">
+                          <td className="p-2.5 font-mono text-slate-400">{idx + 1}</td>
+                          <td className="p-2.5 font-bold text-slate-900">{item.courtName}</td>
+                          <td className="p-2.5">
+                            <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-semibold">
+                              {item.emirate}
+                            </span>
+                          </td>
+                          <td className="p-2.5">{item.department}</td>
+                          <td className="p-2.5 text-slate-600">{item.titleOrEmployee}</td>
+                          <td className="p-2.5 font-mono text-slate-700">
+                            {item.phone}{" "}
+                            {item.extOrSeal && item.extOrSeal !== "—" ? `(${item.extOrSeal})` : ""}
+                          </td>
+                          <td className="p-2.5 font-mono text-slate-600 text-[11px]">
+                            {item.email}
+                          </td>
+                          <td className="sticky left-0 z-10 bg-white group-hover:bg-slate-50 p-2.5 text-center shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.08)]">
+                            <button
+                              onClick={() =>
+                                setCourtImportPreviewList((prev) =>
+                                  prev.filter((_, i) => i !== idx),
+                                )
+                              }
+                              className="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50"
+                              title="حذف هذا الصف من المعاينة"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between border-t border-slate-200 pt-3">
+                <button
+                  onClick={() => setCourtExcelModalOpen(false)}
+                  className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors"
+                >
+                  إلغاء الأمر
+                </button>
+                <button
+                  onClick={confirmCourtExcelImport}
+                  disabled={courtImportPreviewList.length === 0}
+                  className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 shadow-md transition disabled:opacity-50"
+                >
+                  <CheckCircle2 size={16} /> تأكيد واستيراد ({courtImportPreviewList.length}) جهة
+                  إلى الدليل
+                </button>
               </div>
             </div>
+          </Modal>
+        )}
 
-            <div className="flex items-center justify-between border-t border-slate-200 pt-3">
-              <button
-                onClick={() => setCourtExcelModalOpen(false)}
-                className="rounded-xl px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-[#0D382B]/[0.06] transition-colors"
-              >
-                إلغاء الأمر
-              </button>
-              <button
-                onClick={confirmCourtExcelImport}
-                disabled={courtImportPreviewList.length === 0}
-                className="flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 shadow-md transition disabled:opacity-50"
-              >
-                <CheckCircle2 size={16} /> تأكيد واستيراد ({courtImportPreviewList.length}) جهة إلى
-                الدليل
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
+        {/* ================= نوافذ إدارة الموظفين والكادر (HR) ================= */}
+        {modal === "employee" && (
+          <EmployeeModal
+            form={form}
+            onFieldChange={f}
+            onSave={saveEmployee}
+            onClose={() => setModal(null)}
+          />
+        )}
 
-      {/* ================= نوافذ إدارة الموظفين والكادر (HR) ================= */}
-      {modal === "employee" && (
-        <EmployeeModal
-          form={form}
-          onFieldChange={f}
-          onSave={saveEmployee}
-          onClose={() => setModal(null)}
-        />
-      )}
+        {modal === "leave-request" && (
+          <LeaveRequestModal
+            employees={employees}
+            form={form}
+            onFieldChange={f}
+            onSave={saveLeaveRequest}
+            onClose={() => setModal(null)}
+          />
+        )}
 
-      {modal === "leave-request" && (
-        <LeaveRequestModal
-          employees={employees}
-          form={form}
-          onFieldChange={f}
-          onSave={saveLeaveRequest}
-          onClose={() => setModal(null)}
-        />
-      )}
+        {modal === "employee-expense" && (
+          <EmployeeExpenseModal
+            employees={employees}
+            cases={cases}
+            form={form}
+            onFieldChange={f}
+            onSave={saveEmployeeExpense}
+            onClose={() => setModal(null)}
+          />
+        )}
 
-      {modal === "employee-expense" && (
-        <EmployeeExpenseModal
-          employees={employees}
-          cases={cases}
-          form={form}
-          onFieldChange={f}
-          onSave={saveEmployeeExpense}
-          onClose={() => setModal(null)}
-        />
-      )}
-
-      {modal === "employee-disciplinary" && isSuperAdmin && (
-        <DisciplinaryActionModal
-          employees={employees}
-          form={form}
-          onFieldChange={f}
-          onSave={saveDisciplinaryAction}
-          onClose={() => setModal(null)}
-        />
-      )}
+        {modal === "employee-disciplinary" && isSuperAdmin && (
+          <DisciplinaryActionModal
+            employees={employees}
+            form={form}
+            onFieldChange={f}
+            onSave={saveDisciplinaryAction}
+            onClose={() => setModal(null)}
+          />
+        )}
       </Suspense>
 
       {agrPreviewId !== null &&
