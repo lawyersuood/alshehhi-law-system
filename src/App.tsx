@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, Suspense, lazy } from "react";
 import OfficialLetterComposer, {
   LETTERHEAD_LAYOUT as LETTERHEAD_PAGE_LAYOUT,
   printHtmlDocumentInHiddenIframe,
@@ -9,28 +9,30 @@ import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 import Logo from "./components/Logo";
 import { ErrorBoundary } from "./components/ErrorBoundary";
-import DocModal from "./components/modals/DocModal";
-import PoaModal from "./components/modals/PoaModal";
-import HearingModal from "./components/modals/HearingModal";
-import TaskModal from "./components/modals/TaskModal";
-import ClientModal from "./components/modals/ClientModal";
-import ColleagueModal from "./components/modals/ColleagueModal";
-import TimeLogModal from "./components/modals/TimeLogModal";
-import CaseExpenseModal from "./components/modals/CaseExpenseModal";
-import InvoiceModal from "./components/modals/InvoiceModal";
-import TrustTransactionModal from "./components/modals/TrustTransactionModal";
-import IssueDelegationModal from "./components/modals/IssueDelegationModal";
-import LeaveRequestModal from "./components/modals/LeaveRequestModal";
-import EmployeeExpenseModal from "./components/modals/EmployeeExpenseModal";
-import StrReportModal from "./components/modals/StrReportModal";
-import EmployeeModal from "./components/modals/EmployeeModal";
-import KycModal from "./components/modals/KycModal";
-import CaseModal from "./components/modals/CaseModal";
-import PaymentModal from "./components/modals/PaymentModal";
-import UserModal from "./components/modals/UserModal";
-import DeadlineModal from "./components/modals/DeadlineModal";
-import CourtContactModal from "./components/modals/CourtContactModal";
-import DisciplinaryActionModal from "./components/modals/DisciplinaryActionModal";
+// النوافذ المنبثقة (Modals) تُحمَّل عند الطلب فقط (React.lazy) لتقليل حجم الحزمة
+// الرئيسية الأولية — هذه النوافذ لا تُستخدم إلا عند فتح المستخدم لها فعلياً.
+const DocModal = lazy(() => import("./components/modals/DocModal"));
+const PoaModal = lazy(() => import("./components/modals/PoaModal"));
+const HearingModal = lazy(() => import("./components/modals/HearingModal"));
+const TaskModal = lazy(() => import("./components/modals/TaskModal"));
+const ClientModal = lazy(() => import("./components/modals/ClientModal"));
+const ColleagueModal = lazy(() => import("./components/modals/ColleagueModal"));
+const TimeLogModal = lazy(() => import("./components/modals/TimeLogModal"));
+const CaseExpenseModal = lazy(() => import("./components/modals/CaseExpenseModal"));
+const InvoiceModal = lazy(() => import("./components/modals/InvoiceModal"));
+const TrustTransactionModal = lazy(() => import("./components/modals/TrustTransactionModal"));
+const IssueDelegationModal = lazy(() => import("./components/modals/IssueDelegationModal"));
+const LeaveRequestModal = lazy(() => import("./components/modals/LeaveRequestModal"));
+const EmployeeExpenseModal = lazy(() => import("./components/modals/EmployeeExpenseModal"));
+const StrReportModal = lazy(() => import("./components/modals/StrReportModal"));
+const EmployeeModal = lazy(() => import("./components/modals/EmployeeModal"));
+const KycModal = lazy(() => import("./components/modals/KycModal"));
+const CaseModal = lazy(() => import("./components/modals/CaseModal"));
+const PaymentModal = lazy(() => import("./components/modals/PaymentModal"));
+const UserModal = lazy(() => import("./components/modals/UserModal"));
+const DeadlineModal = lazy(() => import("./components/modals/DeadlineModal"));
+const CourtContactModal = lazy(() => import("./components/modals/CourtContactModal"));
+const DisciplinaryActionModal = lazy(() => import("./components/modals/DisciplinaryActionModal"));
 import DashboardView from "./components/DashboardView";
 import CasesListView from "./components/CasesListView";
 import CaseDetailView from "./components/CaseDetailView";
@@ -8822,6 +8824,7 @@ export default function App() {
       </div>
 
       {/* ================= النوافذ المنبثقة ================= */}
+      <Suspense fallback={null}>
       {modal === "case" && (
         <CaseModal
           editingCase={editingCase}
@@ -9471,6 +9474,7 @@ export default function App() {
           onClose={() => setModal(null)}
         />
       )}
+      </Suspense>
 
       {agrPreviewId !== null &&
         (() => {

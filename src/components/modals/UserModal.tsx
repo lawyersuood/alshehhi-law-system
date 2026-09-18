@@ -108,14 +108,26 @@ export default function UserModal({
             className={inputCls}
           />
         </Field>
-        <Field label="كلمة المرور المسجلة (مشفّرة وآمنة)">
+        <Field
+          label={
+            editingUser
+              ? "كلمة مرور جديدة (اتركها فارغة للإبقاء على كلمة المرور الحالية)"
+              : "كلمة المرور (٦ أحرف على الأقل) *"
+          }
+        >
           <input
             type="password"
-            readOnly
-            disabled
-            value="••••••••"
-            className={`${inputCls} bg-stone-100 text-slate-500 cursor-not-allowed`}
+            onChange={onFieldChange("password")}
+            defaultValue=""
+            placeholder={editingUser ? "•••••••• (بدون تغيير)" : "أدخل كلمة مرور قوية"}
+            className={inputCls}
+            autoComplete="new-password"
           />
+          <p className="text-[11px] text-slate-500 mt-1 leading-snug">
+            {editingUser
+              ? "يتم تخزين كلمة المرور بشكل مُجزّأ (hash) ولا يمكن عرضها لاحقاً — أدخل قيمة جديدة فقط إذا رغبت بتغييرها."
+              : "سيتم تخزين كلمة المرور مُجزّأة (hash) ولا يمكن استرجاعها كنص عادي لاحقاً."}
+          </p>
         </Field>
 
         {/* تخصيص صلاحيات الوصول للأقسام والتبويبات الـ 18 */}
