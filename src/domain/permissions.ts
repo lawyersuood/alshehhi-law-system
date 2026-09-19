@@ -263,6 +263,13 @@ export const DETAILED_ACTION_PERMISSIONS: Array<{
     desc: "السماح للمستخدم بإدراج صورة التوقيع والختم الرسمية المعتمدة عند إصدار الخطابات والإنابات والاتفاقيات، دون منحه صلاحية تعديل أو استبدال هذه الصور",
     category: "النظام والأمان",
   },
+  {
+    id: "manageStrReports",
+    label: "الاطلاع وتسجيل بلاغات الاشتباه AML/STR",
+    desc: "صلاحية حساسة للاطلاع على سجل بلاغات الاشتباه (STR) وتسجيل بلاغات جديدة لوحدة الاستعلام المالي FIU، حصر على مسؤول الامتثال ومدير النظام",
+    category: "النظام والأمان",
+    isSensitive: true,
+  },
 
   // 2. صلاحيات الحذف الصريحة والرقابة الحساسة لجميع الأقسام (تمنع افتراضياً وتشترط إذناً وتأكيداً)
   {
@@ -502,6 +509,7 @@ export const ROLE_PRESETS: Record<string, { title: string; permissions: RolePerm
       manageColleagues: true,
       manageLetterheadAssets: true,
       useSignatureStamp: true,
+      manageStrReports: true,
 
       // صلاحيات الحذف للمدير مفعلة
       deleteCases: true,
@@ -559,6 +567,7 @@ export const ROLE_PRESETS: Record<string, { title: string; permissions: RolePerm
       manageColleagues: true,
       manageLetterheadAssets: false,
       useSignatureStamp: true,
+      manageStrReports: true,
 
       // الحذف ممنوع افتراضياً
       deleteCases: false,
@@ -616,6 +625,7 @@ export const ROLE_PRESETS: Record<string, { title: string; permissions: RolePerm
       manageColleagues: true,
       manageLetterheadAssets: false,
       useSignatureStamp: true,
+      manageStrReports: false,
 
       // الحذف ممنوع افتراضياً
       deleteCases: false,
@@ -673,6 +683,7 @@ export const ROLE_PRESETS: Record<string, { title: string; permissions: RolePerm
       manageColleagues: true,
       manageLetterheadAssets: false,
       useSignatureStamp: false,
+      manageStrReports: false,
 
       // الحذف ممنوع افتراضياً
       deleteCases: false,
@@ -727,6 +738,7 @@ export const ROLE_PRESETS: Record<string, { title: string; permissions: RolePerm
       viewReports: true,
       exportData: true,
       useSignatureStamp: false,
+      manageStrReports: false,
 
       // الحذف ممنوع افتراضياً
       deleteCases: false,
@@ -860,6 +872,10 @@ export const PERMISSION_LABELS: Record<keyof RolePermissions, { label: string; d
   useSignatureStamp: {
     label: "إدراج التوقيع والختم في المستندات الصادرة",
     desc: "السماح بإدراج التوقيع والختم المعتمدين عند إصدار المستندات",
+  },
+  manageStrReports: {
+    label: "بلاغات الاشتباه AML/STR",
+    desc: "صلاحية حساسة للاطلاع على سجل بلاغات الاشتباه وتسجيل بلاغات جديدة لوحدة الاستعلام المالي FIU",
   },
 
   // صلاحيات الحذف والرقابة

@@ -25,6 +25,7 @@ export interface KycViewProps {
   kycWatchlist: (KycWatchlistItem & { source?: string })[];
   setKycWatchlist: (updater: (prev: KycWatchlistItem[]) => KycWatchlistItem[]) => void;
   strReports: StrReport[];
+  canManageStrReports: boolean;
   requestDelete: (opts: {
     section: string;
     title: string;
@@ -61,6 +62,7 @@ export default function KycView({
   kycWatchlist,
   setKycWatchlist,
   strReports,
+  canManageStrReports,
   requestDelete,
   uaeTerroristList,
   logAuditAction,
@@ -98,7 +100,9 @@ export default function KycView({
       k.id,
     );
     setKyc((prev) =>
-      prev.map((x) => (x.id === k.id ? { ...x, archived: true, archivedAt: new Date().toISOString() } : x)),
+      prev.map((x) =>
+        x.id === k.id ? { ...x, archived: true, archivedAt: new Date().toISOString() } : x,
+      ),
     );
   };
 
@@ -110,7 +114,9 @@ export default function KycView({
       `إلغاء أرشفة ملف KYC للموكل ${clientName(k.clientId)}`,
       k.id,
     );
-    setKyc((prev) => prev.map((x) => (x.id === k.id ? { ...x, archived: false, archivedAt: null } : x)));
+    setKyc((prev) =>
+      prev.map((x) => (x.id === k.id ? { ...x, archived: false, archivedAt: null } : x)),
+    );
   };
 
   return (
@@ -128,12 +134,14 @@ export default function KycView({
         >
           <FileSpreadsheet size={18} /> 🚨 قائمة المحظورين والمنكشفين ({kycWatchlist.length})
         </button>
-        <button
-          onClick={() => setKycSubTab("str")}
-          className={`px-4 py-3 text-sm font-bold border-b-2 transition flex items-center gap-2 whitespace-nowrap ${kycSubTab === "str" ? "border-amber-500 text-amber-700 bg-amber-50/50" : "border-transparent text-slate-500 hover:text-slate-800"}`}
-        >
-          <ShieldAlert size={18} /> 🚨 سجل بلاغات الاشتباه AML / STR ({strReports.length})
-        </button>
+        {canManageStrReports && (
+          <button
+            onClick={() => setKycSubTab("str")}
+            className={`px-4 py-3 text-sm font-bold border-b-2 transition flex items-center gap-2 whitespace-nowrap ${kycSubTab === "str" ? "border-amber-500 text-amber-700 bg-amber-50/50" : "border-transparent text-slate-500 hover:text-slate-800"}`}
+          >
+            <ShieldAlert size={18} /> 🚨 سجل بلاغات الاشتباه AML / STR ({strReports.length})
+          </button>
+        )}
       </div>
 
       {kycSubTab === "watchlist" && (
@@ -311,7 +319,7 @@ export default function KycView({
         </div>
       )}
 
-      {kycSubTab === "str" ? (
+      {kycSubTab === "str" && canManageStrReports ? (
         <div className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -324,12 +332,17 @@ export default function KycView({
               </p>
             </div>
             <button
-              onClick={() => openModalWithCheck("str")}
+              onClick={() => openModalWithCheck("str", "manageStrReports")}
               className="flex items-center gap-2 rounded-xl bg-red-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-800 shadow-sm"
             >
               <Plus size={16} /> إضافة بلاغ اشتباه جديد
             </button>
           </div>
+
+          <p className="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5">
+            🔒 الوصول إلى سجل بلاغات الاشتباه (STR) مقيّد ومحصور بمسؤول الامتثال أو مدير النظام فقط،
+            حماية لسرية بلاغات مكافحة غسل الأموال.
+          </p>
 
           <div className="space-y-3">
             {strReports.map((str) => (
@@ -367,8 +380,8 @@ export default function KycView({
               </p>
               <p className="mt-1 text-[11px] font-semibold text-amber-700">
                 ⚠️ بيانات PEP وفحص العقوبات في هذا السجل هي إقرار ذاتي غير محقق (Self-Declared /
-                Unverified) — ليست نتيجة فحص آلي مقابل قائمة عقوبات رسمية، ويجب التحقق منها يدوياً من
-                قبل مسؤول الامتثال قبل الاعتماد عليها.
+                Unverified) — ليست نتيجة فحص آلي مقابل قائمة عقوبات رسمية، ويجب التحقق منها يدوياً
+                من قبل مسؤول الامتثال قبل الاعتماد عليها.
               </p>
             </div>
             <button
@@ -437,7 +450,11 @@ export default function KycView({
           {visibleKyc.length === 0 ? (
             <EmptyState
               icon={UserCheck}
-              text={showArchivedKyc ? "لا توجد سجلات KYC مؤرشفة حالياً" : "لا توجد سجلات KYC مضافة حتى الآن"}
+              text={
+                showArchivedKyc
+                  ? "لا توجد سجلات KYC مؤرشفة حالياً"
+                  : "لا توجد سجلات KYC مضافة حتى الآن"
+              }
             />
           ) : (
             <div className="app-card overflow-hidden">

@@ -64,6 +64,7 @@ export interface RolePermissions {
   manageColleagues?: boolean; // إضافة وتعديل بيانات الزملاء وإصدار الإنابات
   manageLetterheadAssets?: boolean; // إدارة قسم الهوية الرسمية: تعديل الورق الرسمي والتوقيع والختم (صلاحية حساسة)
   useSignatureStamp?: boolean; // إدراج التوقيع والختم المعتمدين عند إصدار المستندات (دون صلاحية تعديلهما)
+  manageStrReports?: boolean; // الاطلاع وتسجيل بلاغات الاشتباه AML/STR (صلاحية حساسة — مسؤول امتثال/مدير فقط)
 
   // 3. صلاحيات الحذف والرقابة الحساسة لجميع الأقسام (Deletion Permissions)
   deleteCases?: boolean; // حذف القضايا والملفات نهائياً

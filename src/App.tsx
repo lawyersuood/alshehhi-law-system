@@ -734,6 +734,13 @@ export default function App() {
     return Boolean(userPerms?.manageLetterheadAssets || userPerms?.useSignatureStamp);
   }, [currentUser, isAdmin, isSuperAdmin, userPerms]);
 
+  // التحقق من صلاحية الاطلاع على بلاغات الاشتباه AML/STR (صلاحية حساسة ومحمية) — حصر على مسؤول الامتثال/المدير
+  const canManageStrReports = useMemo(() => {
+    if (!currentUser) return false;
+    if (isSuperAdmin || isAdmin) return true;
+    return Boolean(userPerms?.manageStrReports);
+  }, [currentUser, isAdmin, isSuperAdmin, userPerms]);
+
   // ---------- سجل التدقيق والأنشطة الأمني (Audit Log) ----------
   // auditLogs: انتقلت لهوك useAuditLogsData (مع مزامنة Supabase — كانت هذه المزامنة سابقاً جزءاً
   // من useEffect الضخم "remainingSyncTables" بالأسفل، والحفظ المحلي وحده كان هنا فقط).
@@ -6539,7 +6546,7 @@ export default function App() {
   };
 
   const saveStrReport = () => {
-    if (!checkPerm("manageKyc", "تسجيل بلاغ اشتباه STR")) return;
+    if (!checkPerm("manageStrReports", "تسجيل بلاغ اشتباه STR")) return;
     if (!form.clientId || !form.suspicionReason) return;
     const newStrId = nextId(strReports);
     setStrReports([
@@ -8576,6 +8583,7 @@ export default function App() {
                     kycWatchlist={kycWatchlist}
                     setKycWatchlist={setKycWatchlist}
                     strReports={strReports}
+                    canManageStrReports={canManageStrReports}
                     requestDelete={requestDelete}
                     uaeTerroristList={uaeTerroristList}
                     logAuditAction={logAuditAction}
@@ -9226,7 +9234,7 @@ export default function App() {
         )}
 
         {/* ================= نافذة بلاغ الاشتباه STR ================= */}
-        {modal === "str" && (
+        {modal === "str" && canManageStrReports && (
           <StrReportModal
             clients={clients}
             onFieldChange={f}
