@@ -9,6 +9,7 @@ import {
 } from "../../domain/constants";
 import { Plus, Trash2 } from "lucide-react";
 import type { CaseItem, Client } from "../../domain/types";
+import { normalizeArabicNameForMatch } from "../../domain/utils";
 
 export interface CaseModalProps {
   editingCase: CaseItem | null;
@@ -40,10 +41,11 @@ export default function CaseModal({
 }: CaseModalProps) {
   const opponents: string[] = form.opponents && form.opponents.length > 0 ? form.opponents : [""];
 
-  // (Phase-1) فحص أولي لتعارض المصالح: مطابقة نصية بسيطة (تجاهل حالة الأحرف والمسافات الزائدة)
+  // (Phase-3) فحص أولي لتعارض المصالح: مطابقة نصية مع تطبيع الأسماء العربية (تجاهل اختلاف
+  // الهمزات إأآا، التاء المربوطة/الهاء، الألف المقصورة/الياء، التشكيل، والمسافات الزائدة)
   // لأسماء الخصوم المُدخلة مقابل أسماء الموكلين الحاليين وأسماء الخصوم في القضايا الأخرى.
   // هذا فحص إرشادي غير حاسم (non-blocking) يُنبّه المحامي فقط، ولا يمنع الحفظ.
-  const normalize = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+  const normalize = (s: string) => normalizeArabicNameForMatch(s);
   const conflictMatches: string[] = [];
   const seen = new Set<string>();
   for (const rawOpp of opponents) {

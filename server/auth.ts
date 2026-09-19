@@ -41,23 +41,41 @@ const supabaseServiceRole = SUPABASE_SERVICE_ROLE_KEY
   : null;
 
 // (Phase-4) يقرأ دور المستخدم من جدول public.profiles (المصدر المركزي الفعلي لأدوار المستخدمين —
-// انظر RLS_CHECKLIST.md و PHASE4_ROLES_MIGRATION.md لتفاصيل هذا التحديث). يُرجع null عند أي فشل
-// (لا يوجد service-role key مضبوط، خطأ اتصال، أو المستخدم غير موجود في الجدول بعد) بدلاً من رمي
-// استثناء، حتى تتم معالجة الحالة بلطف (fallback) في requireServerRole أدناه دون تعطيل الخادم.
-async function fetchRoleFromProfilesTable(authUserId: string): Promise<string | null> {
-  if (!supabaseServiceRole) return null;
+// انظر RLS_CHECKLIST.md و PHASE4_ROLES_MIGRATION.md لتفاصيل هذا التحديث).
+//
+// (تصحيح لاحق مهم) يُميّز هذا الآن بوضوح بين حالتين مختلفتين تماماً كانتا تُعاملان سابقاً بنفس
+// الطريقة الخاطئة (كلتاهما ترجعان null فتُفعّلان الرجوع لـ app_metadata.role القديم):
+//   (أ) "لم نُهاجَر بعد" — لا يوجد service-role key، خطأ اتصال، أو لا يوجد صف للمستخدم في الجدول
+//       إطلاقاً بعد. هذه حالة يُقبل فيها الرجوع للآلية القديمة كحل مؤقت (fallback) — راجع
+//       PROFILE_LOOKUP_NOT_MIGRATED أدناه.
+//   (ب) "تمت مراجعته صراحةً وخُفِّضت صلاحياته" — الصف موجود فعلاً في profiles لكن status ليست
+//       approved (مثال: أعاده المدير إلى no_access/pending). هذه الحالة يجب أن تُرفض العملية
+//       فوراً وبشكل قاطع (PROFILE_LOOKUP_DENIED)، ولا يجوز أبداً الرجوع لأي دور قديم متبقٍ في
+//       app_metadata، وإلا فإن سحب صلاحية موظف من شاشة "المستخدمون" لن يُطبَّق فعلياً على الخادم —
+//       وهو بالضبط الهدف الذي بُني من أجله هذا الترحيل.
+type ProfileRoleLookup =
+  | { kind: "found"; role: string }
+  | { kind: "denied" } // الصف موجود لكن غير معتمد (status != approved) — رفض قاطع، بلا fallback
+  | { kind: "not_migrated" }; // لا يوجد صف / لا يوجد service key / خطأ اتصال — fallback مسموح
+
+async function fetchRoleFromProfilesTable(authUserId: string): Promise<ProfileRoleLookup> {
+  if (!supabaseServiceRole) return { kind: "not_migrated" };
   try {
     const { data, error } = await supabaseServiceRole
       .from("profiles")
       .select("role, status")
       .eq("id", authUserId)
       .maybeSingle();
-    if (error || !data) return null;
-    // حساب لم يُعتمد بعد (status != approved) لا يُعامل كصاحب دور فعلي حتى لو كان مضبوطاً في العمود
-    if (data.status && data.status !== "approved" && data.status !== "نشط") return null;
-    return (data.role as string) || null;
+    if (error || !data) return { kind: "not_migrated" };
+    // حساب موجود في الجدول لكن غير معتمد (سواء لم يُراجَع بعد، أو رُوجِع وخُفِّضت صلاحياته عمداً):
+    // رفض قاطع، وليس "غير مهاجَر" — لا رجوع لأي دور قديم.
+    if (data.status && data.status !== "approved" && data.status !== "نشط") {
+      return { kind: "denied" };
+    }
+    if (!data.role) return { kind: "denied" };
+    return { kind: "found", role: data.role as string };
   } catch {
-    return null;
+    return { kind: "not_migrated" };
   }
 }
 
@@ -115,18 +133,30 @@ export function requireServerRole(...allowedRoles: string[]) {
     let role: string | undefined | null = null;
 
     if (userId) {
-      role = await fetchRoleFromProfilesTable(userId);
-    }
-
-    if (!role) {
-      if (userId) {
+      const lookup = await fetchRoleFromProfilesTable(userId);
+      if (lookup.kind === "found") {
+        role = lookup.role;
+      } else if (lookup.kind === "denied") {
+        // رفض قاطع: الحساب مُراجَع فعلياً في profiles وغير معتمد (أو خُفِّضت صلاحياته) —
+        // لا رجوع لـ app_metadata.role القديم مهما كانت قيمته، حتى لا يُبطَل هدف الترحيل.
         console.warn(
-          `[requireServerRole] تعذّرت قراءة الدور من جدول profiles للمستخدم ${userId} — ` +
-            `الرجوع مؤقتاً لقراءة app_metadata.role (الآلية القديمة). إن كان هذا حساباً حالياً، ` +
-            `يجب على المدير الدخول لشاشة المستخدمين وإعادة إسناد دوره ليظهر في جدول profiles.`,
+          `[requireServerRole] رفض صريح للمستخدم ${userId}: حسابه موجود في profiles لكنه غير ` +
+            `معتمد حالياً (status != approved) أو بلا دور مضبوط — تم تجاهل أي دور قديم في app_metadata عمداً.`,
         );
+        res.status(403).json({
+          error: "حسابك قيد المراجعة أو تم تقييد صلاحياتك من قبل المدير. تواصل مع إدارة المكتب.",
+        });
+        return;
+      } else {
+        // not_migrated: لا يوجد صف بعد لهذا المستخدم (أو لا service-role key) — fallback مقبول
+        // مؤقتاً للحسابات التي لم تُهاجَر بعد، وليس لأي حساب رُوجِع صراحة.
+        console.warn(
+          `[requireServerRole] لا يوجد صف في profiles بعد للمستخدم ${userId} — ` +
+            `الرجوع مؤقتاً لقراءة app_metadata.role (الآلية القديمة) لأن هذا الحساب لم يُهاجَر بعد. ` +
+            `يجب على المدير الدخول لشاشة المستخدمين وحفظ دوره ليُنشأ له صف في profiles.`,
+        );
+        role = req.authUser?.role;
       }
-      role = req.authUser?.role;
     }
 
     if (!role || !allowedRoles.includes(role)) {

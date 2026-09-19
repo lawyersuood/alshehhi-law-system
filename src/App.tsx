@@ -3542,6 +3542,7 @@ export default function App() {
   // لا توجد وسيلة آلية آمنة لتخمين الدور المقصود لحساب موجود مسبقاً محلياً فقط.
   const bootstrapAppUserProfileIfMissing = async (authUserId: string, email: string) => {
     try {
+      const normalizedEmail = email.toLowerCase();
       const { data: existing, error: selectErr } = await supabase
         .from("profiles")
         .select("id")
@@ -3551,10 +3552,44 @@ export default function App() {
         console.warn("Phase-4 profiles bootstrap: تعذّر التحقق من الصف الحالي:", selectErr.message);
         return;
       }
-      if (existing) return; // الصف موجود مسبقاً — لا شيء يُفعل
+      if (existing) return; // الصف موجود مسبقاً بنفس معرّف Supabase Auth — لا شيء يُفعل
+
+      // (تصحيح لاحق مهم) قبل افتراض عدم وجود أي صف، نتحقق أولاً هل يوجد صف "يتيم" بنفس البريد
+      // الإلكتروني لكن بمعرّف مختلف — هذا يحدث تحديداً حين يُنشئ المدير حساب موظف جديد من شاشة
+      // "المستخدمون" (saveUser في هذا الملف) *قبل* أن يسجّل ذلك الموظف دخوله فعلياً لأول مرة عبر
+      // Supabase Auth: يُنشأ حينها صف بمعرّف عشوائي لا يطابق auth.users.id الحقيقي. إن لم نتحقق
+      // من هذا هنا، سيفشل الإدراج أدناه بصمت بسبب قيد unique(email)، ويبقى الدور الذي عيّنه المدير
+      // غير مرئي أبداً لـ requireServerRole على الخادم رغم أنه صحيح ومحفوظ في الجدول تحت معرّف آخر.
+      const { data: orphanByEmail, error: emailLookupErr } = await supabase
+        .from("profiles")
+        .select("id, role, role_title, permissions, status")
+        .eq("email", normalizedEmail)
+        .maybeSingle();
+
+      if (!emailLookupErr && orphanByEmail && orphanByEmail.id !== authUserId) {
+        // نُطابق الصف "اليتيم" مع معرّف Supabase Auth الحقيقي بتحديث id بدل إدراج صف جديد،
+        // محافظين على الدور والصلاحيات التي عيّنها المدير مسبقاً من شاشة المستخدمين.
+        const { error: relinkErr } = await supabase
+          .from("profiles")
+          .update({ id: authUserId })
+          .eq("email", normalizedEmail);
+        if (relinkErr) {
+          console.warn(
+            "Phase-4 profiles bootstrap: تعذّر ربط الصف اليتيم بمعرّف Supabase Auth الحقيقي:",
+            relinkErr.message,
+          );
+        } else {
+          console.warn(
+            `Phase-4: تم ربط صف الدور الموجود مسبقاً بالبريد ${normalizedEmail} بمعرّف تسجيل ` +
+              `الدخول الحقيقي — الدور المعيّن مسبقاً (${orphanByEmail.role}) أصبح فعالاً الآن على الخادم.`,
+          );
+        }
+        return;
+      }
+
       const { error: insertErr } = await supabase.from("profiles").insert({
         id: authUserId,
-        email: email.toLowerCase(),
+        email: normalizedEmail,
         role: "no_access",
         role_title: "بدون صلاحيات خاصة (بانتظار مراجعة المدير)",
         status: "pending",
@@ -6255,7 +6290,8 @@ export default function App() {
     // نجزّئ (hash) كلمة المرور الجديدة/المُغيّرة قبل تخزينها — لا نخزّن أي كلمة مرور كنص عادي بعد الآن
     const hashedFormPassword = form.password ? await hashPassword(form.password) : "";
 
-    const rKey = (form.roleKey || "lawyer") as "admin" | "lawyer" | "secretary" | "accountant";
+    const rKey = (form.roleKey || "lawyer") as
+      "admin" | "supervisor" | "lawyer" | "secretary" | "accountant";
     const preset = ROLE_PRESETS[rKey];
     const userPermissions = form.permissions ? { ...form.permissions } : { ...preset.permissions };
 
@@ -8250,6 +8286,7 @@ export default function App() {
                     requestDelete={requestDelete}
                     logAuditAction={logAuditAction}
                     setCases={setCases}
+                    trustTransactions={trustTransactions}
                   />
                 )}
 

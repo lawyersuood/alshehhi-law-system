@@ -25,8 +25,9 @@ import {
   ArchiveRestore,
 } from "lucide-react";
 import { Badge } from "./AuthScreens";
-import { CaseItem, Client, RolePermissions } from "../domain/types";
+import { CaseItem, Client, RolePermissions, TrustTransaction } from "../domain/types";
 import { CASE_STAGES, CASE_STATUS, CASE_TYPES } from "../domain/constants";
+import { fmtAED } from "../domain/utils";
 import {
   statusColor,
   stageBadgeColor,
@@ -123,6 +124,7 @@ export interface CasesListViewProps {
     },
   ) => void;
   setCases: React.Dispatch<React.SetStateAction<CaseItem[]>>;
+  trustTransactions?: TrustTransaction[];
 }
 
 export default function CasesListView({
@@ -174,6 +176,7 @@ export default function CasesListView({
   requestDelete,
   logAuditAction,
   setCases,
+  trustTransactions = [],
 }: CasesListViewProps) {
   // عرض القضايا النشطة (غير المؤرشفة) افتراضياً، مع إمكانية التبديل لعرض الأرشيف.
   // الأرشفة إجراء يدوي بحت لا يحذف أي بيانات — انظر ARCHIVE_FEATURE.md
@@ -188,16 +191,42 @@ export default function CasesListView({
   );
   const visibleCases = showArchivedTab ? archivedCasesList : activeCasesList;
 
+  // (Phase-3) رصيد الأمانة المرتبط بقضية معيّنة: مجموع "إيداع أمانة" ناقص كل أنواع الصرف/الاسترداد
+  // الأخرى المرتبطة بنفس القضية. تُستخدم فقط لتحذير المستخدم قبل الأرشفة، وليست حساباً محاسبياً
+  // رسمياً بديلاً عن تقرير تسوية الأمانات.
+  const getCaseTrustBalance = React.useCallback(
+    (caseId: number | string) => {
+      return trustTransactions
+        .filter((t) => String(t.caseId) === String(caseId))
+        .reduce((sum, t) => sum + (t.type === "إيداع أمانة" ? t.amount : -t.amount), 0);
+    },
+    [trustTransactions],
+  );
+
   const archiveCase = (c: CaseItem) => {
+    const balance = getCaseTrustBalance(c.id);
+    const hasOpenBalance = Math.abs(balance) >= 0.01;
+    if (hasOpenBalance) {
+      const proceed = window.confirm(
+        `تنبيه: هذه القضية (${c.number}) لديها رصيد أمانة غير مُسوّى بقيمة ${fmtAED(balance)}.\n` +
+          `يُنصح بشدة بتسوية هذا الرصيد (صرفه أو استرداده للموكل) قبل أرشفة القضية، حتى لا يصبح رصيداً منسياً بعد اختفائها من القائمة النشطة.\n\n` +
+          `هل تريد المتابعة والأرشفة رغم ذلك؟`,
+      );
+      if (!proceed) return;
+    }
     logAuditAction(
       "STATUS_CHANGE",
       "إدارة القضايا",
       `قضية: ${c.number}`,
-      `أرشفة القضية رقم ${c.number} (إجراء يدوي غير مدمّر — لا حذف لأي بيانات)`,
+      hasOpenBalance
+        ? `أرشفة القضية رقم ${c.number} رغم وجود رصيد أمانة غير مُسوّى (${fmtAED(balance)}) — تمت الموافقة الصريحة على المتابعة (إجراء يدوي غير مدمّر — لا حذف لأي بيانات)`
+        : `أرشفة القضية رقم ${c.number} (لا يوجد رصيد أمانة مفتوح — إجراء يدوي غير مدمّر — لا حذف لأي بيانات)`,
       c.id,
     );
     setCases((prev) =>
-      prev.map((x) => (x.id === c.id ? { ...x, archived: true, archivedAt: new Date().toISOString() } : x)),
+      prev.map((x) =>
+        x.id === c.id ? { ...x, archived: true, archivedAt: new Date().toISOString() } : x,
+      ),
     );
   };
 
