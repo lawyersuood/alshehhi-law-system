@@ -16,6 +16,7 @@ import type {
   TimeLog,
   CaseExpense,
   TrustTransaction,
+  TrustReconciliation,
   JudgmentDeadline,
   InvoiceInstallment,
   StrReport,
@@ -2353,6 +2354,7 @@ export const seedTimeLogs: TimeLog[] = [];
 export const seedCaseExpenses: CaseExpense[] = [];
 
 export const seedTrustTransactions: TrustTransaction[] = [];
+export const seedTrustReconciliations: TrustReconciliation[] = [];
 
 export const seedDeadlines: JudgmentDeadline[] = [];
 

@@ -1030,6 +1030,8 @@ export default function App() {
     setCaseExpenses,
     trustTransactions,
     setTrustTransactions,
+    trustReconciliations,
+    setTrustReconciliations,
     installments,
     setInstallments,
     strReports,
@@ -6511,6 +6513,39 @@ export default function App() {
   const saveTrustTransaction = () => {
     if (!checkPerm("manageInvoices", "معاملة حساب أمانة")) return;
     if (!form.clientId || !form.amount) return;
+    // (تحسين تسوية الأمانة) تنبيه فوري قبل الحفظ لو أن هذه المعاملة (عادةً صرف) ستجعل رصيد
+    // أمانة هذا الموكل سالباً — أي صرف مبلغ يفوق ما هو مودَع فعلياً في أمانته. هذا مؤشر خطير
+    // على مستوى الممارسة المهنية (مشابه لمخالفة IOLTA) ويستحق مراجعة يدوية قبل المتابعة، دون
+    // منع الحفظ نهائياً لأن قد تكون هناك حالات استثنائية مبررة (تسوية لاحقة، تصحيح قيد سابق...).
+    const txType = form.type || "إيداع أمانة";
+    const txAmount = +form.amount;
+    if (txType !== "إيداع أمانة") {
+      const existingForClient = trustTransactions.filter(
+        (t) => String(t.clientId) === String(form.clientId),
+      );
+      const currentBalance = existingForClient.reduce(
+        (sum, t) => sum + (t.type === "إيداع أمانة" ? t.amount : -t.amount),
+        0,
+      );
+      const balanceAfter = currentBalance - txAmount;
+      if (balanceAfter < -0.01) {
+        const clientNameForWarning =
+          clients.find((c) => String(c.id) === String(form.clientId))?.name || "";
+        const proceed = window.confirm(
+          `تنبيه: رصيد أمانة الموكل "${clientNameForWarning}" الحالي هو ${fmtAED(currentBalance)}.\n` +
+            `هذه المعاملة (صرف ${fmtAED(txAmount)}) ستجعل الرصيد سالباً (${fmtAED(balanceAfter)})، ` +
+            `أي صرف مبلغ يفوق ما هو مودَع فعلياً في أمانة هذا الموكل — وهذا يُعتبر مخالفة جوهرية في إدارة حسابات الأمانة.\n` +
+            `هل تريد المتابعة رغم ذلك؟`,
+        );
+        if (!proceed) return;
+        logAuditAction(
+          "UPDATE",
+          "حساب الأمانات",
+          `موكل: ${clientNameForWarning}`,
+          `تنبيه: تسجيل معاملة صرف أمانة بمبلغ ${fmtAED(txAmount)} رغم أنها تجعل رصيد الموكل سالباً (${fmtAED(balanceAfter)}) — تمت المتابعة بتأكيد صريح من المستخدم.`,
+        );
+      }
+    }
     const newTrustTxId = nextId(trustTransactions);
     const trustRefNo = form.refNo || `TR-${Math.floor(1000 + Math.random() * 9000)}`;
     setTrustTransactions([
@@ -6534,6 +6569,50 @@ export default function App() {
       newTrustTxId,
     );
     setModal(null);
+  };
+
+  // (تحسين تسوية الأمانة) تسجيل تسوية دورية بين رصيد دفاتر المكتب (مجموع كل معاملات الأمانة)
+  // وبين رصيد كشف الحساب البنكي الفعلي لحساب الأمانات — ممارسة "three-way reconciliation" لا
+  // تُحذف أو تُعدَّل أي تسوية سابقة، بل تُضاف كسجل جديد للحفاظ على أثر تدقيقي كامل.
+  const saveTrustReconciliation = (bankStatementBalance: number, notes: string) => {
+    if (!checkPerm("manageInvoices", "تسوية حساب الأمانات")) return;
+    const bookBalance = trustTransactions.reduce(
+      (sum, t) => sum + (t.type === "إيداع أمانة" ? t.amount : -t.amount),
+      0,
+    );
+    const balancesByClient = new Map<string, number>();
+    for (const t of trustTransactions) {
+      const key = String(t.clientId);
+      const prev = balancesByClient.get(key) || 0;
+      balancesByClient.set(key, prev + (t.type === "إيداع أمانة" ? t.amount : -t.amount));
+    }
+    const hadNegativeClientBalances = Array.from(balancesByClient.values()).some(
+      (b) => b < -0.01,
+    );
+    const variance = bankStatementBalance - bookBalance;
+    const newId = nextId(trustReconciliations);
+    setTrustReconciliations([
+      ...trustReconciliations,
+      {
+        id: newId,
+        date: todayISO(),
+        bookBalance,
+        bankStatementBalance,
+        variance,
+        reconciledBy: currentUser?.name || currentUser?.email || "غير معروف",
+        notes: notes || "",
+        hadNegativeClientBalances,
+      },
+    ]);
+    logAuditAction(
+      "CREATE",
+      "تسوية حساب الأمانات",
+      `تسوية بتاريخ ${todayISO()}`,
+      `تسوية حساب الأمانات: رصيد الدفاتر ${fmtAED(bookBalance)}، رصيد كشف البنك ${fmtAED(bankStatementBalance)}، الفارق ${fmtAED(variance)}` +
+        (Math.abs(variance) >= 0.01 ? " — يوجد فارق يستوجب المراجعة." : " — مطابقة تامة.") +
+        (hadNegativeClientBalances ? " تنبيه: يوجد رصيد أمانة سالب لدى موكل واحد أو أكثر." : ""),
+      newId,
+    );
   };
 
   const saveDeadline = () => {
@@ -8524,6 +8603,8 @@ export default function App() {
                     trustTransactions={trustTransactions}
                     caseNo={caseNo}
                     caseExpenses={caseExpenses}
+                    trustReconciliations={trustReconciliations}
+                    onSaveTrustReconciliation={saveTrustReconciliation}
                   />
                 )}
 
@@ -8913,6 +8994,7 @@ export default function App() {
             editingCase={editingCase}
             clients={clients}
             cases={cases}
+            kyc={kyc}
             form={form}
             setForm={setForm}
             onFieldChange={f}

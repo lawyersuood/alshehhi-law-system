@@ -52,6 +52,36 @@ export const firstNNameTokens = (s: string, n: number = 3): string => {
   return normalizeArabicNameForMatch(s).split(" ").filter(Boolean).slice(0, n).join(" ");
 };
 
+/**
+ * استخراج "أسماء مرشّحة" من نص حرّ (مثل حقل المستفيد الحقيقي/UBO في ملف KYC) لأغراض فحص تعارض
+ * المصالح "من الدرجة الثانية" — أي عندما يكون طرف الخصومة ليس هو الموكل نفسه، بل مالكاً مستفيداً
+ * أو شريكاً/طرفاً ذا صلة مذكوراً ضمن هيكل ملكية الموكل (شركة تابعة، مساهم، شريك تجاري...).
+ *
+ * بما أن حقل UBO في هذا النظام نص حر (وليس بيانات هيكلية)، هذا الاستخراج إرشادي (heuristic) فقط:
+ * يقسّم النص على الفواصل الشائعة (فاصلة، "و"، فاصلة منقوطة، سطر جديد، شرطة) ثم يُبقي فقط المقاطع
+ * التي تبدو كأسماء أشخاص/كيانات (طولها الطبيعي وليست عبارات وصفية عامة قصيرة جداً)، ويُطبّع كل
+ * مقطع بنفس دالة تطبيع الأسماء العربية المستخدمة في فحص التعارض الأساسي.
+ */
+export const extractCandidateNamesFromText = (text: string): string[] => {
+  if (!text) return [];
+  const parts = text
+    .split(/[,،;\n\r\-–—]+|\bو\b/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const seen = new Set<string>();
+  const names: string[] = [];
+  for (const raw of parts) {
+    const normalized = normalizeArabicNameForMatch(raw);
+    // تجاهل المقاطع القصيرة جداً (أقل من 3 أحرف) أو الطويلة جداً (على الأغلب جملة وصفية وليست اسماً)
+    if (normalized.length < 3 || normalized.length > 60) continue;
+    if (!seen.has(normalized)) {
+      seen.add(normalized);
+      names.push(normalized);
+    }
+  }
+  return names;
+};
+
 export const UAE_TIME_ZONE = "Asia/Dubai";
 
 export const toDubaiISODate = (date: Date): string =>

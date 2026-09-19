@@ -7,6 +7,7 @@ import type {
   TimeLog,
   CaseExpense,
   TrustTransaction,
+  TrustReconciliation,
   InvoiceInstallment,
   StrReport,
 } from "../domain/types";
@@ -14,6 +15,7 @@ import {
   seedTimeLogs,
   seedCaseExpenses,
   seedTrustTransactions,
+  seedTrustReconciliations,
   seedInstallments,
   seedStrReports,
 } from "../domain/seedData";
@@ -34,6 +36,11 @@ export function useBillingRecords() {
     "trust_transactions",
     () => loadStorage("firm_trust_transactions", seedTrustTransactions),
   );
+  const [trustReconciliations, setTrustReconciliations] = useSyncedTable<TrustReconciliation>(
+    "firm_trust_reconciliations",
+    "trust_reconciliations",
+    () => loadStorage("firm_trust_reconciliations", seedTrustReconciliations),
+  );
   const [installments, setInstallments] = useSyncedTable<InvoiceInstallment>(
     "firm_installments",
     "invoice_installments",
@@ -52,6 +59,8 @@ export function useBillingRecords() {
     setCaseExpenses,
     trustTransactions,
     setTrustTransactions,
+    trustReconciliations,
+    setTrustReconciliations,
     installments,
     setInstallments,
     strReports,

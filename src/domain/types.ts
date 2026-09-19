@@ -403,6 +403,24 @@ export interface TrustTransaction {
   notes: string;
 }
 
+/**
+ * سجل تسوية حساب الأمانات (Trust Reconciliation) — مقارنة دورية بين إجمالي رصيد دفاتر المكتب
+ * (مجموع كل معاملات الأمانة لكل الموكلين) وبين رصيد كشف الحساب البنكي الفعلي لحساب الأمانات،
+ * بما يماثل ممارسة "three-way reconciliation" (دفاتر/بنك/دفتر كل موكل) المعتمدة في الأنظمة
+ * المهنية الرصينة لحسابات الأمانة (IOLTA وما شابهها). كل سجل يوثّق لحظة تسوية واحدة ولا يُعدَّل
+ * لاحقاً — أي تسوية جديدة تُضاف كسجل جديد، حفاظاً على أثر تدقيقي كامل.
+ */
+export interface TrustReconciliation {
+  id: number;
+  date: string;
+  bookBalance: number;
+  bankStatementBalance: number;
+  variance: number;
+  reconciledBy: string;
+  notes: string;
+  hadNegativeClientBalances: boolean;
+}
+
 export interface JudgmentDeadlineLog {
   id: string;
   timestamp: string;

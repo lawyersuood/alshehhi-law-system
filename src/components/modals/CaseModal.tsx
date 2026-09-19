@@ -8,13 +8,14 @@ import {
   TASK_TEMPLATES,
 } from "../../domain/constants";
 import { Plus, Trash2 } from "lucide-react";
-import type { CaseItem, Client } from "../../domain/types";
-import { normalizeArabicNameForMatch } from "../../domain/utils";
+import type { CaseItem, Client, KycItem } from "../../domain/types";
+import { normalizeArabicNameForMatch, extractCandidateNamesFromText } from "../../domain/utils";
 
 export interface CaseModalProps {
   editingCase: CaseItem | null;
   clients: Client[];
   cases?: CaseItem[];
+  kyc?: KycItem[];
   form: Record<string, any>;
   setForm: (updater: (prev: Record<string, any>) => Record<string, any>) => void;
   onFieldChange: (
@@ -33,6 +34,7 @@ export default function CaseModal({
   editingCase,
   clients,
   cases = [],
+  kyc = [],
   form,
   setForm,
   onFieldChange,
@@ -71,6 +73,72 @@ export default function CaseModal({
           if (!seen.has(label)) {
             seen.add(label);
             conflictMatches.push(label);
+          }
+        }
+      }
+    }
+  }
+  // (تحسين "الدرجة الثانية") فحص تعارض مبني على المستفيد الحقيقي (UBO) المُصرَّح به في ملفات
+  // KYC — تعارض المصالح الحقيقي في الممارسة الإماراتية غالباً لا يظهر من مطابقة اسم الموكل/الخصم
+  // مباشرة، بل عبر هيكل الملكية: قد يكون الخصم نفسه هو المالك المستفيد لموكل قائم، أو قد يشترك
+  // موكلان في نفس المالك المستفيد (شركات تابعة لنفس المجموعة). بما أن حقل UBO نص حر، هذا الفحص
+  // إرشادي (heuristic) قائم على استخراج أسماء مرشّحة من النص — غير حاسم ولا يمنع الحفظ.
+  const latestKycByClient = new Map<string, KycItem>();
+  for (const k of kyc) {
+    if (k.archived) continue;
+    const key = String(k.clientId);
+    const existing = latestKycByClient.get(key);
+    if (!existing || String(k.lastReview || "") > String(existing.lastReview || "")) {
+      latestKycByClient.set(key, k);
+    }
+  }
+  for (const rawOpp of opponents) {
+    const opp = normalize(rawOpp);
+    if (opp.length < 3) continue;
+    for (const c of clients) {
+      const record = latestKycByClient.get(String(c.id));
+      if (!record?.ubo) continue;
+      const uboNames = extractCandidateNamesFromText(record.ubo);
+      for (const uboName of uboNames) {
+        if (uboName.includes(opp) || opp.includes(uboName)) {
+          const label = `⚠️ (فحص UBO) الخصم "${rawOpp}" يطابق اسماً مذكوراً في المستفيد الحقيقي (UBO) لملف KYC الخاص بالموكل "${c.name}" — يُحتمل أن يكون الخصم مالكاً مستفيداً أو طرفاً ذا صلة بموكل قائم`;
+          if (!seen.has(label)) {
+            seen.add(label);
+            conflictMatches.push(label);
+          }
+        }
+      }
+    }
+  }
+  // اشتراك موكلَين في نفس المالك المستفيد (نفس المجموعة الاقتصادية) — تنبيه توعوي فقط لأنه ليس
+  // تعارضاً بالضرورة، لكن يستحق مراجعة يدوية قبل قبول التوكيل الجديد إذا كان أحدهما خصماً في الآخر.
+  if (form.clientId) {
+    const selectedRecord = latestKycByClient.get(String(form.clientId));
+    if (selectedRecord?.ubo) {
+      const selectedUboNames = extractCandidateNamesFromText(selectedRecord.ubo);
+      for (const c of clients) {
+        if (String(c.id) === String(form.clientId)) continue;
+        const otherRecord = latestKycByClient.get(String(c.id));
+        if (!otherRecord?.ubo) continue;
+        const otherUboNames = extractCandidateNamesFromText(otherRecord.ubo);
+        const sharedOwner = selectedUboNames.find((n1) =>
+          otherUboNames.some((n2) => n1.includes(n2) || n2.includes(n1)),
+        );
+        if (sharedOwner) {
+          const isOpponentElsewhere = cases.some((cs) => {
+            if (editingCase && cs.id === editingCase.id) return false;
+            const csOpponents: string[] = (cs as any).opponents || [];
+            return csOpponents.some((o) => {
+              const n = normalize(o || "");
+              return n && (n.includes(normalize(c.name)) || normalize(c.name).includes(n));
+            });
+          });
+          if (isOpponentElsewhere) {
+            const label = `⚠️ (فحص UBO) الموكل المختار يشترك في نفس المستفيد الحقيقي (UBO) مع الموكل "${c.name}"، والأخير طرف خصومة في قضية أخرى — يُنصح بمراجعة تعارض المصالح على مستوى المجموعة الاقتصادية`;
+            if (!seen.has(label)) {
+              seen.add(label);
+              conflictMatches.push(label);
+            }
           }
         }
       }

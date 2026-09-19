@@ -26,6 +26,7 @@ import {
   TimeLog,
   CaseItem,
   TrustTransaction,
+  TrustReconciliation,
   CaseExpense,
 } from "../domain/types";
 import { fmtAED, fmtDate, effectiveInvoiceStatus, invColor } from "../domain/utils";
@@ -65,6 +66,8 @@ export interface InvoicesViewProps {
   trustTransactions: Array<Omit<TrustTransaction, "type"> & { type: string }>;
   caseNo: (id: number) => string;
   caseExpenses: CaseExpense[];
+  trustReconciliations?: TrustReconciliation[];
+  onSaveTrustReconciliation?: (bankStatementBalance: number, notes: string) => void;
 }
 
 export default function InvoicesView({
@@ -99,7 +102,11 @@ export default function InvoicesView({
   trustTransactions,
   caseNo,
   caseExpenses,
+  trustReconciliations = [],
+  onSaveTrustReconciliation,
 }: InvoicesViewProps) {
+  const [reconcileBankBalance, setReconcileBankBalance] = React.useState("");
+  const [reconcileNotes, setReconcileNotes] = React.useState("");
   return (
     <div className="space-y-6">
       {/* شريط الأقسام المالي */}
@@ -743,6 +750,143 @@ export default function InvoicesView({
                   <Plus size={16} /> إضافة إيداع / صرف أمانة
                 </button>
               </div>
+
+              {/* لوحة تسوية حساب الأمانات (three-way reconciliation): مقارنة دورية بين رصيد
+                  دفاتر المكتب (مجموع كل معاملات الأمانة) وبين رصيد كشف الحساب البنكي الفعلي —
+                  ممارسة مهنية أساسية للوقاية من مخالفات إدارة حسابات الأمانة. */}
+              {(() => {
+                const bookBalance = trustTransactions.reduce(
+                  (sum, t) => sum + (t.type === "إيداع أمانة" ? t.amount : -t.amount),
+                  0,
+                );
+                const lastReconciliation =
+                  trustReconciliations.length > 0
+                    ? trustReconciliations[trustReconciliations.length - 1]
+                    : null;
+                const negativeClientsCount = (() => {
+                  const byClient = new Map<number, number>();
+                  for (const t of trustTransactions) {
+                    byClient.set(
+                      t.clientId,
+                      (byClient.get(t.clientId) || 0) +
+                        (t.type === "إيداع أمانة" ? t.amount : -t.amount),
+                    );
+                  }
+                  return Array.from(byClient.values()).filter((b) => b < -0.01).length;
+                })();
+                return (
+                  <div className="app-card p-5 space-y-4 border-r-4 border-r-[#0D382B]">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                        <ShieldCheck size={18} className="text-[#0D382B]" />
+                        تسوية حساب الأمانات (Trust Reconciliation)
+                      </h3>
+                      {lastReconciliation && (
+                        <span className="text-[11px] text-slate-500">
+                          آخر تسوية: {fmtDate(lastReconciliation.date)}
+                        </span>
+                      )}
+                    </div>
+
+                    {negativeClientsCount > 0 && (
+                      <div className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-xs text-red-800 font-bold">
+                        ⚠️ يوجد {negativeClientsCount} موكل/موكلين برصيد أمانة سالب حالياً — راجع
+                        الجدول أدناه فوراً.
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                      <div className="rounded-lg bg-stone-50 p-3">
+                        <p className="text-slate-500">رصيد الدفاتر (مجموع كل الموكلين)</p>
+                        <p className="text-lg font-mono font-bold text-slate-900">
+                          {fmtAED(bookBalance)}
+                        </p>
+                      </div>
+                      <div className="rounded-lg bg-stone-50 p-3">
+                        <input
+                          type="number"
+                          value={reconcileBankBalance}
+                          onChange={(e) => setReconcileBankBalance(e.target.value)}
+                          placeholder="رصيد كشف الحساب البنكي"
+                          className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm font-mono mb-1"
+                        />
+                        <p className="text-[10px] text-slate-500">أدخل الرصيد كما في آخر كشف بنكي</p>
+                      </div>
+                      <div className="rounded-lg bg-stone-50 p-3">
+                        {reconcileBankBalance !== "" ? (
+                          (() => {
+                            const variance = +reconcileBankBalance - bookBalance;
+                            const matched = Math.abs(variance) < 0.01;
+                            return (
+                              <>
+                                <p className="text-slate-500">الفارق</p>
+                                <p
+                                  className={`text-lg font-mono font-bold ${matched ? "text-emerald-700" : "text-red-700"}`}
+                                >
+                                  {fmtAED(variance)}
+                                </p>
+                                <p className="text-[10px] text-slate-500">
+                                  {matched ? "مطابقة تامة ✓" : "يوجد فارق — يستوجب المراجعة"}
+                                </p>
+                              </>
+                            );
+                          })()
+                        ) : (
+                          <p className="text-slate-400 text-[11px]">أدخل رصيد البنك لحساب الفارق</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        value={reconcileNotes}
+                        onChange={(e) => setReconcileNotes(e.target.value)}
+                        placeholder="ملاحظات التسوية (اختياري)"
+                        className="flex-1 rounded-md border border-slate-300 px-2 py-1.5 text-xs"
+                      />
+                      <button
+                        disabled={reconcileBankBalance === "" || !onSaveTrustReconciliation}
+                        onClick={() => {
+                          onSaveTrustReconciliation?.(+reconcileBankBalance, reconcileNotes);
+                          setReconcileBankBalance("");
+                          setReconcileNotes("");
+                        }}
+                        className="rounded-md bg-[#0D382B] px-4 py-1.5 text-xs font-bold text-white hover:bg-[#124d40] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        تسجيل التسوية
+                      </button>
+                    </div>
+
+                    {trustReconciliations.length > 0 && (
+                      <details className="text-xs">
+                        <summary className="cursor-pointer text-slate-500 font-semibold">
+                          سجل التسويات السابقة ({trustReconciliations.length})
+                        </summary>
+                        <div className="mt-2 space-y-1.5 max-h-48 overflow-y-auto custom-scrollbar">
+                          {[...trustReconciliations]
+                            .reverse()
+                            .map((r) => (
+                              <div
+                                key={r.id}
+                                className="flex items-center justify-between rounded-md border border-slate-100 px-2 py-1.5"
+                              >
+                                <span className="text-slate-600">{fmtDate(r.date)}</span>
+                                <span className="text-slate-500">
+                                  دفاتر: {fmtAED(r.bookBalance)} | بنك: {fmtAED(r.bankStatementBalance)}
+                                </span>
+                                <span
+                                  className={`font-bold ${Math.abs(r.variance) < 0.01 ? "text-emerald-700" : "text-red-700"}`}
+                                >
+                                  فارق: {fmtAED(r.variance)}
+                                </span>
+                              </div>
+                            ))}
+                        </div>
+                      </details>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* إجمالي رصيد الأمانات لكل موكل — تُعرض فقط للموكلين الذين لديهم حركة أمانة فعلية،
                   بدل عرض بطاقة لكل موكل مسجل بالمكتب (111 موكلاً) حتى لو لم تُسجَّل له أي معاملة أمانة إطلاقاً */}
